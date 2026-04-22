@@ -1,0 +1,194 @@
+Now create the Supabase database schema for 
+CareVoy. Create a SQL migration file at 
+/database/schema.sql with the following tables:
+
+1. patients
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- full_name (text)
+- phone (text, unique)
+- email (text)
+- home_address (text)
+- date_of_birth (date, nullable)
+- hsa_fsa_card_token (text, nullable)
+- stripe_customer_id (text, nullable)
+- onboarding_complete (boolean, default false)
+
+2. hospitals
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- name (text)
+- address (text)
+- city (text)
+- state (text)
+- contact_email (text)
+- stripe_subscription_id (text, nullable)
+- tier (text, default 'starter')
+- patients_per_month (integer, default 0)
+- active (boolean, default true)
+
+3. hospital_coordinators
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- hospital_id (uuid, references hospitals)
+- full_name (text)
+- email (text, unique)
+- phone (text)
+
+4. nemt_partners
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- company_name (text)
+- contact_name (text)
+- contact_phone (text)
+- contact_email (text)
+- city (text)
+- state (text)
+- api_endpoint (text, nullable)
+- api_key (text, nullable)
+- dispatch_software (text, nullable)
+- active (boolean, default true)
+
+5. rides
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- patient_id (uuid, references patients)
+- hospital_id (uuid, references hospitals)
+- nemt_partner_id (uuid, references nemt_partners, nullable)
+- ride_type (text) -- 'pre_op' or 'post_op'
+- pickup_address (text)
+- dropoff_address (text)
+- pickup_time (timestamptz)
+- surgery_date (date)
+- procedure_type (text)
+- mobility_needs (text, nullable)
+- companion_requested (boolean, default false)
+- status (text, default 'pending')
+- driver_name (text, nullable)
+- driver_phone (text, nullable)
+- vehicle_type (text, nullable)
+- estimated_cost (numeric, nullable)
+- actual_cost (numeric, nullable)
+- nemt_confirmation_id (text, nullable)
+- tracking_url (text, nullable)
+
+6. payments
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- ride_id (uuid, references rides)
+- patient_id (uuid, references patients)
+- amount (numeric)
+- payment_method (text) -- 'hsa', 'fsa', 'card'
+- stripe_payment_intent_id (text, nullable)
+- flex_transaction_id (text, nullable)
+- status (text, default 'pending')
+- receipt_url (text, nullable)
+- hsa_fsa_eligible (boolean, default true)
+- irs_expense_code (text, default '213d')
+
+7. receipts
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- payment_id (uuid, references payments)
+- patient_id (uuid, references patients)
+- ride_id (uuid, references rides)
+- pdf_url (text, nullable)
+- emailed_at (timestamptz, nullable)
+- provider_name (text)
+- service_date (date)
+- service_type (text, default 'Medical Transportation')
+- amount (numeric)
+- irs_code_reference (text, default 'IRS Publication 502 - Transportation')
+
+8. notifications
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- recipient_type (text) -- 'patient', 'coordinator', 'nemt', 'admin'
+- recipient_id (uuid)
+- channel (text) -- 'sms', 'email', 'push'
+- message (text)
+- status (text, default 'pending')
+- sent_at (timestamptz, nullable)
+- twilio_sid (text, nullable)
+
+9. ai_conversations
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- patient_id (uuid, references patients, nullable)
+- session_id (text) -- unique per conversation
+- status (text, default 'active')
+-- active, completed, handed_off
+- intent_detected (text, nullable)
+-- 'book_ride', 'hsa_question', 'reschedule',
+-- 'cancel', 'track_ride', 'receipt_request',
+-- 'general_question', 'onboarding'
+- extraction_complete (boolean, default false)
+- extracted_data (jsonb, nullable)
+-- stores what Claude pulled from conversation:
+-- surgery_date, hospital, procedure_type,
+-- mobility_needs, companion_needed etc
+- ride_booked (boolean, default false)
+- ride_id (uuid, references rides, nullable)
+- total_messages (integer, default 0)
+- resolved (boolean, default false)
+
+10. ai_messages
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- conversation_id (uuid, references ai_conversations)
+- role (text) -- 'user' or 'assistant'
+- content (text)
+- tokens_used (integer, nullable)
+- claude_model (text, nullable)
+- intent_signal (text, nullable)
+-- what Claude detected in this specific message
+
+11. ai_extractions
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- conversation_id (uuid, references ai_conversations)
+- patient_id (uuid, references patients, nullable)
+- surgery_date (date, nullable)
+- surgery_time (text, nullable)
+- hospital_name (text, nullable)
+- hospital_id (uuid, references hospitals, nullable)
+- procedure_type (text, nullable)
+- needs_wheelchair (boolean, default false)
+- needs_companion (boolean, default false)
+- home_address (text, nullable)
+- special_instructions (text, nullable)
+- confidence_score (numeric, nullable)
+-- 0 to 1, how confident Claude is
+-- in the extracted data
+- confirmed_by_patient (boolean, default false)
+-- true when patient says "yes that's correct"
+- extraction_version (integer, default 1)
+
+12. hsa_fsa_questions
+- id (uuid, primary key, default gen_random_uuid())
+- created_at (timestamptz, default now())
+- conversation_id (uuid, references ai_conversations)
+- patient_id (uuid, references patients, nullable)
+- question (text)
+- answer (text)
+- category (text)
+-- 'eligibility', 'reimbursement',
+-- 'card_payment', 'receipt', 'limits'
+- helpful (boolean, nullable)
+-- patient feedback on answer quality
+
+Enable Row Level Security on all tables.
+
+Add these RLS policies:
+- patients: users can only read/write their own row
+- rides: patients see only their rides
+- payments: patients see only their payments  
+- receipts: patients see only their receipts
+- ai_conversations: patients see only their conversations
+- ai_messages: patients see only messages in their conversations
+- hospitals: coordinators see only their hospital
+- hospital_coordinators: coordinators see only their own row
+- All tables: service role (admin) can do everything
+
+After creating the schema explain each table 
+in plain English especially the AI tables.
