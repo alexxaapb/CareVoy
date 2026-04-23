@@ -3,9 +3,11 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -66,7 +68,9 @@ function formatTime(d: Date | null): string {
 
 export default function BookRideScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const checkScale = useRef(new Animated.Value(0)).current;
+  const checkOpacity = useRef(new Animated.Value(0)).current;
 
   // Step 1
   const [surgeryDate, setSurgeryDate] = useState<Date | null>(null);
@@ -139,7 +143,7 @@ export default function BookRideScreen() {
       setError(err);
       return;
     }
-    setStep((s) => (s === 3 ? 3 : ((s + 1) as 1 | 2 | 3)));
+    setStep((s) => (s >= 4 ? 4 : ((s + 1) as 1 | 2 | 3 | 4)));
   };
 
   const back = () => {
@@ -148,7 +152,26 @@ export default function BookRideScreen() {
       router.back();
       return;
     }
-    setStep((s) => (s - 1) as 1 | 2 | 3);
+    setStep((s) => (s - 1) as 1 | 2 | 3 | 4);
+  };
+
+  const playSuccessAnimation = () => {
+    checkScale.setValue(0);
+    checkOpacity.setValue(0);
+    Animated.parallel([
+      Animated.spring(checkScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(checkOpacity, {
+        toValue: 1,
+        duration: 240,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
 
   const submit = async () => {
@@ -204,7 +227,8 @@ export default function BookRideScreen() {
       setError(insertErr.message);
       return;
     }
-    router.replace("/(tabs)");
+    setStep(4);
+    playSuccessAnimation();
   };
 
   return (
@@ -215,20 +239,30 @@ export default function BookRideScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.topBar}>
-          <Pressable onPress={back} hitSlop={12}>
-            <Feather name="chevron-left" size={26} color={WHITE} />
-          </Pressable>
+          {step !== 4 ? (
+            <Pressable onPress={back} hitSlop={12}>
+              <Feather name="chevron-left" size={26} color={WHITE} />
+            </Pressable>
+          ) : (
+            <View style={{ width: 26 }} />
+          )}
           <Text style={styles.topTitle}>Book a Ride</Text>
           <View style={{ width: 26 }} />
         </View>
 
-        <View style={styles.progress}>
-          {[1, 2, 3].map((n) => (
-            <View
-              key={n}
-              style={[styles.progressDot, n <= step && styles.progressDotActive]}
-            />
-          ))}
+        <View style={styles.progressWrap}>
+          <View style={styles.progress}>
+            {[1, 2, 3, 4].map((n) => (
+              <View
+                key={n}
+                style={[
+                  styles.progressDot,
+                  n <= step && styles.progressDotActive,
+                ]}
+              />
+            ))}
+          </View>
+          <Text style={styles.progressText}>Step {step} of 4</Text>
         </View>
 
         <ScrollView
@@ -467,11 +501,45 @@ export default function BookRideScreen() {
             </View>
           )}
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {step === 4 && (
+            <View style={styles.successWrap}>
+              <Animated.View
+                style={[
+                  styles.successCircle,
+                  {
+                    opacity: checkOpacity,
+                    transform: [{ scale: checkScale }],
+                  },
+                ]}
+              >
+                <Feather name="check" size={56} color={NAVY} />
+              </Animated.View>
+              <Text style={styles.successTitle}>Your ride is booked</Text>
+              <Text style={styles.successSub}>
+                We&apos;ve saved your request. A care coordinator will confirm
+                your driver shortly and you&apos;ll get a text when they&apos;re
+                on the way.
+              </Text>
+            </View>
+          )}
+
+          {step !== 4 && error ? (
+            <Text style={styles.error}>{error}</Text>
+          ) : null}
         </ScrollView>
 
         <View style={styles.footer}>
-          {step === 3 ? (
+          {step === 4 ? (
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryBtn,
+                pressed && styles.pressed,
+              ]}
+              onPress={() => router.replace("/(tabs)")}
+            >
+              <Text style={styles.primaryBtnText}>Back to Home</Text>
+            </Pressable>
+          ) : step === 3 ? (
             <Pressable
               style={({ pressed }) => [
                 styles.primaryBtn,
@@ -615,11 +683,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },
+  progressWrap: { paddingHorizontal: 24, marginBottom: 8 },
   progress: {
     flexDirection: "row",
     gap: 6,
-    paddingHorizontal: 24,
-    marginBottom: 8,
   },
   progressDot: {
     flex: 1,
@@ -628,6 +695,43 @@ const styles = StyleSheet.create({
     backgroundColor: BORDER,
   },
   progressDotActive: { backgroundColor: TEAL },
+  progressText: {
+    color: MUTED,
+    fontSize: 12,
+    marginTop: 8,
+    fontFamily: "Inter_500Medium",
+  },
+  successWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+    paddingHorizontal: 12,
+  },
+  successCircle: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: TEAL,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 28,
+  },
+  successTitle: {
+    color: WHITE,
+    fontSize: 24,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: -0.4,
+    textAlign: "center",
+  },
+  successSub: {
+    color: MUTED,
+    fontSize: 15,
+    marginTop: 12,
+    textAlign: "center",
+    lineHeight: 22,
+    fontFamily: "Inter_400Regular",
+  },
   container: { padding: 24, paddingBottom: 24 },
   stepTitle: {
     color: WHITE,
