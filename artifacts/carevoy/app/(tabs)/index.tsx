@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -67,6 +67,7 @@ function formatMoney(n: number | null): string {
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [name, setName] = useState<string | null>(null);
   const [upcoming, setUpcoming] = useState<Ride[]>([]);
   const [past, setPast] = useState<Ride[]>([]);
@@ -153,6 +154,7 @@ export default function HomeScreen() {
               styles.primaryBtn,
               pressed && styles.pressed,
             ]}
+            onPress={() => router.push("/book-ride")}
           >
             <Feather name="plus-circle" size={20} color={NAVY} />
             <Text style={styles.primaryBtnText}>Book a Ride</Text>
