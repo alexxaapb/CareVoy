@@ -20,19 +20,42 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
+type AuthState = {
+  userId: string | null;
+  onboarded: boolean | null;
+};
+
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
-  const [session, setSession] = useState<unknown>(null);
-  const [authReady, setAuthReady] = useState(false);
+  const [auth, setAuth] = useState<AuthState>({
+    userId: null,
+    onboarded: null,
+  });
+  const [ready, setReady] = useState(false);
+
+  const refreshFromUser = async (userId: string | null) => {
+    if (!userId) {
+      setAuth({ userId: null, onboarded: null });
+      return;
+    }
+    const { data, error } = await supabase
+      .from("patients")
+      .select("onboarding_complete")
+      .eq("id", userId)
+      .maybeSingle();
+    const onboarded = !error && !!data?.onboarding_complete;
+    setAuth({ userId, onboarded });
+  };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setAuthReady(true);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
-      setSession(s);
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      await refreshFromUser(data.session?.user.id ?? null);
+      setReady(true);
+    })();
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_evt, s) => {
+      await refreshFromUser(s?.user.id ?? null);
     });
     return () => {
       sub.subscription.unsubscribe();
@@ -40,19 +63,29 @@ function RootLayoutNav() {
   }, []);
 
   useEffect(() => {
-    if (!authReady) return;
-    const inAuthScreen = segments[0] === "login";
-    if (!session && !inAuthScreen) {
-      router.replace("/login");
-    } else if (session && inAuthScreen) {
+    if (!ready) return;
+    const top = segments[0];
+    const inLogin = top === "login";
+    const inOnboarding = top === "onboarding";
+
+    if (!auth.userId) {
+      if (!inLogin) router.replace("/login");
+      return;
+    }
+    if (auth.onboarded === false) {
+      if (!inOnboarding) router.replace("/onboarding");
+      return;
+    }
+    if (auth.onboarded === true && (inLogin || inOnboarding)) {
       router.replace("/(tabs)");
     }
-  }, [authReady, session, segments, router]);
+  }, [ready, auth, segments, router]);
 
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
     </Stack>
   );
 }
