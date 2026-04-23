@@ -200,9 +200,20 @@ create table if not exists public.hsa_fsa_questions (
   helpful boolean
 );
 
+-- staff (NEMT drivers, coordinators, admins)
+create table if not exists public.staff (
+  id uuid primary key,
+  created_at timestamptz not null default now(),
+  email text unique,
+  full_name text,
+  role text check (role in ('nemt', 'coordinator', 'admin')),
+  nemt_partner_id uuid references public.nemt_partners(id) on delete set null
+);
+
 -- =========================================================================
 -- Indexes
 -- =========================================================================
+create index if not exists idx_staff_partner on public.staff(nemt_partner_id);
 create index if not exists idx_rides_patient on public.rides(patient_id);
 create index if not exists idx_rides_hospital on public.rides(hospital_id);
 create index if not exists idx_payments_patient on public.payments(patient_id);
@@ -317,5 +328,39 @@ create policy "hospitals_coordinator_select" on public.hospitals
 drop policy if exists "notifications_recipient_select" on public.notifications;
 create policy "notifications_recipient_select" on public.notifications
   for select using (auth.uid() = recipient_id);
+
+-- staff: own row only
+alter table public.staff enable row level security;
+
+drop policy if exists "staff_select_own" on public.staff;
+create policy "staff_select_own" on public.staff
+  for select using (auth.uid() = id);
+
+drop policy if exists "staff_update_own" on public.staff;
+create policy "staff_update_own" on public.staff
+  for update using (auth.uid() = id) with check (auth.uid() = id);
+
+-- rides: NEMT staff can see and update rides assigned to their partner
+drop policy if exists "rides_nemt_select" on public.rides;
+create policy "rides_nemt_select" on public.rides
+  for select using (
+    exists (
+      select 1 from public.staff s
+      where s.id = auth.uid()
+        and s.role = 'nemt'
+        and s.nemt_partner_id = rides.nemt_partner_id
+    )
+  );
+
+drop policy if exists "rides_nemt_update" on public.rides;
+create policy "rides_nemt_update" on public.rides
+  for update using (
+    exists (
+      select 1 from public.staff s
+      where s.id = auth.uid()
+        and s.role = 'nemt'
+        and s.nemt_partner_id = rides.nemt_partner_id
+    )
+  );
 
 -- nemt_partners: no public policies (admin/service-role only)

@@ -20,8 +20,11 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
+type Role = "patient" | "nemt" | "coordinator" | "admin" | "unknown";
+
 type AuthState = {
   userId: string | null;
+  role: Role;
   onboarded: boolean | null;
 };
 
@@ -30,22 +33,43 @@ function RootLayoutNav() {
   const segments = useSegments();
   const [auth, setAuth] = useState<AuthState>({
     userId: null,
+    role: "unknown",
     onboarded: null,
   });
   const [ready, setReady] = useState(false);
 
   const refreshFromUser = async (userId: string | null) => {
     if (!userId) {
-      setAuth({ userId: null, onboarded: null });
+      setAuth({ userId: null, role: "unknown", onboarded: null });
       return;
     }
-    const { data, error } = await supabase
-      .from("patients")
-      .select("onboarding_complete")
-      .eq("id", userId)
-      .maybeSingle();
-    const onboarded = !error && !!data?.onboarding_complete;
-    setAuth({ userId, onboarded });
+    const [patientRes, staffRes] = await Promise.all([
+      supabase
+        .from("patients")
+        .select("onboarding_complete")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("staff")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
+    if (patientRes.data) {
+      setAuth({
+        userId,
+        role: "patient",
+        onboarded: !!patientRes.data.onboarding_complete,
+      });
+    } else if (staffRes.data?.role) {
+      setAuth({
+        userId,
+        role: staffRes.data.role as Role,
+        onboarded: true,
+      });
+    } else {
+      setAuth({ userId, role: "patient", onboarded: false });
+    }
   };
 
   useEffect(() => {
@@ -67,18 +91,31 @@ function RootLayoutNav() {
     const top = segments[0];
     const inLogin = top === "login";
     const inOnboarding = top === "onboarding";
+    const inDriver = top === "driver";
+    const inComingSoon = top === "coming-soon";
+    const inTabs = top === "(tabs)";
 
     if (!auth.userId) {
       if (!inLogin) router.replace("/login");
       return;
     }
+    if (auth.role === "nemt") {
+      if (!inDriver) router.replace("/driver");
+      return;
+    }
+    if (auth.role === "coordinator" || auth.role === "admin") {
+      if (!inComingSoon) router.replace("/coming-soon");
+      return;
+    }
+    // patient flow
     if (auth.onboarded === false) {
       if (!inOnboarding) router.replace("/onboarding");
       return;
     }
-    if (auth.onboarded === true && (inLogin || inOnboarding)) {
+    if (auth.onboarded === true && (inLogin || inOnboarding || inDriver || inComingSoon)) {
       router.replace("/(tabs)");
     }
+    void inTabs;
   }, [ready, auth, segments, router]);
 
   return (
@@ -88,6 +125,8 @@ function RootLayoutNav() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="book-ride" options={{ headerShown: false }} />
       <Stack.Screen name="chat" options={{ headerShown: false }} />
+      <Stack.Screen name="driver" options={{ headerShown: false }} />
+      <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
     </Stack>
   );
 }
