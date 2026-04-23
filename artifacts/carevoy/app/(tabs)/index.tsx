@@ -164,6 +164,7 @@ export default function HomeScreen() {
               styles.secondaryBtn,
               pressed && styles.pressed,
             ]}
+            onPress={() => router.push("/chat")}
           >
             <Feather name="message-circle" size={20} color={TEAL} />
             <Text style={styles.secondaryBtnText}>

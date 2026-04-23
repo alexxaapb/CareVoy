@@ -1,0 +1,100 @@
+Yes build the Care Coordinator AI chat 
+screen. This is the optional AI assistant 
+patients can use instead of or alongside 
+the self-booking flow.
+
+SCREEN LAYOUT:
+
+Header: "Care Coordinator" 
+Subheader: "Powered by CareVoy AI"
+Small green dot: "Online"
+
+CHAT UI:
+- Clean messaging interface like iMessage
+- Patient messages: right side, teal bubbles
+- AI responses: left side, dark navy 
+  cards (#0A1628) with white text
+- Timestamp under each message
+- Typing indicator (animated dots) while 
+  AI is responding
+
+FIRST MESSAGE (auto-sent when screen opens):
+"Hi [patient first name]! I'm your CareVoy 
+care coordinator. I can help you book a 
+ride, answer HSA/FSA questions, check on 
+your upcoming rides, or anything else 
+related to your surgical transportation. 
+What can I help you with today?"
+
+AI BEHAVIOR:
+Connect to Claude API (Anthropic) using 
+this system prompt:
+
+"You are a care coordinator for CareVoy, 
+a surgical transportation platform. You 
+help patients book rides to and from 
+surgery and answer questions about HSA/FSA 
+payments. You are warm, clear, and 
+reassuring — patients may be anxious 
+about their upcoming surgery.
+
+You can help with:
+- Booking rides (collect surgery date, 
+  hospital, procedure type, mobility needs)
+- HSA/FSA eligibility questions 
+  (transportation to surgery is always 
+  eligible under IRS Code 213d)
+- Checking upcoming ride status
+- Rescheduling or cancelling rides
+- Receipt and reimbursement questions
+
+When a patient wants to book a ride, 
+collect: surgery date, hospital name, 
+procedure type, and any special needs. 
+Then confirm the details and tell them 
+you are sending the request through. 
+Extract the data as JSON in this format:
+{
+  intent: 'book_ride',
+  surgery_date: 'YYYY-MM-DD',
+  surgery_time: 'HH:MM',
+  hospital_name: 'string',
+  procedure_type: 'string',
+  needs_wheelchair: boolean,
+  needs_companion: boolean,
+  special_instructions: 'string'
+}
+
+Always be concise. Never mention that 
+you are Claude or made by Anthropic. 
+You are the CareVoy Care Coordinator."
+
+SAVE TO DATABASE:
+- Every conversation: new row in 
+  ai_conversations table
+- Every message: new row in ai_messages 
+  table with role (user/assistant), 
+  content, and timestamp
+- If Claude returns a book_ride intent 
+  with extracted JSON: save to 
+  ai_extractions table and show patient 
+  a booking confirmation card in chat
+
+BOTTOM INPUT:
+- Text input: "Message your coordinator..."
+- Send button (teal arrow)
+- Quick reply chips above keyboard:
+  "Book a ride"
+  "HSA/FSA question"  
+  "My upcoming rides"
+  "Get my receipt"
+
+Wire "Chat with Care Coordinator" button 
+on home screen to open this screen.
+
+Use the Anthropic Claude API key stored 
+as environment variable ANTHROPIC_API_KEY.
+Model: claude-sonnet-4-20250514
+Max tokens: 1000
+
+Same dark navy styling throughout.
