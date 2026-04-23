@@ -3,12 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const router: IRouter = Router();
 
-const baseURL = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
-const apiKey = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
-
 const anthropic = new Anthropic({
-  baseURL,
-  apiKey: apiKey ?? "placeholder",
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const SYSTEM_PROMPT = `You are a care coordinator for CareVoy, a surgical transportation platform. You help patients book rides to and from surgery and answer questions about HSA/FSA payments. You are warm, clear, and reassuring — patients may be anxious about their upcoming surgery.
