@@ -305,7 +305,12 @@ export default function ChatScreen() {
               {m.extraction && (
                 <BookingCard
                   data={m.extraction}
-                  onConfirm={() => router.push("/book-ride")}
+                  onConfirm={() =>
+                    router.push({
+                      pathname: "/book-ride",
+                      params: { prefill: JSON.stringify(m.extraction) },
+                    })
+                  }
                 />
               )}
             </View>

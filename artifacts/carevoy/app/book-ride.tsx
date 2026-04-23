@@ -2,7 +2,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -39,6 +39,40 @@ const HOSPITALS = [
   "Other - I'll type it in",
 ];
 
+function matchHospital(name: string | undefined): string | null {
+  if (!name) return null;
+  const target = name.toLowerCase();
+  for (const h of HOSPITALS) {
+    const opt = h.toLowerCase();
+    if (opt === target || opt.includes(target) || target.includes(opt))
+      return h;
+  }
+  // simple keyword match
+  if (target.includes("riverside")) return HOSPITALS[0];
+  if (target.includes("grant")) return HOSPITALS[1];
+  if (target.includes("wexner") || target.includes("osu")) return HOSPITALS[2];
+  if (target.includes("st. ann") || target.includes("mount carmel"))
+    return HOSPITALS[3];
+  if (target.includes("nationwide") || target.includes("children"))
+    return HOSPITALS[4];
+  return null;
+}
+
+function parseTimeToDate(t: string | undefined): Date | null {
+  if (!t) return null;
+  const m = t.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const d = new Date();
+  d.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+  return d;
+}
+
+function parseDate(s: string | undefined): Date | null {
+  if (!s) return null;
+  const d = new Date(s.length === 10 ? `${s}T00:00:00` : s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 type RideType = "pre_op" | "post_op" | "both";
 type PaymentMethod = "hsa_fsa" | "card";
 
@@ -68,6 +102,7 @@ function formatTime(d: Date | null): string {
 
 export default function BookRideScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ prefill?: string }>();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const checkScale = useRef(new Animated.Value(0)).current;
   const checkOpacity = useRef(new Animated.Value(0)).current;
@@ -120,6 +155,44 @@ export default function BookRideScreen() {
       }
     })();
   }, []);
+
+  // Pre-fill from AI extraction
+  useEffect(() => {
+    if (!params.prefill) return;
+    try {
+      const p = JSON.parse(params.prefill) as {
+        surgery_date?: string;
+        surgery_time?: string;
+        hospital_name?: string;
+        procedure_type?: string;
+        needs_wheelchair?: boolean;
+        needs_companion?: boolean;
+        special_instructions?: string;
+      };
+      const d = parseDate(p.surgery_date);
+      const t = parseTimeToDate(p.surgery_time);
+      if (d) setSurgeryDate(d);
+      if (t) setSurgeryTime(t);
+      if (p.procedure_type) setProcedureType(p.procedure_type);
+      const matched = matchHospital(p.hospital_name);
+      if (matched) {
+        setHospital(matched);
+      } else if (p.hospital_name) {
+        setHospital("Other - I'll type it in");
+        setHospitalCustom(p.hospital_name);
+      }
+      if (p.needs_wheelchair) setNeedsWheelchair(true);
+      if (p.needs_companion) setBringingCompanion(true);
+      if (p.special_instructions) {
+        // surface as needing extra time if relevant; otherwise ignored quietly
+        if (/extra time|slow|mobility|assist/i.test(p.special_instructions))
+          setNeedsExtraTime(true);
+      }
+      setStep(3);
+    } catch {
+      // ignore malformed prefill
+    }
+  }, [params.prefill]);
 
   const hospitalDisplay = (): string => {
     if (!hospital) return "Select hospital";
