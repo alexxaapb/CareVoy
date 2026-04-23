@@ -186,7 +186,11 @@ export default function HomeScreen() {
             </View>
           ) : (
             upcoming.map((r) => (
-              <View key={r.id} style={styles.card}>
+              <Pressable
+                key={r.id}
+                onPress={() => router.push(`/ride/${r.id}`)}
+                style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              >
                 <View style={styles.cardHeader}>
                   <View style={styles.pill}>
                     <Text style={styles.pillText}>
@@ -212,7 +216,7 @@ export default function HomeScreen() {
                     {r.hospitals?.name ?? r.dropoff_address ?? "Destination TBD"}
                   </Text>
                 </View>
-              </View>
+              </Pressable>
             ))
           )}
         </View>
@@ -226,7 +230,11 @@ export default function HomeScreen() {
             </View>
           ) : (
             past.map((r) => (
-              <View key={r.id} style={styles.card}>
+              <Pressable
+                key={r.id}
+                onPress={() => router.push(`/ride/${r.id}`)}
+                style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              >
                 <View style={styles.pastRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle}>
@@ -240,7 +248,7 @@ export default function HomeScreen() {
                     {formatMoney(r.actual_cost ?? r.estimated_cost)}
                   </Text>
                 </View>
-              </View>
+              </Pressable>
             ))
           )}
         </View>
