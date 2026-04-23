@@ -91,6 +91,9 @@ export default function BookRideScreen() {
 
   // Step 3
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("hsa_fsa");
+  const [hsaCardOnFile, setHsaCardOnFile] = useState<string | null>(null);
+  const [stdCardOnFile, setStdCardOnFile] = useState<string | null>(null);
+  const [receiptEmail, setReceiptEmail] = useState<string>("");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,10 +105,19 @@ export default function BookRideScreen() {
       if (!userId) return;
       const { data } = await supabase
         .from("patients")
-        .select("home_address")
+        .select("home_address, email, hsa_fsa_card_token, stripe_customer_id")
         .eq("id", userId)
         .maybeSingle();
       if (data?.home_address) setPickupAddress(data.home_address);
+      if (data?.email) setReceiptEmail(data.email);
+      if (data?.hsa_fsa_card_token) {
+        const m = data.hsa_fsa_card_token.match(/(\d{4})$/);
+        setHsaCardOnFile(m ? m[1] : "••••");
+      }
+      if (data?.stripe_customer_id) {
+        const m = data.stripe_customer_id.match(/(\d{4})$/);
+        setStdCardOnFile(m ? m[1] : "••••");
+      }
     })();
   }, []);
 
@@ -176,6 +188,16 @@ export default function BookRideScreen() {
 
   const submit = async () => {
     setError(null);
+    const needsCard =
+      paymentMethod === "hsa_fsa" ? !hsaCardOnFile : !stdCardOnFile;
+    if (needsCard) {
+      setError(
+        paymentMethod === "hsa_fsa"
+          ? "Please add an HSA/FSA card from the Payment tab to continue."
+          : "Please add a card from the Payment tab to continue.",
+      );
+      return;
+    }
     setSubmitting(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
@@ -486,18 +508,41 @@ export default function BookRideScreen() {
                 onPress={() => setPaymentMethod("hsa_fsa")}
                 icon="credit-card"
                 title="HSA / FSA card"
-                subtitle="Tax-advantaged. We'll generate an IRS-ready receipt."
+                subtitle={
+                  hsaCardOnFile
+                    ? `Card on file ending in ${hsaCardOnFile} • Tax-free`
+                    : "Tax-advantaged. We'll generate an IRS-ready receipt."
+                }
               />
               <PaymentOption
                 active={paymentMethod === "card"}
                 onPress={() => setPaymentMethod("card")}
                 icon="credit-card"
                 title="Credit or debit card"
-                subtitle="Standard payment."
+                subtitle={
+                  stdCardOnFile
+                    ? `Card on file ending in ${stdCardOnFile}`
+                    : "Standard payment."
+                }
               />
-              <Text style={styles.footnote}>
-                Payment cards can be added in the next step after booking.
-              </Text>
+
+              {((paymentMethod === "hsa_fsa" && !hsaCardOnFile) ||
+                (paymentMethod === "card" && !stdCardOnFile)) && (
+                <Pressable
+                  style={styles.addCardPrompt}
+                  onPress={() => router.push("/(tabs)/payment")}
+                >
+                  <Feather name="plus-circle" size={18} color={TEAL} />
+                  <Text style={styles.addCardText}>
+                    Add{" "}
+                    {paymentMethod === "hsa_fsa"
+                      ? "HSA/FSA card"
+                      : "a card"}{" "}
+                    to continue
+                  </Text>
+                  <Feather name="chevron-right" size={18} color={TEAL} />
+                </Pressable>
+              )}
             </View>
           )}
 
@@ -520,6 +565,26 @@ export default function BookRideScreen() {
                 your driver shortly and you&apos;ll get a text when they&apos;re
                 on the way.
               </Text>
+              {(paymentMethod === "hsa_fsa" ? hsaCardOnFile : stdCardOnFile) && (
+                <View style={styles.chargeBox}>
+                  <Feather name="credit-card" size={18} color={TEAL} />
+                  <Text style={styles.chargeText}>
+                    Your{" "}
+                    {paymentMethod === "hsa_fsa" ? "HSA/FSA" : "card"} ending in{" "}
+                    {paymentMethod === "hsa_fsa"
+                      ? hsaCardOnFile
+                      : stdCardOnFile}{" "}
+                    will be charged{" "}
+                    <Text style={styles.chargeAmount}>
+                      ${rideType === "both" ? "110" : "55"}
+                    </Text>{" "}
+                    after your ride completes.
+                    {receiptEmail
+                      ? ` Receipt sent to ${receiptEmail}.`
+                      : ""}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -914,6 +979,49 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontFamily: "Inter_400Regular",
     textAlign: "center",
+  },
+  addCardPrompt: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: TEAL,
+    borderStyle: "dashed",
+    backgroundColor: "rgba(0,194,168,0.06)",
+  },
+  addCardText: {
+    flex: 1,
+    color: TEAL,
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  chargeBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: CARD,
+  },
+  chargeText: {
+    flex: 1,
+    color: WHITE,
+    fontSize: 13,
+    lineHeight: 19,
+    fontFamily: "Inter_400Regular",
+  },
+  chargeAmount: {
+    color: TEAL,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
   },
   footer: {
     padding: 20,

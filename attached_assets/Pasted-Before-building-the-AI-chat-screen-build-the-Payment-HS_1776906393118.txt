@@ -1,0 +1,68 @@
+Before building the AI chat screen, build 
+the Payment & HSA/FSA screen first. This 
+is the most important screen in the app — 
+it's what makes CareVoy different from 
+Uber and Lyft. Design it with HSA/FSA as 
+the primary payment method.
+
+SCREEN LAYOUT:
+
+Header: "Pay with Your HSA or FSA"
+Subtext: "Your ride is a tax-free medical 
+expense under IRS Code 213(d). Use your 
+pre-tax dollars — automatically."
+
+SECTION 1 — HSA/FSA Card (PRIMARY - show first)
+- Large teal card at top labeled "HSA / FSA Card"
+- Badge that says "TAX-FREE ✓" in green
+- Input fields: Card number, Expiry, CVV
+- Helper text: "Your HSA card works like 
+  a debit card. Your FSA card is verified 
+  automatically via our payment partner."
+- Note: "An IRS-compliant receipt is 
+  generated and emailed to you automatically 
+  after every ride."
+
+SECTION 2 — What's covered info box
+- Teal outlined info box with icon
+- Text: "Transportation to and from surgery 
+  is 100% HSA/FSA eligible. CareVoy handles 
+  the documentation so you never have to 
+  file a reimbursement form manually."
+
+SECTION 3 — Regular Card (SECONDARY)
+- Smaller, muted section below
+- Label: "Or pay with a regular card"
+- Subtext: "We'll generate an HSA/FSA 
+  reimbursement receipt you can submit 
+  to your provider for refund."
+- Card input fields same as above
+
+SECTION 4 — Receipt & Reimbursement
+- Toggle: "Auto-email receipt after 
+  every ride" (default ON)
+- Email field pre-filled from patient profile
+- Text: "Your receipt includes everything 
+  your HSA/FSA provider needs: date, 
+  provider, amount, and IRS expense code."
+
+SAVE BUTTON: "Save Payment Method"
+- Saves card token to patients table
+  (hsa_fsa_card_token and/or stripe fields)
+- Shows confirmation: "HSA/FSA card saved. 
+  You're ready to ride."
+
+After saving, when a ride is confirmed 
+automatically show: "Your HSA/FSA card 
+will be charged $[amount] after your ride 
+completes. Receipt sent to [email]."
+
+Wire this screen to:
+1. The Review step (Step 3) in Book a Ride 
+   flow — if no card saved, prompt to add one
+2. A "Payment & Receipts" tab on home screen
+
+Same dark navy styling. HSA/FSA section 
+should feel premium and trustworthy — 
+this is the moment patients realize 
+CareVoy saves them real money.
