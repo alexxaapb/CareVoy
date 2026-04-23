@@ -204,6 +204,15 @@ export default function RideDetailScreen() {
     })();
   }, [load]);
 
+  useEffect(() => {
+    if (!ride) return;
+    if (ride.status === "en_route") {
+      router.replace(`/ride/${ride.id}/track`);
+    } else if (ride.status === "completed") {
+      // stays on detail; completion screen is opened from tracking flow
+    }
+  }, [ride, router]);
+
   const callDriver = () => {
     if (!ride?.driver_phone) return;
     const tel = ride.driver_phone.replace(/[^\d+]/g, "");

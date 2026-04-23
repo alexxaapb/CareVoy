@@ -87,7 +87,12 @@ create table if not exists public.rides (
   estimated_cost numeric,
   actual_cost numeric,
   nemt_confirmation_id text,
-  tracking_url text
+  tracking_url text,
+  driver_lat numeric,
+  driver_lng numeric,
+  pickup_lat numeric,
+  pickup_lng numeric,
+  rating integer check (rating between 1 and 5)
 );
 
 -- 6. payments
