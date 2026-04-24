@@ -43,7 +43,7 @@ function RootLayoutNav() {
       setAuth({ userId: null, role: "unknown", onboarded: null });
       return;
     }
-    const [patientRes, staffRes] = await Promise.all([
+    const [patientRes, staffRes, coordRes] = await Promise.all([
       supabase
         .from("patients")
         .select("onboarding_complete")
@@ -52,6 +52,11 @@ function RootLayoutNav() {
       supabase
         .from("staff")
         .select("role")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("hospital_coordinators")
+        .select("id")
         .eq("id", userId)
         .maybeSingle(),
     ]);
@@ -67,6 +72,8 @@ function RootLayoutNav() {
         role: staffRes.data.role as Role,
         onboarded: true,
       });
+    } else if (coordRes.data) {
+      setAuth({ userId, role: "coordinator", onboarded: true });
     } else {
       setAuth({ userId, role: "patient", onboarded: false });
     }
@@ -103,7 +110,11 @@ function RootLayoutNav() {
       if (!inDriver) router.replace("/driver");
       return;
     }
-    if (auth.role === "coordinator" || auth.role === "admin") {
+    if (auth.role === "coordinator") {
+      if (top !== "coordinator") router.replace("/coordinator");
+      return;
+    }
+    if (auth.role === "admin") {
       if (!inComingSoon) router.replace("/coming-soon");
       return;
     }
@@ -112,7 +123,10 @@ function RootLayoutNav() {
       if (!inOnboarding) router.replace("/onboarding");
       return;
     }
-    if (auth.onboarded === true && (inLogin || inOnboarding || inDriver || inComingSoon)) {
+    if (
+      auth.onboarded === true &&
+      (inLogin || inOnboarding || inDriver || inComingSoon || top === "coordinator")
+    ) {
       router.replace("/(tabs)");
     }
     void inTabs;
@@ -126,6 +140,7 @@ function RootLayoutNav() {
       <Stack.Screen name="book-ride" options={{ headerShown: false }} />
       <Stack.Screen name="chat" options={{ headerShown: false }} />
       <Stack.Screen name="driver" options={{ headerShown: false }} />
+      <Stack.Screen name="coordinator" options={{ headerShown: false }} />
       <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
     </Stack>
   );
