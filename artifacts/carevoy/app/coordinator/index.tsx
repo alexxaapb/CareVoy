@@ -216,7 +216,7 @@ export default function CoordinatorDashboard() {
   const sendReminder = async (ride: Ride) => {
     if (!ride.patients?.id) return;
     setSending(ride.id);
-    const msg = `Hi ${firstName(ride.patients.full_name)}, your surgery at ${coord?.hospitals?.name ?? "the hospital"} is on ${fmtDate(ride.surgery_date)}. Book your CareVoy transportation to arrive safely. Download the app at carevoy.co`;
+    const msg = `Hi ${firstName(ride.patients.full_name)}, your appointment at ${coord?.hospitals?.name ?? "the facility"} is on ${fmtDate(ride.surgery_date)}. Book your CareVoy transportation to arrive safely. Download the app at carevoy.co`;
     const { error } = await supabase.from("notifications").insert({
       recipient_type: "patient",
       recipient_id: ride.patients.id,
@@ -242,7 +242,7 @@ export default function CoordinatorDashboard() {
       recipient_type: "patient",
       recipient_id: r.patients!.id,
       channel: "sms",
-      message: `Hi ${firstName(r.patients?.full_name)}, your surgery at ${coord?.hospitals?.name ?? "the hospital"} is on ${fmtDate(r.surgery_date)}. Book your CareVoy transportation to arrive safely. Download the app at carevoy.co`,
+      message: `Hi ${firstName(r.patients?.full_name)}, your appointment at ${coord?.hospitals?.name ?? "the facility"} is on ${fmtDate(r.surgery_date)}. Book your CareVoy transportation to arrive safely. Download the app at carevoy.co`,
       status: "pending",
     }));
     const { error } = await supabase.from("notifications").insert(rows);
@@ -308,7 +308,7 @@ export default function CoordinatorDashboard() {
           </View>
           <View style={styles.sidebarFoot}>
             <Text style={styles.hospName}>
-              {coord?.hospitals?.name ?? "Hospital"}
+              {coord?.hospitals?.name ?? "Facility"}
             </Text>
             <Pressable
               onPress={signOut}

@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { key: "overview", label: "Overview", icon: "home" as const },
   { key: "patients", label: "All Patients", icon: "users" as const },
   { key: "rides", label: "All Rides", icon: "navigation" as const },
-  { key: "hospitals", label: "Hospitals", icon: "plus-square" as const },
+  { key: "facilities", label: "Facilities", icon: "plus-square" as const },
   { key: "nemt", label: "NEMT Partners", icon: "truck" as const },
   { key: "notifications", label: "Notifications", icon: "bell" as const },
   { key: "revenue", label: "Revenue", icon: "dollar-sign" as const },
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
               color={TEAL}
             />
             <StatCard label="Pending Notifications" value={stats.pendingNotifs} icon="bell" color={AMBER} />
-            <StatCard label="Hospitals Active" value={stats.activeHospitals} icon="plus-square" color={WHITE} />
+            <StatCard label="Facilities Active" value={stats.activeHospitals} icon="plus-square" color={WHITE} />
           </View>
 
           {/* Live rides + activity feed */}
@@ -574,7 +574,7 @@ export default function AdminDashboard() {
           </View>
 
           {/* Hospitals */}
-          <SectionTitle title="Hospitals" subtitle={`${hospitals.length} total`} />
+          <SectionTitle title="Facilities" subtitle={`${hospitals.length} total`} />
           <View style={styles.tableWrap}>
             <View style={styles.tableHead}>
               <Text style={[styles.th, { flex: 2 }]}>Name</Text>
@@ -585,7 +585,7 @@ export default function AdminDashboard() {
             </View>
             {hospitals.length === 0 ? (
               <View style={styles.empty}>
-                <Text style={styles.emptyText}>No hospitals yet.</Text>
+                <Text style={styles.emptyText}>No facilities yet.</Text>
               </View>
             ) : (
               hospitals.map((h) => (
@@ -695,7 +695,7 @@ export default function AdminDashboard() {
             {viewing ? (
               <View style={{ gap: 14 }}>
                 <ModalRow label="Patient" value={viewing.patients?.full_name ?? "—"} />
-                <ModalRow label="Hospital" value={viewing.hospitals?.name ?? "—"} />
+                <ModalRow label="Facility" value={viewing.hospitals?.name ?? "—"} />
                 <ModalRow label="NEMT Partner" value={viewing.nemt_partners?.company_name ?? "Unassigned"} />
                 <ModalRow label="Pickup time" value={fmtPickup(viewing.pickup_time)} />
                 <ModalRow label="Driver" value={viewing.driver_name ?? "Unassigned"} />

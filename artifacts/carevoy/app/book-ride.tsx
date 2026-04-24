@@ -3,7 +3,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -30,32 +30,87 @@ const CARD = "#0E1A33";
 const BORDER = "#1B2A4A";
 const ERROR = "#FF6B6B";
 
-const HOSPITALS = [
-  "OhioHealth Riverside Methodist Hospital",
-  "OhioHealth Grant Medical Center",
-  "Wexner Medical Center OSU",
-  "Mount Carmel St. Ann's",
-  "Nationwide Children's Hospital",
-  "Other - I'll type it in",
+type FacilityType =
+  | "hospital"
+  | "assisted_living"
+  | "dialysis"
+  | "other";
+
+const FACILITY_TYPE_OPTIONS: { value: FacilityType; label: string }[] = [
+  { value: "hospital", label: "Hospital / Surgical Center" },
+  { value: "assisted_living", label: "Assisted Living / Nursing Home" },
+  { value: "dialysis", label: "Dialysis Center" },
+  { value: "other", label: "Other Medical Facility" },
+];
+
+const FACILITIES_BY_TYPE: Record<FacilityType, string[]> = {
+  hospital: [
+    "OhioHealth Riverside Methodist Hospital",
+    "OhioHealth Grant Medical Center",
+    "Wexner Medical Center OSU",
+    "Mount Carmel St. Ann's",
+    "Nationwide Children's Hospital",
+  ],
+  assisted_living: [
+    "Brookdale Columbus (Assisted Living)",
+    "Sunrise Senior Living Columbus",
+    "Danbury Senior Living Columbus",
+    "The Gables of Westerville",
+    "Atria Columbus",
+  ],
+  dialysis: [
+    "DaVita Columbus East",
+    "DaVita Westerville",
+    "Fresenius Kidney Care Columbus",
+    "US Renal Care Columbus",
+  ],
+  other: [],
+};
+
+const OTHER_OPTION = "Other - I'll type it in";
+
+const ALL_FACILITIES: string[] = [
+  ...FACILITIES_BY_TYPE.hospital,
+  ...FACILITIES_BY_TYPE.assisted_living,
+  ...FACILITIES_BY_TYPE.dialysis,
+  OTHER_OPTION,
 ];
 
 function matchHospital(name: string | undefined): string | null {
   if (!name) return null;
   const target = name.toLowerCase();
-  for (const h of HOSPITALS) {
+  for (const h of ALL_FACILITIES) {
     const opt = h.toLowerCase();
     if (opt === target || opt.includes(target) || target.includes(opt))
       return h;
   }
   // simple keyword match
-  if (target.includes("riverside")) return HOSPITALS[0];
-  if (target.includes("grant")) return HOSPITALS[1];
-  if (target.includes("wexner") || target.includes("osu")) return HOSPITALS[2];
+  if (target.includes("riverside")) return ALL_FACILITIES[0];
+  if (target.includes("grant")) return ALL_FACILITIES[1];
+  if (target.includes("wexner") || target.includes("osu"))
+    return ALL_FACILITIES[2];
   if (target.includes("st. ann") || target.includes("mount carmel"))
-    return HOSPITALS[3];
+    return ALL_FACILITIES[3];
   if (target.includes("nationwide") || target.includes("children"))
-    return HOSPITALS[4];
+    return ALL_FACILITIES[4];
+  if (target.includes("davita") && target.includes("east"))
+    return "DaVita Columbus East";
+  if (target.includes("davita")) return "DaVita Westerville";
+  if (target.includes("fresenius")) return "Fresenius Kidney Care Columbus";
+  if (target.includes("renal")) return "US Renal Care Columbus";
+  if (target.includes("brookdale")) return "Brookdale Columbus (Assisted Living)";
+  if (target.includes("sunrise")) return "Sunrise Senior Living Columbus";
+  if (target.includes("danbury")) return "Danbury Senior Living Columbus";
+  if (target.includes("gables")) return "The Gables of Westerville";
+  if (target.includes("atria")) return "Atria Columbus";
   return null;
+}
+
+function inferFacilityType(name: string): FacilityType {
+  for (const t of ["hospital", "assisted_living", "dialysis"] as FacilityType[]) {
+    if (FACILITIES_BY_TYPE[t].includes(name)) return t;
+  }
+  return "other";
 }
 
 function parseTimeToDate(t: string | undefined): Date | null {
@@ -112,6 +167,7 @@ export default function BookRideScreen() {
   const [surgeryTime, setSurgeryTime] = useState<Date | null>(null);
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
+  const [facilityType, setFacilityType] = useState<FacilityType>("hospital");
   const [hospital, setHospital] = useState<string>("");
   const [hospitalCustom, setHospitalCustom] = useState<string>("");
   const [hospitalPickerOpen, setHospitalPickerOpen] = useState(false);
@@ -177,8 +233,10 @@ export default function BookRideScreen() {
       const matched = matchHospital(p.hospital_name);
       if (matched) {
         setHospital(matched);
+        setFacilityType(inferFacilityType(matched));
       } else if (p.hospital_name) {
-        setHospital("Other - I'll type it in");
+        setHospital(OTHER_OPTION);
+        setFacilityType("other");
         setHospitalCustom(p.hospital_name);
       }
       if (p.needs_wheelchair) setNeedsWheelchair(true);
@@ -194,8 +252,13 @@ export default function BookRideScreen() {
     }
   }, [params.prefill]);
 
+  const facilityChoices = useMemo(() => {
+    if (facilityType === "other") return [OTHER_OPTION];
+    return [...FACILITIES_BY_TYPE[facilityType], OTHER_OPTION];
+  }, [facilityType]);
+
   const hospitalDisplay = (): string => {
-    if (!hospital) return "Select hospital";
+    if (!hospital) return "Select destination facility";
     if (hospital.startsWith("Other"))
       return hospitalCustom.trim() || "Other (type in below)";
     return hospital;
@@ -207,12 +270,12 @@ export default function BookRideScreen() {
   };
 
   const validateStep1 = (): string | null => {
-    if (!surgeryDate) return "Please select surgery date";
-    if (!surgeryTime) return "Please select surgery time";
-    if (!hospital) return "Please select a hospital";
+    if (!surgeryDate) return "Please select date";
+    if (!surgeryTime) return "Please select time";
+    if (!hospital) return "Please select a destination facility";
     if (hospital.startsWith("Other") && !hospitalCustom.trim())
-      return "Please type the hospital name";
-    if (!procedureType.trim()) return "Please enter the procedure type";
+      return "Please type the facility name";
+    if (!procedureType.trim()) return "Please enter the procedure or visit type";
     return null;
   };
 
@@ -432,7 +495,36 @@ export default function BookRideScreen() {
                 </Pressable>
               )}
 
-              <Text style={styles.label}>Hospital</Text>
+              <Text style={styles.label}>Facility type</Text>
+              <View style={styles.facilityTypeRow}>
+                {FACILITY_TYPE_OPTIONS.map((opt) => {
+                  const active = facilityType === opt.value;
+                  return (
+                    <Pressable
+                      key={opt.value}
+                      onPress={() => {
+                        setFacilityType(opt.value);
+                        setHospital("");
+                      }}
+                      style={[
+                        styles.facilityTypeChip,
+                        active && styles.facilityTypeChipActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.facilityTypeChipText,
+                          active && styles.facilityTypeChipTextActive,
+                        ]}
+                      >
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.label}>Destination Facility</Text>
               <Pressable
                 style={styles.input}
                 onPress={() => setHospitalPickerOpen(true)}
@@ -448,14 +540,14 @@ export default function BookRideScreen() {
               {hospital.startsWith("Other") && (
                 <TextInput
                   style={[styles.input, styles.textOnly]}
-                  placeholder="Type hospital name"
+                  placeholder="Type facility name"
                   placeholderTextColor={MUTED}
                   value={hospitalCustom}
                   onChangeText={setHospitalCustom}
                 />
               )}
 
-              <Text style={styles.label}>Procedure type</Text>
+              <Text style={styles.label}>Procedure / visit type</Text>
               <TextInput
                 style={[styles.input, styles.textOnly]}
                 placeholder="e.g. Knee replacement, Cataract surgery"
@@ -539,7 +631,7 @@ export default function BookRideScreen() {
               </Text>
 
               <SummaryRow label="Surgery" value={`${formatDate(surgeryDate)} • ${formatTime(surgeryTime)}`} />
-              <SummaryRow label="Hospital" value={finalHospitalName()} />
+              <SummaryRow label="Destination" value={finalHospitalName()} />
               <SummaryRow label="Procedure" value={procedureType} />
               <SummaryRow
                 label="Ride"
@@ -717,8 +809,8 @@ export default function BookRideScreen() {
           onPress={() => setHospitalPickerOpen(false)}
         >
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select hospital</Text>
-            {HOSPITALS.map((h) => (
+            <Text style={styles.modalTitle}>Select destination facility</Text>
+            {facilityChoices.map((h) => (
               <Pressable
                 key={h}
                 style={styles.modalRow}
@@ -908,6 +1000,33 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 16,
     fontFamily: "Inter_500Medium",
+  },
+  facilityTypeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 6,
+  },
+  facilityTypeChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: CARD,
+  },
+  facilityTypeChipActive: {
+    backgroundColor: TEAL,
+    borderColor: TEAL,
+  },
+  facilityTypeChipText: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  facilityTypeChipTextActive: {
+    color: NAVY,
   },
   multiline: { minHeight: 60, textAlignVertical: "top", paddingTop: 14 },
   inputText: { color: WHITE, fontSize: 16, fontFamily: "Inter_500Medium" },

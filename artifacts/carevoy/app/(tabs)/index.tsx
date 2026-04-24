@@ -145,7 +145,7 @@ export default function HomeScreen() {
           <Text style={styles.greeting}>
             Hi {firstName(name)},
           </Text>
-          <Text style={styles.subGreeting}>ready for your surgery day?</Text>
+          <Text style={styles.subGreeting}>need a ride to your next appointment?</Text>
         </View>
 
         <View style={styles.actions}>

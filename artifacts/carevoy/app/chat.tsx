@@ -140,7 +140,7 @@ export default function ChatScreen() {
       const greeting: Msg = {
         id: `g_${Date.now()}`,
         role: "assistant",
-        content: `Hi ${fn}! I'm your CareVoy care coordinator. I can help you book a ride, answer HSA/FSA questions, check on your upcoming rides, or anything else related to your surgical transportation. What can I help you with today?`,
+        content: `Hi ${fn}! I'm your CareVoy care coordinator. I can help you book a ride, answer HSA/FSA questions, check on your upcoming rides, or anything else related to your medical transportation. What can I help you with today?`,
         ts: new Date(),
       };
       setMessages([greeting]);
