@@ -115,7 +115,7 @@ function RootLayoutNav() {
       return;
     }
     if (auth.role === "admin") {
-      if (!inComingSoon) router.replace("/coming-soon");
+      if (top !== "admin") router.replace("/admin");
       return;
     }
     // patient flow
@@ -125,7 +125,12 @@ function RootLayoutNav() {
     }
     if (
       auth.onboarded === true &&
-      (inLogin || inOnboarding || inDriver || inComingSoon || top === "coordinator")
+      (inLogin ||
+        inOnboarding ||
+        inDriver ||
+        inComingSoon ||
+        top === "coordinator" ||
+        top === "admin")
     ) {
       router.replace("/(tabs)");
     }
@@ -141,6 +146,7 @@ function RootLayoutNav() {
       <Stack.Screen name="chat" options={{ headerShown: false }} />
       <Stack.Screen name="driver" options={{ headerShown: false }} />
       <Stack.Screen name="coordinator" options={{ headerShown: false }} />
+      <Stack.Screen name="admin" options={{ headerShown: false }} />
       <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
     </Stack>
   );
