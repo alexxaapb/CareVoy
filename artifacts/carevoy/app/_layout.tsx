@@ -49,11 +49,7 @@ function RootLayoutNav() {
         .select("onboarding_complete")
         .eq("id", userId)
         .maybeSingle(),
-      supabase
-        .from("staff")
-        .select("role")
-        .eq("id", userId)
-        .maybeSingle(),
+      supabase.from("staff").select("role").eq("id", userId).maybeSingle(),
       supabase
         .from("hospital_coordinators")
         .select("id")

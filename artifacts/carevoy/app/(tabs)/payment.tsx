@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";

@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -175,9 +175,7 @@ export default function CoordinatorDashboard() {
 
   const stats = useMemo(() => {
     const today = todayStr();
-    const todaySurgeries = rides.filter(
-      (r) => r.surgery_date === today,
-    ).length;
+    const todaySurgeries = rides.filter((r) => r.surgery_date === today).length;
     const confirmed = rides.filter(
       (r) => rideTransportStatus(r) === "confirmed",
     ).length;
@@ -193,11 +191,7 @@ export default function CoordinatorDashboard() {
     const q = search.trim().toLowerCase();
     return rides.filter((r) => {
       if (dateFilter === "today" && r.surgery_date !== today) return false;
-      if (
-        dateFilter === "week" &&
-        r.surgery_date &&
-        r.surgery_date > week
-      )
+      if (dateFilter === "week" && r.surgery_date && r.surgery_date > week)
         return false;
       const ts = rideTransportStatus(r);
       if (statusFilter === "needs" && ts === "confirmed") return false;
@@ -295,10 +289,7 @@ export default function CoordinatorDashboard() {
                     color={active ? TEAL : MUTED}
                   />
                   <Text
-                    style={[
-                      styles.navText,
-                      active && styles.navTextActive,
-                    ]}
+                    style={[styles.navText, active && styles.navTextActive]}
                   >
                     {item.label}
                   </Text>
@@ -455,10 +446,7 @@ export default function CoordinatorDashboard() {
               <Text style={[styles.th, styles.colAction]}>Action</Text>
             </View>
             {loading ? (
-              <ActivityIndicator
-                color={TEAL}
-                style={{ marginVertical: 32 }}
-              />
+              <ActivityIndicator color={TEAL} style={{ marginVertical: 32 }} />
             ) : filtered.length === 0 ? (
               <View style={styles.emptyRow}>
                 <Feather name="inbox" size={24} color={MUTED} />
@@ -480,10 +468,7 @@ export default function CoordinatorDashboard() {
                     <Text style={[styles.td, styles.colDate]}>
                       {fmtDate(r.surgery_date)}
                     </Text>
-                    <Text
-                      style={[styles.td, styles.colProc]}
-                      numberOfLines={1}
-                    >
+                    <Text style={[styles.td, styles.colProc]} numberOfLines={1}>
                       {r.procedure_type ?? "—"}
                     </Text>
                     <View style={styles.colStatus}>
@@ -539,10 +524,7 @@ export default function CoordinatorDashboard() {
         animationType="fade"
         onRequestClose={() => setViewing(null)}
       >
-        <Pressable
-          style={styles.modalScrim}
-          onPress={() => setViewing(null)}
-        >
+        <Pressable style={styles.modalScrim} onPress={() => setViewing(null)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <View style={styles.modalHead}>
               <Text style={styles.modalTitle}>Ride details</Text>
@@ -573,18 +555,16 @@ export default function CoordinatorDashboard() {
                       : "TBD"
                   }
                 />
-                <Row label="Driver" value={viewing.driver_name ?? "Unassigned"} />
                 <Row
-                  label="Vehicle"
-                  value={viewing.vehicle_type ?? "—"}
+                  label="Driver"
+                  value={viewing.driver_name ?? "Unassigned"}
                 />
+                <Row label="Vehicle" value={viewing.vehicle_type ?? "—"} />
                 <Row
                   label="Status"
-                  value={
-                    (viewing.status ?? "pending")
-                      .replace("_", " ")
-                      .toUpperCase()
-                  }
+                  value={(viewing.status ?? "pending")
+                    .replace("_", " ")
+                    .toUpperCase()}
                 />
                 <Row
                   label="Estimated cost"

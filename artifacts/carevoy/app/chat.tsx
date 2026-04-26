@@ -54,7 +54,10 @@ const QUICK_REPLIES = [
 ];
 
 function formatTime(d: Date): string {
-  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function getApiBase(): string {
@@ -229,7 +232,8 @@ export default function ChatScreen() {
         }
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to reach coordinator";
+      const msg =
+        e instanceof Error ? e.message : "Failed to reach coordinator";
       setError(msg);
     } finally {
       setSending(false);
@@ -318,7 +322,9 @@ export default function ChatScreen() {
 
           {sending && (
             <View style={[styles.bubbleRow, styles.rowLeft]}>
-              <View style={[styles.bubble, styles.aiBubble, styles.typingBubble]}>
+              <View
+                style={[styles.bubble, styles.aiBubble, styles.typingBubble]}
+              >
                 <Animated.View
                   style={[
                     styles.typingDot,
@@ -443,11 +449,20 @@ function BookingCard({
         <Text style={styles.bookTitle}>Booking summary</Text>
       </View>
       {data.surgery_date ? (
-        <Row label="Date" value={`${data.surgery_date} ${data.surgery_time ?? ""}`.trim()} />
+        <Row
+          label="Date"
+          value={`${data.surgery_date} ${data.surgery_time ?? ""}`.trim()}
+        />
       ) : null}
-      {data.hospital_name ? <Row label="Hospital" value={data.hospital_name} /> : null}
-      {data.procedure_type ? <Row label="Procedure" value={data.procedure_type} /> : null}
-      {data.needs_wheelchair ? <Row label="Mobility" value="Wheelchair vehicle" /> : null}
+      {data.hospital_name ? (
+        <Row label="Hospital" value={data.hospital_name} />
+      ) : null}
+      {data.procedure_type ? (
+        <Row label="Procedure" value={data.procedure_type} />
+      ) : null}
+      {data.needs_wheelchair ? (
+        <Row label="Mobility" value="Wheelchair vehicle" />
+      ) : null}
       {data.needs_companion ? <Row label="Companion" value="Yes" /> : null}
       {data.special_instructions ? (
         <Row label="Notes" value={data.special_instructions} />

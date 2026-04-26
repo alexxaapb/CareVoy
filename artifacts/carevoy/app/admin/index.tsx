@@ -1,6 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -14,7 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -156,7 +162,11 @@ export default function AdminDashboard() {
   const [activity, setActivity] = useState<Notif[]>([]);
   const [hospitals, setHospitals] = useState<HospitalStats[]>([]);
   const [partners, setPartners] = useState<NemtStats[]>([]);
-  const [revenue, setRevenue] = useState({ thisMonth: 0, lastMonth: 0, allTime: 0 });
+  const [revenue, setRevenue] = useState({
+    thisMonth: 0,
+    lastMonth: 0,
+    allTime: 0,
+  });
   const [viewing, setViewing] = useState<Ride | null>(null);
 
   const pulse = useRef(new Animated.Value(1)).current;
@@ -217,7 +227,11 @@ export default function AdminDashboard() {
         .eq("status", "pending"),
       supabase.from("hospitals").select("id, name, city, active"),
       supabase.from("nemt_partners").select("id, company_name, city, active"),
-      supabase.from("rides").select("id, hospital_id, nemt_partner_id, patient_id, pickup_time, status, created_at"),
+      supabase
+        .from("rides")
+        .select(
+          "id, hospital_id, nemt_partner_id, patient_id, pickup_time, status, created_at",
+        ),
       supabase.from("payments").select("amount, status, created_at"),
       supabase
         .from("notifications")
@@ -428,17 +442,42 @@ export default function AdminDashboard() {
 
           {/* 6 stat cards */}
           <View style={styles.statsRow}>
-            <StatCard label="Total Patients" value={stats.totalPatients} icon="users" color={WHITE} />
-            <StatCard label="Active Rides" value={stats.activeRides} icon="navigation" color={TEAL} />
-            <StatCard label="Today's Rides" value={stats.todayRides} icon="calendar" color={WHITE} />
+            <StatCard
+              label="Total Patients"
+              value={stats.totalPatients}
+              icon="users"
+              color={WHITE}
+            />
+            <StatCard
+              label="Active Rides"
+              value={stats.activeRides}
+              icon="navigation"
+              color={TEAL}
+            />
+            <StatCard
+              label="Today's Rides"
+              value={stats.todayRides}
+              icon="calendar"
+              color={WHITE}
+            />
             <StatCard
               label="This Month Revenue"
               value={fmtMoney(stats.monthRevenue)}
               icon="trending-up"
               color={TEAL}
             />
-            <StatCard label="Pending Notifications" value={stats.pendingNotifs} icon="bell" color={AMBER} />
-            <StatCard label="Facilities Active" value={stats.activeHospitals} icon="plus-square" color={WHITE} />
+            <StatCard
+              label="Pending Notifications"
+              value={stats.pendingNotifs}
+              icon="bell"
+              color={AMBER}
+            />
+            <StatCard
+              label="Facilities Active"
+              value={stats.activeHospitals}
+              icon="plus-square"
+              color={WHITE}
+            />
           </View>
 
           {/* Live rides + activity feed */}
@@ -458,11 +497,16 @@ export default function AdminDashboard() {
                   <Text style={[styles.th, styles.cAct]}>Action</Text>
                 </View>
                 {loading ? (
-                  <ActivityIndicator color={TEAL} style={{ marginVertical: 28 }} />
+                  <ActivityIndicator
+                    color={TEAL}
+                    style={{ marginVertical: 28 }}
+                  />
                 ) : liveRides.length === 0 ? (
                   <View style={styles.empty}>
                     <Feather name="moon" size={22} color={MUTED} />
-                    <Text style={styles.emptyText}>No active rides right now.</Text>
+                    <Text style={styles.emptyText}>
+                      No active rides right now.
+                    </Text>
                   </View>
                 ) : (
                   liveRides.map((r) => (
@@ -574,7 +618,10 @@ export default function AdminDashboard() {
           </View>
 
           {/* Hospitals */}
-          <SectionTitle title="Facilities" subtitle={`${hospitals.length} total`} />
+          <SectionTitle
+            title="Facilities"
+            subtitle={`${hospitals.length} total`}
+          />
           <View style={styles.tableWrap}>
             <View style={styles.tableHead}>
               <Text style={[styles.th, { flex: 2 }]}>Name</Text>
@@ -593,9 +640,15 @@ export default function AdminDashboard() {
                   <Text style={[styles.td, { flex: 2 }]} numberOfLines={1}>
                     {h.name ?? "—"}
                   </Text>
-                  <Text style={[styles.td, { flex: 1.2 }]}>{h.city ?? "—"}</Text>
-                  <Text style={[styles.td, { flex: 1 }]}>{h.activePatients}</Text>
-                  <Text style={[styles.td, { flex: 1 }]}>{h.ridesThisMonth}</Text>
+                  <Text style={[styles.td, { flex: 1.2 }]}>
+                    {h.city ?? "—"}
+                  </Text>
+                  <Text style={[styles.td, { flex: 1 }]}>
+                    {h.activePatients}
+                  </Text>
+                  <Text style={[styles.td, { flex: 1 }]}>
+                    {h.ridesThisMonth}
+                  </Text>
                   <View style={{ flex: 0.8 }}>
                     <View
                       style={[
@@ -629,7 +682,10 @@ export default function AdminDashboard() {
           </View>
 
           {/* NEMT Partners */}
-          <SectionTitle title="NEMT Partners" subtitle={`${partners.length} total`} />
+          <SectionTitle
+            title="NEMT Partners"
+            subtitle={`${partners.length} total`}
+          />
           <View style={styles.tableWrap}>
             <View style={styles.tableHead}>
               <Text style={[styles.th, { flex: 2 }]}>Name</Text>
@@ -648,7 +704,9 @@ export default function AdminDashboard() {
                   <Text style={[styles.td, { flex: 2 }]} numberOfLines={1}>
                     {p.company_name ?? "—"}
                   </Text>
-                  <Text style={[styles.td, { flex: 1.2 }]}>{p.city ?? "—"}</Text>
+                  <Text style={[styles.td, { flex: 1.2 }]}>
+                    {p.city ?? "—"}
+                  </Text>
                   <Text style={[styles.td, { flex: 1 }]}>{p.totalRides}</Text>
                   <Text
                     style={[
@@ -669,21 +727,41 @@ export default function AdminDashboard() {
           </View>
 
           {/* Revenue */}
-          <SectionTitle title="Revenue Summary" subtitle="HSA / FSA / Card payments" />
+          <SectionTitle
+            title="Revenue Summary"
+            subtitle="HSA / FSA / Card payments"
+          />
           <View style={styles.revCard}>
-            <RevenueBar label="This Month" amount={revenue.thisMonth} max={revenueMax} color={TEAL} />
-            <RevenueBar label="Last Month" amount={revenue.lastMonth} max={revenueMax} color="#5B7290" />
+            <RevenueBar
+              label="This Month"
+              amount={revenue.thisMonth}
+              max={revenueMax}
+              color={TEAL}
+            />
+            <RevenueBar
+              label="Last Month"
+              amount={revenue.lastMonth}
+              max={revenueMax}
+              color="#5B7290"
+            />
             <View style={styles.revDivider} />
             <View style={styles.revAllTime}>
               <Text style={styles.revAllLabel}>Total all time</Text>
-              <Text style={styles.revAllValue}>{fmtMoney(revenue.allTime)}</Text>
+              <Text style={styles.revAllValue}>
+                {fmtMoney(revenue.allTime)}
+              </Text>
             </View>
           </View>
         </ScrollView>
       </View>
 
       {/* Modal */}
-      <Modal visible={!!viewing} transparent animationType="fade" onRequestClose={() => setViewing(null)}>
+      <Modal
+        visible={!!viewing}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewing(null)}
+      >
         <Pressable style={styles.modalScrim} onPress={() => setViewing(null)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <View style={styles.modalHead}>
@@ -694,13 +772,33 @@ export default function AdminDashboard() {
             </View>
             {viewing ? (
               <View style={{ gap: 14 }}>
-                <ModalRow label="Patient" value={viewing.patients?.full_name ?? "—"} />
-                <ModalRow label="Facility" value={viewing.hospitals?.name ?? "—"} />
-                <ModalRow label="NEMT Partner" value={viewing.nemt_partners?.company_name ?? "Unassigned"} />
-                <ModalRow label="Pickup time" value={fmtPickup(viewing.pickup_time)} />
-                <ModalRow label="Driver" value={viewing.driver_name ?? "Unassigned"} />
+                <ModalRow
+                  label="Patient"
+                  value={viewing.patients?.full_name ?? "—"}
+                />
+                <ModalRow
+                  label="Facility"
+                  value={viewing.hospitals?.name ?? "—"}
+                />
+                <ModalRow
+                  label="NEMT Partner"
+                  value={viewing.nemt_partners?.company_name ?? "Unassigned"}
+                />
+                <ModalRow
+                  label="Pickup time"
+                  value={fmtPickup(viewing.pickup_time)}
+                />
+                <ModalRow
+                  label="Driver"
+                  value={viewing.driver_name ?? "Unassigned"}
+                />
                 <ModalRow label="Vehicle" value={viewing.vehicle_type ?? "—"} />
-                <ModalRow label="Status" value={(viewing.status ?? "pending").replace("_", " ").toUpperCase()} />
+                <ModalRow
+                  label="Status"
+                  value={(viewing.status ?? "pending")
+                    .replace("_", " ")
+                    .toUpperCase()}
+                />
                 <ModalRow
                   label="Estimated cost"
                   value={
@@ -742,7 +840,13 @@ function StatCard({
   );
 }
 
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionTitle({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) {
   return (
     <View style={styles.sectionTitleRow}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -767,7 +871,9 @@ function RevenueBar({
     <View style={styles.revRow}>
       <Text style={styles.revLabel}>{label}</Text>
       <View style={styles.revTrack}>
-        <View style={[styles.revFill, { width: `${pct}%`, backgroundColor: color }]} />
+        <View
+          style={[styles.revFill, { width: `${pct}%`, backgroundColor: color }]}
+        />
       </View>
       <Text style={styles.revValue}>{fmtMoney(amount)}</Text>
     </View>
@@ -795,7 +901,12 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     justifyContent: "space-between",
   },
-  brand: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 32 },
+  brand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 32,
+  },
   logoMark: {
     width: 36,
     height: 36,
@@ -804,8 +915,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  logoMarkText: { color: NAVY, fontSize: 18, fontWeight: "800", fontFamily: "Inter_700Bold" },
-  logoWord: { color: WHITE, fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  logoMarkText: {
+    color: NAVY,
+    fontSize: 18,
+    fontWeight: "800",
+    fontFamily: "Inter_700Bold",
+  },
+  logoWord: {
+    color: WHITE,
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
   navList: { gap: 4, flex: 1 },
   navItem: {
     flexDirection: "row",
@@ -817,7 +938,11 @@ const styles = StyleSheet.create({
   },
   navItemActive: { backgroundColor: "rgba(0,194,168,0.12)" },
   navText: { color: MUTED, fontSize: 14, fontFamily: "Inter_500Medium" },
-  navTextActive: { color: TEAL, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
+  navTextActive: {
+    color: TEAL,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
   sidebarFoot: { borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 16 },
   adminBadge: {
     flexDirection: "row",
@@ -837,7 +962,12 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: 1,
   },
-  signOutBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8 },
+  signOutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+  },
   signOutText: { color: MUTED, fontSize: 13, fontFamily: "Inter_500Medium" },
   main: { flex: 1, backgroundColor: NAVY },
   mainContent: { padding: 32, gap: 24 },
@@ -851,7 +981,13 @@ const styles = StyleSheet.create({
   },
   headerSubRow: { flexDirection: "row", alignItems: "center", marginTop: 6 },
   headerSub: { color: MUTED, fontSize: 14, fontFamily: "Inter_400Regular" },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: GREEN, marginRight: 6 },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: GREEN,
+    marginRight: 6,
+  },
   liveText: {
     color: GREEN,
     fontSize: 13,
@@ -899,7 +1035,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
   },
-  sectionSubtitle: { color: MUTED, fontSize: 12, fontFamily: "Inter_400Regular" },
+  sectionSubtitle: {
+    color: MUTED,
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+  },
   tableWrap: {
     backgroundColor: CARD,
     borderRadius: 14,

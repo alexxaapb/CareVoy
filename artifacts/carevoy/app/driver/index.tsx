@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -77,7 +77,11 @@ function statusMeta(status: string | null) {
     case "pending":
       return { label: "Pending", color: AMBER, bg: "rgba(245,165,36,0.15)" };
     default:
-      return { label: status ?? "—", color: MUTED, bg: "rgba(138,147,166,0.15)" };
+      return {
+        label: status ?? "—",
+        color: MUTED,
+        bg: "rgba(138,147,166,0.15)",
+      };
   }
 }
 
@@ -247,9 +251,7 @@ export default function DriverHomeScreen() {
         ) : rides.length === 0 ? (
           <View style={styles.emptyCard}>
             <Feather name="calendar" size={28} color={MUTED} />
-            <Text style={styles.emptyText}>
-              No assigned rides for today.
-            </Text>
+            <Text style={styles.emptyText}>No assigned rides for today.</Text>
           </View>
         ) : (
           rides.map((r) => {
@@ -259,9 +261,14 @@ export default function DriverHomeScreen() {
               <View key={r.id} style={styles.card}>
                 <View style={styles.cardTop}>
                   <Text style={styles.time}>{formatTime(r.pickup_time)}</Text>
-                  <View style={[styles.statusPill, { backgroundColor: meta.bg }]}>
+                  <View
+                    style={[styles.statusPill, { backgroundColor: meta.bg }]}
+                  >
                     <View
-                      style={[styles.statusDot, { backgroundColor: meta.color }]}
+                      style={[
+                        styles.statusDot,
+                        { backgroundColor: meta.color },
+                      ]}
                     />
                     <Text style={[styles.statusText, { color: meta.color }]}>
                       {meta.label}

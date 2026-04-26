@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -98,12 +98,7 @@ export default function CompleteScreen() {
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        <Animated.View
-          style={[
-            styles.checkWrap,
-            { transform: [{ scale }] },
-          ]}
-        >
+        <Animated.View style={[styles.checkWrap, { transform: [{ scale }] }]}>
           <View style={styles.checkRing}>
             <Feather name="check" size={56} color={WHITE} />
           </View>

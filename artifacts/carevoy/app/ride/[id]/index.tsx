@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -98,10 +98,7 @@ const TIMELINE_STEPS = [
   { key: "completed", label: "Dropped off" },
 ];
 
-function statusToProgress(
-  status: string | null,
-  hasDriver: boolean,
-): number {
+function statusToProgress(status: string | null, hasDriver: boolean): number {
   switch (status) {
     case "completed":
       return 6;
@@ -300,7 +297,9 @@ export default function RideDetailScreen() {
               </Text>
             </View>
             <View style={[styles.statusPill, { backgroundColor: meta.bg }]}>
-              <View style={[styles.statusDot, { backgroundColor: meta.color }]} />
+              <View
+                style={[styles.statusDot, { backgroundColor: meta.color }]}
+              />
               <Text style={[styles.statusPillText, { color: meta.color }]}>
                 {meta.label}
               </Text>
@@ -309,11 +308,11 @@ export default function RideDetailScreen() {
         </View>
 
         <Text style={styles.title}>
-          {ride.ride_type === "post_op" ? "Post-op Ride Home" : "Ride to Surgery"}
+          {ride.ride_type === "post_op"
+            ? "Post-op Ride Home"
+            : "Ride to Surgery"}
         </Text>
-        <Text style={styles.subtitle}>
-          {formatDateTime(ride.pickup_time)}
-        </Text>
+        <Text style={styles.subtitle}>{formatDateTime(ride.pickup_time)}</Text>
 
         {/* Timeline */}
         <View style={styles.section}>
@@ -486,8 +485,7 @@ export default function RideDetailScreen() {
                   style={[
                     styles.paymentStatusText,
                     {
-                      color:
-                        payment?.status === "completed" ? GREEN : AMBER,
+                      color: payment?.status === "completed" ? GREEN : AMBER,
                     },
                   ]}
                 >
@@ -540,10 +538,7 @@ export default function RideDetailScreen() {
                   pressed && styles.pressed,
                 ]}
                 onPress={() =>
-                  Alert.alert(
-                    "Receipt downloaded",
-                    "Saved to your device.",
-                  )
+                  Alert.alert("Receipt downloaded", "Saved to your device.")
                 }
               >
                 <Feather name="download" size={18} color={NAVY} />

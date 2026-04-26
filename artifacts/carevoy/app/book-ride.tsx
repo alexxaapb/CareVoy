@@ -30,11 +30,7 @@ const CARD = "#0E1A33";
 const BORDER = "#1B2A4A";
 const ERROR = "#FF6B6B";
 
-type FacilityType =
-  | "hospital"
-  | "assisted_living"
-  | "dialysis"
-  | "other";
+type FacilityType = "hospital" | "assisted_living" | "dialysis" | "other";
 
 const FACILITY_TYPE_OPTIONS: { value: FacilityType; label: string }[] = [
   { value: "hospital", label: "Hospital / Surgical Center" },
@@ -98,7 +94,8 @@ function matchHospital(name: string | undefined): string | null {
   if (target.includes("davita")) return "DaVita Westerville";
   if (target.includes("fresenius")) return "Fresenius Kidney Care Columbus";
   if (target.includes("renal")) return "US Renal Care Columbus";
-  if (target.includes("brookdale")) return "Brookdale Columbus (Assisted Living)";
+  if (target.includes("brookdale"))
+    return "Brookdale Columbus (Assisted Living)";
   if (target.includes("sunrise")) return "Sunrise Senior Living Columbus";
   if (target.includes("danbury")) return "Danbury Senior Living Columbus";
   if (target.includes("gables")) return "The Gables of Westerville";
@@ -107,7 +104,11 @@ function matchHospital(name: string | undefined): string | null {
 }
 
 function inferFacilityType(name: string): FacilityType {
-  for (const t of ["hospital", "assisted_living", "dialysis"] as FacilityType[]) {
+  for (const t of [
+    "hospital",
+    "assisted_living",
+    "dialysis",
+  ] as FacilityType[]) {
     if (FACILITIES_BY_TYPE[t].includes(name)) return t;
   }
   return "other";
@@ -275,7 +276,8 @@ export default function BookRideScreen() {
     if (!hospital) return "Please select a destination facility";
     if (hospital.startsWith("Other") && !hospitalCustom.trim())
       return "Please type the facility name";
-    if (!procedureType.trim()) return "Please enter the procedure or visit type";
+    if (!procedureType.trim())
+      return "Please enter the procedure or visit type";
     return null;
   };
 
@@ -286,7 +288,8 @@ export default function BookRideScreen() {
 
   const next = () => {
     setError(null);
-    const err = step === 1 ? validateStep1() : step === 2 ? validateStep2() : null;
+    const err =
+      step === 1 ? validateStep1() : step === 2 ? validateStep2() : null;
     if (err) {
       setError(err);
       return;
@@ -567,13 +570,11 @@ export default function BookRideScreen() {
 
               <Text style={styles.label}>Ride type</Text>
               <View style={styles.toggleRow}>
-                {(
-                  [
-                    { v: "pre_op" as RideType, label: "Pre-op" },
-                    { v: "post_op" as RideType, label: "Post-op" },
-                    { v: "both" as RideType, label: "Both" },
-                  ]
-                ).map((opt) => (
+                {[
+                  { v: "pre_op" as RideType, label: "Pre-op" },
+                  { v: "post_op" as RideType, label: "Post-op" },
+                  { v: "both" as RideType, label: "Both" },
+                ].map((opt) => (
                   <Pressable
                     key={opt.v}
                     style={[
@@ -630,7 +631,10 @@ export default function BookRideScreen() {
                 Double check everything before booking.
               </Text>
 
-              <SummaryRow label="Surgery" value={`${formatDate(surgeryDate)} • ${formatTime(surgeryTime)}`} />
+              <SummaryRow
+                label="Surgery"
+                value={`${formatDate(surgeryDate)} • ${formatTime(surgeryTime)}`}
+              />
               <SummaryRow label="Destination" value={finalHospitalName()} />
               <SummaryRow label="Procedure" value={procedureType} />
               <SummaryRow
@@ -700,10 +704,8 @@ export default function BookRideScreen() {
                   <Feather name="plus-circle" size={18} color={TEAL} />
                   <Text style={styles.addCardText}>
                     Add{" "}
-                    {paymentMethod === "hsa_fsa"
-                      ? "HSA/FSA card"
-                      : "a card"}{" "}
-                    to continue
+                    {paymentMethod === "hsa_fsa" ? "HSA/FSA card" : "a card"} to
+                    continue
                   </Text>
                   <Feather name="chevron-right" size={18} color={TEAL} />
                 </Pressable>
@@ -730,12 +732,14 @@ export default function BookRideScreen() {
                 your driver shortly and you&apos;ll get a text when they&apos;re
                 on the way.
               </Text>
-              {(paymentMethod === "hsa_fsa" ? hsaCardOnFile : stdCardOnFile) && (
+              {(paymentMethod === "hsa_fsa"
+                ? hsaCardOnFile
+                : stdCardOnFile) && (
                 <View style={styles.chargeBox}>
                   <Feather name="credit-card" size={18} color={TEAL} />
                   <Text style={styles.chargeText}>
-                    Your{" "}
-                    {paymentMethod === "hsa_fsa" ? "HSA/FSA" : "card"} ending in{" "}
+                    Your {paymentMethod === "hsa_fsa" ? "HSA/FSA" : "card"}{" "}
+                    ending in{" "}
                     {paymentMethod === "hsa_fsa"
                       ? hsaCardOnFile
                       : stdCardOnFile}{" "}
@@ -744,9 +748,7 @@ export default function BookRideScreen() {
                       ${rideType === "both" ? "110" : "55"}
                     </Text>{" "}
                     after your ride completes.
-                    {receiptEmail
-                      ? ` Receipt sent to ${receiptEmail}.`
-                      : ""}
+                    {receiptEmail ? ` Receipt sent to ${receiptEmail}.` : ""}
                   </Text>
                 </View>
               )}
@@ -880,9 +882,7 @@ function PaymentOption({
       style={[styles.payOpt, active && styles.payOptActive]}
       onPress={onPress}
     >
-      <View
-        style={[styles.payIcon, active && { backgroundColor: TEAL }]}
-      >
+      <View style={[styles.payIcon, active && { backgroundColor: TEAL }]}>
         <Feather name={icon} size={18} color={active ? NAVY : TEAL} />
       </View>
       <View style={{ flex: 1 }}>

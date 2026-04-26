@@ -1,6 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Animated,
   Easing,
@@ -12,7 +18,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -139,10 +145,14 @@ export default function TrackRideScreen() {
   const region = {
     latitude: (driverPos.latitude + pickup.latitude) / 2,
     longitude: (driverPos.longitude + pickup.longitude) / 2,
-    latitudeDelta:
-      Math.max(0.01, Math.abs(driverPos.latitude - pickup.latitude) * 2.2),
-    longitudeDelta:
-      Math.max(0.01, Math.abs(driverPos.longitude - pickup.longitude) * 2.2),
+    latitudeDelta: Math.max(
+      0.01,
+      Math.abs(driverPos.latitude - pickup.latitude) * 2.2,
+    ),
+    longitudeDelta: Math.max(
+      0.01,
+      Math.abs(driverPos.longitude - pickup.longitude) * 2.2,
+    ),
   };
 
   return (
@@ -209,10 +219,7 @@ export default function TrackRideScreen() {
       <SafeAreaView style={styles.topSafe} edges={["top"]}>
         <Pressable
           onPress={() => router.back()}
-          style={({ pressed }) => [
-            styles.backBtn,
-            pressed && { opacity: 0.7 },
-          ]}
+          style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
           hitSlop={10}
         >
           <Feather name="arrow-left" size={22} color={WHITE} />
