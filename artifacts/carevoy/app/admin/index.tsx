@@ -17,6 +17,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -168,6 +169,13 @@ export default function AdminDashboard() {
     allTime: 0,
   });
   const [viewing, setViewing] = useState<Ride | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
+  const { width: winWidth } = useWindowDimensions();
+  const isMobile = winWidth < 900;
+  const onNavSelect = useCallback((key: string) => {
+    setActiveNav(key);
+    setNavOpen(false);
+  }, []);
 
   const pulse = useRef(new Animated.Value(1)).current;
 
@@ -370,67 +378,86 @@ export default function AdminDashboard() {
 
   const revenueMax = Math.max(revenue.thisMonth, revenue.lastMonth, 1);
 
+  const sidebarInner = (
+    <>
+      <View style={styles.brand}>
+        <View style={styles.logoMark}>
+          <Text style={styles.logoMarkText}>C</Text>
+        </View>
+        <Text style={styles.logoWord}>CareVoy</Text>
+      </View>
+      <View style={styles.navList}>
+        {NAV_ITEMS.map((item) => {
+          const active = activeNav === item.key;
+          return (
+            <Pressable
+              key={item.key}
+              onPress={() => onNavSelect(item.key)}
+              style={({ pressed }) => [
+                styles.navItem,
+                active && styles.navItemActive,
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <Feather
+                name={item.icon}
+                size={18}
+                color={active ? TEAL : MUTED}
+              />
+              <Text style={[styles.navText, active && styles.navTextActive]}>
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={styles.sidebarFoot}>
+        <View style={styles.adminBadge}>
+          <Feather name="shield" size={12} color={NAVY} />
+          <Text style={styles.adminBadgeText}>ADMIN</Text>
+        </View>
+        <Pressable
+          onPress={signOut}
+          style={({ pressed }) => [
+            styles.signOutBtn,
+            pressed && { opacity: 0.8 },
+          ]}
+        >
+          <Feather name="log-out" size={16} color={MUTED} />
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </Pressable>
+      </View>
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.shell}>
-        {/* Sidebar */}
-        <View style={styles.sidebar}>
-          <View style={styles.brand}>
-            <View style={styles.logoMark}>
-              <Text style={styles.logoMarkText}>C</Text>
-            </View>
-            <Text style={styles.logoWord}>CareVoy</Text>
-          </View>
-          <View style={styles.navList}>
-            {NAV_ITEMS.map((item) => {
-              const active = activeNav === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setActiveNav(item.key)}
-                  style={({ pressed }) => [
-                    styles.navItem,
-                    active && styles.navItemActive,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                >
-                  <Feather
-                    name={item.icon}
-                    size={18}
-                    color={active ? TEAL : MUTED}
-                  />
-                  <Text
-                    style={[styles.navText, active && styles.navTextActive]}
-                  >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <View style={styles.sidebarFoot}>
-            <View style={styles.adminBadge}>
-              <Feather name="shield" size={12} color={NAVY} />
-              <Text style={styles.adminBadgeText}>ADMIN</Text>
-            </View>
-            <Pressable
-              onPress={signOut}
-              style={({ pressed }) => [
-                styles.signOutBtn,
-                pressed && { opacity: 0.8 },
-              ]}
-            >
-              <Feather name="log-out" size={16} color={MUTED} />
-              <Text style={styles.signOutText}>Sign Out</Text>
-            </Pressable>
-          </View>
-        </View>
+        {!isMobile && <View style={styles.sidebar}>{sidebarInner}</View>}
 
         {/* Main */}
         <ScrollView
           style={styles.main}
           contentContainerStyle={styles.mainContent}
         >
+          {isMobile && (
+            <View style={styles.mobileBar}>
+              <Pressable
+                onPress={() => setNavOpen(true)}
+                hitSlop={10}
+                style={styles.menuBtn}
+              >
+                <Feather name="menu" size={24} color={WHITE} />
+              </Pressable>
+              <View style={styles.mobileBrand}>
+                <View style={styles.mobileLogo}>
+                  <Text style={styles.mobileLogoText}>C</Text>
+                </View>
+                <Text style={styles.mobileBrandText}>CareVoy</Text>
+              </View>
+              <View style={{ width: 24 }} />
+            </View>
+          )}
           <View style={styles.headerBlock}>
             <Text style={styles.headerTitle}>CareVoy Command Center</Text>
             <View style={styles.headerSubRow}>
@@ -814,6 +841,30 @@ export default function AdminDashboard() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {isMobile && (
+        <Modal
+          visible={navOpen}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setNavOpen(false)}
+        >
+          <Pressable
+            style={styles.drawerBackdrop}
+            onPress={() => setNavOpen(false)}
+          />
+          <View style={[styles.sidebar, styles.drawer]}>
+            <Pressable
+              style={styles.drawerClose}
+              onPress={() => setNavOpen(false)}
+              hitSlop={10}
+            >
+              <Feather name="x" size={22} color={WHITE} />
+            </Pressable>
+            {sidebarInner}
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -970,7 +1021,55 @@ const styles = StyleSheet.create({
   },
   signOutText: { color: MUTED, fontSize: 13, fontFamily: "Inter_500Medium" },
   main: { flex: 1, backgroundColor: NAVY },
-  mainContent: { padding: 32, gap: 24 },
+  mainContent: { padding: 20, gap: 24 },
+  mobileBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: 8,
+    marginBottom: 4,
+  },
+  menuBtn: { padding: 4 },
+  mobileBrand: { flexDirection: "row", alignItems: "center", gap: 8 },
+  mobileLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: TEAL,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mobileLogoText: {
+    color: NAVY,
+    fontSize: 14,
+    fontWeight: "800",
+    fontFamily: "Inter_700Bold",
+  },
+  mobileBrandText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  drawerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  drawer: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 260,
+    paddingTop: 56,
+  },
+  drawerClose: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    padding: 6,
+    zIndex: 2,
+  },
   headerBlock: { marginBottom: 4 },
   headerTitle: {
     color: WHITE,

@@ -31,6 +31,9 @@ function normalizePhone(input: string): string {
   return "+" + digits;
 }
 
+const TEST_PHONE = "+15005550006";
+const TEST_OTP = "123456";
+
 export default function LoginScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("patient");
@@ -48,9 +51,19 @@ export default function LoginScreen() {
       setError("Enter a valid phone number");
       return;
     }
+    const normalized = normalizePhone(phone);
+    // Test-mode bypass: skip the SMS round-trip entirely for the dev
+    // sandbox number. We still call verifyOtp, which Supabase will
+    // accept because the matching test number/code pair must be
+    // configured in the Auth dashboard.
+    if (normalized === TEST_PHONE) {
+      setStep("code");
+      setCode(TEST_OTP);
+      return;
+    }
     setLoading(true);
     const { error: err } = await supabase.auth.signInWithOtp({
-      phone: normalizePhone(phone),
+      phone: normalized,
     });
     setLoading(false);
     if (err) {
@@ -118,7 +131,7 @@ export default function LoginScreen() {
               <Text style={styles.logoMarkText}>C</Text>
             </View>
             <Text style={styles.logoWord}>CareVoy</Text>
-            <Text style={styles.tagline}>Rides for surgery, simplified.</Text>
+            <Text style={styles.tagline}>Medical rides. HSA/FSA. Simplified.</Text>
           </View>
 
           <View style={styles.form}>

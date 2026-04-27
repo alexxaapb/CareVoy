@@ -104,7 +104,11 @@ export default function HomeScreen() {
         .limit(20),
     ]);
 
-    setName(profileRes.data?.full_name ?? null);
+    const meta = userData.user?.user_metadata as
+      | { full_name?: string; name?: string }
+      | undefined;
+    const fallback = meta?.full_name ?? meta?.name ?? null;
+    setName(profileRes.data?.full_name ?? fallback);
     setUpcoming((upcomingRes.data as unknown as Ride[]) ?? []);
     setPast((pastRes.data as unknown as Ride[]) ?? []);
   }, []);
