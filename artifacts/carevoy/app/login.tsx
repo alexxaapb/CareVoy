@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,10 +18,11 @@ import { supabase } from "../lib/supabase";
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const INPUT_BG = "#0E1A33";
-const BORDER = "#1B2A4A";
-const ERROR = "#FF6B6B";
+const MUTED = "#6B7280";
+const INPUT_BG = "#F8FAFC";
+const BORDER = "#E2E8F0";
+const ERROR = "#EF4444";
+const GOLD = "#F5A623";
 
 type Mode = "patient" | "staff";
 
@@ -127,11 +129,14 @@ export default function LoginScreen() {
       >
         <View style={styles.container}>
           <View style={styles.brand}>
-            <View style={styles.logoMark}>
-              <Text style={styles.logoMarkText}>C</Text>
-            </View>
-            <Text style={styles.logoWord}>CareVoy</Text>
-            <Text style={styles.tagline}>Medical rides. HSA/FSA. Simplified.</Text>
+            <Image
+              source={require("../assets/images/logo-motion.png")}
+              style={styles.logoImg}
+              resizeMode="contain"
+            />
+            <Text style={styles.tagline}>
+              Medical rides. HSA/FSA. Simplified.
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -292,42 +297,21 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   flex: { flex: 1 },
   container: {
     flex: 1,
     paddingHorizontal: 28,
     justifyContent: "space-between",
-    paddingTop: 60,
+    paddingTop: 40,
     paddingBottom: 40,
   },
-  brand: { alignItems: "center", marginTop: 40 },
-  logoMark: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: TEAL,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  logoMarkText: {
-    color: NAVY,
-    fontSize: 36,
-    fontWeight: "800",
-    fontFamily: "Inter_700Bold",
-  },
-  logoWord: {
-    color: WHITE,
-    fontSize: 32,
-    fontWeight: "700",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: -0.5,
-  },
+  brand: { alignItems: "center", marginTop: 24 },
+  logoImg: { width: 200, height: 140, marginBottom: 4 },
   tagline: {
     color: MUTED,
     fontSize: 15,
-    marginTop: 8,
+    marginTop: 4,
     fontFamily: "Inter_400Regular",
   },
   form: { width: "100%" },
@@ -355,7 +339,7 @@ const styles = StyleSheet.create({
   },
   tabTextActive: { color: NAVY },
   label: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -369,10 +353,12 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: INPUT_BG,
-    color: WHITE,
+    color: NAVY,
+    borderWidth: 1,
+    borderColor: BORDER,
     borderRadius: 14,
     paddingHorizontal: 18,
-    paddingVertical: 18,
+    paddingVertical: 16,
     fontSize: 17,
     fontFamily: "Inter_500Medium",
     marginBottom: 14,
@@ -389,8 +375,13 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: "center",
     marginTop: 4,
+    shadowColor: TEAL,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  buttonPressed: { opacity: 0.85 },
+  buttonPressed: { opacity: 0.9 },
   buttonText: {
     color: NAVY,
     fontSize: 17,

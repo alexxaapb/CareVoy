@@ -21,10 +21,10 @@ const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const GREEN = "#22C55E";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const AI_BUBBLE = "#0A1628";
-const BORDER = "#1B2A4A";
-const ERROR = "#FF6B6B";
+const MUTED = "#6B7280";
+const AI_BUBBLE = "#F1F5F9";
+const BORDER = "#E2E8F0";
+const ERROR = "#EF4444";
 
 type Role = "user" | "assistant";
 type Msg = {
@@ -254,7 +254,7 @@ export default function ChatScreen() {
       >
         <View style={styles.topBar}>
           <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Feather name="chevron-left" size={26} color={WHITE} />
+            <Feather name="chevron-left" size={26} color={NAVY} />
           </Pressable>
           <View style={{ flex: 1, alignItems: "center" }}>
             <Text style={styles.topTitle}>Care Coordinator</Text>
@@ -487,7 +487,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   flex: { flex: 1 },
   topBar: {
     flexDirection: "row",
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     borderBottomColor: BORDER,
   },
   topTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 17,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
   },
   bubbleText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 15,
     lineHeight: 21,
     fontFamily: "Inter_400Regular",
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
   },
   bookValue: {
     flex: 1,
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     fontFamily: "Inter_500Medium",
     textAlign: "right",
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
     borderTopColor: BORDER,
     paddingTop: 8,
     paddingBottom: 12,
-    backgroundColor: NAVY,
+    backgroundColor: WHITE,
   },
   chips: { paddingHorizontal: 12, gap: 8, paddingBottom: 8 },
   chip: {
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   chipText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     fontFamily: "Inter_500Medium",
   },
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     backgroundColor: AI_BUBBLE,
     borderWidth: 1,
     borderColor: BORDER,
-    color: WHITE,
+    color: NAVY,
     borderRadius: 22,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === "ios" ? 12 : 8,

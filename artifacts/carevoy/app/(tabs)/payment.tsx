@@ -15,16 +15,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const GREEN = "#22C55E";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
-const ERROR = "#FF6B6B";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
+const ERROR = "#EF4444";
 
 function formatCardNumber(input: string): string {
   const digits = input.replace(/\D/g, "").slice(0, 19);
@@ -368,11 +368,11 @@ export default function PaymentScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   flex: { flex: 1 },
   container: { padding: 24, paddingBottom: 40 },
   title: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 26,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   taxBadge: {
-    backgroundColor: NAVY,
+    backgroundColor: WHITE,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     lineHeight: 19,
     fontFamily: "Inter_400Regular",
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   },
 
   sectionLabel: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
   },
   fieldLabel: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 12,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -562,8 +562,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   input: {
-    backgroundColor: NAVY,
-    color: WHITE,
+    backgroundColor: WHITE,
+    color: NAVY,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: BORDER,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   toggleTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     flex: 1,
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontFamily: "Inter_500Medium",
   },
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: BORDER,
-    backgroundColor: NAVY,
+    backgroundColor: WHITE,
   },
   saveBtn: {
     backgroundColor: TEAL,

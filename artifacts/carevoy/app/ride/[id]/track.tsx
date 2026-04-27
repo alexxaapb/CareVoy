@@ -18,14 +18,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import {
+  MapView,
+  Marker,
+  Polyline,
+  PROVIDER_GOOGLE,
+} from "../../../lib/maps";
+import { supabase } from "../../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
 
 const COLUMBUS_PICKUP = { latitude: 39.9612, longitude: -82.9988 };
 const SIM_START_OFFSET = { dLat: 0.045, dLng: 0.06 };
@@ -45,22 +51,6 @@ type RideRow = {
 };
 
 type LatLng = { latitude: number; longitude: number };
-
-let MapView: any = null;
-let Marker: any = null;
-let Polyline: any = null;
-let PROVIDER_GOOGLE: any = undefined;
-if (Platform.OS !== "web") {
-  try {
-    const maps = require("react-native-maps");
-    MapView = maps.default;
-    Marker = maps.Marker;
-    Polyline = maps.Polyline;
-    PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
-  } catch {
-    MapView = null;
-  }
-}
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
@@ -222,7 +212,7 @@ export default function TrackRideScreen() {
           style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
           hitSlop={10}
         >
-          <Feather name="arrow-left" size={22} color={WHITE} />
+          <Feather name="arrow-left" size={22} color={NAVY} />
         </Pressable>
         <View style={styles.liveBadge}>
           <View style={styles.liveDot} />
@@ -277,47 +267,47 @@ export default function TrackRideScreen() {
 }
 
 const DARK_MAP_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#0E1A33" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#8A93A6" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#050D1F" }] },
+  { elementType: "geometry", stylers: [{ color: "#F1F5F9" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6B7280" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }] },
   {
     featureType: "road",
     elementType: "geometry",
-    stylers: [{ color: "#1B2A4A" }],
+    stylers: [{ color: "#FFFFFF" }],
   },
   {
     featureType: "road",
     elementType: "geometry.stroke",
-    stylers: [{ color: "#0E1A33" }],
+    stylers: [{ color: "#E2E8F0" }],
   },
   {
     featureType: "water",
     elementType: "geometry",
-    stylers: [{ color: "#050D1F" }],
+    stylers: [{ color: "#DBEAFE" }],
   },
   {
     featureType: "poi",
     elementType: "geometry",
-    stylers: [{ color: "#0E1A33" }],
+    stylers: [{ color: "#E2E8F0" }],
   },
   {
     featureType: "transit",
     elementType: "geometry",
-    stylers: [{ color: "#1B2A4A" }],
+    stylers: [{ color: "#E2E8F0" }],
   },
 ];
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: NAVY },
+  root: { flex: 1, backgroundColor: WHITE },
   mapFallback: {
-    backgroundColor: "#0A1428",
+    backgroundColor: "#F1F5F9",
     alignItems: "center",
     justifyContent: "center",
   },
   fallbackGrid: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "transparent",
-    borderColor: "#1B2A4A",
+    borderColor: "#E2E8F0",
     borderWidth: 0,
   },
   fallbackPin: {
@@ -360,22 +350,32 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "rgba(5,13,31,0.85)",
+    backgroundColor: WHITE,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: BORDER,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   liveBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(5,13,31,0.85)",
+    backgroundColor: WHITE,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: BORDER,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   liveDot: {
     width: 8,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EF4444",
   },
   liveText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 11,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sheetTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 18,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   driverName: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 15,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",

@@ -13,16 +13,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const GREEN = "#22C55E";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
-const AMBER = "#F5A524";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
+const AMBER = "#F5A623";
 const BLUE = "#3B82F6";
 
 const COLUMBUS = { lat: 39.9612, lng: -82.9988 };
@@ -382,7 +382,7 @@ function Badge({ icon, label }: { icon: string; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   container: { padding: 24, paddingBottom: 40 },
   headerRow: {
     flexDirection: "row",
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   title: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 24,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   patientName: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 17,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   rowText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     flex: 1,
     fontFamily: "Inter_400Regular",

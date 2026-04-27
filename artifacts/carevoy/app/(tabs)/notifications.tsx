@@ -11,17 +11,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const GREEN = "#22C55E";
 const AMBER = "#F59E0B";
-const RED = "#FF6B6B";
+const RED = "#EF4444";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
 
 type Notification = {
   id: string;
@@ -166,10 +166,10 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   container: { padding: 24, paddingBottom: 40 },
   title: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 26,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   message: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     lineHeight: 20,
     fontFamily: "Inter_500Medium",

@@ -14,18 +14,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
-const AMBER = "#F5A524";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
+const AMBER = "#F5A623";
 const GREEN = "#22C55E";
 const RED = "#EF4444";
-const SIDEBAR_BG = "#08111F";
+const SIDEBAR_BG = "#F8FAFC";
 
 type Coord = {
   full_name: string | null;
@@ -348,7 +348,7 @@ export default function CoordinatorDashboard() {
                 hitSlop={10}
                 style={styles.menuBtn}
               >
-                <Feather name="menu" size={24} color={WHITE} />
+                <Feather name="menu" size={24} color={NAVY} />
               </Pressable>
               <View style={styles.mobileBrand}>
                 <View style={styles.mobileLogo}>
@@ -373,7 +373,7 @@ export default function CoordinatorDashboard() {
             <StatCard
               label="Today's Surgeries"
               value={stats.todaySurgeries}
-              color={WHITE}
+              color={NAVY}
               icon="calendar"
             />
             <StatCard
@@ -391,7 +391,7 @@ export default function CoordinatorDashboard() {
             <StatCard
               label="This Month Total"
               value={monthCount}
-              color={WHITE}
+              color={NAVY}
               icon="trending-up"
             />
           </View>
@@ -642,7 +642,7 @@ export default function CoordinatorDashboard() {
               onPress={() => setNavOpen(false)}
               hitSlop={10}
             >
-              <Feather name="x" size={22} color={WHITE} />
+              <Feather name="x" size={22} color={NAVY} />
             </Pressable>
             {sidebarInner}
           </View>
@@ -720,7 +720,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   shell: { flex: 1, flexDirection: "row" },
   sidebar: {
     width: 240,
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   logoWord: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 20,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   hospName: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "Inter_500Medium",
   },
-  main: { flex: 1, backgroundColor: NAVY },
+  main: { flex: 1, backgroundColor: WHITE },
   mainContent: { padding: 20, gap: 24 },
   mobileBar: {
     flexDirection: "row",
@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   mobileBrandText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 16,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   },
   headerBlock: { marginBottom: 4 },
   headerTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 28,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bulkText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchInput: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontFamily: "Inter_400Regular",
     flex: 1,
@@ -1010,7 +1010,7 @@ const styles = StyleSheet.create({
     borderBottomColor: BORDER,
   },
   td: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontFamily: "Inter_400Regular",
   },
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
   colStatus: { flex: 1.2 },
   colAction: { flex: 1.2, alignItems: "flex-start" },
   patientName: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -1108,7 +1108,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   modalTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 18,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1127,7 +1127,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   modalValue: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   toastText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",

@@ -17,9 +17,9 @@ import { supabase } from "../../lib/supabase";
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
 
 type Ride = {
   id: string;
@@ -262,11 +262,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   container: { padding: 24, paddingBottom: 40 },
   header: { marginTop: 8, marginBottom: 28 },
   greeting: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 28,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   section: { marginBottom: 28 },
   sectionTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 18,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
   },
   cardTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cardLine: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     flex: 1,
     fontFamily: "Inter_400Regular",

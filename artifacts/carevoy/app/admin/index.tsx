@@ -21,18 +21,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
-const AMBER = "#F5A524";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
+const AMBER = "#F5A623";
 const GREEN = "#22C55E";
 const RED = "#EF4444";
-const SIDEBAR_BG = "#08111F";
+const SIDEBAR_BG = "#F8FAFC";
 
 const NAV_ITEMS = [
   { key: "overview", label: "Overview", icon: "home" as const },
@@ -447,7 +447,7 @@ export default function AdminDashboard() {
                 hitSlop={10}
                 style={styles.menuBtn}
               >
-                <Feather name="menu" size={24} color={WHITE} />
+                <Feather name="menu" size={24} color={NAVY} />
               </Pressable>
               <View style={styles.mobileBrand}>
                 <View style={styles.mobileLogo}>
@@ -473,7 +473,7 @@ export default function AdminDashboard() {
               label="Total Patients"
               value={stats.totalPatients}
               icon="users"
-              color={WHITE}
+              color={NAVY}
             />
             <StatCard
               label="Active Rides"
@@ -485,7 +485,7 @@ export default function AdminDashboard() {
               label="Today's Rides"
               value={stats.todayRides}
               icon="calendar"
-              color={WHITE}
+              color={NAVY}
             />
             <StatCard
               label="This Month Revenue"
@@ -503,7 +503,7 @@ export default function AdminDashboard() {
               label="Facilities Active"
               value={stats.activeHospitals}
               icon="plus-square"
-              color={WHITE}
+              color={NAVY}
             />
           </View>
 
@@ -859,7 +859,7 @@ export default function AdminDashboard() {
               onPress={() => setNavOpen(false)}
               hitSlop={10}
             >
-              <Feather name="x" size={22} color={WHITE} />
+              <Feather name="x" size={22} color={NAVY} />
             </Pressable>
             {sidebarInner}
           </View>
@@ -941,7 +941,7 @@ function ModalRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   shell: { flex: 1, flexDirection: "row" },
   sidebar: {
     width: 240,
@@ -973,7 +973,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   logoWord: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 20,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   signOutText: { color: MUTED, fontSize: 13, fontFamily: "Inter_500Medium" },
-  main: { flex: 1, backgroundColor: NAVY },
+  main: { flex: 1, backgroundColor: WHITE },
   mainContent: { padding: 20, gap: 24 },
   mobileBar: {
     flexDirection: "row",
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   mobileBrandText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 16,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1072,7 +1072,7 @@ const styles = StyleSheet.create({
   },
   headerBlock: { marginBottom: 4 },
   headerTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 28,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1129,7 +1129,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sectionTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 18,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1170,7 +1170,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },
-  td: { color: WHITE, fontSize: 13, fontFamily: "Inter_400Regular" },
+  td: { color: NAVY, fontSize: 13, fontFamily: "Inter_400Regular" },
   cPat: { flex: 1.6 },
   cHosp: { flex: 1.6 },
   cPart: { flex: 1.4 },
@@ -1234,7 +1234,7 @@ const styles = StyleSheet.create({
   },
   activityBody: { flex: 1 },
   activityMsg: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     fontFamily: "Inter_500Medium",
     lineHeight: 18,
@@ -1274,7 +1274,7 @@ const styles = StyleSheet.create({
   },
   revFill: { height: "100%", borderRadius: 6 },
   revValue: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1288,7 +1288,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   revAllLabel: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -1322,7 +1322,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   modalTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 18,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1337,7 +1337,7 @@ const styles = StyleSheet.create({
   },
   modalLabel: { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular" },
   modalValue: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",

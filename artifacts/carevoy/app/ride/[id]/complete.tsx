@@ -11,15 +11,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const GREEN = "#22C55E";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
 
 type RideRow = {
   id: string;
@@ -100,7 +100,7 @@ export default function CompleteScreen() {
       <View style={styles.container}>
         <Animated.View style={[styles.checkWrap, { transform: [{ scale }] }]}>
           <View style={styles.checkRing}>
-            <Feather name="check" size={56} color={WHITE} />
+            <Feather name="check" size={56} color={NAVY} />
           </View>
         </Animated.View>
 
@@ -162,7 +162,7 @@ export default function CompleteScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   container: {
     flex: 1,
     paddingHorizontal: 24,
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   title: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 26,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   ratingTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",

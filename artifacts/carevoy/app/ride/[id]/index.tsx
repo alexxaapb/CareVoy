@@ -13,15 +13,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
-const AMBER = "#F5A524";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
+const AMBER = "#F5A623";
 const BLUE = "#3B82F6";
 const GREEN = "#22C55E";
 
@@ -260,7 +260,7 @@ export default function RideDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.topBar}>
           <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Feather name="arrow-left" size={24} color={WHITE} />
+            <Feather name="arrow-left" size={24} color={NAVY} />
           </Pressable>
         </View>
         <View style={styles.loading}>
@@ -288,7 +288,7 @@ export default function RideDetailScreen() {
             hitSlop={12}
             style={({ pressed }) => pressed && styles.pressed}
           >
-            <Feather name="arrow-left" size={24} color={WHITE} />
+            <Feather name="arrow-left" size={24} color={NAVY} />
           </Pressable>
           <View style={styles.badgeRow}>
             <View style={styles.typePill}>
@@ -605,7 +605,7 @@ function ReceiptLine({
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   container: { padding: 24, paddingBottom: 48 },
   loading: { flex: 1, alignItems: "center", justifyContent: "center" },
   topBar: {
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   typePillText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 11,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.75 },
   title: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 26,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
   },
   section: { marginBottom: 24 },
   sectionTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   lineIdle: { backgroundColor: BORDER },
   timelineBody: { flex: 1, paddingBottom: 18 },
   timelineLabel: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   detailValue: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
     fontWeight: "600",
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   driverName: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 16,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   paymentAmount: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 26,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   receiptTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 15,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   receiptValue: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",

@@ -9,7 +9,7 @@ import { supabase } from "../lib/supabase";
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
+const MUTED = "#6B7280";
 
 export default function ComingSoonScreen() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function ComingSoonScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   container: {
     flex: 1,
     alignItems: "center",
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 24,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",

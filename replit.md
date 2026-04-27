@@ -25,3 +25,20 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## CareVoy Mobile App
+
+Located at `artifacts/carevoy/`. Expo React Native app (web + iOS + Android).
+
+**Theme**: white surfaces with navy text, teal primary, gold accent.
+- Tokens in `lib/theme.ts` and `constants/colors.ts` (must stay in sync).
+- App locked to light mode via `app.json` `userInterfaceStyle: "light"`.
+- Colors: BG `#FFFFFF`, text `#050D1F`, muted `#6B7280`, primary teal `#00C2A8`, accent gold `#F5A623`, card `#F8FAFC`, border `#E2E8F0`.
+
+**Brand logo**: `assets/images/logo-motion.png` (used on login screen).
+
+**Backend**: Supabase + Replit api-server (`artifacts/api-server`).
+
+**Module conventions**:
+- Single Supabase client at `lib/supabase.js` — depth-correct relative imports only (no shim copies in `app/`).
+- `react-native-maps` is web-incompatible — always import via `lib/maps` (resolves to `maps.native.ts` on iOS/Android, `maps.web.ts` on web). `lib/maps.d.ts` provides TS types.

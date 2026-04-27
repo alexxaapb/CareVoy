@@ -21,9 +21,9 @@ import { supabase } from "../lib/supabase";
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const INPUT_BG = "#0E1A33";
-const ERROR = "#FF6B6B";
+const MUTED = "#6B7280";
+const INPUT_BG = "#F8FAFC";
+const ERROR = "#EF4444";
 
 function formatDate(d: Date | null): string {
   if (!d) return "Select date";
@@ -178,12 +178,12 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   flex: { flex: 1 },
   container: { padding: 28, paddingTop: 40, paddingBottom: 40 },
   header: { marginBottom: 32, marginTop: 16 },
   title: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 28,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   form: { width: "100%" },
   label: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: INPUT_BG,
-    color: WHITE,
+    color: NAVY,
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 16,
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
   },
   multiline: { minHeight: 72, textAlignVertical: "top", paddingTop: 16 },
-  dateText: { color: WHITE, fontSize: 16, fontFamily: "Inter_500Medium" },
+  dateText: { color: NAVY, fontSize: 16, fontFamily: "Inter_500Medium" },
   placeholder: { color: MUTED },
   pickerWrap: {
     backgroundColor: INPUT_BG,

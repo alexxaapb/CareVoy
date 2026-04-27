@@ -25,10 +25,10 @@ import { supabase } from "../lib/supabase";
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
 const WHITE = "#FFFFFF";
-const MUTED = "#8A93A6";
-const CARD = "#0E1A33";
-const BORDER = "#1B2A4A";
-const ERROR = "#FF6B6B";
+const MUTED = "#6B7280";
+const CARD = "#F8FAFC";
+const BORDER = "#E2E8F0";
+const ERROR = "#EF4444";
 
 type FacilityType = "hospital" | "assisted_living" | "dialysis" | "other";
 
@@ -402,7 +402,7 @@ export default function BookRideScreen() {
         <View style={styles.topBar}>
           {step !== 4 ? (
             <Pressable onPress={back} hitSlop={12}>
-              <Feather name="chevron-left" size={26} color={WHITE} />
+              <Feather name="chevron-left" size={26} color={NAVY} />
             </Pressable>
           ) : (
             <View style={{ width: 26 }} />
@@ -897,7 +897,7 @@ function PaymentOption({
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: NAVY },
+  safe: { flex: 1, backgroundColor: WHITE },
   flex: { flex: 1 },
   topBar: {
     flexDirection: "row",
@@ -908,7 +908,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   topTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 17,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -947,7 +947,7 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   successTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 24,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
   },
   container: { padding: 24, paddingBottom: 24 },
   stepTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 24,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   label: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
   },
   textOnly: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 16,
     fontFamily: "Inter_500Medium",
   },
@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
     color: NAVY,
   },
   multiline: { minHeight: 60, textAlignVertical: "top", paddingTop: 14 },
-  inputText: { color: WHITE, fontSize: 16, fontFamily: "Inter_500Medium" },
+  inputText: { color: NAVY, fontSize: 16, fontFamily: "Inter_500Medium" },
   placeholder: { color: MUTED },
   doneBtn: { alignSelf: "flex-end", paddingVertical: 6, paddingHorizontal: 4 },
   doneBtnText: {
@@ -1050,7 +1050,7 @@ const styles = StyleSheet.create({
   },
   toggleActive: { backgroundColor: TEAL, borderColor: TEAL },
   toggleText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -1072,7 +1072,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   checkBoxOn: { backgroundColor: TEAL, borderColor: TEAL },
-  checkLabel: { color: WHITE, fontSize: 15, fontFamily: "Inter_500Medium" },
+  checkLabel: { color: NAVY, fontSize: 15, fontFamily: "Inter_500Medium" },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1088,7 +1088,7 @@ const styles = StyleSheet.create({
     width: 110,
   },
   summaryValue: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontFamily: "Inter_500Medium",
     flex: 1,
@@ -1106,7 +1106,7 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
   },
   estimateLabel: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
   },
@@ -1143,7 +1143,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   payTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
@@ -1205,7 +1205,7 @@ const styles = StyleSheet.create({
   },
   chargeText: {
     flex: 1,
-    color: WHITE,
+    color: NAVY,
     fontSize: 13,
     lineHeight: 19,
     fontFamily: "Inter_400Regular",
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalSheet: {
-    backgroundColor: NAVY,
+    backgroundColor: WHITE,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     padding: 20,
@@ -1256,7 +1256,7 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
   },
   modalTitle: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 18,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
@@ -1271,7 +1271,7 @@ const styles = StyleSheet.create({
     borderBottomColor: BORDER,
   },
   modalRowText: {
-    color: WHITE,
+    color: NAVY,
     fontSize: 15,
     fontFamily: "Inter_500Medium",
     flex: 1,
