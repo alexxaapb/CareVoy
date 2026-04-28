@@ -30,9 +30,6 @@ function normalizePhone(input: string): string {
   return "+" + digits;
 }
 
-const TEST_PHONE = "+15005550006";
-const TEST_OTP = "123456";
-
 export default function LoginScreen() {
   const router = useRouter();
   const [step, setStep] = useState<"phone" | "code">("phone");
@@ -48,11 +45,6 @@ export default function LoginScreen() {
       return;
     }
     const normalized = normalizePhone(phone);
-    if (normalized === TEST_PHONE) {
-      setStep("code");
-      setCode(TEST_OTP);
-      return;
-    }
     setLoading(true);
     const { error: err } = await supabase.auth.signInWithOtp({
       phone: normalized,
