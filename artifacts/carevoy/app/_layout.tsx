@@ -8,7 +8,13 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -28,6 +34,18 @@ type AuthState = {
   onboarded: boolean | null;
 };
 
+type AuthContextValue = {
+  refresh: () => Promise<void>;
+};
+
+const AuthRefreshContext = createContext<AuthContextValue>({
+  refresh: async () => {},
+});
+
+export function useAuthRefresh() {
+  return useContext(AuthRefreshContext);
+}
+
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
@@ -38,7 +56,7 @@ function RootLayoutNav() {
   });
   const [ready, setReady] = useState(false);
 
-  const refreshFromUser = async (userId: string | null) => {
+  const refreshFromUser = useCallback(async (userId: string | null) => {
     if (!userId) {
       setAuth({ userId: null, role: "unknown", onboarded: null });
       return;
@@ -73,7 +91,12 @@ function RootLayoutNav() {
     } else {
       setAuth({ userId, role: "patient", onboarded: false });
     }
-  };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    await refreshFromUser(data.session?.user.id ?? null);
+  }, [refreshFromUser]);
 
   useEffect(() => {
     (async () => {
@@ -87,7 +110,7 @@ function RootLayoutNav() {
     return () => {
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [refreshFromUser]);
 
   useEffect(() => {
     if (!ready) return;
@@ -137,19 +160,21 @@ function RootLayoutNav() {
   }, [ready, auth, segments, router]);
 
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="partners" options={{ headerShown: false }} />
-      <Stack.Screen name="settings" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="book-ride" options={{ headerShown: false }} />
-      <Stack.Screen name="chat" options={{ headerShown: false }} />
-      <Stack.Screen name="driver" options={{ headerShown: false }} />
-      <Stack.Screen name="coordinator" options={{ headerShown: false }} />
-      <Stack.Screen name="admin" options={{ headerShown: false }} />
-      <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
-    </Stack>
+    <AuthRefreshContext.Provider value={{ refresh }}>
+      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="partners" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="book-ride" options={{ headerShown: false }} />
+        <Stack.Screen name="chat" options={{ headerShown: false }} />
+        <Stack.Screen name="driver" options={{ headerShown: false }} />
+        <Stack.Screen name="coordinator" options={{ headerShown: false }} />
+        <Stack.Screen name="admin" options={{ headerShown: false }} />
+        <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
+      </Stack>
+    </AuthRefreshContext.Provider>
   );
 }
 

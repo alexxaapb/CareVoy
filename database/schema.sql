@@ -21,8 +21,22 @@ create table if not exists public.patients (
   date_of_birth date,
   hsa_fsa_card_token text,
   stripe_customer_id text,
-  onboarding_complete boolean not null default false
+  onboarding_complete boolean not null default false,
+  emergency_contact_name text,
+  emergency_contact_phone text,
+  default_mobility_needs text,
+  preferred_language text not null default 'en',
+  referral_source text
 );
+
+-- Migration: add the columns above to an existing patients table.
+-- Safe to re-run; uses IF NOT EXISTS.
+alter table public.patients
+  add column if not exists emergency_contact_name text,
+  add column if not exists emergency_contact_phone text,
+  add column if not exists default_mobility_needs text,
+  add column if not exists preferred_language text not null default 'en',
+  add column if not exists referral_source text;
 
 -- 2. hospitals
 create table if not exists public.hospitals (
