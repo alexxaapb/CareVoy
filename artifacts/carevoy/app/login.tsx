@@ -22,9 +22,6 @@ const MUTED = "#6B7280";
 const INPUT_BG = "#F8FAFC";
 const BORDER = "#E2E8F0";
 const ERROR = "#EF4444";
-const GOLD = "#F5A623";
-
-type Mode = "patient" | "staff";
 
 function normalizePhone(input: string): string {
   const digits = input.replace(/\D/g, "");
@@ -38,12 +35,9 @@ const TEST_OTP = "123456";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("patient");
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,10 +48,6 @@ export default function LoginScreen() {
       return;
     }
     const normalized = normalizePhone(phone);
-    // Test-mode bypass: skip the SMS round-trip entirely for the dev
-    // sandbox number. We still call verifyOtp, which Supabase will
-    // accept because the matching test number/code pair must be
-    // configured in the Auth dashboard.
     if (normalized === TEST_PHONE) {
       setStep("code");
       setCode(TEST_OTP);
@@ -95,32 +85,6 @@ export default function LoginScreen() {
     router.replace("/(tabs)");
   };
 
-  const staffSignIn = async () => {
-    setError(null);
-    if (!email.trim() || !password) {
-      setError("Enter your email and password");
-      return;
-    }
-    setLoading(true);
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    // _layout will route based on role
-  };
-
-  const switchMode = (m: Mode) => {
-    setMode(m);
-    setError(null);
-    setStep("phone");
-    setCode("");
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -140,133 +104,17 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
-            <View style={styles.tabs}>
-              <Pressable
-                style={[styles.tab, mode === "patient" && styles.tabActive]}
-                onPress={() => switchMode("patient")}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    mode === "patient" && styles.tabTextActive,
-                  ]}
-                >
-                  Patient
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.tab, mode === "staff" && styles.tabActive]}
-                onPress={() => switchMode("staff")}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    mode === "staff" && styles.tabTextActive,
-                  ]}
-                >
-                  Driver / Staff
-                </Text>
-              </Pressable>
-            </View>
-
-            {mode === "patient" ? (
-              step === "phone" ? (
-                <>
-                  <Text style={styles.label}>Phone number</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="(555) 123-4567"
-                    placeholderTextColor={MUTED}
-                    keyboardType="phone-pad"
-                    autoComplete="tel"
-                    value={phone}
-                    onChangeText={setPhone}
-                    editable={!loading}
-                  />
-                  {error ? <Text style={styles.error}>{error}</Text> : null}
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.button,
-                      (loading || pressed) && styles.buttonPressed,
-                    ]}
-                    onPress={sendCode}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color={NAVY} />
-                    ) : (
-                      <Text style={styles.buttonText}>Send Code</Text>
-                    )}
-                  </Pressable>
-                  <Text style={styles.hint}>
-                    We&apos;ll text you a 6-digit code to verify your number.
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.label}>Enter the code</Text>
-                  <Text style={styles.subLabel}>
-                    Sent to {normalizePhone(phone)}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, styles.codeInput]}
-                    placeholder="123456"
-                    placeholderTextColor={MUTED}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    value={code}
-                    onChangeText={setCode}
-                    editable={!loading}
-                  />
-                  {error ? <Text style={styles.error}>{error}</Text> : null}
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.button,
-                      (loading || pressed) && styles.buttonPressed,
-                    ]}
-                    onPress={verifyCode}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color={NAVY} />
-                    ) : (
-                      <Text style={styles.buttonText}>Verify & Sign In</Text>
-                    )}
-                  </Pressable>
-                  <Pressable
-                    onPress={() => {
-                      setStep("phone");
-                      setCode("");
-                      setError(null);
-                    }}
-                    disabled={loading}
-                  >
-                    <Text style={styles.link}>Use a different number</Text>
-                  </Pressable>
-                </>
-              )
-            ) : (
+            {step === "phone" ? (
               <>
-                <Text style={styles.label}>Work email</Text>
+                <Text style={styles.label}>Phone number</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="driver@nemtcompany.com"
+                  placeholder="(555) 123-4567"
                   placeholderTextColor={MUTED}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  value={email}
-                  onChangeText={setEmail}
-                  editable={!loading}
-                />
-                <Text style={styles.label}>Password</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor={MUTED}
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
+                  keyboardType="phone-pad"
+                  autoComplete="tel"
+                  value={phone}
+                  onChangeText={setPhone}
                   editable={!loading}
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -275,20 +123,69 @@ export default function LoginScreen() {
                     styles.button,
                     (loading || pressed) && styles.buttonPressed,
                   ]}
-                  onPress={staffSignIn}
+                  onPress={sendCode}
                   disabled={loading}
                 >
                   {loading ? (
                     <ActivityIndicator color={NAVY} />
                   ) : (
-                    <Text style={styles.buttonText}>Sign In</Text>
+                    <Text style={styles.buttonText}>Send Code</Text>
                   )}
                 </Pressable>
                 <Text style={styles.hint}>
-                  For NEMT drivers and care coordinators.
+                  We&apos;ll text you a 6-digit code to verify your number.
                 </Text>
               </>
+            ) : (
+              <>
+                <Text style={styles.label}>Enter the code</Text>
+                <Text style={styles.subLabel}>
+                  Sent to {normalizePhone(phone)}
+                </Text>
+                <TextInput
+                  style={[styles.input, styles.codeInput]}
+                  placeholder="123456"
+                  placeholderTextColor={MUTED}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  value={code}
+                  onChangeText={setCode}
+                  editable={!loading}
+                />
+                {error ? <Text style={styles.error}>{error}</Text> : null}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.button,
+                    (loading || pressed) && styles.buttonPressed,
+                  ]}
+                  onPress={verifyCode}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={NAVY} />
+                  ) : (
+                    <Text style={styles.buttonText}>Verify & Sign In</Text>
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setStep("phone");
+                    setCode("");
+                    setError(null);
+                  }}
+                  disabled={loading}
+                >
+                  <Text style={styles.link}>Use a different number</Text>
+                </Pressable>
+              </>
             )}
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerLabel}>NEMT driver or facility staff?</Text>
+            <Text style={styles.footerLink}>
+              Sign in at carevoy.co/partners on your computer.
+            </Text>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -315,29 +212,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   form: { width: "100%" },
-  tabs: {
-    flexDirection: "row",
-    backgroundColor: INPUT_BG,
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: BORDER,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  tabActive: { backgroundColor: TEAL },
-  tabText: {
-    color: MUTED,
-    fontSize: 14,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-  },
-  tabTextActive: { color: NAVY },
   label: {
     color: NAVY,
     fontSize: 15,
@@ -407,5 +281,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 10,
     fontFamily: "Inter_500Medium",
+  },
+  footer: {
+    alignItems: "center",
+    paddingHorizontal: 12,
+    gap: 4,
+  },
+  footerLabel: {
+    color: MUTED,
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+  },
+  footerLink: {
+    color: NAVY,
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    textAlign: "center",
   },
 });

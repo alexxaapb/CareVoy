@@ -127,8 +127,8 @@ export default function NotificationsScreen() {
           <View style={styles.emptyCard}>
             <Feather name="bell-off" size={28} color={MUTED} />
             <Text style={styles.emptyText}>
-              No notifications yet. You&apos;ll be notified about your rides
-              here.
+              You&apos;ll be notified about your rides here. Check back when you
+              have a booking.
             </Text>
           </View>
         ) : (

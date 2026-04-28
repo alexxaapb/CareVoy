@@ -152,9 +152,13 @@ export default function CoordinatorDashboard() {
         | { full_name?: string; name?: string }
         | undefined;
       const metaName = meta?.full_name ?? meta?.name ?? null;
-      if (metaName) {
+      const emailUser = userData.user?.email
+        ? userData.user.email.split("@")[0]
+        : null;
+      const fallback = metaName ?? emailUser ?? null;
+      if (fallback) {
         c = {
-          full_name: metaName,
+          full_name: fallback,
           hospital_id: c?.hospital_id ?? null,
           hospitals: c?.hospitals ?? null,
         };
@@ -364,7 +368,9 @@ export default function CoordinatorDashboard() {
               {greeting()}, {firstName(coord?.full_name)}
             </Text>
             <Text style={styles.headerSub}>
-              {coord?.hospitals?.name ?? "—"} • {dateStr}
+              {coord?.hospitals?.name
+                ? `${coord.hospitals.name} • ${dateStr}`
+                : dateStr}
             </Text>
           </View>
 

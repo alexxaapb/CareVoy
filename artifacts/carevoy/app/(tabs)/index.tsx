@@ -146,10 +146,25 @@ export default function HomeScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>
-            Hi {firstName(name)},
-          </Text>
-          <Text style={styles.subGreeting}>need a ride to your next appointment?</Text>
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.greeting}>Hi {firstName(name)},</Text>
+              <Text style={styles.subGreeting}>
+                need a ride to your next appointment?
+              </Text>
+            </View>
+            <Pressable
+              accessibilityLabel="Open settings"
+              onPress={() => router.push("/settings")}
+              hitSlop={10}
+              style={({ pressed }) => [
+                styles.settingsBtn,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Feather name="settings" size={20} color={NAVY} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.actions}>
@@ -230,7 +245,9 @@ export default function HomeScreen() {
           {loading ? null : past.length === 0 ? (
             <View style={styles.emptyCard}>
               <Feather name="clock" size={28} color={MUTED} />
-              <Text style={styles.emptyText}>No past rides yet.</Text>
+              <Text style={styles.emptyText}>
+                Your ride history will appear here after your first trip.
+              </Text>
             </View>
           ) : (
             past.map((r) => (
@@ -265,6 +282,21 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: WHITE },
   container: { padding: 24, paddingBottom: 40 },
   header: { marginTop: 8, marginBottom: 28 },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  settingsBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   greeting: {
     color: NAVY,
     fontSize: 28,

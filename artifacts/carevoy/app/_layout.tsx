@@ -93,13 +93,15 @@ function RootLayoutNav() {
     if (!ready) return;
     const top = segments[0];
     const inLogin = top === "login";
+    const inPartners = top === "partners";
     const inOnboarding = top === "onboarding";
     const inDriver = top === "driver";
     const inComingSoon = top === "coming-soon";
     const inTabs = top === "(tabs)";
 
     if (!auth.userId) {
-      if (!inLogin) router.replace("/login");
+      // /partners is the public web sign-in for staff — let it render
+      if (!inLogin && !inPartners) router.replace("/login");
       return;
     }
     if (auth.role === "nemt") {
@@ -122,6 +124,7 @@ function RootLayoutNav() {
     if (
       auth.onboarded === true &&
       (inLogin ||
+        inPartners ||
         inOnboarding ||
         inDriver ||
         inComingSoon ||
@@ -137,6 +140,8 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="partners" options={{ headerShown: false }} />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="book-ride" options={{ headerShown: false }} />
       <Stack.Screen name="chat" options={{ headerShown: false }} />
