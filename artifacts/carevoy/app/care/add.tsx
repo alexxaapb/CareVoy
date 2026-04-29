@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCare } from "../../lib/careContext";
 import { supabase } from "../../lib/supabase";
+import { useAuthRefresh } from "../_layout";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -63,7 +64,10 @@ function formatDate(d: Date | null): string {
 
 export default function AddCareRecipientScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ from?: string }>();
+  const fromOnboarding = params.from === "onboarding";
   const { refresh, setActivePersonById } = useCare();
+  const { refresh: refreshAuth } = useAuthRefresh();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -125,7 +129,14 @@ export default function AddCareRecipientScreen() {
         `${fullName.trim()} has been added. You're now booking on their behalf.`,
       );
     }
-    router.back();
+    if (fromOnboarding) {
+      // Refresh auth so the guard sees onboarded=true before we land on tabs;
+      // otherwise the guard would bounce us back to /onboarding.
+      await refreshAuth();
+      router.replace("/(tabs)");
+    } else {
+      router.back();
+    }
   };
 
   return (

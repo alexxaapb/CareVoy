@@ -52,6 +52,7 @@ Located at `artifacts/carevoy/`. Expo React Native app (web + iOS + Android).
 - Home screen (`app/(tabs)/index.tsx`) shows a "Booking for" pill switcher when caregivers exist; rides query uses `activePerson.patientId`.
 - Settings (`app/settings.tsx`) "People in my care" section lists recipients and links to `app/care/add.tsx` (consent checkbox required).
 - Booking flow (`app/book-ride.tsx`) shows "Booking for X" banner when active person isn't self; uses recipient's patient_id and address.
+- Onboarding step 4 ("Who will use CareVoy?") asks the user if they're booking for themselves or someone in their care; "someone in my care" deep-links to `/care/add?from=onboarding`, which refreshes auth and lands on the home tab on success. The auth guard in `app/_layout.tsx` allows `top === "care"` while a patient is mid-onboarding so the guard can't bounce them back.
 - RLS policies updated to allow caregivers with active+can_book_rides to read/update patients and rides; caregivers with can_view_receipts can read receipts.
 
 ### Add to Calendar (after booking)

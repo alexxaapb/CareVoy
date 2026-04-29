@@ -142,7 +142,11 @@ function RootLayoutNav() {
     }
     // patient flow
     if (auth.onboarded === false) {
-      if (!inOnboarding) router.replace("/onboarding");
+      // Allow /care/add while finishing the onboarding "who are you booking
+      // for?" step — the user may add a care recipient before they're
+      // technically considered "onboarded".
+      const allowDuringOnboarding = inOnboarding || top === "care";
+      if (!allowDuringOnboarding) router.replace("/onboarding");
       return;
     }
     if (

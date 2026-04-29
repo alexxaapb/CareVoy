@@ -28,7 +28,7 @@ const INPUT_BG = "#F8FAFC";
 const BORDER = "#E2E8F0";
 const ERROR = "#EF4444";
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 const MOBILITY_OPTIONS: { key: string; label: string; sub?: string }[] = [
   { key: "standard", label: "Standard vehicle", sub: "Default" },
@@ -75,7 +75,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const { refresh } = useAuthRefresh();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Step 1
   const [fullName, setFullName] = useState("");
@@ -121,7 +121,7 @@ export default function OnboardingScreen() {
 
   const goBack = () => {
     setError(null);
-    if (step > 1) setStep((s) => (s - 1) as 1 | 2 | 3);
+    if (step > 1) setStep((s) => (s - 1) as 1 | 2 | 3 | 4);
   };
 
   const saveRequiredAndAdvance = async () => {
@@ -160,11 +160,9 @@ export default function OnboardingScreen() {
     setError(null);
     if (skip) {
       // Required step already marked onboarding_complete=true.
-      // Just refresh auth state and route to the app.
-      setLoading(true);
-      await refresh();
-      setLoading(false);
-      router.replace("/(tabs)");
+      // Do NOT call refresh() here — it would trigger the auth guard
+      // in _layout.tsx to immediately redirect to /(tabs), skipping step 4.
+      setStep(4);
       return;
     }
     setLoading(true);
@@ -186,14 +184,28 @@ export default function OnboardingScreen() {
       setError(upsertErr.message);
       return;
     }
+    setLoading(false);
+    setStep(4);
+  };
+
+  const finishWhoFor = async (mode: "self" | "other") => {
+    if (mode === "other") {
+      // Navigate FIRST so the auth guard doesn't intercept while we
+      // refresh — /care/add isn't in the "redirect onboarded users away"
+      // list, so refresh inside that screen is safe.
+      router.replace("/care/add?from=onboarding");
+      return;
+    }
+    // "self": refresh auth — the guard sees onboarded=true on /onboarding
+    // and redirects us to /(tabs) for free.
+    setLoading(true);
     await refresh();
     setLoading(false);
-    router.replace("/(tabs)");
   };
 
   const ProgressDots = () => (
     <View style={styles.progress}>
-      {[1, 2, 3].map((n) => (
+      {[1, 2, 3, 4].map((n) => (
         <View
           key={n}
           style={[
@@ -213,7 +225,7 @@ export default function OnboardingScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.topBar}>
-          {step > 1 && step < 3 ? (
+          {step > 1 && step < 4 ? (
             <Pressable
               onPress={goBack}
               hitSlop={10}
@@ -419,30 +431,99 @@ export default function OnboardingScreen() {
             </>
           )}
 
+          {step === 4 && (
+            <>
+              <View style={styles.header}>
+                <Text style={styles.title}>Who will use CareVoy?</Text>
+                <Text style={styles.subtitle}>
+                  You can always add or change this later in Settings.
+                </Text>
+              </View>
+
+              <Pressable
+                onPress={() => void finishWhoFor("self")}
+                disabled={loading}
+                style={({ pressed }) => [
+                  styles.bigChoice,
+                  pressed && styles.pressed,
+                  loading && styles.bigChoiceDisabled,
+                ]}
+              >
+                <View style={styles.bigChoiceIcon}>
+                  <Feather name="user" size={22} color={NAVY} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.bigChoiceLabel}>
+                    I&apos;m booking for myself
+                  </Text>
+                  <Text style={styles.bigChoiceSub}>
+                    Rides, receipts, and reminders all go to you.
+                  </Text>
+                </View>
+                {loading ? (
+                  <ActivityIndicator size="small" color={MUTED} />
+                ) : (
+                  <Feather name="chevron-right" size={20} color={MUTED} />
+                )}
+              </Pressable>
+
+              <Pressable
+                onPress={() => void finishWhoFor("other")}
+                disabled={loading}
+                style={({ pressed }) => [
+                  styles.bigChoice,
+                  pressed && styles.pressed,
+                  loading && styles.bigChoiceDisabled,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.bigChoiceIcon,
+                    { backgroundColor: "rgba(0,194,168,0.12)" },
+                  ]}
+                >
+                  <Feather name="users" size={22} color={NAVY} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.bigChoiceLabel}>
+                    I&apos;m booking for someone in my care
+                  </Text>
+                  <Text style={styles.bigChoiceSub}>
+                    A parent, spouse, child, or other family member. You stay in
+                    control of their rides.
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={MUTED} />
+              </Pressable>
+            </>
+          )}
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              (loading || pressed) && styles.buttonPressed,
-            ]}
-            onPress={
-              step === 3 ? () => void finishOptional(false) : goNext
-            }
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color={NAVY} />
-            ) : (
-              <Text style={styles.buttonText}>
-                {step === 3
-                  ? "Save & finish"
-                  : step === 2
+          {step !== 4 && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.button,
+                (loading || pressed) && styles.buttonPressed,
+              ]}
+              onPress={
+                step === 3 ? () => void finishOptional(false) : goNext
+              }
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={NAVY} />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {step === 3
                     ? "Save & continue"
-                    : "Continue"}
-              </Text>
-            )}
-          </Pressable>
+                    : step === 2
+                      ? "Save & continue"
+                      : "Continue"}
+                </Text>
+              )}
+            </Pressable>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -659,6 +740,41 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   pressed: { opacity: 0.85 },
+  bigChoice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: WHITE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    marginTop: 12,
+    boxShadow: "0px 1px 3px rgba(5, 13, 31, 0.04)",
+  },
+  bigChoiceIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: INPUT_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bigChoiceLabel: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  bigChoiceSub: {
+    color: MUTED,
+    fontSize: 13,
+    marginTop: 4,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 18,
+  },
+  bigChoiceDisabled: { opacity: 0.6 },
   error: {
     color: ERROR,
     fontSize: 13,
