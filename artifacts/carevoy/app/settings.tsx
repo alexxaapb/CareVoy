@@ -67,8 +67,6 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { careRecipients, refresh: refreshCare } = useCare();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [calendarConnected, setCalendarConnected] = useState(false);
-  const [calendarEmail, setCalendarEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -81,9 +79,7 @@ export default function SettingsScreen() {
     }
     const { data } = await supabase
       .from("patients")
-      .select(
-        "full_name, phone, email, google_calendar_access_token, google_calendar_email",
-      )
+      .select("full_name, phone, email")
       .eq("id", userId)
       .maybeSingle();
     setProfile({
@@ -91,8 +87,6 @@ export default function SettingsScreen() {
       phone: data?.phone ?? userData.user?.phone ?? null,
       email: data?.email ?? userData.user?.email ?? null,
     });
-    setCalendarConnected(!!data?.google_calendar_access_token);
-    setCalendarEmail(data?.google_calendar_email ?? null);
     await refreshCare();
   }, [refreshCare]);
 
@@ -237,24 +231,6 @@ export default function SettingsScreen() {
             label="Add a person in my care"
             sub="Book and track rides on their behalf"
             onPress={() => router.push("/care/add")}
-          />
-        </View>
-
-        <Text style={styles.groupLabel}>Calendar Integration</Text>
-        <View style={styles.group}>
-          <MenuRow
-            icon="calendar"
-            label={
-              calendarConnected
-                ? "Google Calendar"
-                : "Connect Google Calendar"
-            }
-            sub={
-              calendarConnected
-                ? `Connected${calendarEmail ? ` as ${calendarEmail}` : ""}`
-                : "We'll suggest rides for medical appointments"
-            }
-            onPress={() => router.push("/calendar/connect")}
           />
         </View>
 

@@ -36,11 +36,7 @@ alter table public.patients
   add column if not exists emergency_contact_phone text,
   add column if not exists default_mobility_needs text,
   add column if not exists preferred_language text not null default 'en',
-  add column if not exists referral_source text,
-  add column if not exists google_calendar_access_token text,
-  add column if not exists google_calendar_refresh_token text,
-  add column if not exists google_calendar_token_expires_at timestamptz,
-  add column if not exists google_calendar_email text;
+  add column if not exists referral_source text;
 
 -- 1b. caregivers — adult children / family members booking on behalf of a patient
 create table if not exists public.caregivers (

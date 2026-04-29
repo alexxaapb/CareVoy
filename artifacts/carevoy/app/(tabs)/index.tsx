@@ -13,10 +13,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCare } from "../../lib/careContext";
-import {
-  fetchUpcomingMedicalEvents,
-  type MedicalEventMatch,
-} from "../../lib/googleCalendar";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -87,12 +83,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Calendar (only for self)
-  const [calendarToken, setCalendarToken] = useState<string | null>(null);
-  const [calendarTokenExpired, setCalendarTokenExpired] = useState(false);
-  const [calendarEvents, setCalendarEvents] = useState<MedicalEventMatch[]>([]);
-  const [calendarLoading, setCalendarLoading] = useState(false);
-
   const loadRides = useCallback(async () => {
     if (!activePatientId) {
       setUpcoming([]);
@@ -122,52 +112,6 @@ export default function HomeScreen() {
     setPast((pastRes.data as unknown as Ride[]) ?? []);
   }, [activePatientId]);
 
-  const loadCalendar = useCallback(async () => {
-    if (!isSelf || !selfPatientId) {
-      setCalendarToken(null);
-      setCalendarEvents([]);
-      return;
-    }
-    const { data } = await supabase
-      .from("patients")
-      .select(
-        "google_calendar_access_token, google_calendar_token_expires_at",
-      )
-      .eq("id", selfPatientId)
-      .maybeSingle();
-    const token = data?.google_calendar_access_token ?? null;
-    const exp = data?.google_calendar_token_expires_at
-      ? new Date(data.google_calendar_token_expires_at)
-      : null;
-    if (!token) {
-      setCalendarToken(null);
-      setCalendarEvents([]);
-      setCalendarTokenExpired(false);
-      return;
-    }
-    if (exp && exp < new Date()) {
-      setCalendarToken(null);
-      setCalendarEvents([]);
-      setCalendarTokenExpired(true);
-      return;
-    }
-    setCalendarToken(token);
-    setCalendarTokenExpired(false);
-    setCalendarLoading(true);
-    try {
-      const events = await fetchUpcomingMedicalEvents(token, 14);
-      setCalendarEvents(events);
-    } catch (e) {
-      if (e instanceof Error && e.message === "CALENDAR_TOKEN_EXPIRED") {
-        setCalendarToken(null);
-        setCalendarTokenExpired(true);
-        setCalendarEvents([]);
-      }
-    } finally {
-      setCalendarLoading(false);
-    }
-  }, [isSelf, selfPatientId]);
-
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -176,11 +120,10 @@ export default function HomeScreen() {
         await loadRides();
         if (active) setLoading(false);
       })();
-      void loadCalendar();
       return () => {
         active = false;
       };
-    }, [loadRides, loadCalendar]),
+    }, [loadRides]),
   );
 
   // When the active person changes, reload rides immediately.
@@ -190,28 +133,12 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadRides(), loadCalendar()]);
+    await loadRides();
     setRefreshing(false);
   };
 
   const greetingName = firstName(activePerson?.fullName);
   const showSwitcher = careRecipients.length > 0;
-
-  const onTapAppointment = (m: MedicalEventMatch) => {
-    const start = new Date(m.event.start);
-    const yyyy = start.getFullYear();
-    const mm = String(start.getMonth() + 1).padStart(2, "0");
-    const dd = String(start.getDate()).padStart(2, "0");
-    const hh = String(start.getHours()).padStart(2, "0");
-    const mi = String(start.getMinutes()).padStart(2, "0");
-    const prefill = JSON.stringify({
-      surgery_date: `${yyyy}-${mm}-${dd}`,
-      surgery_time: `${hh}:${mi}`,
-      hospital_name: m.event.location ?? m.event.summary,
-      procedure_type: m.event.summary,
-    });
-    router.push({ pathname: "/book-ride", params: { prefill } });
-  };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -340,87 +267,6 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
         </View>
-
-        {isSelf && (calendarToken || calendarTokenExpired) ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Upcoming medical appointments
-            </Text>
-            {calendarTokenExpired ? (
-              <Pressable
-                onPress={() => router.push("/calendar/connect")}
-                style={({ pressed }) => [
-                  styles.calendarReauthCard,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Feather name="refresh-cw" size={18} color={TEAL} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.calendarReauthTitle}>
-                    Reconnect Google Calendar
-                  </Text>
-                  <Text style={styles.calendarReauthSub}>
-                    Your access expired. Tap to reconnect.
-                  </Text>
-                </View>
-                <Feather name="chevron-right" size={18} color={MUTED} />
-              </Pressable>
-            ) : calendarLoading ? (
-              <ActivityIndicator color={TEAL} style={{ marginTop: 12 }} />
-            ) : calendarEvents.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Feather name="calendar" size={24} color={MUTED} />
-                <Text style={styles.emptyText}>
-                  No medical appointments found in the next 14 days.
-                </Text>
-              </View>
-            ) : (
-              calendarEvents.slice(0, 4).map((m) => (
-                <Pressable
-                  key={m.event.id}
-                  onPress={() => onTapAppointment(m)}
-                  style={({ pressed }) => [
-                    styles.card,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <View style={styles.cardHeader}>
-                    <View style={[styles.pill, styles.calPill]}>
-                      <Feather name="calendar" size={11} color={TEAL} />
-                      <Text style={[styles.pillText, { color: TEAL }]}>
-                        Calendar
-                      </Text>
-                    </View>
-                    <Text style={styles.statusText}>
-                      {m.matchedKeyword.toUpperCase()}
-                    </Text>
-                  </View>
-                  <Text style={styles.cardTitle} numberOfLines={2}>
-                    {m.event.summary}
-                  </Text>
-                  <View style={styles.row}>
-                    <Feather name="clock" size={14} color={MUTED} />
-                    <Text style={styles.cardLine} numberOfLines={1}>
-                      {formatDateTime(m.event.start)}
-                    </Text>
-                  </View>
-                  {m.event.location ? (
-                    <View style={styles.row}>
-                      <Feather name="map-pin" size={14} color={MUTED} />
-                      <Text style={styles.cardLine} numberOfLines={1}>
-                        {m.event.location}
-                      </Text>
-                    </View>
-                  ) : null}
-                  <View style={styles.bookCta}>
-                    <Feather name="plus-circle" size={14} color={NAVY} />
-                    <Text style={styles.bookCtaText}>Book a CareVoy ride</Text>
-                  </View>
-                </Pressable>
-              ))
-            )}
-          </View>
-        ) : null}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Upcoming Rides</Text>
@@ -667,12 +513,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  calPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(0,194,168,0.12)",
-  },
   pillText: {
     color: TEAL,
     fontSize: 11,
@@ -715,45 +555,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
-  },
-  bookCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 6,
-    backgroundColor: TEAL,
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  bookCtaText: {
-    color: NAVY,
-    fontSize: 12,
-    fontWeight: "700",
-    fontFamily: "Inter_700Bold",
-  },
-  calendarReauthCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: CARD,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 14,
-    padding: 16,
-  },
-  calendarReauthTitle: {
-    color: NAVY,
-    fontSize: 14,
-    fontWeight: "700",
-    fontFamily: "Inter_700Bold",
-  },
-  calendarReauthSub: {
-    color: MUTED,
-    fontSize: 12,
-    marginTop: 2,
-    fontFamily: "Inter_400Regular",
   },
   pressed: { opacity: 0.85 },
 });

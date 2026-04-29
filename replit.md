@@ -42,3 +42,20 @@ Located at `artifacts/carevoy/`. Expo React Native app (web + iOS + Android).
 **Module conventions**:
 - Single Supabase client at `lib/supabase.js` — depth-correct relative imports only (no shim copies in `app/`).
 - `react-native-maps` is web-incompatible — always import via `lib/maps` (resolves to `maps.native.ts` on iOS/Android, `maps.web.ts` on web). `lib/maps.d.ts` provides TS types.
+
+## Recent Features
+
+### Family Caregiver Mode
+- `caregivers` table (in `database/schema.sql`) links a caregiver `auth.users.id` to one or more patient rows with consent + permission flags (`can_book_rides`, `can_view_receipts`).
+- `add_care_recipient` Postgres SECURITY DEFINER RPC creates the patient row and caregiver link in one call.
+- `lib/careContext.tsx` provides a CareProvider with `activePerson` (self or recipient) persisted in AsyncStorage. Wraps the app in `app/_layout.tsx`.
+- Home screen (`app/(tabs)/index.tsx`) shows a "Booking for" pill switcher when caregivers exist; rides query uses `activePerson.patientId`.
+- Settings (`app/settings.tsx`) "People in my care" section lists recipients and links to `app/care/add.tsx` (consent checkbox required).
+- Booking flow (`app/book-ride.tsx`) shows "Booking for X" banner when active person isn't self; uses recipient's patient_id and address.
+- RLS policies updated to allow caregivers with active+can_book_rides to read/update patients and rides; caregivers with can_view_receipts can read receipts.
+
+### Add to Calendar (after booking)
+- `lib/addToCalendar.ts` builds a Google Calendar template URL via `expo-linking`. Works on iPhone, Android, and web — opens in the user's default browser to save to whatever calendar account they prefer.
+- Wired into `app/book-ride.tsx` step 4 (success screen) — single "Add to my calendar" button after the ride is confirmed. Reminder is anchored to the surgery time (1-hour duration) with pickup time and ride details in the description.
+- Deliberately chose this over OAuth-based "calendar scanning" — no client IDs, no Google verification, no permissions to manage, works for any calendar provider.
+

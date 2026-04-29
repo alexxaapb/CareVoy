@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { openInCalendar } from "../lib/addToCalendar";
 import { useCare } from "../lib/careContext";
 import { supabase } from "../lib/supabase";
 
@@ -193,6 +194,13 @@ export default function BookRideScreen() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookedRideForCalendar, setBookedRideForCalendar] = useState<{
+    title: string;
+    startISO: string;
+    endISO: string;
+    location: string;
+    description: string;
+  } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -405,6 +413,24 @@ export default function BookRideScreen() {
       setError(insertErr.message);
       return;
     }
+    // Save first ride details for "Add to Calendar" button on success screen.
+    // We use the surgery date/time itself as the calendar reminder so the user
+    // sees their appointment in their calendar (with pickup time noted).
+    const firstRow = rows[0];
+    const calendarStart = new Date(surgeryDateTime);
+    const calendarEnd = new Date(surgeryDateTime);
+    calendarEnd.setHours(calendarEnd.getHours() + 1);
+    const pickupLocal = new Date(firstRow.pickup_time).toLocaleString(
+      undefined,
+      { weekday: "short", hour: "numeric", minute: "2-digit" },
+    );
+    setBookedRideForCalendar({
+      title: `${procedureType.trim() || "Medical appointment"} — CareVoy ride`,
+      startISO: calendarStart.toISOString(),
+      endISO: calendarEnd.toISOString(),
+      location: hospitalName,
+      description: `CareVoy ride booked.\n\nPickup: ${pickupLocal}\nFrom: ${firstRow.pickup_address}\nTo: ${firstRow.dropoff_address}${rows.length > 1 ? "\n\nReturn ride also booked." : ""}`,
+    });
     setStep(4);
     playSuccessAnimation();
   };
@@ -778,6 +804,27 @@ export default function BookRideScreen() {
                   </Text>
                 </View>
               )}
+              {bookedRideForCalendar ? (
+                <Pressable
+                  onPress={() => {
+                    void openInCalendar(bookedRideForCalendar);
+                  }}
+                  style={({ pressed }) => [
+                    styles.calBtn,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityLabel="Add ride reminder to calendar"
+                >
+                  <Feather name="calendar" size={18} color={TEAL} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.calBtnTitle}>Add to my calendar</Text>
+                    <Text style={styles.calBtnSub}>
+                      Save a reminder to Google, Apple, or Outlook calendar
+                    </Text>
+                  </View>
+                  <Feather name="external-link" size={16} color={MUTED} />
+                </Pressable>
+              ) : null}
             </View>
           )}
 
@@ -956,6 +1003,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     fontFamily: "Inter_500Medium",
+  },
+  calBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 16,
+    width: "100%",
+  },
+  calBtnTitle: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  calBtnSub: {
+    color: MUTED,
+    fontSize: 12,
+    marginTop: 2,
+    fontFamily: "Inter_400Regular",
   },
   bookingForBanner: {
     flexDirection: "row",
