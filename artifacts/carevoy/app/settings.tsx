@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCare } from "../lib/careContext";
 import { supabase } from "../lib/supabase";
+import { useAuthRefresh } from "./_layout";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -139,6 +140,35 @@ export default function SettingsScreen() {
     Alert.alert(label, "Coming soon.");
   };
 
+  const { refresh: refreshAuth } = useAuthRefresh();
+  const restartOnboarding = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    const userId = u?.user?.id;
+    if (!userId) return;
+    await supabase
+      .from("patients")
+      .update({ onboarding_complete: false })
+      .eq("user_id", userId);
+    await refreshAuth();
+    router.replace("/onboarding");
+  };
+
+  const confirmRestartOnboarding = () => {
+    const msg =
+      "Re-do the onboarding flow? This is for testing — your existing profile will stay, you'll just see the welcome screens again.";
+    if (Platform.OS === "web") {
+      // eslint-disable-next-line no-alert
+      if (typeof window !== "undefined" && window.confirm(msg)) {
+        void restartOnboarding();
+      }
+      return;
+    }
+    Alert.alert("Restart onboarding", msg, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Restart", onPress: () => void restartOnboarding() },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.topBar}>
@@ -251,6 +281,13 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.group}>
+          <MenuRow
+            icon="refresh-ccw"
+            label="Restart onboarding"
+            sub="Re-do the welcome questions (for testing)"
+            onPress={confirmRestartOnboarding}
+          />
+          <View style={styles.divider} />
           <MenuRow
             icon="log-out"
             label={signingOut ? "Signing out…" : "Sign Out"}

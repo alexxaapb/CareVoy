@@ -17,6 +17,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AddressInput } from "../components/AddressInput";
+import { Required } from "../components/Required";
 import { supabase } from "../lib/supabase";
 import { useAuthRefresh } from "./_layout";
 
@@ -276,7 +278,9 @@ export default function OnboardingScreen() {
                 </Text>
               </View>
 
-              <Text style={styles.label}>Full name</Text>
+              <Text style={styles.label}>
+                Full name<Required />
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Jane Doe"
@@ -287,7 +291,9 @@ export default function OnboardingScreen() {
                 editable={!loading}
               />
 
-              <Text style={styles.label}>Email address</Text>
+              <Text style={styles.label}>
+                Email address<Required />
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="you@example.com"
@@ -303,7 +309,9 @@ export default function OnboardingScreen() {
                 Required for HSA / FSA receipts.
               </Text>
 
-              <Text style={styles.label}>Date of birth</Text>
+              <Text style={styles.label}>
+                Date of birth<Required />
+              </Text>
               <Pressable
                 style={styles.input}
                 onPress={() => setShowPicker(true)}
@@ -333,15 +341,17 @@ export default function OnboardingScreen() {
                 </View>
               )}
 
-              <Text style={styles.label}>Home address</Text>
-              <TextInput
-                style={[styles.input, styles.multiline]}
-                placeholder="123 Main St, Apt 4, San Francisco, CA"
-                placeholderTextColor={MUTED}
+              <Text style={styles.label}>
+                Home address<Required />
+              </Text>
+              <AddressInput
                 value={address}
-                onChangeText={setAddress}
+                onChange={setAddress}
+                placeholder="Start typing your address…"
                 multiline
                 editable={!loading}
+                inputStyle={styles.input}
+                zIndex={50}
               />
             </>
           )}
@@ -356,7 +366,9 @@ export default function OnboardingScreen() {
                 </Text>
               </View>
 
-              <Text style={styles.label}>Emergency contact name</Text>
+              <Text style={styles.label}>
+                Emergency contact name<Required />
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Alex Doe"
@@ -367,7 +379,9 @@ export default function OnboardingScreen() {
                 editable={!loading}
               />
 
-              <Text style={styles.label}>Emergency contact phone</Text>
+              <Text style={styles.label}>
+                Emergency contact phone<Required />
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="(555) 123-4567"

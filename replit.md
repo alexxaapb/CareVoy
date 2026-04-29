@@ -55,6 +55,14 @@ Located at `artifacts/carevoy/`. Expo React Native app (web + iOS + Android).
 - Onboarding step 4 ("Who will use CareVoy?") asks the user if they're booking for themselves or someone in their care; "someone in my care" deep-links to `/care/add?from=onboarding`, which refreshes auth and lands on the home tab on success. The auth guard in `app/_layout.tsx` allows `top === "care"` while a patient is mid-onboarding so the guard can't bounce them back.
 - RLS policies updated to allow caregivers with active+can_book_rides to read/update patients and rides; caregivers with can_view_receipts can read receipts.
 
+### Address autocomplete & required-field markers
+- `lib/addressAutocomplete.ts` queries OpenStreetMap Nominatim (free, no API key, US-filtered, 5 results max). Cancels in-flight requests via AbortController; debounce lives in the consumer (350ms in `AddressInput`).
+- `components/AddressInput.tsx` — reusable TextInput + suggestions dropdown. Used in `book-ride.tsx` (pickup address) and `onboarding.tsx` (home address). Accepts `inputStyle` to match the surrounding screen's existing styles.
+- `components/Required.tsx` — small red asterisk used after required field labels (full name, email, DOB, address, emergency contact name+phone, surgery date/time, destination facility, pickup address).
+- `book-ride.tsx` Destination Facility field is now an inline `FacilityAutocomplete` (typeahead over the static Columbus-area list filtered by facility type, plus an "Other" row that captures whatever the user typed). The previous Modal-based picker is gone.
+- Surgery date/time pickers use `themeVariant="light"` + `textColor={NAVY}` + `accentColor={TEAL}` (the previous `themeVariant="dark"` rendered white text against the white app surface on iOS).
+- Settings has a "Restart onboarding" row that flips `patients.onboarding_complete` to false and routes to `/onboarding` so the new "Who will use CareVoy?" step is reachable for testing without recreating the account.
+
 ### Add to Calendar (after booking)
 - `lib/addToCalendar.ts` builds a Google Calendar template URL via `expo-linking`. Works on iPhone, Android, and web — opens in the user's default browser to save to whatever calendar account they prefer.
 - Wired into `app/book-ride.tsx` step 4 (success screen) — single "Add to my calendar" button after the ride is confirmed. Reminder is anchored to the surgery time (1-hour duration) with pickup time and ride details in the description.

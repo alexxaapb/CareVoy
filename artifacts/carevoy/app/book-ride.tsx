@@ -9,7 +9,6 @@ import {
   Animated,
   Easing,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -20,6 +19,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AddressInput } from "../components/AddressInput";
+import { Required } from "../components/Required";
 import { openInCalendar } from "../lib/addToCalendar";
 import { useCare } from "../lib/careContext";
 import { supabase } from "../lib/supabase";
@@ -176,7 +177,6 @@ export default function BookRideScreen() {
   const [facilityType, setFacilityType] = useState<FacilityType>("hospital");
   const [hospital, setHospital] = useState<string>("");
   const [hospitalCustom, setHospitalCustom] = useState<string>("");
-  const [hospitalPickerOpen, setHospitalPickerOpen] = useState(false);
   const [procedureType, setProcedureType] = useState("");
 
   // Step 2
@@ -276,18 +276,6 @@ export default function BookRideScreen() {
       // ignore malformed prefill
     }
   }, [params.prefill]);
-
-  const facilityChoices = useMemo(() => {
-    if (facilityType === "other") return [OTHER_OPTION];
-    return [...FACILITIES_BY_TYPE[facilityType], OTHER_OPTION];
-  }, [facilityType]);
-
-  const hospitalDisplay = (): string => {
-    if (!hospital) return "Select destination facility";
-    if (hospital.startsWith("Other"))
-      return hospitalCustom.trim() || "Other (type in below)";
-    return hospital;
-  };
 
   const finalHospitalName = (): string => {
     if (hospital.startsWith("Other")) return hospitalCustom.trim();
@@ -489,7 +477,9 @@ export default function BookRideScreen() {
                 When and where is your procedure?
               </Text>
 
-              <Text style={styles.label}>Surgery date</Text>
+              <Text style={styles.label}>
+                Surgery date<Required />
+              </Text>
               <Pressable style={styles.input} onPress={() => setShowDate(true)}>
                 <Text
                   style={[styles.inputText, !surgeryDate && styles.placeholder]}
@@ -504,7 +494,9 @@ export default function BookRideScreen() {
                   mode="date"
                   display={Platform.OS === "ios" ? "inline" : "default"}
                   minimumDate={new Date()}
-                  themeVariant="dark"
+                  themeVariant="light"
+                  textColor={NAVY}
+                  accentColor={TEAL}
                   onChange={(_e: DateTimePickerEvent, d?: Date) => {
                     if (Platform.OS !== "ios") setShowDate(false);
                     if (d) setSurgeryDate(d);
@@ -520,7 +512,9 @@ export default function BookRideScreen() {
                 </Pressable>
               )}
 
-              <Text style={styles.label}>Surgery time</Text>
+              <Text style={styles.label}>
+                Surgery time<Required />
+              </Text>
               <Pressable style={styles.input} onPress={() => setShowTime(true)}>
                 <Text
                   style={[styles.inputText, !surgeryTime && styles.placeholder]}
@@ -534,7 +528,9 @@ export default function BookRideScreen() {
                   value={surgeryTime ?? new Date()}
                   mode="time"
                   display={Platform.OS === "ios" ? "spinner" : "default"}
-                  themeVariant="dark"
+                  themeVariant="light"
+                  textColor={NAVY}
+                  accentColor={TEAL}
                   onChange={(_e: DateTimePickerEvent, d?: Date) => {
                     if (Platform.OS !== "ios") setShowTime(false);
                     if (d) setSurgeryTime(d);
@@ -560,6 +556,7 @@ export default function BookRideScreen() {
                       onPress={() => {
                         setFacilityType(opt.value);
                         setHospital("");
+                        setHospitalCustom("");
                       }}
                       style={[
                         styles.facilityTypeChip,
@@ -579,28 +576,19 @@ export default function BookRideScreen() {
                 })}
               </View>
 
-              <Text style={styles.label}>Destination Facility</Text>
-              <Pressable
-                style={styles.input}
-                onPress={() => setHospitalPickerOpen(true)}
-              >
-                <Text
-                  style={[styles.inputText, !hospital && styles.placeholder]}
-                  numberOfLines={1}
-                >
-                  {hospitalDisplay()}
-                </Text>
-                <Feather name="chevron-down" size={18} color={MUTED} />
-              </Pressable>
-              {hospital.startsWith("Other") && (
-                <TextInput
-                  style={[styles.input, styles.textOnly]}
-                  placeholder="Type facility name"
-                  placeholderTextColor={MUTED}
-                  value={hospitalCustom}
-                  onChangeText={setHospitalCustom}
-                />
-              )}
+              <Text style={styles.label}>
+                Destination Facility<Required />
+              </Text>
+              <FacilityAutocomplete
+                value={hospital}
+                customValue={hospitalCustom}
+                facilityType={facilityType}
+                onSelect={(name) => {
+                  setHospital(name);
+                  if (!name.startsWith("Other")) setHospitalCustom("");
+                }}
+                onCustomChange={setHospitalCustom}
+              />
 
               <Text style={styles.label}>Procedure / visit type</Text>
               <TextInput
@@ -647,14 +635,16 @@ export default function BookRideScreen() {
                 ))}
               </View>
 
-              <Text style={styles.label}>Pickup address</Text>
-              <TextInput
-                style={[styles.input, styles.textOnly, styles.multiline]}
-                placeholder="Street, city, state"
-                placeholderTextColor={MUTED}
+              <Text style={styles.label}>
+                Pickup address<Required />
+              </Text>
+              <AddressInput
                 value={pickupAddress}
-                onChangeText={setPickupAddress}
+                onChange={setPickupAddress}
+                placeholder="Start typing your address…"
                 multiline
+                inputStyle={styles.addressInput}
+                zIndex={50}
               />
 
               <Text style={styles.label}>Special needs</Text>
@@ -872,40 +862,197 @@ export default function BookRideScreen() {
           )}
         </View>
       </KeyboardAvoidingView>
-
-      <Modal
-        visible={hospitalPickerOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setHospitalPickerOpen(false)}
-      >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setHospitalPickerOpen(false)}
-        >
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select destination facility</Text>
-            {facilityChoices.map((h) => (
-              <Pressable
-                key={h}
-                style={styles.modalRow}
-                onPress={() => {
-                  setHospital(h);
-                  setHospitalPickerOpen(false);
-                }}
-              >
-                <Text style={styles.modalRowText}>{h}</Text>
-                {hospital === h && (
-                  <Feather name="check" size={18} color={TEAL} />
-                )}
-              </Pressable>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 }
+
+function FacilityAutocomplete({
+  value,
+  customValue,
+  facilityType,
+  onSelect,
+  onCustomChange,
+}: {
+  value: string;
+  customValue: string;
+  facilityType: FacilityType;
+  onSelect: (name: string) => void;
+  onCustomChange: (name: string) => void;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [query, setQuery] = useState("");
+  const isOther = value.startsWith("Other");
+  const displayValue = focused ? query : isOther ? "" : value;
+
+  const choices = useMemo(() => {
+    const list =
+      facilityType === "other"
+        ? []
+        : [...FACILITIES_BY_TYPE[facilityType]];
+    return list;
+  }, [facilityType]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return choices;
+    return choices.filter((c) => c.toLowerCase().includes(q));
+  }, [choices, query]);
+
+  return (
+    <>
+      <View style={facilityStyles.wrap}>
+        <View style={facilityStyles.inputBox}>
+          <TextInput
+            style={facilityStyles.input}
+            placeholder="Start typing facility name…"
+            placeholderTextColor={MUTED}
+            value={displayValue}
+            onChangeText={(t) => {
+              setQuery(t);
+              if (!focused) setFocused(true);
+            }}
+            onFocus={() => {
+              setFocused(true);
+              setQuery(isOther ? customValue : value);
+            }}
+            onBlur={() => {
+              setTimeout(() => setFocused(false), 180);
+            }}
+          />
+          <Feather name="search" size={18} color={MUTED} />
+        </View>
+        {focused ? (
+          <View style={facilityStyles.dropdown}>
+            {filtered.map((name, idx) => (
+              <Pressable
+                key={name}
+                style={({ pressed }) => [
+                  facilityStyles.row,
+                  idx === filtered.length - 1 && filtered.length > 0
+                    ? null
+                    : facilityStyles.rowDivider,
+                  pressed && facilityStyles.rowPressed,
+                ]}
+                onPress={() => {
+                  onSelect(name);
+                  setQuery(name);
+                  setFocused(false);
+                }}
+              >
+                <Text style={facilityStyles.rowText}>{name}</Text>
+                {value === name ? (
+                  <Feather name="check" size={16} color={TEAL} />
+                ) : null}
+              </Pressable>
+            ))}
+            <Pressable
+              style={({ pressed }) => [
+                facilityStyles.row,
+                facilityStyles.rowOther,
+                pressed && facilityStyles.rowPressed,
+              ]}
+              onPress={() => {
+                onSelect(OTHER_OPTION);
+                if (query.trim()) onCustomChange(query.trim());
+                setFocused(false);
+              }}
+            >
+              <Feather name="plus-circle" size={16} color={TEAL} />
+              <Text style={facilityStyles.rowOtherText}>
+                {query.trim()
+                  ? `Use "${query.trim()}"`
+                  : "Other - I'll type it in"}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </View>
+      {isOther ? (
+        <TextInput
+          style={facilityStyles.customInput}
+          placeholder="Facility name"
+          placeholderTextColor={MUTED}
+          value={customValue}
+          onChangeText={onCustomChange}
+        />
+      ) : null}
+    </>
+  );
+}
+
+const facilityStyles = StyleSheet.create({
+  wrap: { position: "relative", zIndex: 100 },
+  inputBox: {
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  input: {
+    flex: 1,
+    color: NAVY,
+    fontSize: 16,
+    fontFamily: "Inter_500Medium",
+    paddingVertical: 12,
+  },
+  dropdown: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: WHITE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    marginTop: 6,
+    maxHeight: 280,
+    overflow: "hidden",
+    boxShadow: "0px 6px 18px rgba(5,13,31,0.12)",
+  },
+  row: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  rowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+  rowPressed: { backgroundColor: CARD },
+  rowText: { color: NAVY, fontSize: 14, fontFamily: "Inter_500Medium", flex: 1 },
+  rowOther: {
+    backgroundColor: "rgba(0,194,168,0.06)",
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+    gap: 8,
+    justifyContent: "flex-start",
+  },
+  rowOtherText: {
+    color: NAVY,
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    fontWeight: "600",
+  },
+  customInput: {
+    backgroundColor: CARD,
+    color: NAVY,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginTop: 8,
+    fontSize: 16,
+    fontFamily: "Inter_500Medium",
+  },
+});
 
 function Checkbox({
   label,
@@ -1146,6 +1293,17 @@ const styles = StyleSheet.create({
     color: NAVY,
   },
   multiline: { minHeight: 60, textAlignVertical: "top", paddingTop: 14 },
+  addressInput: {
+    backgroundColor: CARD,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: BORDER,
+    color: NAVY,
+    fontSize: 16,
+    fontFamily: "Inter_500Medium",
+  },
   inputText: { color: NAVY, fontSize: 16, fontFamily: "Inter_500Medium" },
   placeholder: { color: MUTED },
   doneBtn: { alignSelf: "flex-end", paddingVertical: 6, paddingHorizontal: 4 },
