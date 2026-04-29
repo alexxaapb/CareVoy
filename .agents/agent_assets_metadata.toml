@@ -17,3 +17,27 @@ id = "Bl84Z7UndFldQvuNn4kbx"
 uri = "file://artifacts/carevoy/.tunnel/expo-tunnel-qr.png"
 type = "image"
 title = "CareVoy — Expo Go QR (tunnel)"
+
+[[outputs]]
+id = "vREnQw5lhL3QAuhyY5h6K"
+uri = "file://screenshots/portal-partners.jpg"
+type = "image"
+title = "Partners Portal (sign-in)"
+
+[[outputs]]
+id = "f5bdp0T8Kkf3nFowXvMCX"
+uri = "file://screenshots/portal-driver.jpg"
+type = "image"
+title = "/driver — redirects to login when signed out"
+
+[[outputs]]
+id = "WSU-1LNVA1hW6nhYGd8OY"
+uri = "file://screenshots/portal-coordinator.jpg"
+type = "image"
+title = "/coordinator — redirects to login when signed out"
+
+[[outputs]]
+id = "AmjWGuSYe6KEPZJP27xqR"
+uri = "file://screenshots/portal-admin.jpg"
+type = "image"
+title = "/admin — redirects to login when signed out"
