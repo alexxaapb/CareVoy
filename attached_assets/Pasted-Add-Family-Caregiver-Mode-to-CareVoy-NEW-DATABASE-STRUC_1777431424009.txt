@@ -1,0 +1,86 @@
+Add Family Caregiver Mode to CareVoy.
+
+NEW DATABASE STRUCTURE:
+Create caregivers table:
+- id (uuid, primary key)
+- created_at (timestamptz)
+- caregiver_user_id (uuid, references auth.users)
+- patient_id (uuid, references patients)
+- relationship (text) — 'spouse', 'child', 
+  'parent', 'grandchild', 'guardian', 'other'
+- consent_signed_at (timestamptz)
+- consent_method (text) — 'verbal', 'written', 'digital'
+- can_book_rides (boolean, default true)
+- can_view_receipts (boolean, default true)
+- can_view_medical_info (boolean, default false)
+- active (boolean, default true)
+
+ONBOARDING UPDATES:
+After patient creates account, 
+add a screen:
+"Are you booking rides for yourself 
+ or someone else?"
+- Myself
+- Someone in my care
+- Both
+
+If "Someone in my care" or "Both":
+  Show caregiver setup flow:
+  - Enter person's full name
+  - Their phone number (optional)
+  - Their date of birth
+  - Their address
+  - Your relationship to them
+  - Confirm: "I have permission to 
+    book rides and manage receipts 
+    for [name]" → digital consent
+
+CAREGIVER HOME SCREEN:
+Show toggle/switcher at top:
+"Booking for: [Yourself] | [Mom] | 
+ [Add another]"
+
+Selecting different person changes 
+context throughout app:
+- Booking flow uses their address
+- Their HSA card is used
+- Ride history shows their rides
+- Receipts go to caregiver email 
+  AND patient email if available
+
+CAREGIVER DASHBOARD:
+Show all people in their care 
+on a single dashboard:
+- Mom: Next ride Thursday 9am
+- Dad: No rides scheduled
+- Aunt Linda: Ride completed yesterday
+
+Tap any person to switch context.
+
+PERMISSIONS:
+Patient (if they use the app) sees:
+"Sarah Daughter is your caregiver"
+in their settings. Can revoke 
+permission anytime.
+
+If patient doesn't use app at all:
+Caregiver is full admin of their 
+profile.
+
+DATABASE UPDATES NEEDED:
+- patients table: 
+  Add managed_by_caregiver (boolean)
+- rides table:
+  Add booked_by_user_id (uuid) — 
+  may differ from patient_id
+- payments table:
+  Add paid_by_user_id (uuid) — 
+  may differ from patient_id
+- notifications table:
+  Add notify_caregiver (boolean) — 
+  if true, send to caregiver too
+
+This is the assisted living killer 
+feature. Adult children booking 
+for elderly parents is the actual 
+use case.

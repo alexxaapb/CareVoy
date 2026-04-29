@@ -20,6 +20,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CareProvider } from "../lib/careContext";
 import { supabase } from "../lib/supabase";
 
 SplashScreen.preventAutoHideAsync();
@@ -173,6 +174,8 @@ function RootLayoutNav() {
         <Stack.Screen name="coordinator" options={{ headerShown: false }} />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
         <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
+        <Stack.Screen name="care/add" options={{ headerShown: false }} />
+        <Stack.Screen name="calendar/connect" options={{ headerShown: false }} />
       </Stack>
     </AuthRefreshContext.Provider>
   );
@@ -200,7 +203,9 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView>
             <KeyboardProvider>
-              <RootLayoutNav />
+              <CareProvider>
+                <RootLayoutNav />
+              </CareProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>

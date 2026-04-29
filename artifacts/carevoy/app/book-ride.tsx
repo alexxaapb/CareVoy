@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useCare } from "../lib/careContext";
 import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -159,6 +160,9 @@ function formatTime(d: Date | null): string {
 export default function BookRideScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ prefill?: string }>();
+  const { activePerson } = useCare();
+  const activePatientId = activePerson?.patientId ?? null;
+  const isSelf = !!activePerson?.isSelf;
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const checkScale = useRef(new Animated.Value(0)).current;
   const checkOpacity = useRef(new Animated.Value(0)).current;
@@ -195,23 +199,35 @@ export default function BookRideScreen() {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       if (!userId) return;
-      const { data } = await supabase
+      const targetId = activePatientId ?? userId;
+
+      // Load the booking patient's home address (pickup default).
+      const { data: pat } = await supabase
         .from("patients")
-        .select("home_address, email, hsa_fsa_card_token, stripe_customer_id")
+        .select("home_address, email")
+        .eq("id", targetId)
+        .maybeSingle();
+      if (pat?.home_address) setPickupAddress(pat.home_address);
+
+      // Receipt email: caregiver's email is the primary receipient (their card pays).
+      // We always send to the caregiver's account email on file.
+      const { data: payer } = await supabase
+        .from("patients")
+        .select("email, hsa_fsa_card_token, stripe_customer_id")
         .eq("id", userId)
         .maybeSingle();
-      if (data?.home_address) setPickupAddress(data.home_address);
-      if (data?.email) setReceiptEmail(data.email);
-      if (data?.hsa_fsa_card_token) {
-        const m = data.hsa_fsa_card_token.match(/(\d{4})$/);
+      if (payer?.email) setReceiptEmail(payer.email);
+      else if (pat?.email) setReceiptEmail(pat.email);
+      if (payer?.hsa_fsa_card_token) {
+        const m = payer.hsa_fsa_card_token.match(/(\d{4})$/);
         setHsaCardOnFile(m ? m[1] : "••••");
       }
-      if (data?.stripe_customer_id) {
-        const m = data.stripe_customer_id.match(/(\d{4})$/);
+      if (payer?.stripe_customer_id) {
+        const m = payer.stripe_customer_id.match(/(\d{4})$/);
         setStdCardOnFile(m ? m[1] : "••••");
       }
     })();
-  }, []);
+  }, [activePatientId]);
 
   // Pre-fill from AI extraction
   useEffect(() => {
@@ -340,7 +356,8 @@ export default function BookRideScreen() {
     setSubmitting(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
-    if (!userId || !surgeryDate || !surgeryTime) {
+    const bookingPatientId = activePatientId ?? userId;
+    if (!userId || !bookingPatientId || !surgeryDate || !surgeryTime) {
       setSubmitting(false);
       setError("Missing user or schedule info");
       return;
@@ -368,7 +385,7 @@ export default function BookRideScreen() {
       else pickupTime.setHours(pickupTime.getHours() + 2);
 
       return {
-        patient_id: userId,
+        patient_id: bookingPatientId,
         ride_type: t,
         pickup_address: pickup,
         dropoff_address: dropoff,
@@ -425,6 +442,15 @@ export default function BookRideScreen() {
           </View>
           <Text style={styles.progressText}>Step {step} of 4</Text>
         </View>
+
+        {!isSelf && activePerson && step !== 4 ? (
+          <View style={styles.bookingForBanner}>
+            <Feather name="users" size={14} color={TEAL} />
+            <Text style={styles.bookingForText}>
+              Booking for {activePerson.fullName}
+            </Text>
+          </View>
+        ) : null}
 
         <ScrollView
           contentContainerStyle={styles.container}
@@ -930,6 +956,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     fontFamily: "Inter_500Medium",
+  },
+  bookingForBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "center",
+    backgroundColor: "rgba(0,194,168,0.12)",
+    borderWidth: 1,
+    borderColor: TEAL,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginHorizontal: 16,
+    marginBottom: 4,
+  },
+  bookingForText: {
+    color: NAVY,
+    fontSize: 12,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
   },
   successWrap: {
     alignItems: "center",

@@ -36,7 +36,30 @@ alter table public.patients
   add column if not exists emergency_contact_phone text,
   add column if not exists default_mobility_needs text,
   add column if not exists preferred_language text not null default 'en',
-  add column if not exists referral_source text;
+  add column if not exists referral_source text,
+  add column if not exists google_calendar_access_token text,
+  add column if not exists google_calendar_refresh_token text,
+  add column if not exists google_calendar_token_expires_at timestamptz,
+  add column if not exists google_calendar_email text;
+
+-- 1b. caregivers — adult children / family members booking on behalf of a patient
+create table if not exists public.caregivers (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  caregiver_user_id uuid not null,
+  patient_id uuid not null references public.patients(id) on delete cascade,
+  relationship text,
+  consent_signed_at timestamptz,
+  consent_method text,
+  can_book_rides boolean not null default true,
+  can_view_receipts boolean not null default true,
+  active boolean not null default true,
+  unique (caregiver_user_id, patient_id)
+);
+create index if not exists caregivers_caregiver_user_id_idx
+  on public.caregivers (caregiver_user_id) where active;
+create index if not exists caregivers_patient_id_idx
+  on public.caregivers (patient_id) where active;
 
 -- 2. hospitals
 create table if not exists public.hospitals (
@@ -378,3 +401,143 @@ create policy "rides_nemt_update" on public.rides
   );
 
 -- nemt_partners: no public policies (admin/service-role only)
+
+-- =========================================================================
+-- Caregivers: RLS + RPC for adding a care recipient atomically
+-- =========================================================================
+alter table public.caregivers enable row level security;
+
+drop policy if exists "caregivers_select_own" on public.caregivers;
+create policy "caregivers_select_own" on public.caregivers
+  for select using (auth.uid() = caregiver_user_id);
+
+drop policy if exists "caregivers_update_own" on public.caregivers;
+create policy "caregivers_update_own" on public.caregivers
+  for update using (auth.uid() = caregiver_user_id)
+  with check (auth.uid() = caregiver_user_id);
+
+-- Patients: caregivers can read & update their care recipients in addition
+-- to their own row. Replaces the original "own only" select/update policies.
+drop policy if exists "patients_select_own" on public.patients;
+drop policy if exists "patients_select_own_or_care" on public.patients;
+create policy "patients_select_own_or_care" on public.patients
+  for select using (
+    auth.uid() = id
+    or exists (
+      select 1 from public.caregivers c
+      where c.caregiver_user_id = auth.uid()
+        and c.patient_id = patients.id
+        and c.active
+    )
+  );
+
+drop policy if exists "patients_update_own" on public.patients;
+drop policy if exists "patients_update_own_or_care" on public.patients;
+create policy "patients_update_own_or_care" on public.patients
+  for update using (
+    auth.uid() = id
+    or exists (
+      select 1 from public.caregivers c
+      where c.caregiver_user_id = auth.uid()
+        and c.patient_id = patients.id
+        and c.active
+    )
+  ) with check (true);
+
+-- Rides: caregivers can book/view rides for their care recipients.
+drop policy if exists "rides_patient_all" on public.rides;
+drop policy if exists "rides_patient_or_caregiver" on public.rides;
+create policy "rides_patient_or_caregiver" on public.rides
+  for all using (
+    auth.uid() = patient_id
+    or exists (
+      select 1 from public.caregivers c
+      where c.caregiver_user_id = auth.uid()
+        and c.patient_id = rides.patient_id
+        and c.active
+        and c.can_book_rides
+    )
+  ) with check (
+    auth.uid() = patient_id
+    or exists (
+      select 1 from public.caregivers c
+      where c.caregiver_user_id = auth.uid()
+        and c.patient_id = rides.patient_id
+        and c.active
+        and c.can_book_rides
+    )
+  );
+
+-- Receipts: caregivers can view care recipient receipts.
+drop policy if exists "receipts_patient_all" on public.receipts;
+drop policy if exists "receipts_patient_or_caregiver" on public.receipts;
+create policy "receipts_patient_or_caregiver" on public.receipts
+  for all using (
+    auth.uid() = patient_id
+    or exists (
+      select 1 from public.caregivers c
+      where c.caregiver_user_id = auth.uid()
+        and c.patient_id = receipts.patient_id
+        and c.active
+        and c.can_view_receipts
+    )
+  ) with check (
+    auth.uid() = patient_id
+    or exists (
+      select 1 from public.caregivers c
+      where c.caregiver_user_id = auth.uid()
+        and c.patient_id = receipts.patient_id
+        and c.active
+        and c.can_view_receipts
+    )
+  );
+
+-- RPC: create a patient row + caregiver link atomically.
+-- Runs with security definer so the patient insert isn't blocked by
+-- the strict patients_insert_own policy. Returns the new patient_id.
+create or replace function public.add_care_recipient(
+  p_full_name text,
+  p_phone text,
+  p_email text,
+  p_dob date,
+  p_address text,
+  p_relationship text,
+  p_consent_method text default 'app_checkbox'
+) returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caregiver uuid := auth.uid();
+  v_patient_id uuid;
+begin
+  if v_caregiver is null then
+    raise exception 'Not authenticated';
+  end if;
+  if coalesce(p_full_name, '') = '' then
+    raise exception 'Full name is required';
+  end if;
+
+  insert into public.patients (
+    id, full_name, phone, email, date_of_birth, home_address,
+    onboarding_complete
+  ) values (
+    gen_random_uuid(), p_full_name, nullif(p_phone, ''), nullif(p_email, ''),
+    p_dob, p_address, true
+  ) returning id into v_patient_id;
+
+  insert into public.caregivers (
+    caregiver_user_id, patient_id, relationship,
+    consent_signed_at, consent_method, active
+  ) values (
+    v_caregiver, v_patient_id, p_relationship,
+    now(), coalesce(p_consent_method, 'app_checkbox'), true
+  );
+
+  return v_patient_id;
+end;
+$$;
+
+revoke all on function public.add_care_recipient(text,text,text,date,text,text,text) from public;
+grant execute on function public.add_care_recipient(text,text,text,date,text,text,text) to authenticated;

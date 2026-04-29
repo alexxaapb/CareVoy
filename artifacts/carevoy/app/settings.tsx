@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useCare } from "../lib/careContext";
 import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -64,7 +65,10 @@ function MenuRow({ icon, label, sub, onPress, destructive }: RowProps) {
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { careRecipients, refresh: refreshCare } = useCare();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [calendarConnected, setCalendarConnected] = useState(false);
+  const [calendarEmail, setCalendarEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -77,7 +81,9 @@ export default function SettingsScreen() {
     }
     const { data } = await supabase
       .from("patients")
-      .select("full_name, phone, email")
+      .select(
+        "full_name, phone, email, google_calendar_access_token, google_calendar_email",
+      )
       .eq("id", userId)
       .maybeSingle();
     setProfile({
@@ -85,7 +91,10 @@ export default function SettingsScreen() {
       phone: data?.phone ?? userData.user?.phone ?? null,
       email: data?.email ?? userData.user?.email ?? null,
     });
-  }, []);
+    setCalendarConnected(!!data?.google_calendar_access_token);
+    setCalendarEmail(data?.google_calendar_email ?? null);
+    await refreshCare();
+  }, [refreshCare]);
 
   useFocusEffect(
     useCallback(() => {
@@ -201,6 +210,51 @@ export default function SettingsScreen() {
             label="Notification preferences"
             sub="Texts, email, and push"
             onPress={comingSoon("Notification preferences")}
+          />
+        </View>
+
+        <Text style={styles.groupLabel}>People in my care</Text>
+        <View style={styles.group}>
+          {careRecipients.map((p, idx) => (
+            <React.Fragment key={p.patientId}>
+              {idx > 0 ? <View style={styles.divider} /> : null}
+              <View style={styles.row}>
+                <View style={styles.rowIcon}>
+                  <Feather name="users" size={18} color={TEAL} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>{p.fullName}</Text>
+                  <Text style={styles.rowSub}>
+                    {p.relationship ?? "Care recipient"}
+                  </Text>
+                </View>
+              </View>
+            </React.Fragment>
+          ))}
+          {careRecipients.length > 0 ? <View style={styles.divider} /> : null}
+          <MenuRow
+            icon="user-plus"
+            label="Add a person in my care"
+            sub="Book and track rides on their behalf"
+            onPress={() => router.push("/care/add")}
+          />
+        </View>
+
+        <Text style={styles.groupLabel}>Calendar Integration</Text>
+        <View style={styles.group}>
+          <MenuRow
+            icon="calendar"
+            label={
+              calendarConnected
+                ? "Google Calendar"
+                : "Connect Google Calendar"
+            }
+            sub={
+              calendarConnected
+                ? `Connected${calendarEmail ? ` as ${calendarEmail}` : ""}`
+                : "We'll suggest rides for medical appointments"
+            }
+            onPress={() => router.push("/calendar/connect")}
           />
         </View>
 
