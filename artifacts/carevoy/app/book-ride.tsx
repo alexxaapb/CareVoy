@@ -162,10 +162,22 @@ function formatTime(d: Date | null): string {
 export default function BookRideScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ prefill?: string }>();
-  const { activePerson } = useCare();
+  const {
+    activePerson,
+    careRecipients,
+    selfPatientId,
+    selfFullName,
+    setActivePersonById,
+    loading: careLoading,
+  } = useCare();
   const activePatientId = activePerson?.patientId ?? null;
   const isSelf = !!activePerson?.isSelf;
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  // Pre-step: "Who is this ride for?" — only shown when the user actually has
+  // people in their care. If there are none, we skip straight to surgery details.
+  const [whoChosen, setWhoChosen] = useState(false);
+  const showWhoPicker =
+    !careLoading && careRecipients.length > 0 && !whoChosen && step === 1;
   const checkScale = useRef(new Animated.Value(0)).current;
   const checkOpacity = useRef(new Animated.Value(0)).current;
 
@@ -312,6 +324,12 @@ export default function BookRideScreen() {
   const back = () => {
     setError(null);
     if (step === 1) {
+      // If the user has care recipients, the first thing they saw was the
+      // "Who is this ride for?" picker — return to it instead of leaving.
+      if (careRecipients.length > 0 && whoChosen) {
+        setWhoChosen(false);
+        return;
+      }
       router.back();
       return;
     }
@@ -442,22 +460,106 @@ export default function BookRideScreen() {
           <View style={{ width: 26 }} />
         </View>
 
-        <View style={styles.progressWrap}>
-          <View style={styles.progress}>
-            {[1, 2, 3, 4].map((n) => (
-              <View
-                key={n}
-                style={[
-                  styles.progressDot,
-                  n <= step && styles.progressDotActive,
-                ]}
-              />
-            ))}
+        {!showWhoPicker ? (
+          <View style={styles.progressWrap}>
+            <View style={styles.progress}>
+              {[1, 2, 3, 4].map((n) => (
+                <View
+                  key={n}
+                  style={[
+                    styles.progressDot,
+                    n <= step && styles.progressDotActive,
+                  ]}
+                />
+              ))}
+            </View>
+            <Text style={styles.progressText}>Step {step} of 4</Text>
           </View>
-          <Text style={styles.progressText}>Step {step} of 4</Text>
-        </View>
+        ) : null}
 
-        {!isSelf && activePerson && step !== 4 ? (
+        {showWhoPicker ? (
+          <ScrollView
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.stepTitle}>Who is this ride for?</Text>
+            <Text style={styles.stepSub}>
+              Pick the person you're booking transportation for.
+            </Text>
+
+            {[
+              {
+                id: selfPatientId ?? "self",
+                label: "Myself",
+                sub: selfFullName ?? null,
+                isSelf: true,
+              },
+              ...careRecipients.map((p) => ({
+                id: p.patientId,
+                label: p.fullName,
+                sub: p.relationship ?? "In my care",
+                isSelf: false,
+              })),
+            ].map((opt) => {
+              const selected =
+                (opt.isSelf && isSelf) ||
+                (!opt.isSelf && activePatientId === opt.id);
+              return (
+                <Pressable
+                  key={opt.id}
+                  onPress={async () => {
+                    const target =
+                      opt.isSelf && selfPatientId ? selfPatientId : opt.id;
+                    await setActivePersonById(target);
+                    setWhoChosen(true);
+                  }}
+                  style={({ pressed }) => [
+                    styles.whoCard,
+                    selected && styles.whoCardSelected,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.whoIcon,
+                      selected && styles.whoIconSelected,
+                    ]}
+                  >
+                    <Feather
+                      name={opt.isSelf ? "user" : "users"}
+                      size={18}
+                      color={selected ? NAVY : TEAL}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.whoCardTitle}>{opt.label}</Text>
+                    {opt.sub ? (
+                      <Text style={styles.whoCardSub}>{opt.sub}</Text>
+                    ) : null}
+                  </View>
+                  <Feather
+                    name="chevron-right"
+                    size={20}
+                    color={selected ? NAVY : MUTED}
+                  />
+                </Pressable>
+              );
+            })}
+
+            <Pressable
+              onPress={() => router.push("/care/add")}
+              style={({ pressed }) => [
+                styles.whoAddRow,
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <Feather name="plus-circle" size={18} color={TEAL} />
+              <Text style={styles.whoAddText}>Add someone in my care</Text>
+            </Pressable>
+          </ScrollView>
+        ) : null}
+
+        {!showWhoPicker && !isSelf && activePerson && step !== 4 ? (
           <View style={styles.bookingForBanner}>
             <Feather name="users" size={14} color={TEAL} />
             <Text style={styles.bookingForText}>
@@ -466,6 +568,7 @@ export default function BookRideScreen() {
           </View>
         ) : null}
 
+        {!showWhoPicker ? (
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
@@ -822,7 +925,9 @@ export default function BookRideScreen() {
             <Text style={styles.error}>{error}</Text>
           ) : null}
         </ScrollView>
+        ) : null}
 
+        {!showWhoPicker ? (
         <View style={styles.footer}>
           {step === 4 ? (
             <Pressable
@@ -861,6 +966,7 @@ export default function BookRideScreen() {
             </Pressable>
           )}
         </View>
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -1192,6 +1298,59 @@ const styles = StyleSheet.create({
   bookingForText: {
     color: NAVY,
     fontSize: 12,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  whoCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+  },
+  whoCardSelected: {
+    borderColor: TEAL,
+    backgroundColor: "rgba(0,194,168,0.08)",
+  },
+  whoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,194,168,0.12)",
+  },
+  whoIconSelected: {
+    backgroundColor: TEAL,
+  },
+  whoCardTitle: {
+    color: NAVY,
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  whoCardSub: {
+    color: MUTED,
+    fontSize: 13,
+    marginTop: 2,
+    fontFamily: "Inter_400Regular",
+  },
+  whoAddRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginTop: 4,
+  },
+  whoAddText: {
+    color: TEAL,
+    fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },
