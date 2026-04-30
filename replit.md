@@ -61,7 +61,12 @@ Located at `artifacts/carevoy/`. Expo React Native app (web + iOS + Android).
 - `components/Required.tsx` — small red asterisk used after required field labels (full name, email, DOB, address, emergency contact name+phone, surgery date/time, destination facility, pickup address).
 - `book-ride.tsx` Destination Facility field is now an inline `FacilityAutocomplete` (typeahead over the static Columbus-area list filtered by facility type, plus an "Other" row that captures whatever the user typed). The previous Modal-based picker is gone.
 - Surgery date/time pickers use `themeVariant="light"` + `textColor={NAVY}` + `accentColor={TEAL}` (the previous `themeVariant="dark"` rendered white text against the white app surface on iOS).
-- Settings has a "Restart onboarding" row that flips `patients.onboarding_complete` to false and routes to `/onboarding` so the new "Who will use CareVoy?" step is reachable for testing without recreating the account.
+- Settings has a "Restart onboarding" row that flips `patients.onboarding_complete` to false and routes to `/onboarding` so the new "Who will use CareVoy?" step is reachable for testing without recreating the account. **Schema gotcha:** `patients.id` IS the auth user id (no separate `user_id` column). All updates must use `.eq("id", userId)`, not `.eq("user_id", userId)`.
+
+### Payment screen — wallet buttons, autofill, required markers
+- `app/(tabs)/payment.tsx`: every card field (HSA number/expiry/CVV, regular card number/expiry/CVV) and the receipt email show a red `<Required />` asterisk.
+- All card inputs have `autoComplete` (`cc-number`, `cc-exp`, `cc-csc`) and `textContentType` (`creditCardNumber`, `creditCardExpiration`, `creditCardSecurityCode`) so iOS Wallet / Android Autofill can suggest saved cards above the keyboard.
+- Apple Pay and Google Pay buttons sit above the regular-card form (express-checkout pattern). They currently show an informative alert ("will be enabled once payment processing is connected") because the project has no Stripe/processor wired up yet — when one is added, swap the `showWalletNotice` handler for `presentApplePay()` / `presentGooglePay()`.
 
 ### Add to Calendar (after booking)
 - `lib/addToCalendar.ts` builds a Google Calendar template URL via `expo-linking`. Works on iPhone, Android, and web — opens in the user's default browser to save to whatever calendar account they prefer.

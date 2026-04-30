@@ -145,10 +145,19 @@ export default function SettingsScreen() {
     const { data: u } = await supabase.auth.getUser();
     const userId = u?.user?.id;
     if (!userId) return;
-    await supabase
+    const { error: upErr } = await supabase
       .from("patients")
       .update({ onboarding_complete: false })
-      .eq("user_id", userId);
+      .eq("id", userId);
+    if (upErr) {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        // eslint-disable-next-line no-alert
+        window.alert(`Could not restart onboarding: ${upErr.message}`);
+      } else {
+        Alert.alert("Couldn't restart", upErr.message);
+      }
+      return;
+    }
     await refreshAuth();
     router.replace("/onboarding");
   };

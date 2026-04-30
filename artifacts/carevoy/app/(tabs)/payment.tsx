@@ -1,8 +1,9 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Required } from "../../components/Required";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -88,6 +90,16 @@ export default function PaymentScreen() {
       load();
     }, [load]),
   );
+
+  const showWalletNotice = (label: "Apple Pay" | "Google Pay") => {
+    const msg = `${label} will be enabled once payment processing is connected. For now, please add your card below — it will autofill from your phone's saved cards if you have any.`;
+    if (Platform.OS === "web") {
+      // eslint-disable-next-line no-alert
+      if (typeof window !== "undefined") window.alert(msg);
+      return;
+    }
+    Alert.alert(label, msg);
+  };
 
   const onSave = async () => {
     setError(null);
@@ -185,7 +197,9 @@ export default function PaymentScreen() {
               </View>
             ) : null}
 
-            <Text style={styles.hsaFieldLabel}>Card number</Text>
+            <Text style={styles.hsaFieldLabel}>
+              Card number<Required />
+            </Text>
             <TextInput
               style={styles.hsaInput}
               placeholder="1234 5678 9012 3456"
@@ -193,11 +207,15 @@ export default function PaymentScreen() {
               keyboardType="number-pad"
               value={hsaNumber}
               onChangeText={(t) => setHsaNumber(formatCardNumber(t))}
+              autoComplete="cc-number"
+              textContentType="creditCardNumber"
             />
 
             <View style={styles.row2}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.hsaFieldLabel}>Expiry</Text>
+                <Text style={styles.hsaFieldLabel}>
+                  Expiry<Required />
+                </Text>
                 <TextInput
                   style={styles.hsaInput}
                   placeholder="MM/YY"
@@ -205,10 +223,14 @@ export default function PaymentScreen() {
                   keyboardType="number-pad"
                   value={hsaExpiry}
                   onChangeText={(t) => setHsaExpiry(formatExpiry(t))}
+                  autoComplete="cc-exp"
+                  textContentType="creditCardExpiration"
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.hsaFieldLabel}>CVV</Text>
+                <Text style={styles.hsaFieldLabel}>
+                  CVV<Required />
+                </Text>
                 <TextInput
                   style={styles.hsaInput}
                   placeholder="123"
@@ -218,6 +240,8 @@ export default function PaymentScreen() {
                   maxLength={4}
                   value={hsaCvv}
                   onChangeText={setHsaCvv}
+                  autoComplete="cc-csc"
+                  textContentType="creditCardSecurityCode"
                 />
               </View>
             </View>
@@ -255,6 +279,39 @@ export default function PaymentScreen() {
             to your provider for refund.
           </Text>
 
+          <View style={styles.walletRow}>
+            <Pressable
+              accessibilityLabel="Pay with Apple Pay"
+              onPress={() => showWalletNotice("Apple Pay")}
+              style={({ pressed }) => [
+                styles.walletBtn,
+                styles.applePayBtn,
+                pressed && styles.pressed,
+              ]}
+            >
+              <FontAwesome name="apple" size={20} color={WHITE} />
+              <Text style={styles.applePayText}>Pay</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Pay with Google Pay"
+              onPress={() => showWalletNotice("Google Pay")}
+              style={({ pressed }) => [
+                styles.walletBtn,
+                styles.gPayBtn,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.gPayG}>G</Text>
+              <Text style={styles.gPayText}>Pay</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or enter card details</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
           <View style={styles.regCard}>
             {cardSavedLast4 ? (
               <View style={styles.savedRowAlt}>
@@ -265,7 +322,9 @@ export default function PaymentScreen() {
               </View>
             ) : null}
 
-            <Text style={styles.fieldLabel}>Card number</Text>
+            <Text style={styles.fieldLabel}>
+              Card number<Required />
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="1234 5678 9012 3456"
@@ -273,11 +332,15 @@ export default function PaymentScreen() {
               keyboardType="number-pad"
               value={cardNumber}
               onChangeText={(t) => setCardNumber(formatCardNumber(t))}
+              autoComplete="cc-number"
+              textContentType="creditCardNumber"
             />
 
             <View style={styles.row2}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Expiry</Text>
+                <Text style={styles.fieldLabel}>
+                  Expiry<Required />
+                </Text>
                 <TextInput
                   style={styles.input}
                   placeholder="MM/YY"
@@ -285,10 +348,14 @@ export default function PaymentScreen() {
                   keyboardType="number-pad"
                   value={cardExpiry}
                   onChangeText={(t) => setCardExpiry(formatExpiry(t))}
+                  autoComplete="cc-exp"
+                  textContentType="creditCardExpiration"
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>CVV</Text>
+                <Text style={styles.fieldLabel}>
+                  CVV<Required />
+                </Text>
                 <TextInput
                   style={styles.input}
                   placeholder="123"
@@ -298,9 +365,15 @@ export default function PaymentScreen() {
                   maxLength={4}
                   value={cardCvv}
                   onChangeText={setCardCvv}
+                  autoComplete="cc-csc"
+                  textContentType="creditCardSecurityCode"
                 />
               </View>
             </View>
+            <Text style={styles.autofillHint}>
+              <Feather name="smartphone" size={12} color={MUTED} /> Cards saved
+              to your phone&apos;s wallet will appear above the keyboard.
+            </Text>
           </View>
 
           {/* SECTION 4 — Receipts */}
@@ -325,13 +398,17 @@ export default function PaymentScreen() {
               />
             </View>
 
-            <Text style={styles.fieldLabel}>Receipt email</Text>
+            <Text style={styles.fieldLabel}>
+              Receipt email<Required />
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="you@example.com"
               placeholderTextColor={MUTED}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoComplete="email"
+              textContentType="emailAddress"
               value={email}
               onChangeText={setEmail}
             />
@@ -645,4 +722,70 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   pressed: { opacity: 0.85 },
+
+  walletRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  walletBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 10,
+  },
+  applePayBtn: {
+    backgroundColor: "#000000",
+  },
+  applePayText: {
+    color: WHITE,
+    fontSize: 17,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: -0.2,
+  },
+  gPayBtn: {
+    backgroundColor: "#000000",
+  },
+  gPayG: {
+    color: "#4285F4",
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    marginRight: -2,
+  },
+  gPayText: {
+    color: WHITE,
+    fontSize: 17,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: -0.2,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: BORDER,
+  },
+  dividerText: {
+    color: MUTED,
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+  },
+  autofillHint: {
+    color: MUTED,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 10,
+    fontFamily: "Inter_400Regular",
+  },
 });
