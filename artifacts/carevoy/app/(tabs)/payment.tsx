@@ -1,6 +1,7 @@
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import React, { useCallback, useState } from "react";
+import * as WebBrowser from "expo-web-browser";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +18,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Required } from "../../components/Required";
+import {
+  createSetupSession,
+  detachPaymentMethod,
+  getReturnUrl,
+  listPaymentMethods,
+  type SavedPaymentMethod,
+} from "../../lib/paymentsApi";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -28,40 +36,28 @@ const CARD = "#F8FAFC";
 const BORDER = "#E2E8F0";
 const ERROR = "#EF4444";
 
-function formatCardNumber(input: string): string {
-  const digits = input.replace(/\D/g, "").slice(0, 19);
-  return digits.replace(/(.{4})/g, "$1 ").trim();
-}
-
-function formatExpiry(input: string): string {
-  const digits = input.replace(/\D/g, "").slice(0, 4);
-  if (digits.length < 3) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-}
-
-function last4(card: string): string {
-  const digits = card.replace(/\D/g, "");
-  return digits.slice(-4);
+function brandLabel(brand: string): string {
+  const b = (brand || "").toLowerCase();
+  if (b === "visa") return "Visa";
+  if (b === "mastercard") return "Mastercard";
+  if (b === "amex" || b === "american_express") return "Amex";
+  if (b === "discover") return "Discover";
+  if (b === "diners") return "Diners";
+  if (b === "jcb") return "JCB";
+  if (b === "unionpay") return "UnionPay";
+  return "Card";
 }
 
 export default function PaymentScreen() {
-  // HSA/FSA
-  const [hsaNumber, setHsaNumber] = useState("");
-  const [hsaExpiry, setHsaExpiry] = useState("");
-  const [hsaCvv, setHsaCvv] = useState("");
-  const [hsaSavedLast4, setHsaSavedLast4] = useState<string | null>(null);
+  const [methods, setMethods] = useState<SavedPaymentMethod[]>([]);
+  const [hasCustomer, setHasCustomer] = useState(false);
+  const [patientId, setPatientId] = useState<string | null>(null);
 
-  // Regular card
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [cardSavedLast4, setCardSavedLast4] = useState<string | null>(null);
-
-  // Receipt
   const [autoEmail, setAutoEmail] = useState(true);
   const [email, setEmail] = useState("");
 
-  const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -69,20 +65,17 @@ export default function PaymentScreen() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
+    setPatientId(userId);
     const { data } = await supabase
       .from("patients")
-      .select("email, hsa_fsa_card_token, stripe_customer_id")
+      .select("email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
     if (data?.email) setEmail(data.email);
-    if (data?.hsa_fsa_card_token) {
-      const m = data.hsa_fsa_card_token.match(/(\d{4})$/);
-      setHsaSavedLast4(m ? m[1] : "••••");
-    }
-    if (data?.stripe_customer_id) {
-      const m = data.stripe_customer_id.match(/(\d{4})$/);
-      setCardSavedLast4(m ? m[1] : "••••");
-    }
+    setHasCustomer(!!data?.stripe_customer_id?.startsWith("cus_"));
+    // Methods are fetched server-side, scoped to the authenticated user.
+    const list = await listPaymentMethods();
+    setMethods(list);
   }, []);
 
   useFocusEffect(
@@ -91,73 +84,113 @@ export default function PaymentScreen() {
     }, [load]),
   );
 
-  const showWalletNotice = (label: "Apple Pay" | "Google Pay") => {
-    const msg = `${label} will be enabled once payment processing is connected. For now, please add your card below — it will autofill from your phone's saved cards if you have any.`;
-    if (Platform.OS === "web") {
-      // eslint-disable-next-line no-alert
-      if (typeof window !== "undefined") window.alert(msg);
-      return;
+  // Web: when Stripe redirects back here with ?stripe_status=success|cancel,
+  // surface the result and clean the URL.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("stripe_status");
+    if (!status) return;
+    if (status === "success") {
+      setSuccess("Payment method saved.");
+    } else if (status === "cancel") {
+      setError("No changes were made.");
     }
-    Alert.alert(label, msg);
-  };
+    params.delete("stripe_status");
+    const next = `${window.location.pathname}${
+      params.toString() ? "?" + params.toString() : ""
+    }`;
+    window.history.replaceState({}, "", next);
+    void load();
+  }, [load]);
 
-  const onSave = async () => {
+  const onAddPaymentMethod = async () => {
     setError(null);
     setSuccess(null);
-    const hasHsa = hsaNumber && hsaExpiry && hsaCvv;
-    const hasCard = cardNumber && cardExpiry && cardCvv;
 
-    if (!hasHsa && !hasCard && !hsaSavedLast4 && !cardSavedLast4) {
-      setError("Please enter an HSA/FSA card or a regular card to save.");
+    if (!patientId) {
+      setError("Please sign in first.");
       return;
     }
+
+    setAdding(true);
+    try {
+      const { url } = await createSetupSession({
+        email: email.trim() || undefined,
+        returnUrl: getReturnUrl(),
+      });
+
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined") window.location.href = url;
+      } else {
+        await WebBrowser.openBrowserAsync(url, {
+          presentationStyle:
+            WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+          dismissButtonStyle: "done",
+        });
+        // Refresh from Stripe — the actual saved cards are the source of truth.
+        await load();
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(`Could not start Stripe checkout. ${msg}`);
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Suppress unused-var warning while we keep this state for future surfacing.
+  void hasCustomer;
+
+  const onRemoveMethod = async (id: string, label: string) => {
+    const confirm = async () => {
+      const ok = await detachPaymentMethod(id);
+      if (ok) {
+        setMethods((m) => m.filter((x) => x.id !== id));
+        setSuccess("Payment method removed.");
+      } else {
+        setError("Could not remove that card. Please try again.");
+      }
+    };
+    if (Platform.OS === "web") {
+      // eslint-disable-next-line no-alert
+      if (typeof window !== "undefined" && window.confirm(`Remove ${label}?`)) {
+        confirm();
+      }
+      return;
+    }
+    Alert.alert(
+      "Remove payment method",
+      `Are you sure you want to remove ${label}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Remove", style: "destructive", onPress: confirm },
+      ],
+    );
+  };
+
+  const onSaveEmail = async () => {
+    setError(null);
+    setSuccess(null);
     if (autoEmail && !email.trim()) {
       setError("Add an email to receive receipts, or turn off auto-email.");
       return;
     }
-
-    setSaving(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) {
-      setSaving(false);
+    if (!patientId) {
       setError("Not signed in.");
       return;
     }
-
-    const update: Record<string, string | null> = {};
-    if (hasHsa) update.hsa_fsa_card_token = `card_hsa_${last4(hsaNumber)}`;
-    if (hasCard) update.stripe_customer_id = `card_std_${last4(cardNumber)}`;
-    if (email.trim()) update.email = email.trim();
-
+    setSavingEmail(true);
     const { error: upErr } = await supabase
       .from("patients")
-      .update(update)
-      .eq("id", userId);
-
-    setSaving(false);
+      .update({ email: email.trim() || null })
+      .eq("id", patientId);
+    setSavingEmail(false);
     if (upErr) {
       setError(upErr.message);
       return;
     }
-
-    if (hasHsa) {
-      setHsaSavedLast4(last4(hsaNumber));
-      setHsaNumber("");
-      setHsaExpiry("");
-      setHsaCvv("");
-    }
-    if (hasCard) {
-      setCardSavedLast4(last4(cardNumber));
-      setCardNumber("");
-      setCardExpiry("");
-      setCardCvv("");
-    }
-    setSuccess(
-      hasHsa
-        ? "HSA/FSA card saved. You're ready to ride."
-        : "Payment method saved. You're ready to ride.",
-    );
+    setSuccess("Receipt email saved.");
   };
 
   return (
@@ -172,212 +205,119 @@ export default function PaymentScreen() {
         >
           <Text style={styles.title}>Pay with Your HSA or FSA</Text>
           <Text style={styles.subtitle}>
-            Your ride is a tax-free medical expense under IRS Code 213(d). Use
-            your pre-tax dollars — automatically.
+            Your ride is a tax-free medical expense under IRS Code 213(d). Add
+            an HSA, FSA, or any debit/credit card — Apple Pay and Google Pay
+            also work.
           </Text>
 
-          {/* SECTION 1 — HSA/FSA */}
+          {/* HSA / FSA INFO CARD */}
           <View style={styles.hsaCard}>
             <View style={styles.hsaHeader}>
               <View style={styles.hsaLabelWrap}>
                 <Feather name="credit-card" size={20} color={NAVY} />
-                <Text style={styles.hsaLabel}>HSA / FSA Card</Text>
+                <Text style={styles.hsaLabel}>HSA / FSA Eligible</Text>
               </View>
               <View style={styles.taxBadge}>
                 <Text style={styles.taxBadgeText}>TAX-FREE ✓</Text>
               </View>
             </View>
-
-            {hsaSavedLast4 ? (
-              <View style={styles.savedRow}>
-                <Feather name="check-circle" size={18} color={NAVY} />
-                <Text style={styles.savedText}>
-                  Card on file ending in {hsaSavedLast4}
-                </Text>
-              </View>
-            ) : null}
-
-            <Text style={styles.hsaFieldLabel}>
-              Card number<Required />
-            </Text>
-            <TextInput
-              style={styles.hsaInput}
-              placeholder="1234 5678 9012 3456"
-              placeholderTextColor="rgba(5,13,31,0.4)"
-              keyboardType="number-pad"
-              value={hsaNumber}
-              onChangeText={(t) => setHsaNumber(formatCardNumber(t))}
-              autoComplete="cc-number"
-              textContentType="creditCardNumber"
-            />
-
-            <View style={styles.row2}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.hsaFieldLabel}>
-                  Expiry<Required />
-                </Text>
-                <TextInput
-                  style={styles.hsaInput}
-                  placeholder="MM/YY"
-                  placeholderTextColor="rgba(5,13,31,0.4)"
-                  keyboardType="number-pad"
-                  value={hsaExpiry}
-                  onChangeText={(t) => setHsaExpiry(formatExpiry(t))}
-                  autoComplete="cc-exp"
-                  textContentType="creditCardExpiration"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.hsaFieldLabel}>
-                  CVV<Required />
-                </Text>
-                <TextInput
-                  style={styles.hsaInput}
-                  placeholder="123"
-                  placeholderTextColor="rgba(5,13,31,0.4)"
-                  keyboardType="number-pad"
-                  secureTextEntry
-                  maxLength={4}
-                  value={hsaCvv}
-                  onChangeText={setHsaCvv}
-                  autoComplete="cc-csc"
-                  textContentType="creditCardSecurityCode"
-                />
-              </View>
-            </View>
-
             <Text style={styles.hsaHelper}>
-              Your HSA card works like a debit card. Your FSA card is verified
-              automatically via our payment partner.
+              Add your HSA or FSA debit card the same way you&apos;d add any
+              other card. CareVoy auto-generates an IRS-compliant receipt
+              (IRS Code 213(d)) after every ride.
             </Text>
-            <View style={styles.hsaNoteRow}>
-              <Feather name="file-text" size={14} color={NAVY} />
-              <Text style={styles.hsaNote}>
-                An IRS-compliant receipt is generated and emailed to you
-                automatically after every ride.
+          </View>
+
+          {/* SAVED METHODS */}
+          <Text style={styles.sectionLabel}>Saved payment methods</Text>
+          {methods.length === 0 ? (
+            <View style={styles.emptyMethodsCard}>
+              <Feather name="credit-card" size={20} color={MUTED} />
+              <Text style={styles.emptyMethodsText}>
+                No cards on file yet. Add one below to be ready for your next
+                ride.
               </Text>
             </View>
-          </View>
+          ) : (
+            methods.map((m) => {
+              const label = `${brandLabel(m.brand)} •••• ${m.last4}`;
+              return (
+                <View key={m.id} style={styles.methodRow}>
+                  <View style={styles.methodLeft}>
+                    <View style={styles.methodIcon}>
+                      <Feather name="credit-card" size={18} color={NAVY} />
+                    </View>
+                    <View>
+                      <Text style={styles.methodTitle}>{label}</Text>
+                      {m.expMonth && m.expYear ? (
+                        <Text style={styles.methodSub}>
+                          Expires {String(m.expMonth).padStart(2, "0")}/
+                          {String(m.expYear).slice(-2)}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                  <Pressable
+                    onPress={() => onRemoveMethod(m.id, label)}
+                    accessibilityLabel={`Remove ${label}`}
+                    style={({ pressed }) => [
+                      styles.methodRemove,
+                      pressed && styles.pressed,
+                    ]}
+                    hitSlop={8}
+                  >
+                    <Feather name="trash-2" size={16} color={ERROR} />
+                  </Pressable>
+                </View>
+              );
+            })
+          )}
 
-          {/* SECTION 2 — Info */}
-          <View style={styles.infoBox}>
-            <View style={styles.infoIcon}>
-              <Feather name="shield" size={18} color={TEAL} />
+          {/* ADD METHOD CTA */}
+          <Pressable
+            onPress={onAddPaymentMethod}
+            disabled={adding}
+            accessibilityLabel="Add a payment method via Stripe"
+            style={({ pressed }) => [
+              styles.addBtn,
+              (pressed || adding) && styles.pressed,
+            ]}
+          >
+            {adding ? (
+              <ActivityIndicator color={NAVY} />
+            ) : (
+              <>
+                <Feather name="plus-circle" size={18} color={NAVY} />
+                <Text style={styles.addBtnText}>
+                  {methods.length === 0
+                    ? "Add a payment method"
+                    : "Add another payment method"}
+                </Text>
+              </>
+            )}
+          </Pressable>
+
+          <View style={styles.walletHintRow}>
+            <View style={styles.walletChip}>
+              <FontAwesome name="apple" size={14} color={NAVY} />
+              <Text style={styles.walletChipText}>Apple Pay</Text>
             </View>
-            <Text style={styles.infoText}>
-              Transportation to and from surgery is{" "}
-              <Text style={styles.infoBold}>100% HSA/FSA eligible</Text>.
-              CareVoy handles the documentation so you never have to file a
-              reimbursement form manually.
-            </Text>
+            <View style={styles.walletChip}>
+              <Text style={styles.gPayG}>G</Text>
+              <Text style={styles.walletChipText}>Google Pay</Text>
+            </View>
+            <View style={styles.walletChip}>
+              <Feather name="credit-card" size={14} color={NAVY} />
+              <Text style={styles.walletChipText}>Card</Text>
+            </View>
           </View>
-
-          {/* SECTION 3 — Regular Card */}
-          <Text style={styles.sectionLabel}>Or pay with a regular card</Text>
-          <Text style={styles.sectionSub}>
-            We&apos;ll generate an HSA/FSA reimbursement receipt you can submit
-            to your provider for refund.
+          <Text style={styles.secureRow}>
+            <Feather name="lock" size={11} color={MUTED} /> Secured by Stripe.
+            Your card details never touch CareVoy&apos;s servers.
           </Text>
 
-          <View style={styles.walletRow}>
-            <Pressable
-              accessibilityLabel="Pay with Apple Pay"
-              onPress={() => showWalletNotice("Apple Pay")}
-              style={({ pressed }) => [
-                styles.walletBtn,
-                styles.applePayBtn,
-                pressed && styles.pressed,
-              ]}
-            >
-              <FontAwesome name="apple" size={20} color={WHITE} />
-              <Text style={styles.applePayText}>Pay</Text>
-            </Pressable>
-            <Pressable
-              accessibilityLabel="Pay with Google Pay"
-              onPress={() => showWalletNotice("Google Pay")}
-              style={({ pressed }) => [
-                styles.walletBtn,
-                styles.gPayBtn,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.gPayG}>G</Text>
-              <Text style={styles.gPayText}>Pay</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or enter card details</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.regCard}>
-            {cardSavedLast4 ? (
-              <View style={styles.savedRowAlt}>
-                <Feather name="check-circle" size={16} color={TEAL} />
-                <Text style={styles.savedTextAlt}>
-                  Card on file ending in {cardSavedLast4}
-                </Text>
-              </View>
-            ) : null}
-
-            <Text style={styles.fieldLabel}>
-              Card number<Required />
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="1234 5678 9012 3456"
-              placeholderTextColor={MUTED}
-              keyboardType="number-pad"
-              value={cardNumber}
-              onChangeText={(t) => setCardNumber(formatCardNumber(t))}
-              autoComplete="cc-number"
-              textContentType="creditCardNumber"
-            />
-
-            <View style={styles.row2}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>
-                  Expiry<Required />
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="MM/YY"
-                  placeholderTextColor={MUTED}
-                  keyboardType="number-pad"
-                  value={cardExpiry}
-                  onChangeText={(t) => setCardExpiry(formatExpiry(t))}
-                  autoComplete="cc-exp"
-                  textContentType="creditCardExpiration"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>
-                  CVV<Required />
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="123"
-                  placeholderTextColor={MUTED}
-                  keyboardType="number-pad"
-                  secureTextEntry
-                  maxLength={4}
-                  value={cardCvv}
-                  onChangeText={setCardCvv}
-                  autoComplete="cc-csc"
-                  textContentType="creditCardSecurityCode"
-                />
-              </View>
-            </View>
-            <Text style={styles.autofillHint}>
-              <Feather name="smartphone" size={12} color={MUTED} /> Cards saved
-              to your phone&apos;s wallet will appear above the keyboard.
-            </Text>
-          </View>
-
           {/* SECTION 4 — Receipts */}
-          <Text style={styles.sectionLabel}>Receipts & reimbursement</Text>
+          <Text style={styles.sectionLabel}>Receipts &amp; reimbursement</Text>
           <View style={styles.receiptCard}>
             <View style={styles.toggleRow}>
               <View style={{ flex: 1, paddingRight: 12 }}>
@@ -427,15 +367,15 @@ export default function PaymentScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.saveBtn,
-              (saving || pressed) && styles.pressed,
+              (savingEmail || pressed) && styles.pressed,
             ]}
-            onPress={onSave}
-            disabled={saving}
+            onPress={onSaveEmail}
+            disabled={savingEmail}
           >
-            {saving ? (
+            {savingEmail ? (
               <ActivityIndicator color={NAVY} />
             ) : (
-              <Text style={styles.saveBtnText}>Save Payment Method</Text>
+              <Text style={styles.saveBtnText}>Save Receipt Email</Text>
             )}
           </Pressable>
         </View>
@@ -501,291 +441,228 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: 0.6,
   },
-  savedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(5,13,31,0.1)",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-  },
-  savedText: {
-    color: NAVY,
-    fontSize: 13,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-  },
-  hsaFieldLabel: {
-    color: NAVY,
-    fontSize: 12,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-    marginTop: 12,
-    marginBottom: 6,
-    letterSpacing: 0.4,
-  },
-  hsaInput: {
-    backgroundColor: "rgba(5,13,31,0.08)",
-    color: NAVY,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    fontSize: 16,
-    fontFamily: "Inter_500Medium",
-    fontWeight: "500",
-  },
-  row2: { flexDirection: "row", gap: 12 },
   hsaHelper: {
     color: NAVY,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 14,
-    opacity: 0.85,
-    fontFamily: "Inter_400Regular",
-  },
-  hsaNoteRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(5,13,31,0.15)",
-  },
-  hsaNote: {
-    flex: 1,
-    color: NAVY,
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: "Inter_500Medium",
-    fontWeight: "500",
-  },
-
-  infoBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    borderWidth: 1,
-    borderColor: TEAL,
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 22,
-    backgroundColor: "rgba(0,194,168,0.06)",
-  },
-  infoIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: "rgba(0,194,168,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  infoText: {
-    flex: 1,
-    color: NAVY,
     fontSize: 13,
-    lineHeight: 19,
+    lineHeight: 18,
     fontFamily: "Inter_400Regular",
-  },
-  infoBold: {
-    color: TEAL,
-    fontWeight: "700",
-    fontFamily: "Inter_700Bold",
   },
 
   sectionLabel: {
     color: NAVY,
-    fontSize: 15,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
     marginTop: 28,
+    marginBottom: 10,
   },
-  sectionSub: {
-    color: MUTED,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 4,
-    marginBottom: 12,
-    fontFamily: "Inter_400Regular",
-  },
-  regCard: {
+
+  emptyMethodsCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     backgroundColor: CARD,
-    borderRadius: 14,
     padding: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: BORDER,
   },
-  savedRowAlt: {
+  emptyMethodsText: {
+    flex: 1,
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: "Inter_400Regular",
+  },
+
+  methodRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
+    justifyContent: "space-between",
+    backgroundColor: CARD,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: BORDER,
+    marginBottom: 10,
   },
-  savedTextAlt: {
-    color: TEAL,
-    fontSize: 13,
+  methodLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  methodIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: WHITE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  methodTitle: {
+    color: NAVY,
+    fontSize: 14,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },
+  methodSub: {
+    color: MUTED,
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    marginTop: 2,
+  },
+  methodRemove: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: TEAL,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 12,
+  },
+  addBtnText: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+
+  walletHintRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+    justifyContent: "center",
+  },
+  walletChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  walletChipText: {
+    color: NAVY,
+    fontSize: 12,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  gPayG: {
+    color: "#4285F4",
+    fontWeight: "700",
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+  },
+  secureRow: {
+    color: MUTED,
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 8,
+    fontFamily: "Inter_400Regular",
+  },
+
   fieldLabel: {
     color: NAVY,
     fontSize: 12,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
-    marginTop: 12,
+    marginTop: 14,
     marginBottom: 6,
     letterSpacing: 0.4,
   },
   input: {
     backgroundColor: WHITE,
-    color: NAVY,
-    borderRadius: 10,
     borderWidth: 1,
     borderColor: BORDER,
+    borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 13,
+    paddingVertical: Platform.OS === "ios" ? 14 : 11,
+    color: NAVY,
     fontSize: 15,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Inter_400Regular",
   },
 
   receiptCard: {
     backgroundColor: CARD,
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: BORDER,
+    padding: 16,
   },
   toggleRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingBottom: 6,
+    paddingBottom: 8,
   },
   toggleTitle: {
     color: NAVY,
     fontSize: 14,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
   },
   toggleSub: {
     color: MUTED,
     fontSize: 12,
-    lineHeight: 17,
-    marginTop: 4,
+    lineHeight: 16,
+    marginTop: 2,
     fontFamily: "Inter_400Regular",
   },
 
+  error: {
+    color: ERROR,
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    marginTop: 16,
+  },
   successCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "rgba(34,197,94,0.12)",
+    backgroundColor: "#ECFDF5",
     borderWidth: 1,
-    borderColor: GREEN,
+    borderColor: "#A7F3D0",
+    padding: 12,
     borderRadius: 12,
-    padding: 14,
-    marginTop: 18,
+    marginTop: 16,
   },
   successText: {
-    flex: 1,
     color: NAVY,
-    fontSize: 14,
-    fontFamily: "Inter_500Medium",
-  },
-  error: {
-    color: ERROR,
     fontSize: 13,
-    marginTop: 16,
-    textAlign: "center",
+    flex: 1,
     fontFamily: "Inter_500Medium",
   },
 
   footer: {
-    padding: 20,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === "ios" ? 100 : 96,
+    backgroundColor: WHITE,
     borderTopWidth: 1,
     borderTopColor: BORDER,
-    backgroundColor: WHITE,
+    padding: 16,
   },
   saveBtn: {
     backgroundColor: TEAL,
     borderRadius: 14,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: "center",
+    justifyContent: "center",
   },
   saveBtnText: {
     color: NAVY,
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
+    letterSpacing: 0.3,
   },
-  pressed: { opacity: 0.85 },
-
-  walletRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 4,
-    marginBottom: 14,
-  },
-  walletBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 14,
-    borderRadius: 10,
-  },
-  applePayBtn: {
-    backgroundColor: "#000000",
-  },
-  applePayText: {
-    color: WHITE,
-    fontSize: 17,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: -0.2,
-  },
-  gPayBtn: {
-    backgroundColor: "#000000",
-  },
-  gPayG: {
-    color: "#4285F4",
-    fontSize: 18,
-    fontWeight: "700",
-    fontFamily: "Inter_700Bold",
-    marginRight: -2,
-  },
-  gPayText: {
-    color: WHITE,
-    fontSize: 17,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: -0.2,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: BORDER,
-  },
-  dividerText: {
-    color: MUTED,
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-  },
-  autofillHint: {
-    color: MUTED,
-    fontSize: 11,
-    lineHeight: 16,
-    marginTop: 10,
-    fontFamily: "Inter_400Regular",
-  },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
 });

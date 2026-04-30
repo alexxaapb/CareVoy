@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { initStripe } from "./lib/stripeClient";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +15,11 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+// Run Stripe migrations + managed webhook setup before accepting traffic.
+// initStripe internally swallows errors so server still starts if Stripe
+// connection isn't ready yet (the developer can reconnect and restart).
+await initStripe(logger);
 
 app.listen(port, (err) => {
   if (err) {
