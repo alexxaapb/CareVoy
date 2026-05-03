@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { isDemoMode } from "../lib/demoMode";
 import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -118,6 +119,49 @@ export default function ChatScreen() {
 
   // initial load: fetch user profile, create conversation, send greeting
   useEffect(() => {
+    // Demo mode (pitch-deck screenshots): inject a sample conversation
+    // showing a real exchange — no Supabase call, no network.
+    if (isDemoMode()) {
+      setFirstName("Jane");
+      const now = Date.now();
+      setMessages([
+        {
+          id: "g_demo",
+          role: "assistant",
+          content:
+            "Hi Jane! I'm your CareVoy care coordinator. I can help you book a ride, answer HSA/FSA questions, check on your upcoming rides, or anything else related to your medical transportation. What can I help you with today?",
+          ts: new Date(now - 1000 * 60 * 4),
+        },
+        {
+          id: "u_demo1",
+          role: "user",
+          content:
+            "I have a knee arthroscopy at OhioHealth Riverside on Friday May 9 at 9:30 AM. Can you book my ride?",
+          ts: new Date(now - 1000 * 60 * 3),
+        },
+        {
+          id: "a_demo1",
+          role: "assistant",
+          content:
+            "Absolutely, Jane. I've got everything I need: pickup at 850 N High St (your home), drop-off at OhioHealth Riverside Methodist, Friday May 9 at 8:00 AM (90 minutes before your 9:30 surgery). I'll bill the HSA card ending in 4242 — that keeps it tax-free under IRS Code 213(d). Want me to confirm?",
+          ts: new Date(now - 1000 * 60 * 2),
+        },
+        {
+          id: "u_demo2",
+          role: "user",
+          content: "Yes please. And remind me the day before.",
+          ts: new Date(now - 1000 * 60),
+        },
+        {
+          id: "a_demo2",
+          role: "assistant",
+          content:
+            "Done. Your ride is booked and you'll get a text reminder Thursday evening plus another 30 minutes before pickup. Anything else?",
+          ts: new Date(now - 1000 * 30),
+        },
+      ]);
+      return;
+    }
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
@@ -493,7 +537,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingVertical: 10,
+    paddingTop: Platform.OS === "ios" ? 120 : 80,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },

@@ -143,24 +143,38 @@ export default function AddCareRecipientScreen() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.topBar}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={async () => {
+            if (fromOnboarding) {
+              await refreshAuth();
+              router.replace("/(tabs)");
+            } else if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(tabs)");
+            }
+          }}
           hitSlop={10}
           style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
-          accessibilityLabel="Back"
+          accessibilityLabel={fromOnboarding ? "Cancel" : "Back"}
         >
           <Feather name="arrow-left" size={20} color={NAVY} />
         </Pressable>
-        <Text style={styles.topTitle}>Add a person in my care</Text>
+        <Text style={styles.topTitle}>
+          {fromOnboarding ? "Add a person in my care" : "Add a person in my care"}
+        </Text>
         <View style={{ width: 40 }} />
       </View>
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
         >
           <Text style={styles.intro}>
             Add an elderly parent, spouse, or anyone you book medical rides for.
@@ -327,7 +341,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === "ios" ? 120 : 80,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },

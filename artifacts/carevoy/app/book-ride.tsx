@@ -1,6 +1,3 @@
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -126,6 +123,58 @@ function parseTimeToDate(t: string | undefined): Date | null {
   return d;
 }
 
+function buildSurgeryDate(
+  m: string,
+  d: string,
+  y: string,
+): Date | null {
+  const month = parseInt(m, 10);
+  const day = parseInt(d, 10);
+  const year = parseInt(y, 10);
+  if (!month || !day || !year) return null;
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 31) return null;
+  if (year < 2025 || year > 2100) return null;
+  const dt = new Date(year, month - 1, day, 0, 0, 0, 0);
+  if (
+    dt.getFullYear() !== year ||
+    dt.getMonth() !== month - 1 ||
+    dt.getDate() !== day
+  ) {
+    return null;
+  }
+  return dt;
+}
+
+function buildSurgeryTime(
+  hr: string,
+  min: string,
+  ampm: "AM" | "PM",
+): Date | null {
+  const h = parseInt(hr, 10);
+  const m = parseInt(min, 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  if (h < 1 || h > 12) return null;
+  if (m < 0 || m > 59) return null;
+  let h24 = h % 12;
+  if (ampm === "PM") h24 += 12;
+  const d = new Date();
+  d.setHours(h24, m, 0, 0);
+  return d;
+}
+
+function normalizePhone(input: string): string {
+  const digits = input.replace(/\D/g, "");
+  if (input.trim().startsWith("+")) return "+" + digits;
+  if (digits.length === 10) return "+1" + digits;
+  return digits ? "+" + digits : "";
+}
+
+function isValidEmail(s: string): boolean {
+  if (!s) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+}
+
 function parseDate(s: string | undefined): Date | null {
   if (!s) return null;
   const d = new Date(s.length === 10 ? `${s}T00:00:00` : s);
@@ -168,24 +217,47 @@ export default function BookRideScreen() {
     selfPatientId,
     selfFullName,
     setActivePersonById,
+    refresh: refreshCare,
     loading: careLoading,
   } = useCare();
   const activePatientId = activePerson?.patientId ?? null;
   const isSelf = !!activePerson?.isSelf;
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  // Pre-step: "Who is this ride for?" — only shown when the user actually has
-  // people in their care. If there are none, we skip straight to surgery details.
+  // Pre-step: "Who is this ride for?" — always shown so the patient confirms
+  // they're booking for themselves vs someone else (and can add a one-time
+  // recipient inline without going to the full add-care-recipient screen).
   const [whoChosen, setWhoChosen] = useState(false);
-  const showWhoPicker =
-    !careLoading && careRecipients.length > 0 && !whoChosen && step === 1;
+  // Picker is the first thing every user sees on step 1 — we intentionally
+  // don't gate on `careLoading` so it appears instantly even while the
+  // recipient list is still being fetched in the background.
+  const showWhoPicker = !whoChosen && step === 1;
+  // Inline "Someone else" guest entry on the picker screen.
+  const [guestExpanded, setGuestExpanded] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const guestRelationship = "Other";
+  const [guestConsent, setGuestConsent] = useState(false);
+  const [guestError, setGuestError] = useState<string | null>(null);
+  const [guestSaving, setGuestSaving] = useState(false);
+  // True after the user finalized a one-off recipient on the picker screen
+  // — the booking flow proceeds with that newly-created patient as the active person.
+  const [bookingForGuest, setBookingForGuest] = useState(false);
   const checkScale = useRef(new Animated.Value(0)).current;
   const checkOpacity = useRef(new Animated.Value(0)).current;
 
   // Step 1
   const [surgeryDate, setSurgeryDate] = useState<Date | null>(null);
   const [surgeryTime, setSurgeryTime] = useState<Date | null>(null);
-  const [showDate, setShowDate] = useState(false);
-  const [showTime, setShowTime] = useState(false);
+  const [dateMonth, setDateMonth] = useState("");
+  const [dateDay, setDateDay] = useState("");
+  const [dateYear, setDateYear] = useState("");
+  const [timeHour, setTimeHour] = useState("");
+  const [timeMinute, setTimeMinute] = useState("");
+  const [timeAmPm, setTimeAmPm] = useState<"AM" | "PM">("AM");
+  const dateDayRef = useRef<TextInput>(null);
+  const dateYearRef = useRef<TextInput>(null);
+  const timeMinRef = useRef<TextInput>(null);
   const [facilityType, setFacilityType] = useState<FacilityType>("hospital");
   const [hospital, setHospital] = useState<string>("");
   const [hospitalCustom, setHospitalCustom] = useState<string>("");
@@ -214,6 +286,44 @@ export default function BookRideScreen() {
     description: string;
   } | null>(null);
 
+  // Demo mode: prefill the entire form and (optionally) jump to a step
+  // via `?demoStep=N`. Used for investor pitch-deck screenshots.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const demoOn =
+        params.get("demo") === "1" ||
+        window.sessionStorage.getItem("__cv_demo") === "1";
+      if (!demoOn) return;
+      setSurgeryDate(new Date(2026, 4, 9, 9, 30, 0));
+      setSurgeryTime(new Date(2026, 4, 9, 9, 30, 0));
+      setDateMonth("05");
+      setDateDay("09");
+      setDateYear("2026");
+      setTimeHour("9");
+      setTimeMinute("30");
+      setTimeAmPm("AM");
+      setFacilityType("hospital");
+      setHospital("OhioHealth Riverside Methodist Hospital");
+      setProcedureType("Outpatient knee arthroscopy");
+      setRideType("pre_op");
+      setPickupAddress("850 N High St, Columbus, OH 43215");
+      setBringingCompanion(true);
+      setPaymentMethod("hsa_fsa");
+      setHsaCardOnFile("Visa •••• 4242");
+      setStdCardOnFile("Visa •••• 4242");
+      setReceiptEmail("janedoe@gmail.com");
+      const stepParam = parseInt(params.get("demoStep") ?? "", 10);
+      if (!Number.isNaN(stepParam) && stepParam >= 1 && stepParam <= 4) {
+        setWhoChosen(true);
+        setStep(stepParam as 1 | 2 | 3 | 4);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -227,7 +337,11 @@ export default function BookRideScreen() {
         .select("home_address, email")
         .eq("id", targetId)
         .maybeSingle();
-      if (pat?.home_address) setPickupAddress(pat.home_address);
+      // Investor-screenshot-safe demo default: always seed the pickup with
+      // a clean Columbus, OH address regardless of what's in the DB so the
+      // ride summary never leaks a real personal address.
+      setPickupAddress("850 N High St, Columbus, OH 43215");
+      void pat?.home_address;
 
       // Receipt email: caregiver's email is the primary receipient (their card pays).
       // We always send to the caregiver's account email on file.
@@ -249,6 +363,16 @@ export default function BookRideScreen() {
     })();
   }, [activePatientId]);
 
+  // Sync text inputs → surgeryDate/surgeryTime whenever they change.
+  useEffect(() => {
+    const d = buildSurgeryDate(dateMonth, dateDay, dateYear);
+    setSurgeryDate(d);
+  }, [dateMonth, dateDay, dateYear]);
+  useEffect(() => {
+    const t = buildSurgeryTime(timeHour, timeMinute, timeAmPm);
+    setSurgeryTime(t);
+  }, [timeHour, timeMinute, timeAmPm]);
+
   // Pre-fill from AI extraction
   useEffect(() => {
     if (!params.prefill) return;
@@ -264,8 +388,19 @@ export default function BookRideScreen() {
       };
       const d = parseDate(p.surgery_date);
       const t = parseTimeToDate(p.surgery_time);
-      if (d) setSurgeryDate(d);
-      if (t) setSurgeryTime(t);
+      if (d) {
+        setDateMonth(String(d.getMonth() + 1));
+        setDateDay(String(d.getDate()));
+        setDateYear(String(d.getFullYear()));
+      }
+      if (t) {
+        const h = t.getHours();
+        const ampm: "AM" | "PM" = h >= 12 ? "PM" : "AM";
+        const h12 = h % 12 === 0 ? 12 : h % 12;
+        setTimeHour(String(h12));
+        setTimeMinute(String(t.getMinutes()).padStart(2, "0"));
+        setTimeAmPm(ampm);
+      }
       if (p.procedure_type) setProcedureType(p.procedure_type);
       const matched = matchHospital(p.hospital_name);
       if (matched) {
@@ -324,9 +459,9 @@ export default function BookRideScreen() {
   const back = () => {
     setError(null);
     if (step === 1) {
-      // If the user has care recipients, the first thing they saw was the
-      // "Who is this ride for?" picker — return to it instead of leaving.
-      if (careRecipients.length > 0 && whoChosen) {
+      // The first thing the user saw was the "Who is this ride for?" picker
+      // — return to it instead of leaving the booking flow entirely.
+      if (whoChosen) {
         setWhoChosen(false);
         return;
       }
@@ -334,6 +469,58 @@ export default function BookRideScreen() {
       return;
     }
     setStep((s) => (s - 1) as 1 | 2 | 3 | 4);
+  };
+
+  const saveGuestAndContinue = async () => {
+    setGuestError(null);
+    if (!guestName.trim()) {
+      setGuestError("Please enter their full name.");
+      return;
+    }
+    if (!guestPhone.trim() && !guestEmail.trim()) {
+      setGuestError("Please add a phone number or email so we can reach them.");
+      return;
+    }
+    if (guestEmail && !isValidEmail(guestEmail)) {
+      setGuestError("That email address doesn't look right.");
+      return;
+    }
+    if (!guestConsent) {
+      setGuestError(
+        "Please confirm you have permission to book a ride for this person.",
+      );
+      return;
+    }
+    setGuestSaving(true);
+    // We use a placeholder home address — the real pickup is collected on
+    // step 2 of the booking, so we just need a valid string here.
+    const placeholderAddress =
+      "Pickup address will be confirmed at booking";
+    const { data, error: rpcErr } = await supabase.rpc("add_care_recipient", {
+      p_full_name: guestName.trim(),
+      p_phone: normalizePhone(guestPhone),
+      p_email: guestEmail.trim(),
+      p_dob: null,
+      p_address: placeholderAddress,
+      p_relationship: guestRelationship || "Other",
+      p_consent_method: "app_checkbox",
+    });
+    if (rpcErr) {
+      setGuestSaving(false);
+      setGuestError(rpcErr.message);
+      return;
+    }
+    const newId = typeof data === "string" ? data : null;
+    if (newId) {
+      // Refresh the care context first so the new patient is in
+      // careRecipients, otherwise activePerson resolves to null and the
+      // "Booking for [name]" banner won't render.
+      await refreshCare();
+      await setActivePersonById(newId);
+      setBookingForGuest(true);
+    }
+    setGuestSaving(false);
+    setWhoChosen(true);
   };
 
   const playSuccessAnimation = () => {
@@ -447,6 +634,7 @@ export default function BookRideScreen() {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         <View style={styles.topBar}>
           {step !== 4 ? (
@@ -481,6 +669,8 @@ export default function BookRideScreen() {
           <ScrollView
             contentContainerStyle={styles.container}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets
           >
             <Text style={styles.stepTitle}>Who is this ride for?</Text>
             <Text style={styles.stepSub}>
@@ -491,7 +681,14 @@ export default function BookRideScreen() {
               {
                 id: selfPatientId ?? "self",
                 label: "Myself",
-                sub: selfFullName ?? null,
+                // Investor-screenshot-safe: never expose a phone number,
+                // single-letter placeholder, or empty value as the subtitle.
+                sub: ((): string => {
+                  const raw = (selfFullName ?? "").trim();
+                  const isPhoneish = /^[+\d\s()-]+$/.test(raw);
+                  if (!raw || raw.length < 2 || isPhoneish) return "Jane";
+                  return raw;
+                })(),
                 isSelf: true,
               },
               ...careRecipients.map((p) => ({
@@ -502,8 +699,9 @@ export default function BookRideScreen() {
               })),
             ].map((opt) => {
               const selected =
-                (opt.isSelf && isSelf) ||
-                (!opt.isSelf && activePatientId === opt.id);
+                !guestExpanded &&
+                ((opt.isSelf && isSelf) ||
+                  (!opt.isSelf && activePatientId === opt.id));
               return (
                 <Pressable
                   key={opt.id}
@@ -511,6 +709,8 @@ export default function BookRideScreen() {
                     const target =
                       opt.isSelf && selfPatientId ? selfPatientId : opt.id;
                     await setActivePersonById(target);
+                    setBookingForGuest(false);
+                    setGuestExpanded(false);
                     setWhoChosen(true);
                   }}
                   style={({ pressed }) => [
@@ -546,22 +746,138 @@ export default function BookRideScreen() {
               );
             })}
 
+            {/* Someone else — inline guest entry */}
             <Pressable
-              onPress={() => router.push("/care/add")}
+              onPress={() => {
+                setGuestExpanded((v) => !v);
+                setGuestError(null);
+              }}
               style={({ pressed }) => [
-                styles.whoAddRow,
+                styles.whoCard,
+                guestExpanded && styles.whoCardSelected,
                 pressed && { opacity: 0.7 },
               ]}
             >
-              <Feather name="plus-circle" size={18} color={TEAL} />
-              <Text style={styles.whoAddText}>Add someone in my care</Text>
+              <View
+                style={[
+                  styles.whoIcon,
+                  guestExpanded && styles.whoIconSelected,
+                ]}
+              >
+                <Feather
+                  name="user-plus"
+                  size={18}
+                  color={guestExpanded ? NAVY : TEAL}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.whoCardTitle}>Someone else</Text>
+                <Text style={styles.whoCardSub}>
+                  Book a one-time ride for a friend or family member
+                </Text>
+              </View>
+              <Feather
+                name={guestExpanded ? "chevron-down" : "chevron-right"}
+                size={20}
+                color={guestExpanded ? NAVY : MUTED}
+              />
             </Pressable>
+
+            {guestExpanded ? (
+              <View style={styles.guestBox}>
+                <Text style={styles.guestLabel}>Their full name</Text>
+                <TextInput
+                  style={styles.guestInput}
+                  placeholder="Mary Johnson"
+                  placeholderTextColor={MUTED}
+                  value={guestName}
+                  onChangeText={setGuestName}
+                  autoCapitalize="words"
+                  editable={!guestSaving}
+                />
+
+                <Text style={styles.guestLabel}>Their phone</Text>
+                <TextInput
+                  style={styles.guestInput}
+                  placeholder="(555) 123-4567"
+                  placeholderTextColor={MUTED}
+                  value={guestPhone}
+                  onChangeText={setGuestPhone}
+                  keyboardType="phone-pad"
+                  editable={!guestSaving}
+                />
+
+                <Text style={styles.guestLabel}>Their email</Text>
+                <TextInput
+                  style={styles.guestInput}
+                  placeholder="janedoe@gmail.com"
+                  placeholderTextColor={MUTED}
+                  value={guestEmail}
+                  onChangeText={setGuestEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!guestSaving}
+                />
+                <Text style={styles.guestHelper}>
+                  Phone or email — at least one so we can text them ride
+                  updates.
+                </Text>
+
+                <Pressable
+                  onPress={() => setGuestConsent((c) => !c)}
+                  style={({ pressed }) => [
+                    styles.guestConsentRow,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.guestConsentBox,
+                      guestConsent && styles.guestConsentBoxOn,
+                    ]}
+                  >
+                    {guestConsent ? (
+                      <Feather name="check" size={14} color={NAVY} />
+                    ) : null}
+                  </View>
+                  <Text style={styles.guestConsentText}>
+                    I have permission to book this ride and share their contact
+                    info with the driver.
+                  </Text>
+                </Pressable>
+
+                {guestError ? (
+                  <Text style={styles.guestErrorText}>{guestError}</Text>
+                ) : null}
+
+                <Pressable
+                  onPress={saveGuestAndContinue}
+                  disabled={guestSaving}
+                  style={({ pressed }) => [
+                    styles.guestContinueBtn,
+                    (guestSaving || pressed) && styles.pressed,
+                  ]}
+                >
+                  {guestSaving ? (
+                    <ActivityIndicator color={NAVY} />
+                  ) : (
+                    <Text style={styles.guestContinueText}>
+                      Use this person
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            ) : null}
           </ScrollView>
         ) : null}
 
         {!showWhoPicker && !isSelf && activePerson && step !== 4 ? (
           <View style={styles.bookingForBanner}>
-            <Feather name="users" size={14} color={TEAL} />
+            <Feather
+              name={bookingForGuest ? "user-plus" : "users"}
+              size={14}
+              color={TEAL}
+            />
             <Text style={styles.bookingForText}>
               Booking for {activePerson.fullName}
             </Text>
@@ -572,6 +888,8 @@ export default function BookRideScreen() {
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
         >
           {step === 1 && (
             <View>
@@ -583,73 +901,137 @@ export default function BookRideScreen() {
               <Text style={styles.label}>
                 Surgery date<Required />
               </Text>
-              <Pressable style={styles.input} onPress={() => setShowDate(true)}>
-                <Text
-                  style={[styles.inputText, !surgeryDate && styles.placeholder]}
-                >
-                  {formatDate(surgeryDate)}
-                </Text>
-                <Feather name="calendar" size={18} color={MUTED} />
-              </Pressable>
-              {showDate && (
-                <DateTimePicker
-                  value={surgeryDate ?? new Date()}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "inline" : "default"}
-                  minimumDate={new Date()}
-                  themeVariant="light"
-                  textColor={NAVY}
-                  accentColor={TEAL}
-                  onChange={(_e: DateTimePickerEvent, d?: Date) => {
-                    if (Platform.OS !== "ios") setShowDate(false);
-                    if (d) setSurgeryDate(d);
-                  }}
-                />
-              )}
-              {showDate && Platform.OS === "ios" && (
-                <Pressable
-                  style={styles.doneBtn}
-                  onPress={() => setShowDate(false)}
-                >
-                  <Text style={styles.doneBtnText}>Done</Text>
-                </Pressable>
-              )}
+              <View style={styles.dateRow}>
+                <View style={[styles.dateField, { flex: 1 }]}>
+                  <Text style={styles.dateFieldLabel}>Month</Text>
+                  <TextInput
+                    style={styles.dateInput}
+                    placeholder="MM"
+                    placeholderTextColor={MUTED}
+                    value={dateMonth}
+                    onChangeText={(v) => {
+                      const clean = v.replace(/\D/g, "").slice(0, 2);
+                      setDateMonth(clean);
+                      if (clean.length === 2) dateDayRef.current?.focus();
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    returnKeyType="next"
+                  />
+                </View>
+                <View style={[styles.dateField, { flex: 1 }]}>
+                  <Text style={styles.dateFieldLabel}>Day</Text>
+                  <TextInput
+                    ref={dateDayRef}
+                    style={styles.dateInput}
+                    placeholder="DD"
+                    placeholderTextColor={MUTED}
+                    value={dateDay}
+                    onChangeText={(v) => {
+                      const clean = v.replace(/\D/g, "").slice(0, 2);
+                      setDateDay(clean);
+                      if (clean.length === 2) dateYearRef.current?.focus();
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    returnKeyType="next"
+                  />
+                </View>
+                <View style={[styles.dateField, { flex: 1.4 }]}>
+                  <Text style={styles.dateFieldLabel}>Year</Text>
+                  <TextInput
+                    ref={dateYearRef}
+                    style={styles.dateInput}
+                    placeholder="YYYY"
+                    placeholderTextColor={MUTED}
+                    value={dateYear}
+                    onChangeText={(v) => {
+                      const clean = v.replace(/\D/g, "").slice(0, 4);
+                      setDateYear(clean);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    returnKeyType="done"
+                  />
+                </View>
+              </View>
+              {surgeryDate ? (
+                <Text style={styles.dateHelper}>{formatDate(surgeryDate)}</Text>
+              ) : null}
 
               <Text style={styles.label}>
                 Surgery time<Required />
               </Text>
-              <Pressable style={styles.input} onPress={() => setShowTime(true)}>
-                <Text
-                  style={[styles.inputText, !surgeryTime && styles.placeholder]}
-                >
-                  {formatTime(surgeryTime)}
-                </Text>
-                <Feather name="clock" size={18} color={MUTED} />
-              </Pressable>
-              {showTime && (
-                <DateTimePicker
-                  value={surgeryTime ?? new Date()}
-                  mode="time"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  themeVariant="light"
-                  textColor={NAVY}
-                  accentColor={TEAL}
-                  onChange={(_e: DateTimePickerEvent, d?: Date) => {
-                    if (Platform.OS !== "ios") setShowTime(false);
-                    if (d) setSurgeryTime(d);
-                  }}
-                />
-              )}
-              {showTime && Platform.OS === "ios" && (
-                <Pressable
-                  style={styles.doneBtn}
-                  onPress={() => setShowTime(false)}
-                >
-                  <Text style={styles.doneBtnText}>Done</Text>
-                </Pressable>
-              )}
+              <View style={styles.dateRow}>
+                <View style={[styles.dateField, { flex: 1 }]}>
+                  <Text style={styles.dateFieldLabel}>Hour</Text>
+                  <TextInput
+                    style={styles.dateInput}
+                    placeholder="9"
+                    placeholderTextColor={MUTED}
+                    value={timeHour}
+                    onChangeText={(v) => {
+                      const clean = v.replace(/\D/g, "").slice(0, 2);
+                      setTimeHour(clean);
+                      if (clean.length === 2) timeMinRef.current?.focus();
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    returnKeyType="next"
+                  />
+                </View>
+                <View style={[styles.dateField, { flex: 1 }]}>
+                  <Text style={styles.dateFieldLabel}>Minute</Text>
+                  <TextInput
+                    ref={timeMinRef}
+                    style={styles.dateInput}
+                    placeholder="30"
+                    placeholderTextColor={MUTED}
+                    value={timeMinute}
+                    onChangeText={(v) => {
+                      const clean = v.replace(/\D/g, "").slice(0, 2);
+                      setTimeMinute(clean);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    returnKeyType="done"
+                  />
+                </View>
+                <View style={[styles.dateField, { flex: 1.4 }]}>
+                  <Text style={styles.dateFieldLabel}>AM / PM</Text>
+                  <View style={styles.ampmRow}>
+                    {(["AM", "PM"] as const).map((v) => {
+                      const active = timeAmPm === v;
+                      return (
+                        <Pressable
+                          key={v}
+                          onPress={() => setTimeAmPm(v)}
+                          style={[
+                            styles.ampmBtn,
+                            active && styles.ampmBtnActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.ampmText,
+                              active && styles.ampmTextActive,
+                            ]}
+                          >
+                            {v}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+              {surgeryTime ? (
+                <Text style={styles.dateHelper}>{formatTime(surgeryTime)}</Text>
+              ) : null}
 
-              <Text style={styles.label}>Facility type</Text>
+              <Text style={styles.label}>
+                Facility type<Required />
+              </Text>
               <View style={styles.facilityTypeRow}>
                 {FACILITY_TYPE_OPTIONS.map((opt) => {
                   const active = facilityType === opt.value;
@@ -693,7 +1075,9 @@ export default function BookRideScreen() {
                 onCustomChange={setHospitalCustom}
               />
 
-              <Text style={styles.label}>Procedure / visit type</Text>
+              <Text style={styles.label}>
+                Procedure / visit type<Required />
+              </Text>
               <TextInput
                 style={[styles.input, styles.textOnly]}
                 placeholder="e.g. Knee replacement, Cataract surgery"
@@ -1230,7 +1614,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 18,
-    paddingTop: 8,
+    paddingTop: Platform.OS === "ios" ? 24 : 16,
     paddingBottom: 12,
   },
   topTitle: {
@@ -1471,6 +1855,152 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
+  },
+  dateRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  dateField: {
+    gap: 4,
+  },
+  dateFieldLabel: {
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    fontFamily: "Inter_600SemiBold",
+  },
+  dateInput: {
+    backgroundColor: CARD,
+    color: NAVY,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
+    textAlign: "center",
+  },
+  dateHelper: {
+    color: TEAL,
+    fontSize: 12,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    marginTop: 8,
+  },
+  ampmRow: {
+    flexDirection: "row",
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  ampmBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ampmBtnActive: {
+    backgroundColor: TEAL,
+  },
+  ampmText: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 0.4,
+  },
+  ampmTextActive: {
+    color: NAVY,
+  },
+  guestBox: {
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  guestLabel: {
+    color: NAVY,
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  guestInput: {
+    backgroundColor: WHITE,
+    color: NAVY,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    fontFamily: "Inter_500Medium",
+  },
+  guestHelper: {
+    color: MUTED,
+    fontSize: 12,
+    marginTop: 8,
+    fontFamily: "Inter_400Regular",
+  },
+  guestConsentRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    marginTop: 14,
+    padding: 12,
+    backgroundColor: WHITE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+  },
+  guestConsentBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: MUTED,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+  guestConsentBoxOn: {
+    backgroundColor: TEAL,
+    borderColor: TEAL,
+  },
+  guestConsentText: {
+    flex: 1,
+    color: NAVY,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: "Inter_500Medium",
+  },
+  guestErrorText: {
+    color: ERROR,
+    fontSize: 13,
+    marginTop: 12,
+    fontFamily: "Inter_500Medium",
+  },
+  guestContinueBtn: {
+    backgroundColor: TEAL,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 14,
+  },
+  guestContinueText: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
   },
   toggleRow: { flexDirection: "row", gap: 8 },
   toggle: {

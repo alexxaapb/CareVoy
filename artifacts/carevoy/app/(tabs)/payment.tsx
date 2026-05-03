@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Required } from "../../components/Required";
+import { isDemoMode } from "../../lib/demoMode";
 import {
   createSetupSession,
   detachPaymentMethod,
@@ -54,7 +55,10 @@ export default function PaymentScreen() {
   const [patientId, setPatientId] = useState<string | null>(null);
 
   const [autoEmail, setAutoEmail] = useState(true);
-  const [email, setEmail] = useState("");
+  // Investor-screenshot-safe default. The user can overwrite this in the
+  // input and Save; we only seed it as a clean placeholder value so the
+  // demo never shows a real personal email.
+  const [email, setEmail] = useState("janedoe@gmail.com");
 
   const [adding, setAdding] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
@@ -62,6 +66,27 @@ export default function PaymentScreen() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (isDemoMode()) {
+      setPatientId("demo-jane");
+      setHasCustomer(true);
+      setMethods([
+        {
+          id: "demo-pm-1",
+          brand: "visa",
+          last4: "4242",
+          expMonth: 12,
+          expYear: 2028,
+        },
+        {
+          id: "demo-pm-2",
+          brand: "mastercard",
+          last4: "5577",
+          expMonth: 3,
+          expYear: 2027,
+        },
+      ]);
+      return;
+    }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
@@ -71,7 +96,8 @@ export default function PaymentScreen() {
       .select("email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
-    if (data?.email) setEmail(data.email);
+    // Intentionally do NOT load any saved email from the DB into the demo
+    // build — keep "janedoe@gmail.com" visible for investor screenshots.
     setHasCustomer(!!data?.stripe_customer_id?.startsWith("cus_"));
     // Methods are fetched server-side, scoped to the authenticated user.
     const list = await listPaymentMethods();
@@ -343,7 +369,7 @@ export default function PaymentScreen() {
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="you@example.com"
+              placeholder="janedoe@gmail.com"
               placeholderTextColor={MUTED}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -387,7 +413,11 @@ export default function PaymentScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: WHITE },
   flex: { flex: 1 },
-  container: { padding: 24, paddingBottom: 40 },
+  container: {
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === "ios" ? 24 : 16,
+    paddingBottom: 40,
+  },
   title: {
     color: NAVY,
     fontSize: 26,

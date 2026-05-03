@@ -3,6 +3,7 @@ import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { isDemoMode } from "../../lib/demoMode";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -71,6 +73,48 @@ export default function NotificationsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
+    if (isDemoMode()) {
+      const now = Date.now();
+      setItems([
+        {
+          id: "demo-n-1",
+          created_at: new Date(now - 1000 * 60 * 8).toISOString(),
+          channel: "sms",
+          message:
+            "Your driver Marcus is on the way — ETA 12 minutes. Black Toyota Sienna, plate JCV-7821.",
+          status: "delivered",
+          sent_at: new Date(now - 1000 * 60 * 8).toISOString(),
+        },
+        {
+          id: "demo-n-2",
+          created_at: new Date(now - 1000 * 60 * 60 * 4).toISOString(),
+          channel: "email",
+          message:
+            "Receipt for your ride to OhioHealth Riverside Methodist on May 1 — $42 reimbursed via HSA. IRS code 213(d).",
+          status: "delivered",
+          sent_at: new Date(now - 1000 * 60 * 60 * 4).toISOString(),
+        },
+        {
+          id: "demo-n-3",
+          created_at: new Date(now - 1000 * 60 * 60 * 26).toISOString(),
+          channel: "push",
+          message:
+            "Your pre-op ride for Friday 9:30 AM is confirmed. We'll pick you up 90 minutes before surgery.",
+          status: "sent",
+          sent_at: new Date(now - 1000 * 60 * 60 * 26).toISOString(),
+        },
+        {
+          id: "demo-n-4",
+          created_at: new Date(now - 1000 * 60 * 60 * 24 * 3).toISOString(),
+          channel: "sms",
+          message:
+            "Your post-op return ride was completed. Tap to rate your driver.",
+          status: "delivered",
+          sent_at: new Date(now - 1000 * 60 * 60 * 24 * 3).toISOString(),
+        },
+      ]);
+      return;
+    }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
@@ -167,7 +211,11 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: WHITE },
-  container: { padding: 24, paddingBottom: 40 },
+  container: {
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === "ios" ? 8 : 4,
+    paddingBottom: 40,
+  },
   title: {
     color: NAVY,
     fontSize: 26,

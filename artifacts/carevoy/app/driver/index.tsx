@@ -13,7 +13,73 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { isDemoMode } from "../../lib/demoMode";
 import { supabase } from "../../lib/supabase";
+
+const DEMO_STAFF: Staff = {
+  full_name: "Marcus Johnson",
+  nemt_partner_id: "demo-partner",
+  nemt_partners: { company_name: "Buckeye Medical Transport" },
+};
+const DEMO_RIDES: Ride[] = [
+  {
+    id: "demo-ride-1",
+    pickup_time: (() => {
+      const d = new Date();
+      d.setHours(8, 0, 0, 0);
+      return d.toISOString();
+    })(),
+    pickup_address: "850 N High St, Columbus, OH 43215",
+    dropoff_address: "3535 Olentangy River Rd, Columbus, OH 43214",
+    procedure_type: "Outpatient knee arthroscopy",
+    mobility_needs: "Patient may need slow assist after surgery",
+    companion_requested: true,
+    status: "confirmed",
+    estimated_cost: 55,
+    pickup_lat: 39.9897,
+    pickup_lng: -83.0040,
+    hospitals: { name: "OhioHealth Riverside Methodist Hospital" },
+    patients: { full_name: "Jane Doe" },
+  },
+  {
+    id: "demo-ride-2",
+    pickup_time: (() => {
+      const d = new Date();
+      d.setHours(10, 30, 0, 0);
+      return d.toISOString();
+    })(),
+    pickup_address: "1492 E Broad St, Columbus, OH 43205",
+    dropoff_address: "1492 E Broad St, Columbus, OH 43205",
+    procedure_type: "Dialysis",
+    mobility_needs: "Wheelchair required",
+    companion_requested: false,
+    status: "en_route",
+    estimated_cost: 38,
+    pickup_lat: 39.9692,
+    pickup_lng: -82.9710,
+    hospitals: { name: "DaVita Dialysis - East Columbus" },
+    patients: { full_name: "Robert Chen" },
+  },
+  {
+    id: "demo-ride-3",
+    pickup_time: (() => {
+      const d = new Date();
+      d.setHours(13, 15, 0, 0);
+      return d.toISOString();
+    })(),
+    pickup_address: "2200 Welcome Pl, Columbus, OH 43215",
+    dropoff_address: "410 W 10th Ave, Columbus, OH 43210",
+    procedure_type: "Cardiology follow-up",
+    mobility_needs: null,
+    companion_requested: false,
+    status: "completed",
+    estimated_cost: 42,
+    pickup_lat: 39.9755,
+    pickup_lng: -82.9988,
+    hospitals: { name: "OSU Wexner Medical Center" },
+    patients: { full_name: "Maria Alvarez" },
+  },
+];
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -112,6 +178,11 @@ export default function DriverHomeScreen() {
   const [actingId, setActingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (isDemoMode()) {
+      setStaff(DEMO_STAFF);
+      setRides(DEMO_RIDES);
+      return;
+    }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;

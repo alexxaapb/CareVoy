@@ -17,6 +17,7 @@ import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
+const GOLD = "#F5A623";
 const WHITE = "#FFFFFF";
 const MUTED = "#6B7280";
 const INPUT_BG = "#F8FAFC";
@@ -32,7 +33,7 @@ function normalizePhone(input: string): string {
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [step, setStep] = useState<"phone" | "code" | "booking-for">("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,19 +51,13 @@ export default function LoginScreen() {
       phone: normalized,
     });
     setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
+    if (err) { setError(err.message); return; }
     setStep("code");
   };
 
   const verifyCode = async () => {
     setError(null);
-    if (code.length !== 6) {
-      setError("Enter the 6-digit code");
-      return;
-    }
+    if (code.length !== 6) { setError("Enter the 6-digit code"); return; }
     setLoading(true);
     const { error: err } = await supabase.auth.verifyOtp({
       phone: normalizePhone(phone),
@@ -70,11 +65,16 @@ export default function LoginScreen() {
       type: "sms",
     });
     setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
+    if (err) { setError(err.message); return; }
+    setStep("booking-for");
+  };
+
+  const handleBookingFor = (forSelf: boolean) => {
+    if (forSelf) {
+      router.replace("/(tabs)");
+    } else {
+      router.replace("/(tabs)?caregiverMode=true");
     }
-    router.replace("/(tabs)");
   };
 
   return (
@@ -96,7 +96,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
-            {step === "phone" ? (
+            {step === "phone" && (
               <>
                 <Text style={styles.label}>Phone number</Text>
                 <TextInput
@@ -111,29 +111,22 @@ export default function LoginScreen() {
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Pressable
-                  style={({ pressed }) => [
-                    styles.button,
-                    (loading || pressed) && styles.buttonPressed,
-                  ]}
+                  style={({ pressed }) => [styles.button, (loading || pressed) && styles.buttonPressed]}
                   onPress={sendCode}
                   disabled={loading}
                 >
-                  {loading ? (
-                    <ActivityIndicator color={NAVY} />
-                  ) : (
-                    <Text style={styles.buttonText}>Send Code</Text>
-                  )}
+                  {loading ? <ActivityIndicator color={NAVY} /> : <Text style={styles.buttonText}>Send Code</Text>}
                 </Pressable>
                 <Text style={styles.hint}>
                   We&apos;ll text you a 6-digit code to verify your number.
                 </Text>
               </>
-            ) : (
+            )}
+
+            {step === "code" && (
               <>
                 <Text style={styles.label}>Enter the code</Text>
-                <Text style={styles.subLabel}>
-                  Sent to {normalizePhone(phone)}
-                </Text>
+                <Text style={styles.subLabel}>Sent to {normalizePhone(phone)}</Text>
                 <TextInput
                   style={[styles.input, styles.codeInput]}
                   placeholder="123456"
@@ -146,39 +139,60 @@ export default function LoginScreen() {
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Pressable
-                  style={({ pressed }) => [
-                    styles.button,
-                    (loading || pressed) && styles.buttonPressed,
-                  ]}
+                  style={({ pressed }) => [styles.button, (loading || pressed) && styles.buttonPressed]}
                   onPress={verifyCode}
                   disabled={loading}
                 >
-                  {loading ? (
-                    <ActivityIndicator color={NAVY} />
-                  ) : (
-                    <Text style={styles.buttonText}>Verify & Sign In</Text>
-                  )}
+                  {loading ? <ActivityIndicator color={NAVY} /> : <Text style={styles.buttonText}>Verify & Sign In</Text>}
                 </Pressable>
-                <Pressable
-                  onPress={() => {
-                    setStep("phone");
-                    setCode("");
-                    setError(null);
-                  }}
-                  disabled={loading}
-                >
+                <Pressable onPress={() => { setStep("phone"); setCode(""); setError(null); }} disabled={loading}>
                   <Text style={styles.link}>Use a different number</Text>
+                </Pressable>
+              </>
+            )}
+
+            {step === "booking-for" && (
+              <>
+                <Text style={styles.bookingTitle}>Who are you booking for?</Text>
+                <Text style={styles.bookingSubtitle}>
+                  You can always book for someone else later too.
+                </Text>
+
+                <Pressable
+                  style={({ pressed }) => [styles.choiceCard, pressed && styles.choiceCardPressed]}
+                  onPress={() => handleBookingFor(true)}
+                >
+                  <Text style={styles.choiceEmoji}>🙋</Text>
+                  <View style={styles.choiceText}>
+                    <Text style={styles.choiceTitle}>Myself</Text>
+                    <Text style={styles.choiceDesc}>I'm booking my own medical rides</Text>
+                  </View>
+                  <Text style={styles.choiceArrow}>→</Text>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [styles.choiceCard, styles.choiceCardAlt, pressed && styles.choiceCardPressed]}
+                  onPress={() => handleBookingFor(false)}
+                >
+                  <Text style={styles.choiceEmoji}>👨‍👩‍👧</Text>
+                  <View style={styles.choiceText}>
+                    <Text style={styles.choiceTitle}>Someone else</Text>
+                    <Text style={styles.choiceDesc}>I'm helping a family member or patient</Text>
+                  </View>
+                  <Text style={styles.choiceArrow}>→</Text>
                 </Pressable>
               </>
             )}
           </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerLabel}>NEMT driver or facility staff?</Text>
-            <Text style={styles.footerLink}>
-              Sign in at carevoy.co/partners on your computer.
-            </Text>
-          </View>
+          {step !== "booking-for" && (
+            <View style={styles.footer}>
+              <Text style={styles.footerLabel}>NEMT driver or facility staff?</Text>
+              <Text style={styles.footerLink}>
+                Sign in at carevoy.co/partners on your computer.
+              </Text>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -197,26 +211,10 @@ const styles = StyleSheet.create({
   },
   brand: { alignItems: "center", marginTop: 24 },
   logoImg: { width: 200, height: 140, marginBottom: 4 },
-  tagline: {
-    color: MUTED,
-    fontSize: 15,
-    marginTop: 4,
-    fontFamily: "Inter_400Regular",
-  },
+  tagline: { color: MUTED, fontSize: 15, marginTop: 4, fontFamily: "Inter_400Regular" },
   form: { width: "100%" },
-  label: {
-    color: NAVY,
-    fontSize: 15,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-    marginBottom: 6,
-  },
-  subLabel: {
-    color: MUTED,
-    fontSize: 13,
-    marginBottom: 12,
-    fontFamily: "Inter_400Regular",
-  },
+  label: { color: NAVY, fontSize: 15, fontWeight: "600", fontFamily: "Inter_600SemiBold", marginBottom: 6 },
+  subLabel: { color: MUTED, fontSize: 13, marginBottom: 12, fontFamily: "Inter_400Regular" },
   input: {
     backgroundColor: INPUT_BG,
     color: NAVY,
@@ -229,12 +227,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     marginBottom: 14,
   },
-  codeInput: {
-    fontSize: 24,
-    letterSpacing: 8,
-    textAlign: "center",
-    fontFamily: "Inter_600SemiBold",
-  },
+  codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontFamily: "Inter_600SemiBold" },
   button: {
     backgroundColor: TEAL,
     borderRadius: 14,
@@ -248,46 +241,49 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonPressed: { opacity: 0.9 },
-  buttonText: {
+  buttonText: { color: NAVY, fontSize: 17, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  hint: { color: MUTED, fontSize: 13, marginTop: 16, textAlign: "center", fontFamily: "Inter_400Regular" },
+  link: { color: TEAL, fontSize: 14, textAlign: "center", marginTop: 16, fontFamily: "Inter_500Medium" },
+  error: { color: ERROR, fontSize: 13, marginBottom: 10, fontFamily: "Inter_500Medium" },
+  footer: { alignItems: "center", paddingHorizontal: 12, gap: 4 },
+  footerLabel: { color: MUTED, fontSize: 13, fontFamily: "Inter_500Medium" },
+  footerLink: { color: NAVY, fontSize: 13, fontFamily: "Inter_600SemiBold", textAlign: "center" },
+
+  // Booking-for screen
+  bookingTitle: {
     color: NAVY,
-    fontSize: 17,
+    fontSize: 22,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
-  },
-  hint: {
-    color: MUTED,
-    fontSize: 13,
-    marginTop: 16,
+    marginBottom: 8,
     textAlign: "center",
-    fontFamily: "Inter_400Regular",
   },
-  link: {
-    color: TEAL,
+  bookingSubtitle: {
+    color: MUTED,
     fontSize: 14,
+    fontFamily: "Inter_400Regular",
     textAlign: "center",
-    marginTop: 16,
-    fontFamily: "Inter_500Medium",
+    marginBottom: 32,
   },
-  error: {
-    color: ERROR,
-    fontSize: 13,
-    marginBottom: 10,
-    fontFamily: "Inter_500Medium",
-  },
-  footer: {
+  choiceCard: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    gap: 4,
+    backgroundColor: INPUT_BG,
+    borderWidth: 1.5,
+    borderColor: BORDER,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 14,
+    gap: 14,
   },
-  footerLabel: {
-    color: MUTED,
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
+  choiceCardAlt: {
+    borderColor: TEAL,
+    backgroundColor: "#F0FDFB",
   },
-  footerLink: {
-    color: NAVY,
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    textAlign: "center",
-  },
+  choiceCardPressed: { opacity: 0.8 },
+  choiceEmoji: { fontSize: 28 },
+  choiceText: { flex: 1 },
+  choiceTitle: { color: NAVY, fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold", marginBottom: 2 },
+  choiceDesc: { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular" },
+  choiceArrow: { color: TEAL, fontSize: 20, fontWeight: "700" },
 });
