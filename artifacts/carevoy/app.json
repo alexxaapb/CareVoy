@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "carevoy",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
@@ -16,7 +16,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "co.carevoy.app",
+      "buildNumber": "4",
       "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "CareVoy uses your location to find nearby pickup points and show your ride on the map.",
+        "NSCalendarsUsageDescription": "CareVoy adds your ride to your calendar so you never miss an appointment.",
+        "NSContactsUsageDescription": "CareVoy can access contacts to help you add emergency contacts quickly.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -28,7 +32,7 @@
       [
         "expo-router",
         {
-          "origin": "https://replit.com/"
+          "origin": "https://carevoy.co/"
         }
       ],
       "expo-font",
@@ -37,11 +41,11 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false
     },
     "extra": {
       "eas": {
-        "projectId": "5ff188f5-4996-403d-81fb-ba2e7e7c6988"
+        "projectId": "f70bca6e-82e7-4cea-8455-4d6077dcb765"
       }
     }
   }
