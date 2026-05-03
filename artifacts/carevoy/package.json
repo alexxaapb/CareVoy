@@ -7,7 +7,8 @@
     "dev": "EXPO_PUBLIC_DOMAIN=$REPLIT_DEV_DOMAIN EXPO_PUBLIC_REPL_ID=$REPL_ID pnpm exec expo start --tunnel --port $PORT",
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "eas-build-pre-install": "corepack enable && corepack prepare pnpm@10.32.1 --activate && cd ../.. && pnpm install --no-frozen-lockfile && cd artifacts/carevoy && touch yarn.lock"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -62,6 +63,5 @@
     "@supabase/supabase-js": "^2.104.0",
     "react-native-maps": "^1.20.1",
     "react-native-url-polyfill": "^3.0.0"
-  },
-  "packageManager": "pnpm@10.32.1"
+  }
 }
