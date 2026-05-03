@@ -1,21 +1,24 @@
 {
-  "cli": {
-    "version": ">= 18.9.1",
-    "appVersionSource": "remote"
-  },
+  "cli": { "version": ">= 5.0.0" },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": { "simulator": false },
+      "env": {
+        "NPM_CONFIG_FROZEN_LOCKFILE": "false",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://byflpckbjjumxxjxoplk.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT",
+        "EXPO_PUBLIC_DOMAIN": "carevoy.co"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "env": {
+        "NPM_CONFIG_FROZEN_LOCKFILE": "false",
+        "EXPO_PUBLIC_SUPABASE_URL": "",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "",
+        "EXPO_PUBLIC_DOMAIN": ""
+      }
     }
   },
-  "submit": {
-    "production": {}
-  }
+  "submit": { "production": {} }
 }
