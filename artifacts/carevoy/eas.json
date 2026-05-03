@@ -12,12 +12,7 @@
       }
     },
     "production": {
-      "env": {
-        "NPM_CONFIG_FROZEN_LOCKFILE": "false",
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "",
-        "EXPO_PUBLIC_DOMAIN": ""
-      }
+      "distribution": "store"
     }
   },
   "submit": { "production": {} }
