@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "f70bca6e-82e7-4cea-8455-4d6077dcb765"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.carevoy.workspace",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

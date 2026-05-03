@@ -14,7 +14,11 @@
       "backgroundColor": "#FFFFFF"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "co.carevoy.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {},
     "web": {
@@ -34,6 +38,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5ff188f5-4996-403d-81fb-ba2e7e7c6988"
+      }
     }
   }
 }
