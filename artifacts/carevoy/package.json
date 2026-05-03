@@ -62,5 +62,6 @@
     "@supabase/supabase-js": "^2.104.0",
     "react-native-maps": "^1.20.1",
     "react-native-url-polyfill": "^3.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.32.1"
 }
