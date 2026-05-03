@@ -1,9 +1,14 @@
 {
-  "cli": { "version": ">= 5.0.0" },
+  "cli": {
+    "version": ">= 5.0.0"
+  },
   "build": {
     "preview": {
       "distribution": "internal",
-      "ios": { "simulator": false },
+      "ios": {
+        "simulator": false,
+        "image": "latest"
+      },
       "env": {
         "NPM_CONFIG_FROZEN_LOCKFILE": "false",
         "EXPO_PUBLIC_SUPABASE_URL": "https://byflpckbjjumxxjxoplk.supabase.co",
@@ -15,5 +20,7 @@
       "distribution": "store"
     }
   },
-  "submit": { "production": {} }
+  "submit": {
+    "production": {}
+  }
 }
