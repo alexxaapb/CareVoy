@@ -182,6 +182,29 @@ function startOfMonthISO(): string {
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
 }
 
+function startOfLastMonthISO(): string {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString().slice(0, 10);
+}
+
+function endOfLastMonthISO(): string {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 0).toISOString().slice(0, 10);
+}
+
+function next7Days(): { label: string; date: string }[] {
+  const out: { label: string; date: string }[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    out.push({
+      label: d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3),
+      date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+    });
+  }
+  return out;
+}
+
 function fmtDate(s: string | null): string {
   if (!s) return "—";
   return new Date(s).toLocaleDateString(undefined, {
@@ -209,6 +232,11 @@ export default function CoordinatorDashboard() {
   const [coord, setCoord] = useState<Coord | null>(null);
   const [rides, setRides] = useState<Ride[]>([]);
   const [monthCount, setMonthCount] = useState(0);
+  const [lastMonthCount, setLastMonthCount] = useState(0);
+  const [completedThisMonth, setCompletedThisMonth] = useState(0);
+  const [noShowsThisMonth, setNoShowsThisMonth] = useState(0);
+  const [bookedThisMonth, setBookedThisMonth] = useState(0);
+  const [avgCost, setAvgCost] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("dashboard");
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
@@ -236,6 +264,11 @@ export default function CoordinatorDashboard() {
       setCoord(DEMO_COORD);
       setRides(DEMO_RIDES);
       setMonthCount(DEMO_RIDES.length);
+      setLastMonthCount(8);
+      setCompletedThisMonth(4);
+      setNoShowsThisMonth(0);
+      setBookedThisMonth(DEMO_RIDES.filter((r) => r.status !== "pending").length);
+      setAvgCost(54);
       return;
     }
     const { data: userData } = await supabase.auth.getUser();
@@ -271,7 +304,18 @@ export default function CoordinatorDashboard() {
       return;
     }
     const today = todayStr();
-    const [ridesRes, monthRes] = await Promise.all([
+    const monthStart = startOfMonthISO();
+    const lastMonthStart = startOfLastMonthISO();
+    const lastMonthEnd = endOfLastMonthISO();
+    const [
+      ridesRes,
+      monthRes,
+      lastMonthRes,
+      completedRes,
+      noShowRes,
+      bookedRes,
+      monthRidesRes,
+    ] = await Promise.all([
       supabase
         .from("rides")
         .select(
@@ -284,10 +328,47 @@ export default function CoordinatorDashboard() {
         .from("rides")
         .select("id", { count: "exact", head: true })
         .eq("hospital_id", c.hospital_id)
-        .gte("surgery_date", startOfMonthISO()),
+        .gte("surgery_date", monthStart),
+      supabase
+        .from("rides")
+        .select("id", { count: "exact", head: true })
+        .eq("hospital_id", c.hospital_id)
+        .gte("surgery_date", lastMonthStart)
+        .lte("surgery_date", lastMonthEnd),
+      supabase
+        .from("rides")
+        .select("id", { count: "exact", head: true })
+        .eq("hospital_id", c.hospital_id)
+        .gte("surgery_date", monthStart)
+        .eq("status", "completed"),
+      supabase
+        .from("rides")
+        .select("id", { count: "exact", head: true })
+        .eq("hospital_id", c.hospital_id)
+        .gte("surgery_date", monthStart)
+        .eq("status", "no_show"),
+      supabase
+        .from("rides")
+        .select("id", { count: "exact", head: true })
+        .eq("hospital_id", c.hospital_id)
+        .gte("surgery_date", monthStart)
+        .neq("status", "pending"),
+      supabase
+        .from("rides")
+        .select("actual_cost, estimated_cost")
+        .eq("hospital_id", c.hospital_id)
+        .gte("surgery_date", monthStart),
     ]);
     setRides((ridesRes.data as unknown as Ride[]) ?? []);
     setMonthCount(monthRes.count ?? 0);
+    setLastMonthCount(lastMonthRes.count ?? 0);
+    setCompletedThisMonth(completedRes.count ?? 0);
+    setNoShowsThisMonth(noShowRes.count ?? 0);
+    setBookedThisMonth(bookedRes.count ?? 0);
+    const costs = ((monthRidesRes.data as { actual_cost: number | null; estimated_cost: number | null }[] | null) ?? [])
+      .map((r) => r.actual_cost ?? r.estimated_cost)
+      .filter((n): n is number => typeof n === "number" && n > 0);
+    setAvgCost(costs.length ? costs.reduce((a, b) => a + b, 0) / costs.length : null);
   }, []);
 
   useEffect(() => {
@@ -500,6 +581,103 @@ export default function CoordinatorDashboard() {
               color={NAVY}
               icon="trending-up"
             />
+          </View>
+
+          {/* Performance Metrics */}
+          <Text style={styles.sectionLabel}>Growth & Performance</Text>
+          <View style={styles.statsRow}>
+            <MetricCard
+              label="MoM Growth"
+              value={
+                lastMonthCount > 0
+                  ? `${monthCount >= lastMonthCount ? "+" : ""}${Math.round(((monthCount - lastMonthCount) / lastMonthCount) * 100)}%`
+                  : monthCount > 0
+                    ? "New"
+                    : "—"
+              }
+              sub={`vs ${lastMonthCount} last month`}
+              positive={monthCount >= lastMonthCount}
+              icon="trending-up"
+            />
+            <MetricCard
+              label="CareVoy Conversion"
+              value={
+                monthCount > 0
+                  ? `${Math.round((bookedThisMonth / monthCount) * 100)}%`
+                  : "—"
+              }
+              sub={`${bookedThisMonth}/${monthCount} surgeries booked`}
+              positive
+              icon="link"
+            />
+            <MetricCard
+              label="Completion Rate"
+              value={
+                bookedThisMonth > 0
+                  ? `${Math.round((completedThisMonth / bookedThisMonth) * 100)}%`
+                  : "—"
+              }
+              sub={`${completedThisMonth} rides completed`}
+              positive
+              icon="check-circle"
+            />
+            <MetricCard
+              label="No-Show Rate"
+              value={
+                bookedThisMonth > 0
+                  ? `${Math.round((noShowsThisMonth / bookedThisMonth) * 100)}%`
+                  : "—"
+              }
+              sub={`${noShowsThisMonth} this month`}
+              positive={noShowsThisMonth === 0}
+              icon="user-x"
+            />
+            <MetricCard
+              label="Avg Ride Cost"
+              value={fmtMoney(avgCost)}
+              sub="per booked ride"
+              positive
+              icon="dollar-sign"
+            />
+          </View>
+
+          {/* 7-day surgery schedule */}
+          <Text style={styles.sectionLabel}>Next 7 Days</Text>
+          <View style={styles.calendarStrip}>
+            {next7Days().map((d, idx) => {
+              const dayCount = rides.filter(
+                (r) => r.surgery_date === d.date,
+              ).length;
+              const today = idx === 0;
+              return (
+                <View
+                  key={d.date}
+                  style={[styles.calCell, today && styles.calCellToday]}
+                >
+                  <Text style={[styles.calDow, today && styles.calDowToday]}>
+                    {d.label}
+                  </Text>
+                  <Text style={[styles.calNum, today && styles.calNumToday]}>
+                    {new Date(d.date).getDate()}
+                  </Text>
+                  <View
+                    style={[
+                      styles.calBadge,
+                      dayCount === 0 && styles.calBadgeEmpty,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.calBadgeText,
+                        dayCount === 0 && styles.calBadgeTextEmpty,
+                      ]}
+                    >
+                      {dayCount}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
           </View>
 
           {/* Bulk action */}
@@ -780,6 +958,32 @@ function StatCard({
   );
 }
 
+function MetricCard({
+  label,
+  value,
+  sub,
+  positive,
+  icon,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  positive: boolean;
+  icon: React.ComponentProps<typeof Feather>["name"];
+}) {
+  const accent = positive ? TEAL : AMBER;
+  return (
+    <View style={styles.statCard}>
+      <View style={styles.statHead}>
+        <Text style={styles.statLabel}>{label}</Text>
+        <Feather name={icon} size={16} color={accent} />
+      </View>
+      <Text style={[styles.metricValue, { color: accent }]}>{value}</Text>
+      <Text style={styles.metricSub}>{sub}</Text>
+    </View>
+  );
+}
+
 function Chip({
   label,
   active,
@@ -1003,6 +1207,84 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
   },
+  metricValue: {
+    fontSize: 26,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    marginTop: 2,
+  },
+  metricSub: {
+    color: MUTED,
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    marginTop: 4,
+  },
+  sectionLabel: {
+    color: NAVY,
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    marginTop: 8,
+    marginBottom: -8,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+  },
+  calendarStrip: {
+    flexDirection: "row",
+    gap: 10,
+    backgroundColor: CARD,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  calCell: {
+    flex: 1,
+    minWidth: 64,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: WHITE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    gap: 4,
+  },
+  calCellToday: {
+    backgroundColor: "rgba(0,194,168,0.10)",
+    borderColor: TEAL,
+  },
+  calDow: {
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 0.5,
+  },
+  calDowToday: { color: TEAL },
+  calNum: {
+    color: NAVY,
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  calNumToday: { color: NAVY },
+  calBadge: {
+    marginTop: 4,
+    backgroundColor: TEAL,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    minWidth: 26,
+    alignItems: "center",
+  },
+  calBadgeEmpty: { backgroundColor: "transparent" },
+  calBadgeText: {
+    color: NAVY,
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  calBadgeTextEmpty: { color: MUTED },
   bulkBar: {
     backgroundColor: "rgba(245,165,36,0.10)",
     borderColor: "rgba(245,165,36,0.4)",

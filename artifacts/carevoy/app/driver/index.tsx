@@ -159,6 +159,24 @@ function todayBounds(): { start: string; end: string } {
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
+function startOfWeekISO(): string {
+  const d = new Date();
+  const day = d.getDay(); // 0 = Sunday
+  const diff = day === 0 ? -6 : 1 - day; // Monday-start week
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function startOfMonthIsoTs(): string {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+}
+
+function fmtMoney(n: number): string {
+  return `$${n.toFixed(0)}`;
+}
+
 function isExtraTime(needs: string | null): boolean {
   if (!needs) return false;
   return /slow|mobility|assist|extra time|patient/i.test(needs);
@@ -169,10 +187,47 @@ function isWheelchair(needs: string | null): boolean {
   return /wheel/i.test(needs);
 }
 
+type DriverStats = {
+  todayCompleted: number;
+  weekCompleted: number;
+  monthCompleted: number;
+  todayEarnings: number;
+  weekEarnings: number;
+  monthEarnings: number;
+  cancelledMonth: number;
+  avgFare: number;
+  completionRate: number;
+};
+
+const EMPTY_STATS: DriverStats = {
+  todayCompleted: 0,
+  weekCompleted: 0,
+  monthCompleted: 0,
+  todayEarnings: 0,
+  weekEarnings: 0,
+  monthEarnings: 0,
+  cancelledMonth: 0,
+  avgFare: 0,
+  completionRate: 0,
+};
+
+const DEMO_STATS: DriverStats = {
+  todayCompleted: 1,
+  weekCompleted: 12,
+  monthCompleted: 47,
+  todayEarnings: 42,
+  weekEarnings: 540,
+  monthEarnings: 2155,
+  cancelledMonth: 2,
+  avgFare: 46,
+  completionRate: 96,
+};
+
 export default function DriverHomeScreen() {
   const router = useRouter();
   const [staff, setStaff] = useState<Staff | null>(null);
   const [rides, setRides] = useState<Ride[]>([]);
+  const [stats, setStats] = useState<DriverStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -181,6 +236,7 @@ export default function DriverHomeScreen() {
     if (isDemoMode()) {
       setStaff(DEMO_STAFF);
       setRides(DEMO_RIDES);
+      setStats(DEMO_STATS);
       return;
     }
     const { data: userData } = await supabase.auth.getUser();
@@ -198,21 +254,86 @@ export default function DriverHomeScreen() {
 
     if (!s?.nemt_partner_id) {
       setRides([]);
+      setStats(EMPTY_STATS);
       return;
     }
 
     const { start, end } = todayBounds();
-    const { data: ridesData } = await supabase
-      .from("rides")
-      .select(
-        "id, pickup_time, pickup_address, dropoff_address, procedure_type, mobility_needs, companion_requested, status, estimated_cost, pickup_lat, pickup_lng, hospitals(name), patients(full_name)",
-      )
-      .eq("nemt_partner_id", s.nemt_partner_id)
-      .gte("pickup_time", start)
-      .lt("pickup_time", end)
-      .order("pickup_time", { ascending: true });
+    const monthStart = startOfMonthIsoTs();
+    const weekStart = startOfWeekISO();
 
-    setRides((ridesData as unknown as Ride[]) ?? []);
+    const [ridesRes, monthRes] = await Promise.all([
+      supabase
+        .from("rides")
+        .select(
+          "id, pickup_time, pickup_address, dropoff_address, procedure_type, mobility_needs, companion_requested, status, estimated_cost, pickup_lat, pickup_lng, hospitals(name), patients(full_name)",
+        )
+        .eq("nemt_partner_id", s.nemt_partner_id)
+        .gte("pickup_time", start)
+        .lt("pickup_time", end)
+        .order("pickup_time", { ascending: true }),
+      supabase
+        .from("rides")
+        .select("status, actual_cost, estimated_cost, pickup_time")
+        .eq("nemt_partner_id", s.nemt_partner_id)
+        .gte("pickup_time", monthStart),
+    ]);
+
+    setRides((ridesRes.data as unknown as Ride[]) ?? []);
+
+    const monthRows = (monthRes.data as
+      | {
+          status: string | null;
+          actual_cost: number | null;
+          estimated_cost: number | null;
+          pickup_time: string | null;
+        }[]
+      | null) ?? [];
+
+    let todayCompleted = 0;
+    let weekCompleted = 0;
+    let monthCompleted = 0;
+    let todayEarnings = 0;
+    let weekEarnings = 0;
+    let monthEarnings = 0;
+    let cancelledMonth = 0;
+    let totalAssigned = 0;
+    const fares: number[] = [];
+
+    for (const r of monthRows) {
+      totalAssigned++;
+      if (r.status === "cancelled" || r.status === "no_show") cancelledMonth++;
+      if (r.status !== "completed") continue;
+      const fare = r.actual_cost ?? r.estimated_cost ?? 0;
+      monthCompleted++;
+      monthEarnings += fare;
+      if (fare > 0) fares.push(fare);
+      const t = r.pickup_time ? new Date(r.pickup_time) : null;
+      if (!t) continue;
+      if (t.toISOString() >= weekStart) {
+        weekCompleted++;
+        weekEarnings += fare;
+      }
+      if (t >= new Date(start) && t < new Date(end)) {
+        todayCompleted++;
+        todayEarnings += fare;
+      }
+    }
+
+    setStats({
+      todayCompleted,
+      weekCompleted,
+      monthCompleted,
+      todayEarnings,
+      weekEarnings,
+      monthEarnings,
+      cancelledMonth,
+      avgFare: fares.length ? fares.reduce((a, b) => a + b, 0) / fares.length : 0,
+      completionRate:
+        totalAssigned > 0
+          ? Math.round((monthCompleted / totalAssigned) * 100)
+          : 0,
+    });
   }, []);
 
   useFocusEffect(
@@ -308,6 +429,60 @@ export default function DriverHomeScreen() {
             <Feather name="log-out" size={20} color={MUTED} />
           </Pressable>
         </View>
+
+        {/* Earnings */}
+        <Text style={styles.sectionLabel}>Earnings</Text>
+        <View style={styles.statsRow}>
+          <StatTile
+            label="Today"
+            value={fmtMoney(stats.todayEarnings)}
+            sub={`${stats.todayCompleted} ride${stats.todayCompleted === 1 ? "" : "s"}`}
+            color={TEAL}
+            icon="dollar-sign"
+          />
+          <StatTile
+            label="This Week"
+            value={fmtMoney(stats.weekEarnings)}
+            sub={`${stats.weekCompleted} completed`}
+            color={NAVY}
+            icon="calendar"
+          />
+          <StatTile
+            label="This Month"
+            value={fmtMoney(stats.monthEarnings)}
+            sub={`${stats.monthCompleted} completed`}
+            color={NAVY}
+            icon="trending-up"
+          />
+        </View>
+
+        {/* Performance */}
+        <Text style={styles.sectionLabel}>Performance</Text>
+        <View style={styles.statsRow}>
+          <StatTile
+            label="Completion Rate"
+            value={`${stats.completionRate}%`}
+            sub="this month"
+            color={stats.completionRate >= 90 ? TEAL : AMBER}
+            icon="check-circle"
+          />
+          <StatTile
+            label="Avg Fare"
+            value={stats.avgFare > 0 ? fmtMoney(stats.avgFare) : "—"}
+            sub="per ride"
+            color={NAVY}
+            icon="dollar-sign"
+          />
+          <StatTile
+            label="Cancelled / No-Show"
+            value={String(stats.cancelledMonth)}
+            sub="this month"
+            color={stats.cancelledMonth === 0 ? TEAL : AMBER}
+            icon="x-circle"
+          />
+        </View>
+
+        <Text style={styles.sectionLabel}>Today's Rides</Text>
 
         <View style={styles.testingNotice}>
           <Feather name="alert-circle" size={14} color={AMBER} />
@@ -443,6 +618,31 @@ export default function DriverHomeScreen() {
   );
 }
 
+function StatTile({
+  label,
+  value,
+  sub,
+  color,
+  icon,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  color: string;
+  icon: React.ComponentProps<typeof Feather>["name"];
+}) {
+  return (
+    <View style={styles.statTile}>
+      <View style={styles.statTileHead}>
+        <Text style={styles.statTileLabel}>{label}</Text>
+        <Feather name={icon} size={14} color={color} />
+      </View>
+      <Text style={[styles.statTileValue, { color }]}>{value}</Text>
+      <Text style={styles.statTileSub}>{sub}</Text>
+    </View>
+  );
+}
+
 function Badge({ icon, label }: { icon: string; label: string }) {
   return (
     <View style={styles.badge}>
@@ -472,6 +672,56 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
     fontFamily: "Inter_400Regular",
+  },
+  sectionLabel: {
+    color: NAVY,
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    marginTop: 6,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 14,
+    flexWrap: "wrap",
+  },
+  statTile: {
+    flex: 1,
+    minWidth: 100,
+    backgroundColor: CARD,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  statTileHead: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  statTileLabel: {
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  statTileValue: {
+    fontSize: 22,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  statTileSub: {
+    color: MUTED,
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    marginTop: 2,
   },
   testingNotice: {
     flexDirection: "row",
