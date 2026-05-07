@@ -270,13 +270,15 @@ function RootLayoutNav() {
     if (
       auth.onboarded === true &&
       (inLogin ||
-        inPartners ||
         inOnboarding ||
         inDriver ||
         inComingSoon ||
         top === "coordinator" ||
         top === "admin")
     ) {
+      // Note: /partners is intentionally NOT in this list — a signed-in patient
+      // who explicitly visits /partners should be allowed to stay there so the
+      // partner login screen can sign them out and let them sign in as staff.
       router.replace("/(tabs)");
     }
     void inTabs;
