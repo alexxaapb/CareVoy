@@ -58,22 +58,28 @@ export default function PartnersPortal() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
 
-  // If already signed in as staff, jump to the right dashboard.
+  // Show the current session (if any) — but DON'T auto-redirect. The user came
+  // to /partners on purpose, probably to switch accounts. Auto-bouncing them
+  // into whichever dashboard their current session points at would trap them.
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getSession();
-      const uid = data.session?.user?.id;
-      if (uid) {
-        const ok = await resolveRoleAndRedirect(router, uid);
-        if (!ok) {
-          // Patient session — sign out so they can log in as staff
-          await supabase.auth.signOut();
-        }
-      }
+      setCurrentEmail(data.session?.user?.email ?? null);
       setChecking(false);
     })();
-  }, [router]);
+  }, []);
+
+  const switchAccount = async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
+    setCurrentEmail(null);
+    setEmail("");
+    setPassword("");
+    setError(null);
+    setLoading(false);
+  };
 
   const onSignIn = async () => {
     setError(null);
@@ -143,6 +149,71 @@ export default function PartnersPortal() {
               For NEMT drivers, hospital coordinators, and CareVoy admins.
               Patients should use the CareVoy mobile app instead.
             </Text>
+
+            {currentEmail ? (
+              <View
+                style={{
+                  backgroundColor: "#F8FAFC",
+                  borderColor: "#E2E8F0",
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  padding: 12,
+                  marginTop: 16,
+                  marginBottom: 4,
+                }}
+              >
+                <Text style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>
+                  Currently signed in as
+                </Text>
+                <Text
+                  style={{
+                    color: NAVY,
+                    fontSize: 14,
+                    fontWeight: "600",
+                    marginBottom: 10,
+                  }}
+                >
+                  {currentEmail}
+                </Text>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Pressable
+                    onPress={async () => {
+                      const { data } = await supabase.auth.getSession();
+                      const uid = data.session?.user?.id;
+                      if (uid) await resolveRoleAndRedirect(router, uid);
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: TEAL,
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: WHITE, fontWeight: "600" }}>
+                      Continue
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={switchAccount}
+                    disabled={loading}
+                    style={{
+                      flex: 1,
+                      backgroundColor: WHITE,
+                      borderColor: BORDER,
+                      borderWidth: 1,
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: NAVY, fontWeight: "600" }}>
+                      Use different account
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
 
             <Text style={styles.label}>Work email</Text>
             <TextInput

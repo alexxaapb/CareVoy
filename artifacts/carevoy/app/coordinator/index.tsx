@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -227,7 +228,98 @@ function rideTransportStatus(r: Ride): "confirmed" | "pending" | "none" {
   return "none";
 }
 
-export default function CoordinatorDashboard() {
+type ErrBoundaryState = { error: Error | null };
+
+class CoordinatorErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrBoundaryState
+> {
+  state: ErrBoundaryState = { error: null };
+  static getDerivedStateFromError(error: Error): ErrBoundaryState {
+    return { error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("[coordinator] render crashed:", error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+          edges={["top", "bottom"]}
+        >
+          <ScrollView contentContainerStyle={{ padding: 24 }}>
+            <Text
+              style={{
+                color: "#EF4444",
+                fontWeight: "700",
+                fontSize: 18,
+                marginBottom: 12,
+              }}
+            >
+              Coordinator dashboard crashed
+            </Text>
+            <Text
+              selectable
+              style={{
+                color: "#050D1F",
+                fontSize: 14,
+                marginBottom: 16,
+              }}
+            >
+              {this.state.error.message ?? String(this.state.error)}
+            </Text>
+            <Text
+              style={{
+                color: "#6B7280",
+                fontSize: 12,
+                fontWeight: "600",
+                marginBottom: 6,
+              }}
+            >
+              Stack
+            </Text>
+            <Text
+              selectable
+              style={{
+                color: "#6B7280",
+                fontSize: 11,
+                fontFamily: Platform.select({ ios: "Menlo", default: "monospace" }),
+              }}
+            >
+              {this.state.error.stack ?? "(no stack)"}
+            </Text>
+            <Pressable
+              onPress={() => this.setState({ error: null })}
+              style={{
+                marginTop: 24,
+                backgroundColor: "#00C2A8",
+                padding: 14,
+                borderRadius: 10,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>
+                Try again
+              </Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function CoordinatorRoute() {
+  return (
+    <CoordinatorErrorBoundary>
+      <CoordinatorDashboard />
+    </CoordinatorErrorBoundary>
+  );
+}
+
+function CoordinatorDashboard() {
   const router = useRouter();
   const [coord, setCoord] = useState<Coord | null>(null);
   const [rides, setRides] = useState<Ride[]>([]);
@@ -260,6 +352,17 @@ export default function CoordinatorDashboard() {
   };
 
   const load = useCallback(async () => {
+    try {
+      await loadInner();
+    } catch (e) {
+      console.error("[coordinator] load failed:", e);
+      setToast(
+        `Couldn't load dashboard: ${(e as Error)?.message ?? String(e)}`,
+      );
+    }
+  }, []);
+
+  const loadInner = useCallback(async () => {
     if (isDemoMode()) {
       setCoord(DEMO_COORD);
       setRides(DEMO_RIDES);
@@ -301,6 +404,11 @@ export default function CoordinatorDashboard() {
     if (!c?.hospital_id) {
       setRides([]);
       setMonthCount(0);
+      setLastMonthCount(0);
+      setCompletedThisMonth(0);
+      setNoShowsThisMonth(0);
+      setBookedThisMonth(0);
+      setAvgCost(null);
       return;
     }
     const today = todayStr();

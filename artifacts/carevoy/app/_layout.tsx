@@ -188,13 +188,11 @@ function RootLayoutNav() {
         .eq("id", userId)
         .maybeSingle(),
     ]);
-    if (patientRes.data) {
-      setAuth({
-        userId,
-        role: "patient",
-        onboarded: !!patientRes.data.onboarding_complete,
-      });
-    } else if (staffRes.data?.role) {
+    // Staff/coordinator roles take priority over patient — a single auth user
+    // may legitimately have BOTH a patients row and a hospital_coordinators row
+    // (e.g. they signed up as a patient first, then the admin linked them as a
+    // coordinator). In that case we want them to land on their staff dashboard.
+    if (staffRes.data?.role) {
       setAuth({
         userId,
         role: staffRes.data.role as Role,
@@ -202,6 +200,12 @@ function RootLayoutNav() {
       });
     } else if (coordRes.data) {
       setAuth({ userId, role: "coordinator", onboarded: true });
+    } else if (patientRes.data) {
+      setAuth({
+        userId,
+        role: "patient",
+        onboarded: !!patientRes.data.onboarding_complete,
+      });
     } else {
       setAuth({ userId, role: "patient", onboarded: false });
     }
@@ -250,6 +254,10 @@ function RootLayoutNav() {
       if (!inLogin && !inPartners) router.replace("/login");
       return;
     }
+    // /partners is the universal "switch account" entrypoint — never bounce
+    // anyone away from it. The page itself shows the current session and
+    // offers a "Use different account" button.
+    if (inPartners) return;
     if (auth.role === "nemt") {
       if (!inDriver) router.replace("/driver");
       return;
