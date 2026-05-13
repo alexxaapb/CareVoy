@@ -47,7 +47,37 @@ export default function LoginScreen() {
     }
     const normalized = normalizePhone(phone);
     setLoading(true);
+    
+    // Check recent OTP attempts for this phone number
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: recentAttempts, error: checkError } = await supabase
+      .from('otp_attempts')
+      .select('*')
+      .eq('phone_number', normalized)
+      .gte('created_at', fifteenMinutesAgo);
+    
+    if (checkError) {
+      console.warn('Rate limit check failed:', checkError);
+    } else if (recentAttempts && recentAttempts.length >= 3) {
+      setLoading(false);
+      setError("Too many attempts. Try again in 15 minutes.");
+      return;
+    }
+    
+    // Log this attempt
+    await supabase.from('otp_attempts').insert({
+      phone_number: normalized,
+      ip_address: 'mobile-client'
+    });
+    
+    // Send OTP
     const { error: err } = await supabase.auth.signInWithOtp({
+      phone: normalized,
+    });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
+    setStep("code");
+  };
       phone: normalized,
     });
     setLoading(false);
