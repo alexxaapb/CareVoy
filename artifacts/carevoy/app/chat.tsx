@@ -225,7 +225,7 @@ export default function ChatScreen() {
       });
     }
 // Temporarily disabled - chat feature coming in v1.0.1
-      throw new Error("Chat feature coming soon");      const aiMsg: Msg = {
+      throw new Error("Chat feature coming soon");
         id: `a_${Date.now()}`,
         role: "assistant",
         content: data.content || "(no response)",
