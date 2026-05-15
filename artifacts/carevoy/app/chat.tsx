@@ -224,17 +224,8 @@ export default function ChatScreen() {
         content: trimmed,
       });
     }
-
-    try {
-      const history = [...messages, userMsg]
-        .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({ role: m.role, content: m.content }));
-
-      const base = getApiBase();
-      // Temporarily disabled - chat feature coming in v1.0.1
-throw new Error("Chat feature coming soon");      
-    };
-      const aiMsg: Msg = {
+// Temporarily disabled - chat feature coming in v1.0.1
+      throw new Error("Chat feature coming soon");      const aiMsg: Msg = {
         id: `a_${Date.now()}`,
         role: "assistant",
         content: data.content || "(no response)",
