@@ -78,12 +78,6 @@ export default function LoginScreen() {
     if (err) { setError(err.message); return; }
     setStep("code");
   };
-      phone: normalized,
-    });
-    setLoading(false);
-    if (err) { setError(err.message); return; }
-    setStep("code");
-  };
 
   const verifyCode = async () => {
     setError(null);
