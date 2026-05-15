@@ -29,39 +29,18 @@ export async function createSetupSession(input: {
   email?: string;
   returnUrl: string;
 }): Promise<{ url: string; customerId: string }> {
-  const headers = {
-    "Content-Type": "application/json",
-    ...(await authHeader()),
-  };
-  const res = await fetch(url("/api/payments/setup-session"), {
-    method: "POST",
-    headers,
-    body: JSON.stringify(input),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`setup-session failed: ${res.status} ${text}`);
-  }
-  return (await res.json()) as { url: string; customerId: string };
+  // Temporarily disabled - will be enabled in v1.0.1
+  throw new Error("Payment features coming soon");
 }
 
 export async function listPaymentMethods(): Promise<SavedPaymentMethod[]> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return [];
-  const res = await fetch(url("/api/payments/methods"), { headers });
-  if (!res.ok) return [];
-  const data = (await res.json()) as { methods?: SavedPaymentMethod[] };
-  return data.methods ?? [];
+  // Temporarily disabled - will be enabled in v1.0.1
+  return [];
 }
 
 export async function detachPaymentMethod(id: string): Promise<boolean> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return false;
-  const res = await fetch(url(`/api/payments/methods/${id}`), {
-    method: "DELETE",
-    headers,
-  });
-  return res.ok;
+  // Temporarily disabled - will be enabled in v1.0.1
+  return false;
 }
 
 /**
