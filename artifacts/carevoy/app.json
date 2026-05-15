@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "co.carevoy.app",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "CareVoy uses your location to find nearby pickup points and show your ride on the map.",
         "NSCalendarsUsageDescription": "CareVoy adds your ride to your calendar so you never miss an appointment.",
