@@ -231,25 +231,9 @@ export default function ChatScreen() {
         .map((m) => ({ role: m.role, content: m.content }));
 
       const base = getApiBase();
-      const res = await fetch(`${base}/api/ai/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: history,
-          patientFirstName: firstName,
-        }),
-      });
-
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || `Request failed (${res.status})`);
-      }
-
-      const data = (await res.json()) as {
-        content: string;
-        extraction: BookRideExtraction | null;
-      };
-
+      // Temporarily disabled - chat feature coming in v1.0.1
+throw new Error("Chat feature coming soon");      
+    };
       const aiMsg: Msg = {
         id: `a_${Date.now()}`,
         role: "assistant",
