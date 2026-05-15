@@ -224,32 +224,10 @@ export default function ChatScreen() {
         content: trimmed,
       });
     }
-// Temporarily disabled - chat feature coming in v1.0.1
+
+    try {
+      // Temporarily disabled - chat feature coming in v1.0.1
       throw new Error("Chat feature coming soon");
-        id: `a_${Date.now()}`,
-        role: "assistant",
-        content: data.content || "(no response)",
-        ts: new Date(),
-        extraction: data.extraction ?? null,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-
-      if (conversationIdRef.current) {
-        await supabase.from("ai_messages").insert({
-          conversation_id: conversationIdRef.current,
-          role: "assistant",
-          content: aiMsg.content,
-        });
-
-        if (data.extraction) {
-          await supabase.from("ai_extractions").insert({
-            conversation_id: conversationIdRef.current,
-            patient_id: userIdRef.current,
-            intent: data.extraction.intent,
-            extracted_data: data.extraction,
-          });
-        }
-      }
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Failed to reach coordinator";
