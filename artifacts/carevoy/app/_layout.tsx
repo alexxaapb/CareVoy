@@ -123,14 +123,6 @@ class LaunchErrorBoundary extends Component
   static getDerivedStateFromError(error: Error) {
     return { error };
   }
-  state: { error: Error | null } = { error: null };
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
-  state: { error: Error | null } = { error: null };
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
   componentDidCatch(error: Error, info: { componentStack: string }) {
     console.error("[LaunchErrorBoundary]", error, info?.componentStack);
   }
