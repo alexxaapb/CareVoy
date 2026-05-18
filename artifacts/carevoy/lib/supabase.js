@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store';
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -18,12 +18,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// Create a custom storage adapter for SecureStore (iOS Keychain)
+const ExpoSecureStoreAdapter = {
+  getItem: (key) => {
+    return SecureStore.getItemAsync(key);
+  },
+  setItem: (key, value) => {
+    return SecureStore.setItemAsync(key, value);
+  },
+  removeItem: (key) => {
+    return SecureStore.deleteItemAsync(key);
+  },
+};
+
 export const supabase = createClient(
   supabaseUrl || PLACEHOLDER_URL,
   supabaseAnonKey || PLACEHOLDER_KEY,
   {
     auth: {
-      storage: AsyncStorage,
+      storage: ExpoSecureStoreAdapter,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUse: false,
