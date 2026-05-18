@@ -115,7 +115,7 @@ const errStyles = StyleSheet.create({
   },
 });
 
-class LaunchErrorBoundary extends Component
+class LaunchErrorBoundary extends Component<
   { children: React.ReactNode; extra?: string[] },
   { error: Error | null }
 > {
