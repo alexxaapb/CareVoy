@@ -47,36 +47,35 @@ export default function LoginScreen() {
     }
     const normalized = normalizePhone(phone);
     setLoading(true);
-    
-    // Check recent OTP attempts for this phone number
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    const { data: recentAttempts, error: checkError } = await supabase
-      .from('otp_attempts')
-      .select('*')
-      .eq('phone_number', normalized)
-      .gte('created_at', fifteenMinutesAgo);
-    
-    if (checkError) {
-      console.warn('Rate limit check failed:', checkError);
-    } else if (recentAttempts && recentAttempts.length >= 3) {
+
+    // Call Edge Function for server-side rate limiting
+    try {
+      const response = await fetch(
+        `https://byflpckbjjumxxjxoplk.supabase.co/functions/v1/send-otp-rate-limited`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ phone: normalized }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setLoading(false);
+        setError(result.error || 'Failed to send code');
+        return;
+      }
+
       setLoading(false);
-      setError("Too many attempts. Try again in 15 minutes.");
-      return;
+      setStep("code");
+    } catch (err) {
+      setLoading(false);
+      setError('Network error. Please try again.');
     }
-    
-    // Log this attempt
-    await supabase.from('otp_attempts').insert({
-      phone_number: normalized,
-      ip_address: 'mobile-client'
-    });
-    
-    // Send OTP
-    const { error: err } = await supabase.auth.signInWithOtp({
-      phone: normalized,
-    });
-    setLoading(false);
-    if (err) { setError(err.message); return; }
-    setStep("code");
   };
 
   const verifyCode = async () => {
