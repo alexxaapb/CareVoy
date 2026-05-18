@@ -1,3 +1,4 @@
+import '../sentry.config'; // Add Sentry - must be first!
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -114,7 +115,7 @@ const errStyles = StyleSheet.create({
   },
 });
 
-class LaunchErrorBoundary extends Component<
+class LaunchErrorBoundary extends Component
   { children: React.ReactNode; extra?: string[] },
   { error: Error | null }
 > {
