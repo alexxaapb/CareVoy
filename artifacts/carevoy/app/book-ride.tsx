@@ -1185,10 +1185,34 @@ export default function BookRideScreen() {
               <Text style={styles.label}>
                 Pickup address<Required />
               </Text>
+              <Pressable
+                onPress={detectLocation}
+                disabled={gettingLocation}
+                style={({ pressed }) => [{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  backgroundColor: 'rgba(0,194,168,0.10)',
+                  borderWidth: 1,
+                  borderColor: '#00C2A8',
+                  borderRadius: 10,
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  marginBottom: 10,
+                  opacity: pressed || gettingLocation ? 0.7 : 1,
+                }]}
+              >
+                {gettingLocation
+                  ? <ActivityIndicator size="small" color="#00C2A8" />
+                  : <Feather name="navigation" size={16} color="#00C2A8" />}
+                <Text style={{ color: '#00C2A8', fontSize: 14, fontWeight: '600', fontFamily: 'Inter_600SemiBold' }}>
+                  {gettingLocation ? 'Detecting location…' : 'Use my current location'}
+                </Text>
+              </Pressable>
               <AddressInput
                 value={pickupAddress}
                 onChange={setPickupAddress}
-                placeholder="Start typing your address…"
+                placeholder="Or type your address…"
                 multiline
                 inputStyle={styles.addressInput}
                 zIndex={50}
