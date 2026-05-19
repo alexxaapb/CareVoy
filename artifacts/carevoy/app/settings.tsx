@@ -286,13 +286,13 @@ export default function SettingsScreen() {
             icon="help-circle"
             label="Help & Support"
             sub="support@carevoy.co"
-            onPress={comingSoon("Help & Support")}
+            onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:support@carevoy.co"); }}
           />
           <View style={styles.divider} />
           <MenuRow
             icon="message-circle"
             label="Chat with care coordinator"
-            onPress={() => router.push("/chat")}
+            onPress={comingSoon("Chat with care coordinator")}
           />
         </View>
 

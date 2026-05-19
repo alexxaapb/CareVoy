@@ -159,7 +159,7 @@ export default function PaymentScreen() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(`Could not start Stripe checkout. ${msg}`);
+      setError("Payment setup is coming soon. Check back after your first ride is booked.");
     } finally {
       setAdding(false);
     }
