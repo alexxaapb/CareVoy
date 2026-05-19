@@ -277,6 +277,70 @@ export default function BookRideScreen() {
   const [receiptEmail, setReceiptEmail] = useState<string>("");
 
   const [submitting, setSubmitting] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [dbFacilities, setDbFacilities] = useState<Record<string, string[]>>({});
+
+  // Load facilities from Supabase
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('hospitals')
+        .select('name, city, type')
+        .eq('active', true)
+        .order('name');
+      if (data && data.length > 0) {
+        const grouped: Record<string, string[]> = {
+          hospital: [],
+          assisted_living: [],
+          dialysis: [],
+          other: [],
+        };
+        data.forEach((h: { name: string; type?: string }) => {
+          const t = h.type ?? 'hospital';
+          if (grouped[t]) grouped[t].push(h.name);
+          else grouped['other'].push(h.name);
+        });
+        setDbFacilities(grouped);
+      }
+    })();
+  }, []);
+
+  const getFacilitiesForType = (type: FacilityType): string[] => {
+    const db = dbFacilities[type];
+    if (db && db.length > 0) return [...db, OTHER_OPTION];
+    return [...(FACILITIES_BY_TYPE[type] ?? []), OTHER_OPTION];
+  };
+
+  const detectLocation = async () => {
+    setGettingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setGettingLocation(false);
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const geo = await Location.reverseGeocodeAsync({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+      if (geo.length > 0) {
+        const g = geo[0];
+        const addr = [
+          g.streetNumber,
+          g.street,
+          g.city,
+          g.region,
+          g.postalCode,
+        ].filter(Boolean).join(', ');
+        setPickupAddress(addr);
+      }
+    } catch (e) {
+      console.warn('Location error:', e);
+    } finally {
+      setGettingLocation(false);
+    }
+  };
   const [error, setError] = useState<string | null>(null);
   const [bookedRideForCalendar, setBookedRideForCalendar] = useState<{
     title: string;
@@ -337,11 +401,7 @@ export default function BookRideScreen() {
         .select("home_address, email")
         .eq("id", targetId)
         .maybeSingle();
-      // Investor-screenshot-safe demo default: always seed the pickup with
-      // a clean Columbus, OH address regardless of what's in the DB so the
-      // ride summary never leaks a real personal address.
-      setPickupAddress("850 N High St, Columbus, OH 43215");
-      void pat?.home_address;
+      if (pat?.home_address) setPickupAddress(pat.home_address);
 
       // Receipt email: caregiver's email is the primary receipient (their card pays).
       // We always send to the caregiver's account email on file.
