@@ -226,8 +226,42 @@ export default function ChatScreen() {
     }
 
     try {
-      // Temporarily disabled - chat feature coming in v1.0.1
-      throw new Error("Chat feature coming soon");
+      const API_BASE = "https://care-voy-api-server.vercel.app";
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const apiMessages = messages
+        .concat(userMsg)
+        .filter(m => m.role === "user" || m.role === "assistant")
+        .map(m => ({ role: m.role, content: m.content }));
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+          patientId: userId,
+          conversationId: conversationIdRef.current,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to reach coordinator");
+      const data = await res.json();
+      const reply = data.reply;
+      const assistantMsg: Msg = {
+        id: `a_${Date.now()}`,
+        role: "assistant",
+        content: reply,
+        ts: new Date(),
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+      if (conversationIdRef.current) {
+        await supabase.from("ai_messages").insert({
+          conversation_id: conversationIdRef.current,
+          role: "assistant",
+          content: reply,
+        });
+      }
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Failed to reach coordinator";
