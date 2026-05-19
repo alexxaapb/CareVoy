@@ -285,7 +285,7 @@ export default function BookRideScreen() {
     (async () => {
       const { data } = await supabase
         .from('hospitals')
-        .select('name, city, type')
+        .select('name, city, facility_type')
         .eq('active', true)
         .order('name');
       if (data && data.length > 0) {
@@ -296,7 +296,7 @@ export default function BookRideScreen() {
           other: [],
         };
         data.forEach((h: { name: string; type?: string }) => {
-          const t = h.type ?? 'hospital';
+          const t = h.facility_type ?? 'hospital';
           if (grouped[t]) grouped[t].push(h.name);
           else grouped['other'].push(h.name);
         });
