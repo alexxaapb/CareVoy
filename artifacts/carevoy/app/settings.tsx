@@ -298,13 +298,6 @@ export default function SettingsScreen() {
 
         <View style={styles.group}>
           <MenuRow
-            icon="refresh-ccw"
-            label="Restart onboarding"
-            sub="Re-do the welcome questions (for testing)"
-            onPress={confirmRestartOnboarding}
-          />
-          <View style={styles.divider} />
-          <MenuRow
             icon="log-out"
             label={signingOut ? "Signing out…" : "Sign Out"}
             onPress={signingOut ? () => {} : handleSignOut}

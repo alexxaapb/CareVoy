@@ -313,7 +313,7 @@ export default function BookRideScreen() {
       setPaymentMethod("hsa_fsa");
       setHsaCardOnFile("Visa •••• 4242");
       setStdCardOnFile("Visa •••• 4242");
-      setReceiptEmail("janedoe@gmail.com");
+      setReceiptEmail("");
       const stepParam = parseInt(params.get("demoStep") ?? "", 10);
       if (!Number.isNaN(stepParam) && stepParam >= 1 && stepParam <= 4) {
         setWhoChosen(true);
