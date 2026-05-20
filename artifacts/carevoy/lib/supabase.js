@@ -39,7 +39,7 @@ export const supabase = createClient(
       storage: ExpoSecureStoreAdapter,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUse: false,
+      detectSessionInUrl: false,
     },
   },
 );
