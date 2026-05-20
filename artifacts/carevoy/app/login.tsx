@@ -113,9 +113,6 @@ export default function LoginScreen() {
               style={styles.logoImg}
               resizeMode="contain"
             />
-            <Text style={styles.tagline}>
-              Medical rides. HSA/FSA. Simplified.
-            </Text>
           </View>
 
           <View style={styles.form}>
@@ -185,8 +182,7 @@ export default function LoginScreen() {
                   style={({ pressed }) => [styles.choiceCard, pressed && styles.choiceCardPressed]}
                   onPress={() => handleBookingFor(true)}
                 >
-                  <Text style={styles.choiceEmoji}>🙋</Text>
-                  <View style={styles.choiceText}>
+                    <View style={styles.choiceText}>
                     <Text style={styles.choiceTitle}>Myself</Text>
                     <Text style={styles.choiceDesc}>I'm booking my own medical rides</Text>
                   </View>
@@ -197,8 +193,7 @@ export default function LoginScreen() {
                   style={({ pressed }) => [styles.choiceCard, styles.choiceCardAlt, pressed && styles.choiceCardPressed]}
                   onPress={() => handleBookingFor(false)}
                 >
-                  <Text style={styles.choiceEmoji}>👨‍👩‍👧</Text>
-                  <View style={styles.choiceText}>
+                    <View style={styles.choiceText}>
                     <Text style={styles.choiceTitle}>Someone else</Text>
                     <Text style={styles.choiceDesc}>I'm helping a family member or patient</Text>
                   </View>
@@ -210,10 +205,10 @@ export default function LoginScreen() {
 
           {step !== "booking-for" && (
             <View style={styles.footer}>
-              <Text style={styles.footerLabel}>NEMT driver or facility staff?</Text>
-              <Text style={styles.footerLink}>
-                Sign in at carevoy.co/partners on your computer.
-              </Text>
+              <Text style={styles.footerLabel}>Healthcare facility or driver?</Text>
+              <Pressable onPress={() => router.push("/partners")}>
+                <Text style={styles.footerLink}>Partner sign-in →</Text>
+              </Pressable>
             </View>
           )}
         </View>
@@ -234,10 +229,10 @@ const styles = StyleSheet.create({
   },
   brand: { alignItems: "center", marginTop: 24 },
   logoImg: { width: 200, height: 140, marginBottom: 4 },
-  tagline: { color: MUTED, fontSize: 15, marginTop: 4, fontFamily: "Inter_400Regular" },
+  tagline: { color: MUTED, fontSize: 15, marginTop: 4, fontFamily: "System" },
   form: { width: "100%" },
-  label: { color: NAVY, fontSize: 15, fontWeight: "600", fontFamily: "Inter_600SemiBold", marginBottom: 6 },
-  subLabel: { color: MUTED, fontSize: 13, marginBottom: 12, fontFamily: "Inter_400Regular" },
+  label: { color: NAVY, fontSize: 15, fontWeight: "600", fontFamily: "System", marginBottom: 6 },
+  subLabel: { color: MUTED, fontSize: 13, marginBottom: 12, fontFamily: "System" },
   input: {
     backgroundColor: INPUT_BG,
     color: NAVY,
@@ -247,10 +242,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 17,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     marginBottom: 14,
   },
-  codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontFamily: "Inter_600SemiBold" },
+  codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontFamily: "System" },
   button: {
     backgroundColor: TEAL,
     borderRadius: 14,
@@ -264,27 +259,27 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonPressed: { opacity: 0.9 },
-  buttonText: { color: NAVY, fontSize: 17, fontWeight: "700", fontFamily: "Inter_700Bold" },
-  hint: { color: MUTED, fontSize: 13, marginTop: 16, textAlign: "center", fontFamily: "Inter_400Regular" },
-  link: { color: TEAL, fontSize: 14, textAlign: "center", marginTop: 16, fontFamily: "Inter_500Medium" },
-  error: { color: ERROR, fontSize: 13, marginBottom: 10, fontFamily: "Inter_500Medium" },
+  buttonText: { color: NAVY, fontSize: 17, fontWeight: "700", fontFamily: "System" },
+  hint: { color: MUTED, fontSize: 13, marginTop: 16, textAlign: "center", fontFamily: "System" },
+  link: { color: TEAL, fontSize: 14, textAlign: "center", marginTop: 16, fontFamily: "System" },
+  error: { color: ERROR, fontSize: 13, marginBottom: 10, fontFamily: "System" },
   footer: { alignItems: "center", paddingHorizontal: 12, gap: 4 },
-  footerLabel: { color: MUTED, fontSize: 13, fontFamily: "Inter_500Medium" },
-  footerLink: { color: NAVY, fontSize: 13, fontFamily: "Inter_600SemiBold", textAlign: "center" },
+  footerLabel: { color: MUTED, fontSize: 13, fontFamily: "System" },
+  footerLink: { color: NAVY, fontSize: 13, fontFamily: "System", textAlign: "center" },
 
   // Booking-for screen
   bookingTitle: {
     color: NAVY,
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginBottom: 8,
     textAlign: "center",
   },
   bookingSubtitle: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     textAlign: "center",
     marginBottom: 32,
   },
@@ -304,9 +299,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0FDFB",
   },
   choiceCardPressed: { opacity: 0.8 },
-  choiceEmoji: { fontSize: 28 },
   choiceText: { flex: 1 },
-  choiceTitle: { color: NAVY, fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold", marginBottom: 2 },
-  choiceDesc: { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular" },
+  choiceTitle: { color: NAVY, fontSize: 16, fontWeight: "700", fontFamily: "System", marginBottom: 2 },
+  choiceDesc: { color: MUTED, fontSize: 13, fontFamily: "System" },
   choiceArrow: { color: TEAL, fontSize: 20, fontWeight: "700" },
 });
