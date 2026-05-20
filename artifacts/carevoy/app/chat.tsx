@@ -129,7 +129,7 @@ export default function ChatScreen() {
           id: "g_demo",
           role: "assistant",
           content:
-            "Hi Jane! I'm your CareVoy care coordinator. I can help you book a ride, answer HSA/FSA questions, check on your upcoming rides, or anything else related to your medical transportation. What can I help you with today?",
+            "Hi! I'm your CareVoy care coordinator. I can help you book a ride, answer HSA/FSA questions, check on your upcoming rides, or anything else related to your medical transportation. What can I help you with today?",
           ts: new Date(now - 1000 * 60 * 4),
         },
         {

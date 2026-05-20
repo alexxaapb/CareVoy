@@ -484,13 +484,7 @@ export default function DriverHomeScreen() {
 
         <Text style={styles.sectionLabel}>Today's Rides</Text>
 
-        <View style={styles.testingNotice}>
-          <Feather name="alert-circle" size={14} color={AMBER} />
-          <Text style={styles.testingText}>
-            MVP testing tool — for simulating ride status before NEMT API
-            integration.
-          </Text>
-        </View>
+
 
         {loading ? (
           <ActivityIndicator color={TEAL} style={{ marginTop: 32 }} />

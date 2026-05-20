@@ -331,6 +331,7 @@ function CoordinatorDashboard() {
   const [avgCost, setAvgCost] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [notifications, setNotifications] = useState<{id: string; message: string; status: string; created_at: string}[]>([]);
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
@@ -424,6 +425,13 @@ function CoordinatorDashboard() {
       bookedRes,
       monthRidesRes,
     ] = await Promise.all([
+      supabase
+        .from("notifications")
+        .select("id, message, status, created_at")
+        .eq("recipient_type", "coordinator")
+        .order("created_at", { ascending: false })
+        .limit(20)
+        .then(({ data }) => { if (data) setNotifications(data); }),
       supabase
         .from("rides")
         .select(
@@ -662,6 +670,26 @@ function CoordinatorDashboard() {
                 : dateStr}
             </Text>
           </View>
+
+          {/* Book ride for patient CTA */}
+          <Pressable
+            onPress={() => router.push("/book-ride")}
+            style={({ pressed }) => [{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              backgroundColor: "#00C2A8",
+              borderRadius: 14,
+              paddingVertical: 16,
+              opacity: pressed ? 0.85 : 1,
+            }]}
+          >
+            <Feather name="plus-circle" size={20} color="#050D1F" />
+            <Text style={{ color: "#050D1F", fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold" }}>
+              Book a Ride for Patient
+            </Text>
+          </Pressable>
 
           {/* Stats */}
           <View style={styles.statsRow}>
@@ -944,6 +972,42 @@ function CoordinatorDashboard() {
                   </View>
                 );
               })
+            )}
+          </View>
+          {/* Alerts / Notifications */}
+          <Text style={styles.sectionLabel}>Recent Alerts</Text>
+          <View style={[styles.tableWrap, { marginBottom: 24 }]}>
+            {notifications.length === 0 ? (
+              <View style={styles.emptyRow}>
+                <Feather name="bell" size={24} color="#6B7280" />
+                <Text style={styles.emptyText}>No alerts yet.</Text>
+              </View>
+            ) : (
+              notifications.map((n, i) => (
+                <View key={n.id} style={[styles.tr, i === notifications.length - 1 && { borderBottomWidth: 0 }]}>
+                  <View style={{
+                    width: 8, height: 8, borderRadius: 4,
+                    backgroundColor: n.status === "pending" ? "#F5A623" : "#00C2A8",
+                    marginRight: 12, marginTop: 4,
+                  }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.td, { fontSize: 13 }]}>{n.message}</Text>
+                    <Text style={[styles.subMuted, { marginTop: 4 }]}>
+                      {new Date(n.created_at).toLocaleString(undefined, {
+                        month: "short", day: "numeric",
+                        hour: "numeric", minute: "2-digit"
+                      })}
+                    </Text>
+                  </View>
+                  <View style={[styles.pill, {
+                    backgroundColor: n.status === "pending" ? "rgba(245,165,36,0.15)" : "rgba(0,194,168,0.15)"
+                  }]}>
+                    <Text style={[styles.pillText, {
+                      color: n.status === "pending" ? "#F5A623" : "#00C2A8"
+                    }]}>{n.status}</Text>
+                  </View>
+                </View>
+              ))
             )}
           </View>
         </ScrollView>

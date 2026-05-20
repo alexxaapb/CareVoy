@@ -171,7 +171,7 @@ export default function SettingsScreen() {
 
   const confirmRestartOnboarding = () => {
     const msg =
-      "Re-do the onboarding flow? This is for testing — your existing profile will stay, you'll just see the welcome screens again.";
+      "Re-do the onboarding flow? Your existing profile will stay, you'll just see the welcome screens again.";
     if (Platform.OS === "web") {
       // eslint-disable-next-line no-alert
       if (typeof window !== "undefined" && window.confirm(msg)) {
