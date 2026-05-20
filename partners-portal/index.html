@@ -51,7 +51,82 @@
     <button class="submit" id="signInBtn" onclick="signIn()">Sign In</button>
     <div class="footer">Patient? <a href="https://apps.apple.com/us/app/carevoy/id6768714735">Download the app</a></div>
   </div>
-  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    function togglePw() {
+      const input = document.getElementById('password');
+      const btn = document.getElementById('eyeBtn');
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.textContent = input.type === 'password' ? '👁' : '🙈';
+    }
+
+    async function signIn() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('error');
+      const btn = document.getElementById('signInBtn');
+      errEl.style.display = 'none';
+
+      if (!email || !password) {
+        errEl.textContent = 'Enter your email and password.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        const res = await fetch('https://byflpckbjjumxxjxoplk.supabase.co/auth/v1/token?grant_type=password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiang1dW14eGpvcGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NDA5MjAsImV4cCI6MjA2MTAxNjkyMH0.hFmKsWXmNhNVD6O_XEqonUbM_WUqW1MjHWVH-EcJaWk'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error_description || data.message || 'Login failed');
+
+        const token = data.access_token;
+        const uid = data.user?.id;
+
+        const staffRes = await fetch('https://byflpckbjjumxxjxoplk.supabase.co/rest/v1/staff?id=eq.' + uid + '&select=role', {
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiang1dW14eGpvcGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NDA5MjAsImV4cCI6MjA2MTAxNjkyMH0.hFmKsWXmNhNVD6O_XEqonUbM_WUqW1MjHWVH-EcJaWk',
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        const staffData = await staffRes.json();
+        const role = staffData[0]?.role;
+
+        const coordRes = await fetch('https://byflpckbjjumxxjxoplk.supabase.co/rest/v1/hospital_coordinators?id=eq.' + uid + '&select=id', {
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiang1dW14eGpvcGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NDA5MjAsImV4cCI6MjA2MTAxNjkyMH0.hFmKsWXmNhNVD6O_XEqonUbM_WUqW1MjHWVH-EcJaWk',
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        const coordData = await coordRes.json();
+
+        sessionStorage.setItem('cv_token', token);
+        sessionStorage.setItem('cv_uid', uid);
+        sessionStorage.setItem('cv_role', role || (coordData[0] ? 'coordinator' : ''));
+
+        if (role === 'admin') window.location.href = '/admin';
+        else if (role === 'nemt') window.location.href = '/driver';
+        else if (coordData[0]) window.location.href = '/coordinator';
+        else throw new Error('No partner role found. Contact your CareVoy admin.');
+
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); });
+  </script>
   <script>
     const SUPABASE_URL = 'https://byflpckbjjumxxjxoplk.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiang1dW14eGpvcGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NDA5MjAsImV4cCI6MjA2MTAxNjkyMH0.hFmKsWXmNhNVD6O_XEqonUbM_WUqW1MjHWVH-EcJaWk';
