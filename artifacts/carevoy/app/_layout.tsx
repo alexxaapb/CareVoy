@@ -17,13 +17,14 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, ScrollView, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { CareProvider } from "../lib/careContext";
 import { isDemoMode } from "../lib/demoMode";
 import { supabase } from "../lib/supabase";
+import * as SecureStore from "expo-secure-store";
 
 // Capture any module-evaluation errors that happen before React mounts so we
 // can show them on screen instead of silently crashing to the home screen.
@@ -161,6 +162,63 @@ export function useAuthRefresh() {
   return useContext(AuthRefreshContext);
 }
 
+const ROLE_KEY = "carevoy_last_role";
+
+function AnimatedSplash({ onDone }: { onDone: () => void }) {
+  const scale = React.useRef(new Animated.Value(0.82)).current;
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setTimeout(onDone, 400);
+    });
+  }, []);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#050D1F", alignItems: "center", justifyContent: "center" }}>
+      <Animated.View style={{ transform: [{ scale }], opacity }}>
+        <View style={{
+          width: 120, height: 120, borderRadius: 28,
+          backgroundColor: "#050D1F",
+          alignItems: "center", justifyContent: "center",
+          borderWidth: 1.5, borderColor: "rgba(255,255,255,0.08)"
+        }}>
+          <View style={{ position: "relative", width: 72, height: 72, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: "#FFFFFF", fontSize: 52, fontWeight: "800", fontFamily: "System", lineHeight: 60 }}>C</Text>
+            <View style={{
+              position: "absolute", top: 8, right: 4,
+              width: 14, height: 14, borderRadius: 7,
+              borderWidth: 2.5,
+              borderColor: "#00C2A8",
+              borderBottomColor: "transparent",
+              borderLeftColor: "transparent",
+              transform: [{ rotate: "45deg" }]
+            }} />
+          </View>
+        </View>
+        <Text style={{
+          color: "#FFFFFF", fontSize: 22, fontWeight: "700",
+          fontFamily: "System", textAlign: "center", marginTop: 16,
+          letterSpacing: -0.5
+        }}>CareVoy</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
@@ -170,6 +228,7 @@ function RootLayoutNav() {
     onboarded: null,
   });
   const [ready, setReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   const refreshFromUser = useCallback(async (userId: string | null) => {
     if (!userId) {
@@ -230,7 +289,7 @@ function RootLayoutNav() {
       await refreshFromUser(data.session?.user.id ?? null);
       setReady(true);
     })();
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_evt, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (evt, s) => {
       await refreshFromUser(s?.user.id ?? null);
     });
     return () => {
@@ -292,6 +351,10 @@ function RootLayoutNav() {
     }
     void inTabs;
   }, [ready, auth, segments, router]);
+
+  if (showSplash) {
+    return <AnimatedSplash onDone={() => setShowSplash(false)} />;
+  }
 
   return (
     <AuthRefreshContext.Provider value={{ refresh }}>
