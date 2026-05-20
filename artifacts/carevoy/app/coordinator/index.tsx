@@ -671,9 +671,25 @@ function CoordinatorDashboard() {
             </Text>
           </View>
 
-          {/* Book ride for patient CTA */}
+          {/* Send booking link to patient */}
           <Pressable
-            onPress={() => router.push("/book-ride")}
+            onPress={async () => {
+              const targets = rides.filter(r => rideTransportStatus(r) !== "confirmed" && r.patients?.id);
+              if (targets.length === 0) {
+                showToast("No patients need transport right now");
+                return;
+              }
+              const rows = targets.map(r => ({
+                recipient_type: "patient",
+                recipient_id: r.patients!.id,
+                channel: "sms",
+                message: `Hi ${firstName(r.patients?.full_name)}, your ${coord?.hospitals?.name ?? "facility"} appointment is coming up. Book your free CareVoy ride now: https://carevoy.co — Download the app or reply for help.`,
+                status: "pending",
+              }));
+              const { error } = await supabase.from("notifications").insert(rows);
+              if (error) { showToast("Could not send booking links"); return; }
+              showToast(`Booking link sent to ${targets.length} patient${targets.length === 1 ? "" : "s"}`);
+            }}
             style={({ pressed }) => [{
               flexDirection: "row",
               alignItems: "center",
@@ -685,9 +701,9 @@ function CoordinatorDashboard() {
               opacity: pressed ? 0.85 : 1,
             }]}
           >
-            <Feather name="plus-circle" size={20} color="#050D1F" />
+            <Feather name="send" size={20} color="#050D1F" />
             <Text style={{ color: "#050D1F", fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold" }}>
-              Book a Ride for Patient
+              Send Booking Links to Patients
             </Text>
           </Pressable>
 
