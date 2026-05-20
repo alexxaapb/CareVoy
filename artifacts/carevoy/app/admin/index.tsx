@@ -233,7 +233,7 @@ export default function AdminDashboard() {
         .from("notifications")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending"),
-      supabase.from("hospitals").select("id, name, city, active"),
+      supabase.from("hospitals").select("id, name, city, active, facility_type"),
       supabase.from("nemt_partners").select("id, company_name, city, active"),
       supabase
         .from("rides")
@@ -652,6 +652,7 @@ export default function AdminDashboard() {
           <View style={styles.tableWrap}>
             <View style={styles.tableHead}>
               <Text style={[styles.th, { flex: 2 }]}>Name</Text>
+              <Text style={[styles.th, { flex: 1 }]}>Type</Text>
               <Text style={[styles.th, { flex: 1.2 }]}>City</Text>
               <Text style={[styles.th, { flex: 1 }]}>Active Patients</Text>
               <Text style={[styles.th, { flex: 1 }]}>Rides This Month</Text>
@@ -666,6 +667,9 @@ export default function AdminDashboard() {
                 <View key={h.id} style={styles.tr}>
                   <Text style={[styles.td, { flex: 2 }]} numberOfLines={1}>
                     {h.name ?? "—"}
+                  </Text>
+                  <Text style={[styles.td, { flex: 1 }]} numberOfLines={1}>
+                    {(h.facility_type ?? "hospital").replace("_", " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                   </Text>
                   <Text style={[styles.td, { flex: 1.2 }]}>
                     {h.city ?? "—"}
@@ -970,13 +974,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 18,
     fontWeight: "800",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   logoWord: {
     color: NAVY,
     fontSize: 20,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   navList: { gap: 4, flex: 1 },
   navItem: {
@@ -988,11 +992,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   navItemActive: { backgroundColor: "rgba(0,194,168,0.12)" },
-  navText: { color: MUTED, fontSize: 14, fontFamily: "Inter_500Medium" },
+  navText: { color: MUTED, fontSize: 14, fontFamily: "System" },
   navTextActive: {
     color: TEAL,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   sidebarFoot: { borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 16 },
   adminBadge: {
@@ -1010,7 +1014,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 11,
     fontWeight: "800",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 1,
   },
   signOutBtn: {
@@ -1019,7 +1023,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 8,
   },
-  signOutText: { color: MUTED, fontSize: 13, fontFamily: "Inter_500Medium" },
+  signOutText: { color: MUTED, fontSize: 13, fontFamily: "System" },
   main: { flex: 1, backgroundColor: WHITE },
   mainContent: { padding: 20, gap: 24 },
   mobileBar: {
@@ -1043,13 +1047,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "800",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   mobileBrandText: {
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   drawerBackdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -1075,11 +1079,11 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 28,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.5,
   },
   headerSubRow: { flexDirection: "row", alignItems: "center", marginTop: 6 },
-  headerSub: { color: MUTED, fontSize: 14, fontFamily: "Inter_400Regular" },
+  headerSub: { color: MUTED, fontSize: 14, fontFamily: "System" },
   liveDot: {
     width: 8,
     height: 8,
@@ -1091,7 +1095,7 @@ const styles = StyleSheet.create({
     color: GREEN,
     fontSize: 13,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.4,
   },
   statsRow: { flexDirection: "row", gap: 14, flexWrap: "wrap" },
@@ -1114,11 +1118,11 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  statValue: { fontSize: 26, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  statValue: { fontSize: 26, fontWeight: "700", fontFamily: "System" },
   twoCol: { flexDirection: "row", gap: 20, alignItems: "flex-start" },
   colMain: { flex: 2, gap: 12 },
   colSide: { flex: 1, gap: 12, minWidth: 280 },
@@ -1132,12 +1136,12 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   sectionSubtitle: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   tableWrap: {
     backgroundColor: CARD,
@@ -1158,7 +1162,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
@@ -1170,7 +1174,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },
-  td: { color: NAVY, fontSize: 13, fontFamily: "Inter_400Regular" },
+  td: { color: NAVY, fontSize: 13, fontFamily: "System" },
   cPat: { flex: 1.6 },
   cHosp: { flex: 1.6 },
   cPart: { flex: 1.4 },
@@ -1190,7 +1194,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.4,
   },
   viewBtn: {
@@ -1204,10 +1208,10 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 12,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   empty: { paddingVertical: 32, alignItems: "center", gap: 8 },
-  emptyText: { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular" },
+  emptyText: { color: MUTED, fontSize: 13, fontFamily: "System" },
   activityCard: {
     backgroundColor: CARD,
     borderRadius: 14,
@@ -1236,13 +1240,13 @@ const styles = StyleSheet.create({
   activityMsg: {
     color: NAVY,
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     lineHeight: 18,
   },
   activityMeta: {
     color: MUTED,
     fontSize: 11,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginTop: 2,
     letterSpacing: 0.3,
   },
@@ -1260,7 +1264,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     width: 110,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -1277,7 +1281,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     width: 110,
     textAlign: "right",
   },
@@ -1291,13 +1295,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   revAllValue: {
     color: TEAL,
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   modalScrim: {
     flex: 1,
@@ -1325,7 +1329,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   modalRow: {
     flexDirection: "row",
@@ -1335,12 +1339,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },
-  modalLabel: { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular" },
+  modalLabel: { color: MUTED, fontSize: 13, fontFamily: "System" },
   modalValue: {
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     flex: 1,
     textAlign: "right",
     marginLeft: 12,
