@@ -59,6 +59,7 @@ export default function PartnersPortal() {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [currentEmail, setCurrentEmail] = useState<string | null>(null);
 
   // Show the current session (if any) — but DON'T auto-redirect. The user came
@@ -254,7 +255,7 @@ export default function PartnersPortal() {
                 style={{ position: 'absolute', right: 14, top: 0, bottom: 0, justifyContent: 'center' }}
                 hitSlop={8}
               >
-                <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={MUTED} />
+                <Text style={{ color: TEAL, fontSize: 12, fontWeight: "600" }}>{showPassword ? "HIDE" : "SHOW"}</Text>
               </Pressable>
             </View>
 
