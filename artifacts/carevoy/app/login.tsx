@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -108,11 +107,16 @@ export default function LoginScreen() {
       >
         <View style={styles.container}>
           <View style={styles.brand}>
-            <Image
-              source={require("../assets/images/logo-motion.png")}
-              style={styles.logoImg}
-              resizeMode="contain"
-            />
+            <View style={{
+              width: 64, height: 64, borderRadius: 16,
+              backgroundColor: NAVY,
+              alignItems: "center", justifyContent: "center",
+              marginBottom: 12,
+            }}>
+              <Text style={{ color: WHITE, fontSize: 32, fontWeight: "800", fontFamily: "System" }}>C</Text>
+            </View>
+            <Text style={styles.welcomeTitle}>Welcome</Text>
+            <Text style={styles.welcomeSub}>Enter your number to continue</Text>
           </View>
 
           <View style={styles.form}>
@@ -227,45 +231,42 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 40,
   },
-  brand: { alignItems: "center", marginTop: 24 },
-  logoImg: { width: 200, height: 140, marginBottom: 4 },
+  brand: { alignItems: "center", marginTop: 48, marginBottom: 8 },
+  logoImg: { width: 64, height: 64, marginBottom: 12, borderRadius: 16 },
   tagline: { color: MUTED, fontSize: 15, marginTop: 4, fontFamily: "System" },
   form: { width: "100%" },
-  label: { color: NAVY, fontSize: 15, fontWeight: "600", fontFamily: "System", marginBottom: 6 },
+  welcomeTitle: { color: NAVY, fontSize: 26, fontWeight: "700", fontFamily: "System", textAlign: "center", marginBottom: 4 },
+  welcomeSub: { color: MUTED, fontSize: 14, fontFamily: "System", textAlign: "center", marginBottom: 28 },
+  label: { color: NAVY, fontSize: 12, fontWeight: "600", fontFamily: "System", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
   subLabel: { color: MUTED, fontSize: 13, marginBottom: 12, fontFamily: "System" },
   input: {
     backgroundColor: INPUT_BG,
     color: NAVY,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 14,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    fontSize: 17,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
     fontFamily: "System",
-    marginBottom: 14,
+    marginBottom: 12,
   },
   codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontFamily: "System" },
   button: {
-    backgroundColor: TEAL,
-    borderRadius: 14,
-    paddingVertical: 18,
+    backgroundColor: NAVY,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: "center",
     marginTop: 4,
-    shadowColor: TEAL,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 3,
   },
-  buttonPressed: { opacity: 0.9 },
-  buttonText: { color: NAVY, fontSize: 17, fontWeight: "700", fontFamily: "System" },
-  hint: { color: MUTED, fontSize: 13, marginTop: 16, textAlign: "center", fontFamily: "System" },
+  buttonPressed: { opacity: 0.85 },
+  buttonText: { color: WHITE, fontSize: 16, fontWeight: "700", fontFamily: "System" },
+  hint: { color: MUTED, fontSize: 12, marginTop: 14, textAlign: "center", fontFamily: "System" },
   link: { color: TEAL, fontSize: 14, textAlign: "center", marginTop: 16, fontFamily: "System" },
   error: { color: ERROR, fontSize: 13, marginBottom: 10, fontFamily: "System" },
   footer: { alignItems: "center", paddingHorizontal: 12, gap: 4 },
   footerLabel: { color: MUTED, fontSize: 13, fontFamily: "System" },
-  footerLink: { color: NAVY, fontSize: 13, fontFamily: "System", textAlign: "center" },
+  footerLink: { color: NAVY, fontSize: 13, fontWeight: "600", fontFamily: "System", textAlign: "center" },
 
   // Booking-for screen
   bookingTitle: {
