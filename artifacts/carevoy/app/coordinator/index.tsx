@@ -357,9 +357,7 @@ function CoordinatorDashboard() {
       await loadInner();
     } catch (e) {
       console.error("[coordinator] load failed:", e);
-      setToast(
-        `Couldn't load dashboard: ${(e as Error)?.message ?? String(e)}`,
-      );
+      // Silently log to console, don't show toast to user
     }
   }, []);
 
