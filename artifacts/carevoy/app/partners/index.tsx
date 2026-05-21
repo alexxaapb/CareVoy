@@ -64,11 +64,19 @@ export default function PartnersPortal() {
   // to /partners on purpose, probably to switch accounts. Auto-bouncing them
   // into whichever dashboard their current session points at would trap them.
   useEffect(() => {
+    const timeout = setTimeout(() => setChecking(false), 3000);
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      setCurrentEmail(data.session?.user?.email ?? null);
-      setChecking(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        setCurrentEmail(data.session?.user?.email ?? null);
+      } catch (e) {
+        console.warn('Session check failed:', e);
+      } finally {
+        clearTimeout(timeout);
+        setChecking(false);
+      }
     })();
+    return () => clearTimeout(timeout);
   }, []);
 
   const switchAccount = async () => {
