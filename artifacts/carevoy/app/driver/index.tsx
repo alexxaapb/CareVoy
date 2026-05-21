@@ -396,7 +396,11 @@ export default function DriverHomeScreen() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.replace("/login");
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    } else {
+      router.replace("/login");
+    }
   };
 
   const company = staff?.nemt_partners?.company_name ?? "NEMT Partner";

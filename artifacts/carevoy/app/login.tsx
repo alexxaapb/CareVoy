@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -107,14 +108,11 @@ export default function LoginScreen() {
       >
         <View style={styles.container}>
           <View style={styles.brand}>
-            <View style={{
-              width: 64, height: 64, borderRadius: 16,
-              backgroundColor: NAVY,
-              alignItems: "center", justifyContent: "center",
-              marginBottom: 12,
-            }}>
-              <Text style={{ color: WHITE, fontSize: 32, fontWeight: "800", fontFamily: "System" }}>C</Text>
-            </View>
+            <Image
+              source={require("../assets/images/logo-motion.png")}
+              style={{ width: 80, height: 80, borderRadius: 18, marginBottom: 16 }}
+              resizeMode="contain"
+            />
             <Text style={styles.welcomeTitle}>Welcome</Text>
             <Text style={styles.welcomeSub}>Enter your number to continue</Text>
           </View>
