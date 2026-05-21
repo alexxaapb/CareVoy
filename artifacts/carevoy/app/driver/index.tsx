@@ -429,8 +429,9 @@ export default function DriverHomeScreen() {
               {company} • {dateStr}
             </Text>
           </View>
-          <Pressable onPress={signOut} hitSlop={10}>
-            <Feather name="log-out" size={20} color={MUTED} />
+          <Pressable onPress={signOut} hitSlop={10} style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: "#E2E8F0" }}>
+            <Feather name="log-out" size={16} color={MUTED} />
+            <Text style={{ color: MUTED, fontSize: 13, fontWeight: "600", fontFamily: "System" }}>Sign Out</Text>
           </Pressable>
         </View>
 

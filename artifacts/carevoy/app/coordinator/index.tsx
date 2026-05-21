@@ -364,7 +364,7 @@ function CoordinatorDashboard() {
   }, []);
 
   const loadInner = useCallback(async () => {
-    if (isDemoMode()) {
+    if (isDemoMode() && typeof window === 'undefined') {
       setCoord(DEMO_COORD);
       setRides(DEMO_RIDES);
       setMonthCount(DEMO_RIDES.length);
