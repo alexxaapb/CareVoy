@@ -20,13 +20,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Create a custom storage adapter for SecureStore (iOS Keychain)
 const ExpoSecureStoreAdapter = {
-  getItem: (key) => {
+  getItem: async (key) => {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem(key);
+    }
     return SecureStore.getItemAsync(key);
   },
-  setItem: (key, value) => {
+  setItem: async (key, value) => {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+      return;
+    }
     return SecureStore.setItemAsync(key, value);
   },
-  removeItem: (key) => {
+  removeItem: async (key) => {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(key);
+      return;
+    }
     return SecureStore.deleteItemAsync(key);
   },
 };
