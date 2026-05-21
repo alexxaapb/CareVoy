@@ -373,7 +373,11 @@ export default function AdminDashboard() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.replace("/login");
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    } else {
+      router.replace("/login");
+    }
   };
 
   const revenueMax = Math.max(revenue.thisMonth, revenue.lastMonth, 1);
