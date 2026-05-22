@@ -4,8 +4,8 @@
     { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api/stripe/(.*)", "dest": "/api/stripe/$1" },
+    { "src": "/api/stripe/(.*)", "dest": "/api/stripe/$1.js" },
     { "src": "/api/chat", "dest": "/api/chat/index.js" },
-    { "src": "/api/receipts/(.*)", "dest": "/api/receipts/$1" }
+    { "src": "/api/receipts/(.*)", "dest": "/api/receipts/$1.js" }
   ]
 }
