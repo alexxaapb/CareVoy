@@ -119,8 +119,11 @@ export default function ChatScreen() {
   }, [sending, dot1, dot2, dot3]);
 
   // initial load: fetch user profile, create conversation, send greeting
-  useEffect(() => {
-    // Demo mode (pitch-deck screenshots): inject a sample conversation
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) return;
+      userIdRef.current = userId;
       setUserId(userId);
 
       const { data: patient } = await supabase
