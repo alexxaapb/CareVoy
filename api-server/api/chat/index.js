@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     );
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       system: `You are a friendly care coordinator for CareVoy, a medical transportation app. 
 You help patients and caregivers with questions about booking rides to medical appointments.
