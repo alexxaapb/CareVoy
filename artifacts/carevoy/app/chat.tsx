@@ -118,6 +118,7 @@ export default function ChatScreen() {
     };
   }, [sending, dot1, dot2, dot3]);
 
+  useEffect(() => {
   // initial load: fetch user profile, create conversation, send greeting
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
