@@ -167,9 +167,9 @@ export default function SettingsScreen() {
                 <Text style={styles.profileName}>
                   {profile?.full_name && profile.full_name.trim().length > 1
                     ? profile.full_name
-                    : "Jane Doe"}
+                    : profile?.full_name || ""}
                 </Text>
-                <Text style={styles.profileSub}>janedoe@gmail.com</Text>
+                <Text style={styles.profileSub}>{profile?.email || ""}</Text>
               </View>
             </>
           )}
