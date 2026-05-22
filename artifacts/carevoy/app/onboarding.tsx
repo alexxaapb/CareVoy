@@ -301,7 +301,7 @@ export default function OnboardingScreen() {
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder="Jane Doe"
+                placeholder="Full name"
                 placeholderTextColor={MUTED}
                 value={fullName}
                 onChangeText={setFullName}

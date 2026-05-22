@@ -177,7 +177,7 @@ export default function HomeScreen() {
         await loadAll();
         if (active && isDemoMode()) {
           setProfile({
-            full_name: "Jane Doe",
+            full_name: "",
             home_address: "850 N High St, Columbus, OH 43215",
           });
           setCompletedCount(12);

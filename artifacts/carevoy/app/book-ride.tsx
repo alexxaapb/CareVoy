@@ -870,7 +870,7 @@ export default function BookRideScreen() {
                 <Text style={styles.guestLabel}>Their email</Text>
                 <TextInput
                   style={styles.guestInput}
-                  placeholder="janedoe@gmail.com"
+                  placeholder="your@email.com"
                   placeholderTextColor={MUTED}
                   value={guestEmail}
                   onChangeText={setGuestEmail}

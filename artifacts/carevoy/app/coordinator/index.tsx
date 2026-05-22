@@ -33,7 +33,7 @@ function plusDays(n: number): string {
 const DEMO_RIDES: Ride[] = [
   {
     id: "demo-ride-1",
-    patient_id: "demo-patient-1",
+    patient_id: "",
     surgery_date: plusDays(7),
     pickup_time: `${plusDays(7)}T08:00:00.000Z`,
     procedure_type: "Outpatient knee arthroscopy",
@@ -42,7 +42,7 @@ const DEMO_RIDES: Ride[] = [
     vehicle_type: "Sedan",
     estimated_cost: 55,
     actual_cost: null,
-    patients: { id: "demo-patient-1", full_name: "Jane Doe", phone: null },
+    patients: { id: "", full_name: "Patient", phone: null },
   },
   {
     id: "demo-ride-2",

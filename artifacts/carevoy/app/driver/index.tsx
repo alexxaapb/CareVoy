@@ -39,7 +39,7 @@ const DEMO_RIDES: Ride[] = [
     pickup_lat: 39.9897,
     pickup_lng: -83.0040,
     hospitals: { name: "OhioHealth Riverside Methodist Hospital" },
-    patients: { full_name: "Jane Doe" },
+    patients: { full_name: "Patient" },
   },
   {
     id: "demo-ride-2",
