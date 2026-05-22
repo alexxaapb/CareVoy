@@ -72,13 +72,6 @@ export default function SettingsScreen() {
   const [signingOut, setSigningOut] = useState(false);
 
   const load = useCallback(async () => {
-    if (isDemoMode()) {
-      setProfile({
-        full_name: "Jane Doe",
-        phone: null,
-        email: "janedoe@gmail.com",
-      });
-      return;
     }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;

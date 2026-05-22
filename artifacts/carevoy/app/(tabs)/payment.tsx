@@ -368,7 +368,7 @@ export default function PaymentScreen() {
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="janedoe@gmail.com"
+              placeholder="your@email.com"
               placeholderTextColor={MUTED}
               keyboardType="email-address"
               autoCapitalize="none"
