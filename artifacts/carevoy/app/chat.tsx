@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { isDemoMode } from "../lib/demoMode";
 import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
