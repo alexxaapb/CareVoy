@@ -159,7 +159,7 @@ export default function PaymentScreen() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError("Payment setup is coming soon. Check back after your first ride is booked.");
+      setError(`Unable to set up payment: ${msg}. Please try again or contact support@carevoy.co`);
     } finally {
       setAdding(false);
     }
