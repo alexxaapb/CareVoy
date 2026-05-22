@@ -71,7 +71,6 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
-  const load = useCallback(async () => {
     }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
