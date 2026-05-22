@@ -96,8 +96,7 @@ export default function PaymentScreen() {
       .select("email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
-    // Intentionally do NOT load any saved email from the DB into the demo
-    // build — keep "janedoe@gmail.com" visible for investor screenshots.
+    if (data?.email) setReceiptEmail(data.email);
     setHasCustomer(!!data?.stripe_customer_id?.startsWith("cus_"));
     // Methods are fetched server-side, scoped to the authenticated user.
     const list = await listPaymentMethods();
