@@ -75,6 +75,7 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string>("there");
+  const [userId, setUserId] = useState<string | null>(null);
   const conversationIdRef = useRef<string | null>(null);
   const userIdRef = useRef<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -167,6 +168,7 @@ export default function ChatScreen() {
       const userId = userData.user?.id;
       if (!userId) return;
       userIdRef.current = userId;
+      setUserId(userId);
 
       const { data: patient } = await supabase
         .from("patients")
@@ -533,7 +535,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   subRow: {
     flexDirection: "row",
@@ -544,7 +546,7 @@ const styles = StyleSheet.create({
   subText: {
     color: MUTED,
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   subDivider: { color: MUTED, fontSize: 11 },
   dot: {
@@ -556,7 +558,7 @@ const styles = StyleSheet.create({
   online: {
     color: GREEN,
     fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     fontWeight: "600",
   },
 
@@ -584,15 +586,15 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     lineHeight: 21,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
-  userText: { color: NAVY, fontWeight: "500", fontFamily: "Inter_500Medium" },
+  userText: { color: NAVY, fontWeight: "500", fontFamily: "System" },
   ts: {
     color: MUTED,
     fontSize: 10,
     marginTop: 2,
     marginBottom: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   tsLeft: { textAlign: "left", marginLeft: 8 },
   tsRight: { textAlign: "right", marginRight: 8 },
@@ -629,7 +631,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 13,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.4,
   },
   bookRow: {
@@ -641,14 +643,14 @@ const styles = StyleSheet.create({
   bookLabel: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     width: 90,
   },
   bookValue: {
     flex: 1,
     color: NAVY,
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     textAlign: "right",
   },
   bookBtn: {
@@ -665,7 +667,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontWeight: "700",
     fontSize: 14,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
 
   composer: {
@@ -688,7 +690,7 @@ const styles = StyleSheet.create({
   chipText: {
     color: NAVY,
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   inputRow: {
     flexDirection: "row",
@@ -707,7 +709,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === "ios" ? 12 : 8,
     fontSize: 15,
     maxHeight: 120,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   sendBtn: {
     width: 40,
@@ -723,6 +725,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     marginTop: 8,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
 });

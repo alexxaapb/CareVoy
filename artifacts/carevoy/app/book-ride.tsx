@@ -1571,7 +1571,7 @@ const facilityStyles = StyleSheet.create({
     flex: 1,
     color: NAVY,
     fontSize: 16,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     paddingVertical: 12,
   },
   dropdown: {
@@ -1600,7 +1600,7 @@ const facilityStyles = StyleSheet.create({
     borderBottomColor: BORDER,
   },
   rowPressed: { backgroundColor: CARD },
-  rowText: { color: NAVY, fontSize: 14, fontFamily: "Inter_500Medium", flex: 1 },
+  rowText: { color: NAVY, fontSize: 14, fontFamily: "System", flex: 1 },
   rowOther: {
     backgroundColor: "rgba(0,194,168,0.06)",
     borderTopWidth: 1,
@@ -1611,7 +1611,7 @@ const facilityStyles = StyleSheet.create({
   rowOtherText: {
     color: NAVY,
     fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     fontWeight: "600",
   },
   customInput: {
@@ -1624,7 +1624,7 @@ const facilityStyles = StyleSheet.create({
     paddingVertical: 14,
     marginTop: 8,
     fontSize: 16,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
 });
 
@@ -1705,7 +1705,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   progressWrap: { paddingHorizontal: 24, marginBottom: 8 },
   progress: {
@@ -1723,7 +1723,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     marginTop: 8,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   calBtn: {
     flexDirection: "row",
@@ -1741,13 +1741,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   calBtnSub: {
     color: MUTED,
     fontSize: 12,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   bookingForBanner: {
     flexDirection: "row",
@@ -1767,7 +1767,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   whoCard: {
     flexDirection: "row",
@@ -1800,13 +1800,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   whoCardSub: {
     color: MUTED,
     fontSize: 13,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   whoAddRow: {
     flexDirection: "row",
@@ -1820,7 +1820,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   successWrap: {
     alignItems: "center",
@@ -1841,7 +1841,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 24,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.4,
     textAlign: "center",
   },
@@ -1851,14 +1851,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: "center",
     lineHeight: 22,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   container: { padding: 24, paddingBottom: 24 },
   stepTitle: {
     color: NAVY,
     fontSize: 24,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.4,
   },
   stepSub: {
@@ -1866,13 +1866,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
     marginBottom: 18,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   label: {
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginTop: 16,
     marginBottom: 6,
   },
@@ -1890,7 +1890,7 @@ const styles = StyleSheet.create({
   textOnly: {
     color: NAVY,
     fontSize: 16,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   facilityTypeRow: {
     flexDirection: "row",
@@ -1914,7 +1914,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   facilityTypeChipTextActive: {
     color: NAVY,
@@ -1929,16 +1929,16 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
     color: NAVY,
     fontSize: 16,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
-  inputText: { color: NAVY, fontSize: 16, fontFamily: "Inter_500Medium" },
+  inputText: { color: NAVY, fontSize: 16, fontFamily: "System" },
   placeholder: { color: MUTED },
   doneBtn: { alignSelf: "flex-end", paddingVertical: 6, paddingHorizontal: 4 },
   doneBtnText: {
     color: TEAL,
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   dateRow: {
     flexDirection: "row",
@@ -1953,7 +1953,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   dateInput: {
     backgroundColor: CARD,
@@ -1964,14 +1964,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     textAlign: "center",
   },
   dateHelper: {
     color: TEAL,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginTop: 8,
   },
   ampmRow: {
@@ -1995,7 +1995,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.4,
   },
   ampmTextActive: {
@@ -2014,7 +2014,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginBottom: 6,
     marginTop: 12,
   },
@@ -2027,13 +2027,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   guestHelper: {
     color: MUTED,
     fontSize: 12,
     marginTop: 8,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   guestConsentRow: {
     flexDirection: "row",
@@ -2065,13 +2065,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   guestErrorText: {
     color: ERROR,
     fontSize: 13,
     marginTop: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   guestContinueBtn: {
     backgroundColor: TEAL,
@@ -2084,7 +2084,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   toggleRow: { flexDirection: "row", gap: 8 },
   toggle: {
@@ -2101,7 +2101,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   toggleTextActive: { color: NAVY },
   checkRow: {
@@ -2120,7 +2120,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   checkBoxOn: { backgroundColor: TEAL, borderColor: TEAL },
-  checkLabel: { color: NAVY, fontSize: 15, fontFamily: "Inter_500Medium" },
+  checkLabel: { color: NAVY, fontSize: 15, fontFamily: "System" },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -2132,13 +2132,13 @@ const styles = StyleSheet.create({
   summaryLabel: {
     color: MUTED,
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     width: 110,
   },
   summaryValue: {
     color: NAVY,
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     flex: 1,
     textAlign: "right",
   },
@@ -2156,19 +2156,19 @@ const styles = StyleSheet.create({
   estimateLabel: {
     color: NAVY,
     fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   estimateNote: {
     color: MUTED,
     fontSize: 12,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   estimateValue: {
     color: TEAL,
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   payOpt: {
     flexDirection: "row",
@@ -2194,13 +2194,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   paySub: {
     color: MUTED,
     fontSize: 12,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   radio: {
     width: 22,
@@ -2217,7 +2217,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     marginTop: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     textAlign: "center",
   },
   addCardPrompt: {
@@ -2238,7 +2238,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   chargeBox: {
     flexDirection: "row",
@@ -2256,12 +2256,12 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 13,
     lineHeight: 19,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   chargeAmount: {
     color: TEAL,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   footer: {
     padding: 20,
@@ -2279,7 +2279,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   pressed: { opacity: 0.85 },
   error: {
@@ -2287,7 +2287,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 14,
     textAlign: "center",
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   modalBackdrop: {
     flex: 1,
@@ -2307,7 +2307,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginBottom: 12,
   },
   modalRow: {
@@ -2321,7 +2321,7 @@ const styles = StyleSheet.create({
   modalRowText: {
     color: NAVY,
     fontSize: 15,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     flex: 1,
     paddingRight: 12,
   },

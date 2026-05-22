@@ -663,20 +663,20 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 24,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.5,
   },
   subtitle: {
     color: MUTED,
     fontSize: 14,
     marginTop: 4,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   sectionLabel: {
     color: NAVY,
     fontSize: 12,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginTop: 6,
     marginBottom: 8,
     letterSpacing: 0.5,
@@ -707,19 +707,19 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 11,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
   statTileValue: {
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   statTileSub: {
     color: MUTED,
     fontSize: 11,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginTop: 2,
   },
   testingNotice: {
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     color: AMBER,
     fontSize: 12,
     flex: 1,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   emptyCard: {
     backgroundColor: CARD,
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
   emptyText: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   card: {
     backgroundColor: CARD,
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   statusPill: {
     flexDirection: "row",
@@ -787,14 +787,14 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.4,
   },
   patientName: {
     color: NAVY,
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginBottom: 10,
   },
   row: {
@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     flex: 1,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     lineHeight: 19,
   },
   badges: {
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 11,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   actionBtn: {
     marginTop: 14,
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   completedBadge: {
     marginTop: 14,
@@ -864,6 +864,6 @@ const styles = StyleSheet.create({
     color: GREEN,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
 });

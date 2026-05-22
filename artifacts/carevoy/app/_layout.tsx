@@ -17,7 +17,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { Animated, Easing, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
@@ -189,31 +189,12 @@ function AnimatedSplash({ onDone }: { onDone: () => void }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#050D1F", alignItems: "center", justifyContent: "center" }}>
-      <Animated.View style={{ transform: [{ scale }], opacity }}>
-        <View style={{
-          width: 120, height: 120, borderRadius: 28,
-          backgroundColor: "#050D1F",
-          alignItems: "center", justifyContent: "center",
-          borderWidth: 1.5, borderColor: "rgba(255,255,255,0.08)"
-        }}>
-          <View style={{ position: "relative", width: 72, height: 72, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ color: "#FFFFFF", fontSize: 52, fontWeight: "800", fontFamily: "System", lineHeight: 60 }}>C</Text>
-            <View style={{
-              position: "absolute", top: 8, right: 4,
-              width: 14, height: 14, borderRadius: 7,
-              borderWidth: 2.5,
-              borderColor: "#00C2A8",
-              borderBottomColor: "transparent",
-              borderLeftColor: "transparent",
-              transform: [{ rotate: "45deg" }]
-            }} />
-          </View>
-        </View>
-        <Text style={{
-          color: "#FFFFFF", fontSize: 22, fontWeight: "700",
-          fontFamily: "System", textAlign: "center", marginTop: 16,
-          letterSpacing: -0.5
-        }}>CareVoy</Text>
+      <Animated.View style={{ transform: [{ scale }], opacity, alignItems: "center" }}>
+        <Image
+          source={require("./assets/images/logo-motion.png")}
+          style={{ width: 120, height: 120, borderRadius: 28 }}
+          resizeMode="contain"
+        />
       </Animated.View>
     </View>
   );
