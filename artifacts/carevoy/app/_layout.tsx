@@ -360,10 +360,10 @@ export default function RootLayout() {
     if (demo || true) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, demo]);
+  }, [demo]);
 
   // Demo mode renders immediately so the screenshot tool catches painted UI.
-  if (!demo && !fontsLoaded && !fontError) return null;
+  // fonts removed
 
   // If anything failed during module evaluation, show the visible error screen
   // immediately instead of attempting to render the app.
