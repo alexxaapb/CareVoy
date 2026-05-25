@@ -1,5 +1,4 @@
 import '../sentry.config'; // Add Sentry - must be first!
-import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
