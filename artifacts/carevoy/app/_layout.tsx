@@ -202,6 +202,7 @@ function RootLayoutNav() {
     userId: null,
     role: "unknown",
     onboarded: null,
+  });
 
   const [ready, setReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
