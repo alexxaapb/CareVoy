@@ -1,6 +1,5 @@
 import '../sentry.config'; // Add Sentry - must be first!
 import {
-  useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
