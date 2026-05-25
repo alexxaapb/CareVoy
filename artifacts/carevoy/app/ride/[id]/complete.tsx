@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.5,
     textAlign: "center",
   },
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 16,
     marginTop: 8,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     textAlign: "center",
   },
   receiptPill: {
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   ratingCard: {
     backgroundColor: CARD,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginBottom: 14,
   },
   stars: {
@@ -240,12 +240,12 @@ const styles = StyleSheet.create({
   ratingHint: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   thanks: {
     color: TEAL,
     fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     fontWeight: "600",
   },
   homeBtn: {
@@ -260,6 +260,6 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
 });

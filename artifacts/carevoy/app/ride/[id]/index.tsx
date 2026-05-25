@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.6,
   },
   statusPill: {
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   statusPillText: {
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.4,
   },
   pressed: { opacity: 0.75 },
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -656,14 +656,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginTop: 4,
     marginBottom: 24,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   section: { marginBottom: 24 },
   sectionTitle: {
     color: NAVY,
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginBottom: 12,
   },
   timeline: {
@@ -697,14 +697,14 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   timelineLabelMuted: { color: MUTED, fontWeight: "400" },
   timelineTime: {
     color: MUTED,
     fontSize: 12,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   card: {
     backgroundColor: CARD,
@@ -723,13 +723,13 @@ const styles = StyleSheet.create({
   detailLabel: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginBottom: 2,
   },
   detailValue: {
     color: NAVY,
     fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     fontWeight: "600",
   },
   driverRow: {
@@ -749,12 +749,12 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   driverSub: {
     color: MUTED,
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginTop: 2,
   },
   callBtn: {
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginTop: 12,
   },
   paymentTop: {
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   paymentStatus: {
     paddingHorizontal: 10,
@@ -792,13 +792,13 @@ const styles = StyleSheet.create({
   paymentStatusText: {
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.4,
   },
   paymentMethod: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginBottom: 14,
   },
   irsBadge: {
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   receiptHeader: {
     flexDirection: "row",
@@ -827,7 +827,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   receiptRow: {
     flexDirection: "row",
@@ -838,13 +838,13 @@ const styles = StyleSheet.create({
   receiptLabel: {
     color: MUTED,
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   receiptValue: {
     color: NAVY,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     flex: 1,
     textAlign: "right",
     marginLeft: 12,
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   linkBtn: {
     flexDirection: "row",
@@ -876,11 +876,11 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   emptyText: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 });

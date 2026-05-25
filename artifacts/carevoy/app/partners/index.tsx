@@ -337,20 +337,20 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 22,
     fontWeight: "800",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   brandWord: {
     color: NAVY,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.3,
   },
   brandSub: {
     color: TEAL,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.4,
   },
   subtitle: {
@@ -367,13 +367,13 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: 8,
     marginBottom: 22,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   label: {
     color: NAVY,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginBottom: 6,
     marginTop: 4,
   },
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 15,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     marginBottom: 14,
   },
   button: {
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   errorRow: {
     flexDirection: "row",
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: ERROR,
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     flex: 1,
   },
   footer: {
@@ -434,6 +434,6 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     flex: 1,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 });

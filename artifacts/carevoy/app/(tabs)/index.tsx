@@ -515,21 +515,21 @@ const styles = StyleSheet.create({
   greetingSmall: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginBottom: 6,
   },
   headline: {
     color: NAVY,
     fontSize: 32,
     lineHeight: 38,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     fontWeight: "700",
     letterSpacing: -0.6,
     marginBottom: 22,
   },
   headlineItalic: {
     color: TEAL,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     fontWeight: "700",
   },
 
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     letterSpacing: 0.2,
   },
 
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     letterSpacing: -0.2,
   },
   bookBtnArrow: {
@@ -667,13 +667,13 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 13,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   hsaText: {
     color: HSA_TEXT,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     flex: 1,
   },
 
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
   statNum: {
     color: NAVY,
     fontSize: 28,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     fontWeight: "700",
     letterSpacing: -0.6,
     lineHeight: 32,
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
   statLabel: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
     marginTop: 4,
   },
 
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: "uppercase",
     marginBottom: 8,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   switcherRow: {
     gap: 8,
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     maxWidth: 130,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   personPillTextSelected: { color: NAVY },
   addPill: {
@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginBottom: 10,
     letterSpacing: -0.2,
   },
@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 10,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.3,
   },
   rideStatus: {
@@ -796,13 +796,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
     letterSpacing: 0.5,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   rideTitle: {
     color: NAVY,
     fontSize: 14,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   rideRow: {
     flexDirection: "row",
@@ -813,6 +813,6 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 12,
     flex: 1,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 });

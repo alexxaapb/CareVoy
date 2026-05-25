@@ -1,9 +1,5 @@
 import '../sentry.config'; // Add Sentry - must be first!
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -207,7 +203,7 @@ function RootLayoutNav() {
     userId: null,
     role: "unknown",
     onboarded: null,
-  });
+
   const [ready, setReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -357,15 +353,11 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
+  // fonts removed - using system font
+
   const demo = isDemoMode();
   useEffect(() => {
-    if (fontsLoaded || fontError || demo) {
+    if (demo || true) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError, demo]);

@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 6,
     marginBottom: 24,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   card: {
     flexDirection: "row",
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     lineHeight: 20,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
   metaRow: {
     flexDirection: "row",
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   meta: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   metaDot: { color: MUTED, fontSize: 12 },
   statusDot: { width: 7, height: 7, borderRadius: 4 },
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.5,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   emptyCard: {
     backgroundColor: CARD,
@@ -288,6 +288,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 });

@@ -58,13 +58,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 24,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginBottom: 8,
   },
   subtitle: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 32,
@@ -80,6 +80,6 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
 });

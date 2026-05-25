@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 8,
     marginBottom: 24,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 
   hsaCard: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.3,
   },
   taxBadge: {
@@ -467,21 +467,21 @@ const styles = StyleSheet.create({
     color: GREEN,
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.6,
   },
   hsaHelper: {
     color: NAVY,
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 
   sectionLabel: {
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginTop: 28,
     marginBottom: 10,
   },
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 
   methodRow: {
@@ -530,12 +530,12 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   methodSub: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginTop: 2,
   },
   methodRemove: {
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
 
   walletHintRow: {
@@ -585,27 +585,27 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
   },
   gPayG: {
     color: "#4285F4",
     fontWeight: "700",
     fontSize: 14,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   secureRow: {
     color: MUTED,
     fontSize: 11,
     textAlign: "center",
     marginTop: 8,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 
   fieldLabel: {
     color: NAVY,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginTop: 14,
     marginBottom: 6,
     letterSpacing: 0.4,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === "ios" ? 14 : 11,
     color: NAVY,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 
   receiptCard: {
@@ -638,21 +638,21 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   toggleSub: {
     color: MUTED,
     fontSize: 12,
     lineHeight: 16,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
 
   error: {
     color: ERROR,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "System",
     marginTop: 16,
   },
   successCard: {
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 13,
     flex: 1,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "System",
   },
 
   footer: {
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.3,
   },
   pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },

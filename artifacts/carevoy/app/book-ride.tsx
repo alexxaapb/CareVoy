@@ -1205,7 +1205,7 @@ export default function BookRideScreen() {
                 {gettingLocation
                   ? <ActivityIndicator size="small" color="#00C2A8" />
                   : <Feather name="navigation" size={16} color="#00C2A8" />}
-                <Text style={{ color: '#00C2A8', fontSize: 14, fontWeight: '600', fontFamily: 'Inter_600SemiBold' }}>
+                <Text style={{ color: '#00C2A8', fontSize: 14, fontWeight: '600', fontFamily: 'System' }}>
                   {gettingLocation ? 'Detecting location…' : 'Use my current location'}
                 </Text>
               </Pressable>

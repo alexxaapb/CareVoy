@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   fallbackHint: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     position: "absolute",
     bottom: 220,
   },
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     letterSpacing: 0.6,
   },
   driverMarker: {
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
     marginBottom: 14,
   },
   driverRow: {
@@ -467,25 +467,25 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   driverSub: {
     color: MUTED,
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginTop: 2,
   },
   etaBox: { alignItems: "flex-end" },
   etaLabel: {
     color: MUTED,
     fontSize: 11,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
   },
   etaValue: {
     color: TEAL,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "System",
   },
   progressTrack: {
     height: 6,
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   progressNote: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "System",
     marginTop: 8,
     textAlign: "center",
   },
