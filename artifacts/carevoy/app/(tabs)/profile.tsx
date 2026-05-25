@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import {
+import { Linking,
   ActivityIndicator,
   Alert,
   Platform,
@@ -14,7 +14,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCare } from "../../lib/careContext";
-import { isDemoMode } from "../../lib/demoMode";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -222,7 +221,7 @@ export default function SettingsScreen() {
             icon="help-circle"
             label="Help & Support"
             sub="support@carevoy.co"
-            onPress={comingSoon("Help & Support")}
+            onPress={() => Linking.openURL("mailto:support@carevoy.co")}
           />
           <View style={styles.divider} />
           <MenuRow
