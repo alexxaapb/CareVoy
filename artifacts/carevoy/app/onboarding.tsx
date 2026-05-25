@@ -1,7 +1,7 @@
-import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Linking, Feather } from "@expo/vector-icons";
+import { Linking, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import {
+import { Linking,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -12,12 +12,12 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Linking, SafeAreaView } from "react-native-safe-area-context";
 
-import { AddressInput } from "../components/AddressInput";
-import { Required } from "../components/Required";
-import { supabase } from "../lib/supabase";
-import { useAuthRefresh } from "./_layout";
+import { Linking, AddressInput } from "../components/AddressInput";
+import { Linking, Required } from "../components/Required";
+import { Linking, supabase } from "../lib/supabase";
+import { Linking, useAuthRefresh } from "./_layout";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
