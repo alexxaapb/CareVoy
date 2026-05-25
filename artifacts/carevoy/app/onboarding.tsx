@@ -401,6 +401,17 @@ export default function OnboardingScreen() {
                 inputStyle={styles.input}
                 zIndex={50}
               />
+              <View style={{ flexDirection: "row", alignItems: "flex-start", marginTop: 20, gap: 10 }}>
+                <Pressable onPress={() => setTosAccepted(v => !v)} style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: tosAccepted ? TEAL : MUTED, backgroundColor: tosAccepted ? TEAL : "transparent", alignItems: "center", justifyContent: "center", marginTop: 1 }}>
+                  {tosAccepted && <Feather name="check" size={14} color="#fff" />}
+                </Pressable>
+                <Text style={{ flex: 1, fontSize: 13, color: MUTED, lineHeight: 20 }}>
+                  {"I agree to the "}
+                  <Text style={{ color: TEAL, textDecorationLine: "underline" }} onPress={() => Linking.openURL("https://www.carevoy.co/terms")}>Terms of Service</Text>
+                  {" and "}
+                  <Text style={{ color: TEAL, textDecorationLine: "underline" }} onPress={() => Linking.openURL("https://www.carevoy.co/privacy-policy")}>Privacy Policy</Text>
+                </Text>
+              </View>
             </>
           )}
 
