@@ -66,6 +66,7 @@ export default function OnboardingScreen() {
   const { refresh } = useAuthRefresh();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [tosAccepted, setTosAccepted] = useState(false);
 
   // Step 1
   const [fullName, setFullName] = useState("");
@@ -119,6 +120,7 @@ export default function OnboardingScreen() {
   const goNext = () => {
     setError(null);
     if (step === 1) {
+      if (!tosAccepted) { setError("Please accept the Terms of Service and Privacy Policy to continue."); return; }
       if (!fullName.trim()) return setError("Please enter your full name");
       if (!isValidEmail(email))
         return setError("Please enter a valid email address");
