@@ -346,7 +346,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     SplashScreen.hideAsync();
-  }, [demo]);
+  }, []);
 
   // Demo mode renders immediately so the screenshot tool catches painted UI.
   // fonts removed
