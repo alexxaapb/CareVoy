@@ -18,7 +18,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Required } from "../../components/Required";
-import { isDemoMode } from "../../lib/demoMode";
 import {
   createSetupSession,
   detachPaymentMethod,
@@ -66,27 +65,6 @@ export default function PaymentScreen() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (isDemoMode()) {
-      setPatientId("demo-jane");
-      setHasCustomer(true);
-      setMethods([
-        {
-          id: "demo-pm-1",
-          brand: "visa",
-          last4: "4242",
-          expMonth: 12,
-          expYear: 2028,
-        },
-        {
-          id: "demo-pm-2",
-          brand: "mastercard",
-          last4: "5577",
-          expMonth: 3,
-          expYear: 2027,
-        },
-      ]);
-      return;
-    }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
@@ -96,7 +74,7 @@ export default function PaymentScreen() {
       .select("email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
-    if (data?.email) setReceiptEmail(data.email);
+    if (data?.email) setEmail(data.email);
     setHasCustomer(!!data?.stripe_customer_id?.startsWith("cus_"));
     // Methods are fetched server-side, scoped to the authenticated user.
     const list = await listPaymentMethods();

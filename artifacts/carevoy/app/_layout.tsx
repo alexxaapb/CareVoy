@@ -15,7 +15,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { CareProvider } from "../lib/careContext";
-import { isDemoMode } from "../lib/demoMode";
 import { supabase } from "../lib/supabase";
 import * as SecureStore from "expo-secure-store";
 
@@ -252,13 +251,6 @@ function RootLayoutNav() {
   }, [refreshFromUser]);
 
   useEffect(() => {
-    // Demo mode (pitch-deck screenshots): skip Supabase auth entirely and
-    // pretend the demo patient is signed in & onboarded. No subscription.
-    if (isDemoMode()) {
-      setAuth({ userId: "demo-jane", role: "patient", onboarded: true });
-      setReady(true);
-      return;
-    }
     (async () => {
       const { data } = await supabase.auth.getSession();
       await refreshFromUser(data.session?.user.id ?? null);
@@ -274,9 +266,6 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (!ready) return;
-    // Demo mode: never redirect — the URL is the source of truth so the
-    // screenshot tool can capture any screen directly.
-    if (isDemoMode()) return;
     const top = segments[0];
     const inLogin = top === "login";
     const inPartners = top === "partners";
@@ -353,11 +342,8 @@ function RootLayoutNav() {
 export default function RootLayout() {
   // fonts removed - using system font
 
-  const demo = isDemoMode();
   useEffect(() => {
-    if (demo || true) {
-      SplashScreen.hideAsync();
-    }
+    SplashScreen.hideAsync();
   }, [demo]);
 
   // Demo mode renders immediately so the screenshot tool catches painted UI.

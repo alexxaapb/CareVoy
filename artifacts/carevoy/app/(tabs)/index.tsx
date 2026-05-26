@@ -15,7 +15,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCare } from "../../lib/careContext";
-import { isDemoMode } from "../../lib/demoMode";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -175,33 +174,6 @@ export default function HomeScreen() {
       (async () => {
         setLoading(true);
         await loadAll();
-        if (active && isDemoMode()) {
-          setProfile({
-            full_name: "",
-            home_address: "850 N High St, Columbus, OH 43215",
-          });
-          setCompletedCount(12);
-          setReimbursedTotal(640);
-          const inTwoDays = new Date();
-          inTwoDays.setDate(inTwoDays.getDate() + 2);
-          inTwoDays.setHours(9, 30, 0, 0);
-          setUpcoming([
-            {
-              id: "demo-ride-1",
-              ride_type: "pre_op",
-              pickup_address: "850 N High St, Columbus, OH 43215",
-              dropoff_address: "OhioHealth Riverside Methodist Hospital",
-              pickup_time: inTwoDays.toISOString(),
-              surgery_date: inTwoDays.toISOString(),
-              status: "confirmed",
-              actual_cost: null,
-              estimated_cost: 42,
-              hospitals: {
-                name: "OhioHealth Riverside Methodist Hospital",
-              },
-            } as Ride,
-          ]);
-        }
         if (active) setLoading(false);
       })();
       return () => {

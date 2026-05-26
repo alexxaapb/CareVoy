@@ -15,14 +15,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { isDemoMode } from "../../lib/demoMode";
 import { supabase } from "../../lib/supabase";
 
-const DEMO_COORD: Coord = {
-  full_name: "Dr. Sarah Patel",
-  hospital_id: "demo-hospital",
-  hospitals: { name: "OhioHealth Riverside Methodist Hospital" },
-};
 
 function plusDays(n: number): string {
   const d = new Date();
@@ -30,86 +24,6 @@ function plusDays(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-const DEMO_RIDES: Ride[] = [
-  {
-    id: "demo-ride-1",
-    patient_id: "",
-    surgery_date: plusDays(7),
-    pickup_time: `${plusDays(7)}T08:00:00.000Z`,
-    procedure_type: "Outpatient knee arthroscopy",
-    status: "confirmed",
-    driver_name: "Marcus Johnson",
-    vehicle_type: "Sedan",
-    estimated_cost: 55,
-    actual_cost: null,
-    patients: { id: "", full_name: "Patient", phone: null },
-  },
-  {
-    id: "demo-ride-2",
-    patient_id: "demo-patient-2",
-    surgery_date: plusDays(2),
-    pickup_time: `${plusDays(2)}T07:30:00.000Z`,
-    procedure_type: "Cataract surgery",
-    status: "confirmed",
-    driver_name: "Tasha Williams",
-    vehicle_type: "Sedan",
-    estimated_cost: 48,
-    actual_cost: null,
-    patients: { id: "demo-patient-2", full_name: "Robert Chen", phone: null },
-  },
-  {
-    id: "demo-ride-3",
-    patient_id: "demo-patient-3",
-    surgery_date: plusDays(3),
-    pickup_time: null,
-    procedure_type: "Colonoscopy",
-    status: "pending",
-    driver_name: null,
-    vehicle_type: null,
-    estimated_cost: null,
-    actual_cost: null,
-    patients: { id: "demo-patient-3", full_name: "Maria Alvarez", phone: null },
-  },
-  {
-    id: "demo-ride-4",
-    patient_id: "demo-patient-4",
-    surgery_date: plusDays(5),
-    pickup_time: `${plusDays(5)}T10:15:00.000Z`,
-    procedure_type: "Hip replacement",
-    status: "confirmed",
-    driver_name: "Devon Brooks",
-    vehicle_type: "Wheelchair van",
-    estimated_cost: 92,
-    actual_cost: null,
-    patients: { id: "demo-patient-4", full_name: "Edward Nguyen", phone: null },
-  },
-  {
-    id: "demo-ride-5",
-    patient_id: "demo-patient-5",
-    surgery_date: plusDays(9),
-    pickup_time: null,
-    procedure_type: "Cardiac catheterization",
-    status: "pending",
-    driver_name: null,
-    vehicle_type: null,
-    estimated_cost: null,
-    actual_cost: null,
-    patients: { id: "demo-patient-5", full_name: "Linda Foster", phone: null },
-  },
-  {
-    id: "demo-ride-6",
-    patient_id: "demo-patient-6",
-    surgery_date: plusDays(12),
-    pickup_time: `${plusDays(12)}T06:45:00.000Z`,
-    procedure_type: "Tonsillectomy",
-    status: "confirmed",
-    driver_name: "Aaliyah Brown",
-    vehicle_type: "Sedan",
-    estimated_cost: 35,
-    actual_cost: null,
-    patients: { id: "demo-patient-6", full_name: "Kevin Park", phone: null },
-  },
-];
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -362,17 +276,6 @@ function CoordinatorDashboard() {
   }, []);
 
   const loadInner = useCallback(async () => {
-    if (isDemoMode() && typeof window === 'undefined') {
-      setCoord(DEMO_COORD);
-      setRides(DEMO_RIDES);
-      setMonthCount(DEMO_RIDES.length);
-      setLastMonthCount(8);
-      setCompletedThisMonth(4);
-      setNoShowsThisMonth(0);
-      setBookedThisMonth(DEMO_RIDES.filter((r) => r.status !== "pending").length);
-      setAvgCost(54);
-      return;
-    }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
