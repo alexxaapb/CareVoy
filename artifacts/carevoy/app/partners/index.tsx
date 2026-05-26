@@ -63,17 +63,17 @@ export default function PartnersPortal() {
   const [rememberMe, setRememberMe] = useState(true);
   const [currentEmail, setCurrentEmail] = useState<string | null>(null);
 
-  // Show the current session (if any) — but DON'T auto-redirect. The user came
-  // to /partners on purpose, probably to switch accounts. Auto-bouncing them
-  // into whichever dashboard their current session points at would trap them.
+  // Always start fresh at /partners — sign out any existing session so the
+  // user can cleanly log into their partner account. This prevents accidental
+  // auto-redirects when a patient session is still active.
   useEffect(() => {
     const timeout = setTimeout(() => setChecking(false), 3000);
     (async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        setCurrentEmail(data.session?.user?.email ?? null);
+        await supabase.auth.signOut();
+        setCurrentEmail(null);
       } catch (e) {
-        console.warn('Session check failed:', e);
+        console.warn('Sign out failed:', e);
       } finally {
         clearTimeout(timeout);
         setChecking(false);
