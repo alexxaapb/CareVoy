@@ -261,7 +261,7 @@ export default function HomeScreen() {
       >
         {/* Greeting */}
         <Text style={styles.greetingSmall}>
-          {timeGreeting()}, {greetingName}
+          Hello, {greetingName}
         </Text>
         <Text style={styles.headline}>
           Where are you{"\n"}headed{" "}
