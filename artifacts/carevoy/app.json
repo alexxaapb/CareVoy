@@ -38,7 +38,13 @@
       "expo-font",
       "expo-web-browser",
       "@react-native-community/datetimepicker",
-      "@stripe/stripe-react-native"
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.co.carevoy",
+          "enableGooglePay": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
