@@ -1,6 +1,6 @@
+import { useStripe } from "@stripe/stripe-react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -19,9 +19,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Required } from "../../components/Required";
 import {
-  createSetupSession,
+  createSetupIntent,
   detachPaymentMethod,
-  getReturnUrl,
   listPaymentMethods,
   type SavedPaymentMethod,
 } from "../../lib/paymentsApi";
@@ -49,6 +48,7 @@ function brandLabel(brand: string): string {
 }
 
 export default function PaymentScreen() {
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [methods, setMethods] = useState<SavedPaymentMethod[]>([]);
   const [hasCustomer, setHasCustomer] = useState(false);
   const [patientId, setPatientId] = useState<string | null>(null);
@@ -118,21 +118,34 @@ export default function PaymentScreen() {
 
     setAdding(true);
     try {
-      const { url } = await createSetupSession({
+      const { clientSecret, customerId } = await createSetupIntent({
         email: email.trim() || undefined,
-        returnUrl: getReturnUrl(),
       });
-
-      if (Platform.OS === "web") {
-        if (typeof window !== "undefined") window.location.href = url;
+      const { error: initError } = await initPaymentSheet({
+        customerId,
+        setupIntentClientSecret: clientSecret,
+        merchantDisplayName: "CareVoy",
+        allowsDelayedPaymentMethods: false,
+        appearance: {
+          colors: {
+            primary: "#00C2A8",
+            background: "#FFFFFF",
+            componentBackground: "#F8FAFC",
+            componentBorder: "#E2E8F0",
+            primaryText: "#050D1F",
+            secondaryText: "#6B7280",
+          },
+        },
+      });
+      if (initError) throw new Error(initError.message);
+      const { error: presentError } = await presentPaymentSheet();
+      if (presentError) {
+        if (presentError.code !== "Canceled") {
+          throw new Error(presentError.message);
+        }
       } else {
-        await WebBrowser.openBrowserAsync(url, {
-          presentationStyle:
-            WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-          dismissButtonStyle: "done",
-        });
-        // Refresh from Stripe — the actual saved cards are the source of truth.
         await load();
+        setSuccess("Payment method saved successfully.");
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -140,7 +153,6 @@ export default function PaymentScreen() {
     } finally {
       setAdding(false);
     }
-  };
 
   // Suppress unused-var warning while we keep this state for future surfacing.
   void hasCustomer;
