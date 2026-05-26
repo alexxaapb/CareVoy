@@ -109,7 +109,7 @@ export default function LoginScreen() {
         <View style={styles.container}>
           <View style={styles.brand}>
             <Image
-              source={require("../assets/images/logo-motion.png")}
+              source={require("../assets/images/icon.png")}
               style={{ width: 90, height: 90, marginBottom: 16, borderRadius: 20 }}
               resizeMode="contain"
             />
