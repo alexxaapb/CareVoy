@@ -223,7 +223,7 @@ export default function HomeScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setDetectedCity("Columbus, OH");
+        setDetectedCity(null);
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -237,10 +237,10 @@ export default function HomeScreen() {
       } else if (place?.city) {
         setDetectedCity(place.city);
       } else {
-        setDetectedCity("Columbus, OH");
+        setDetectedCity(null);
       }
     } catch {
-      setDetectedCity("Columbus, OH");
+      setDetectedCity(null);
     } finally {
       setRequestingLocation(false);
     }
