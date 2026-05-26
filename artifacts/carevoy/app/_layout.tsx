@@ -184,7 +184,7 @@ function AnimatedSplash({ onDone }: { onDone: () => void }) {
     <View style={{ flex: 1, backgroundColor: "#050D1F", alignItems: "center", justifyContent: "center" }}>
       <Animated.View style={{ transform: [{ scale }], opacity, alignItems: "center" }}>
         <Image
-          source={require("../assets/images/logo-splash.png")}
+          source={require("../assets/images/logo-motion.png")}
           style={{ width: 200, height: 200, borderRadius: 46 }}
           resizeMode="contain"
         />
