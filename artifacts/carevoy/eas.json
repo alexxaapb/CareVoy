@@ -23,6 +23,13 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT",
         "EXPO_PUBLIC_DOMAIN": "carevoy.co"
       }
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
     }
   },
   "submit": {
