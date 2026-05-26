@@ -323,21 +323,22 @@ function RootLayoutNav() {
 
   return (
     <StripeProvider publishableKey="pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2">
-    <AuthRefreshContext.Provider value={{ refresh }}>
-      <Stack screenOptions={{ headerBackTitle: "Back" }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="partners" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="book-ride" options={{ headerShown: false }} />
-        <Stack.Screen name="chat" options={{ headerShown: false }} />
-        <Stack.Screen name="driver" options={{ headerShown: false }} />
-        <Stack.Screen name="coordinator" options={{ headerShown: false }} />
-        <Stack.Screen name="admin" options={{ headerShown: false }} />
-        <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
-        <Stack.Screen name="care/add" options={{ headerShown: false }} />
-      </Stack>
-    </AuthRefreshContext.Provider>
+      <AuthRefreshContext.Provider value={{ refresh }}>
+        <Stack screenOptions={{ headerBackTitle: "Back" }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="partners" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="book-ride" options={{ headerShown: false }} />
+          <Stack.Screen name="chat" options={{ headerShown: false }} />
+          <Stack.Screen name="driver" options={{ headerShown: false }} />
+          <Stack.Screen name="coordinator" options={{ headerShown: false }} />
+          <Stack.Screen name="admin" options={{ headerShown: false }} />
+          <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
+          <Stack.Screen name="care/add" options={{ headerShown: false }} />
+        </Stack>
+      </AuthRefreshContext.Provider>
+    </StripeProvider>
   );
 }
 
