@@ -686,6 +686,43 @@ export default function AdminDashboard() {
             </View>
           </View>
 
+          {/* Partner Invites */}
+          <SectionTitle
+            title="Invite Partners"
+            subtitle="Generate secure onboarding links"
+          />
+          <View style={styles.inviteRow}>
+            <Pressable
+              onPress={() => generateInvite("coordinator")}
+              disabled={!!generatingInvite}
+              style={({ pressed }) => [
+                styles.inviteBtn,
+                pressed && { opacity: 0.85 },
+                generatingInvite === "coordinator" && { opacity: 0.6 },
+              ]}
+            >
+              <Feather name="plus-square" size={18} color={WHITE} />
+              <Text style={styles.inviteBtnText}>
+                {generatingInvite === "coordinator" ? "Generating..." : "Invite Facility"}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => generateInvite("nemt")}
+              disabled={!!generatingInvite}
+              style={({ pressed }) => [
+                styles.inviteBtn,
+                { backgroundColor: NAVY },
+                pressed && { opacity: 0.85 },
+                generatingInvite === "nemt" && { opacity: 0.6 },
+              ]}
+            >
+              <Feather name="truck" size={18} color={WHITE} />
+              <Text style={styles.inviteBtnText}>
+                {generatingInvite === "nemt" ? "Generating..." : "Invite NEMT Partner"}
+              </Text>
+            </Pressable>
+          </View>
+
           {/* Hospitals */}
           <SectionTitle
             title="Facilities"
@@ -987,6 +1024,27 @@ function ModalRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  inviteRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  inviteBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: TEAL,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  inviteBtnText: {
+    color: WHITE,
+    fontSize: 14,
+    fontWeight: "600",
+  },
   safe: { flex: 1, backgroundColor: WHITE },
   shell: { flex: 1, flexDirection: "row" },
   sidebar: {
