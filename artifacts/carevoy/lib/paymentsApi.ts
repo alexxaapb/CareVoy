@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import { supabase } from "./supabase";
 
 export type SavedPaymentMethod = {
@@ -17,10 +16,9 @@ async function authHeader(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export async function createSetupSession(input: {
+export async function createSetupIntent(input: {
   email?: string;
-  returnUrl: string;
-}): Promise<{ url: string; customerId: string }> {
+}): Promise<{ clientSecret: string; customerId: string }> {
   const { data: userData } = await supabase.auth.getUser();
   const patientId = userData.user?.id;
   const headers = await authHeader();
@@ -54,16 +52,4 @@ export async function detachPaymentMethod(id: string): Promise<boolean> {
     body: JSON.stringify({ paymentMethodId: id }),
   });
   return res.ok;
-}
-
-export function getReturnUrl(): string {
-  if (Platform.OS === "web") {
-    if (typeof window !== "undefined") {
-      const u = new URL(window.location.href);
-      u.search = "";
-      u.hash = "";
-      return u.toString();
-    }
-  }
-  return `${API_BASE}/api/payments/return`;
 }

@@ -1,4 +1,5 @@
 import '../sentry.config'; // Add Sentry - must be first!
+import { StripeProvider } from "@stripe/stripe-react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -321,6 +322,7 @@ function RootLayoutNav() {
   }
 
   return (
+    <StripeProvider publishableKey="pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2">
     <AuthRefreshContext.Provider value={{ refresh }}>
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
