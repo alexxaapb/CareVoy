@@ -1,5 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Clipboard from "expo-clipboard";
+import { Alert } from "react-native";
 import React, {
   useCallback,
   useEffect,
@@ -163,6 +165,7 @@ export default function AdminDashboard() {
   const [activity, setActivity] = useState<Notif[]>([]);
   const [hospitals, setHospitals] = useState<HospitalStats[]>([]);
   const [partners, setPartners] = useState<NemtStats[]>([]);
+  const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
   const [revenue, setRevenue] = useState({
     thisMonth: 0,
     lastMonth: 0,
@@ -197,7 +200,42 @@ export default function AdminDashboard() {
       ]),
     );
     loop.start();
-    return () => loop.stop();
+  
+  const generateInvite = useCallback(async (role: "nemt" | "coordinator") => {
+    if (generatingInvite) return;
+    setGeneratingInvite(role);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        Alert.alert("Error", "Please sign in again");
+        return;
+      }
+      const res = await fetch("https://care-voy-api-server.vercel.app/api/invite/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ role }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        Alert.alert("Error", data.error || "Failed to generate invite");
+        return;
+      }
+      await Clipboard.setStringAsync(data.invite_url);
+      Alert.alert(
+        "Invite Link Copied",
+        `${role === "nemt" ? "NEMT" : "Facility"} invite link copied to clipboard. Expires in 7 days.\n\n${data.invite_url}`
+      );
+    } catch (e) {
+      Alert.alert("Error", e instanceof Error ? e.message : "Failed to generate invite");
+    } finally {
+      setGeneratingInvite(null);
+    }
+  }, [generatingInvite]);
+
+  return () => loop.stop();
   }, [pulse]);
 
   const load = useCallback(async () => {
