@@ -260,9 +260,11 @@ export default function HomeScreen() {
         }
       >
         {/* Greeting */}
-        <Text style={styles.greetingSmall}>
-          Hello, {greetingName}
-        </Text>
+        {greetingName && greetingName !== "there" ? (
+          <Text style={styles.greetingSmall}>
+            Hello, {greetingName}
+          </Text>
+        ) : null}
         <Text style={styles.headline}>
           Where are you{"\n"}headed{" "}
           <Text style={styles.headlineItalic}>today?</Text>
