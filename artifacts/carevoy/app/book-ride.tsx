@@ -40,26 +40,9 @@ const FACILITY_TYPE_OPTIONS: { value: FacilityType; label: string }[] = [
 ];
 
 const FACILITIES_BY_TYPE: Record<FacilityType, string[]> = {
-  hospital: [
-    "OhioHealth Riverside Methodist Hospital",
-    "OhioHealth Grant Medical Center",
-    "Wexner Medical Center OSU",
-    "Mount Carmel St. Ann's",
-    "Nationwide Children's Hospital",
-  ],
-  assisted_living: [
-    "Brookdale Columbus (Assisted Living)",
-    "Sunrise Senior Living Columbus",
-    "Danbury Senior Living Columbus",
-    "The Gables of Westerville",
-    "Atria Columbus",
-  ],
-  dialysis: [
-    "DaVita Columbus East",
-    "DaVita Westerville",
-    "Fresenius Kidney Care Columbus",
-    "US Renal Care Columbus",
-  ],
+  hospital: [],
+  assisted_living: [],
+  dialysis: [],
   other: [],
 };
 
@@ -80,26 +63,6 @@ function matchHospital(name: string | undefined): string | null {
     if (opt === target || opt.includes(target) || target.includes(opt))
       return h;
   }
-  // simple keyword match
-  if (target.includes("riverside")) return ALL_FACILITIES[0];
-  if (target.includes("grant")) return ALL_FACILITIES[1];
-  if (target.includes("wexner") || target.includes("osu"))
-    return ALL_FACILITIES[2];
-  if (target.includes("st. ann") || target.includes("mount carmel"))
-    return ALL_FACILITIES[3];
-  if (target.includes("nationwide") || target.includes("children"))
-    return ALL_FACILITIES[4];
-  if (target.includes("davita") && target.includes("east"))
-    return "DaVita Columbus East";
-  if (target.includes("davita")) return "DaVita Westerville";
-  if (target.includes("fresenius")) return "Fresenius Kidney Care Columbus";
-  if (target.includes("renal")) return "US Renal Care Columbus";
-  if (target.includes("brookdale"))
-    return "Brookdale Columbus (Assisted Living)";
-  if (target.includes("sunrise")) return "Sunrise Senior Living Columbus";
-  if (target.includes("danbury")) return "Danbury Senior Living Columbus";
-  if (target.includes("gables")) return "The Gables of Westerville";
-  if (target.includes("atria")) return "Atria Columbus";
   return null;
 }
 
@@ -350,43 +313,6 @@ export default function BookRideScreen() {
     description: string;
   } | null>(null);
 
-  // Demo mode: prefill the entire form and (optionally) jump to a step
-  // via `?demoStep=N`. Used for investor pitch-deck screenshots.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const demoOn =
-        params.get("demo") === "1" ||
-        window.sessionStorage.getItem("__cv_demo") === "1";
-      if (!demoOn) return;
-      setSurgeryDate(new Date(2026, 4, 9, 9, 30, 0));
-      setSurgeryTime(new Date(2026, 4, 9, 9, 30, 0));
-      setDateMonth("05");
-      setDateDay("09");
-      setDateYear("2026");
-      setTimeHour("9");
-      setTimeMinute("30");
-      setTimeAmPm("AM");
-      setFacilityType("hospital");
-      setHospital("OhioHealth Riverside Methodist Hospital");
-      setProcedureType("Outpatient knee arthroscopy");
-      setRideType("pre_op");
-      setPickupAddress("850 N High St, Columbus, OH 43215");
-      setBringingCompanion(true);
-      setPaymentMethod("hsa_fsa");
-      setHsaCardOnFile("Visa •••• 4242");
-      setStdCardOnFile("Visa •••• 4242");
-      setReceiptEmail("");
-      const stepParam = parseInt(params.get("demoStep") ?? "", 10);
-      if (!Number.isNaN(stepParam) && stepParam >= 1 && stepParam <= 4) {
-        setWhoChosen(true);
-        setStep(stepParam as 1 | 2 | 3 | 4);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
 
   useEffect(() => {
     (async () => {
@@ -746,7 +672,7 @@ export default function BookRideScreen() {
                 sub: ((): string => {
                   const raw = (selfFullName ?? "").trim();
                   const isPhoneish = /^[+\d\s()-]+$/.test(raw);
-                  if (!raw || raw.length < 2 || isPhoneish) return "Jane";
+                  if (!raw || raw.length < 2 || isPhoneish) return "there";
                   return raw;
                 })(),
                 isSelf: true,

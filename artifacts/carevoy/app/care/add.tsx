@@ -251,7 +251,7 @@ export default function AddCareRecipientScreen() {
           <Text style={styles.label}>Their home address</Text>
           <TextInput
             style={[styles.input, styles.multiline]}
-            placeholder="123 Elm St, Columbus, OH"
+            placeholder="123 Elm St"
             placeholderTextColor={MUTED}
             value={address}
             onChangeText={setAddress}

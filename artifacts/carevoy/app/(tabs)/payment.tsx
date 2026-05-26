@@ -126,6 +126,13 @@ export default function PaymentScreen() {
         setupIntentClientSecret: clientSecret,
         merchantDisplayName: "CareVoy",
         allowsDelayedPaymentMethods: false,
+        applePay: {
+          merchantCountryCode: "US",
+        },
+        googlePay: {
+          merchantCountryCode: "US",
+          testEnv: false,
+        },
         appearance: {
           colors: {
             primary: "#00C2A8",

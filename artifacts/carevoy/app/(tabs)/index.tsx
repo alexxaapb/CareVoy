@@ -47,28 +47,27 @@ type PatientProfile = {
   home_address: string | null;
 };
 
-// Demo placeholder used in investor screenshots when the patient hasn't set
-// a real first name yet. We intentionally never expose the raw phone number
-// in the greeting.
-const DEMO_FIRST_NAME = "Jane";
+// Greeting fallback when patient hasn't set their name yet.
+// We never expose the raw phone number in the greeting.
+const GREETING_FALLBACK = "there";
 
 function firstName(full?: string | null): string {
-  if (!full) return DEMO_FIRST_NAME;
+  if (!full) return GREETING_FALLBACK;
   const trimmed = full.trim();
   // Phone-shaped strings (digits / +) → use the demo name, never expose the
   // user's phone in the greeting.
-  if (/^[+\d\s()-]+$/.test(trimmed)) return DEMO_FIRST_NAME;
+  if (/^[+\d\s()-]+$/.test(trimmed)) return GREETING_FALLBACK;
   // Email-shaped → derive a name-ish first part.
   if (trimmed.includes("@")) {
     const local = trimmed.split("@")[0] ?? "";
     const cleaned = local.replace(/[._-]+/g, " ").trim();
-    if (!cleaned) return DEMO_FIRST_NAME;
+    if (!cleaned) return GREETING_FALLBACK;
     const first = cleaned.split(/\s+/)[0] ?? "";
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   }
   // Single-letter "A"-style placeholders → demo name.
-  if (trimmed.length < 2) return DEMO_FIRST_NAME;
-  return trimmed.split(/\s+/)[0] ?? DEMO_FIRST_NAME;
+  if (trimmed.length < 2) return GREETING_FALLBACK;
+  return trimmed.split(/\s+/)[0] ?? GREETING_FALLBACK;
 }
 
 function timeGreeting(): string {
@@ -305,7 +304,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.pinLabel}>
               <Text style={styles.pinLabelText} numberOfLines={1}>
-                {requestingLocation ? "Locating…" : "Columbus, OH"}
+                {requestingLocation ? "Locating…" : "Set your location"}
               </Text>
             </View>
           </Pressable>

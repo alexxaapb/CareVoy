@@ -278,7 +278,7 @@ export default function DriverHomeScreen() {
 
   const startRide = async (ride: Ride) => {
     setActingId(ride.id);
-    // ~5 km offset northwest of pickup (or Columbus default)
+    // ~5 km offset northwest of pickup
     const lat = (ride.pickup_lat ?? COLUMBUS.lat) + 0.045;
     const lng = (ride.pickup_lng ?? COLUMBUS.lng) - 0.06;
     const { error } = await supabase
