@@ -44,6 +44,12 @@
           "merchantIdentifier": "merchant.co.carevoy",
           "enableGooglePay": false
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "CareVoy uses your location to auto-fill your pickup address."
+        }
       ]
     ],
     "experiments": {
