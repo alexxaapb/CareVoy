@@ -270,19 +270,21 @@ function RootLayoutNav() {
     const top = segments[0];
     const inLogin = top === "login";
     const inPartners = top === "partners";
+    const inInvite = top === "invite";
     const inOnboarding = top === "onboarding";
     const inDriver = top === "driver";
     const inComingSoon = top === "coming-soon";
     const inTabs = top === "(tabs)";
 
     if (!auth.userId) {
-      if (!inLogin && !inPartners) router.replace("/login");
+      if (!inLogin && !inPartners && !inInvite) router.replace("/login");
       return;
     }
     // /partners is the universal "switch account" entrypoint — never bounce
     // anyone away from it. The page itself shows the current session and
     // offers a "Use different account" button.
     if (inPartners) return;
+    if (inInvite) return;
     if (auth.role === "nemt") {
       if (!inDriver) router.replace("/driver");
       return;
@@ -328,6 +330,7 @@ function RootLayoutNav() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="partners" options={{ headerShown: false }} />
+          <Stack.Screen name="invite" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="book-ride" options={{ headerShown: false }} />
           <Stack.Screen name="chat" options={{ headerShown: false }} />
