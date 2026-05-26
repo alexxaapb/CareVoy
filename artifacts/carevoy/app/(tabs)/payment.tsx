@@ -153,6 +153,7 @@ export default function PaymentScreen() {
     } finally {
       setAdding(false);
     }
+  };
 
   // Suppress unused-var warning while we keep this state for future surfacing.
   void hasCustomer;
