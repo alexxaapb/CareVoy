@@ -3,6 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -146,9 +147,11 @@ export default function PartnersPortal() {
         >
           <View style={styles.card}>
             <View style={styles.brandRow}>
-              <View style={styles.logoMark}>
-                <Text style={styles.logoMarkText}>C</Text>
-              </View>
+              <Image
+                source={require("../../assets/images/icon.png")}
+                style={styles.logoMark}
+                resizeMode="contain"
+              />
               <View>
                 <Text style={styles.brandWord}>CareVoy</Text>
                 <Text style={styles.brandSub}>Partner Portal</Text>
@@ -328,16 +331,7 @@ const styles = StyleSheet.create({
   logoMark: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: TEAL,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoMarkText: {
-    color: NAVY,
-    fontSize: 22,
-    fontWeight: "800",
-    fontFamily: "System",
+    borderRadius: 10,
   },
   brandWord: {
     color: NAVY,
