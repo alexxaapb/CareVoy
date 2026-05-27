@@ -1207,7 +1207,7 @@ export default function BookRideScreen() {
                     {rideType === "both" ? "Per ride" : "One ride"}
                   </Text>
                 </View>
-                <Text style={styles.estimateValue}>$45–65</Text>
+                <Text style={styles.estimateValue}>Quoted by provider</Text>
               </View>
 
               <Text style={styles.label}>Payment method</Text>
