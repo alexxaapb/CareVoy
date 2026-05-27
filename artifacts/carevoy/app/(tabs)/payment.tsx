@@ -321,18 +321,42 @@ export default function PaymentScreen() {
           </Pressable>
 
           <View style={styles.walletHintRow}>
-            <View style={styles.walletChip}>
+            <Pressable
+              onPress={onAddPaymentMethod}
+              disabled={adding}
+              style={({ pressed }) => [
+                styles.walletChip,
+                (pressed || adding) && styles.pressed,
+              ]}
+              accessibilityLabel="Pay with Apple Pay"
+            >
               <FontAwesome name="apple" size={14} color={NAVY} />
               <Text style={styles.walletChipText}>Apple Pay</Text>
-            </View>
-            <View style={styles.walletChip}>
+            </Pressable>
+            <Pressable
+              onPress={onAddPaymentMethod}
+              disabled={adding}
+              style={({ pressed }) => [
+                styles.walletChip,
+                (pressed || adding) && styles.pressed,
+              ]}
+              accessibilityLabel="Pay with Google Pay"
+            >
               <Text style={styles.gPayG}>G</Text>
               <Text style={styles.walletChipText}>Google Pay</Text>
-            </View>
-            <View style={styles.walletChip}>
+            </Pressable>
+            <Pressable
+              onPress={onAddPaymentMethod}
+              disabled={adding}
+              style={({ pressed }) => [
+                styles.walletChip,
+                (pressed || adding) && styles.pressed,
+              ]}
+              accessibilityLabel="Pay with a card"
+            >
               <Feather name="credit-card" size={14} color={NAVY} />
               <Text style={styles.walletChipText}>Card</Text>
-            </View>
+            </Pressable>
           </View>
           <Text style={styles.secureRow}>
             <Feather name="lock" size={11} color={MUTED} /> Secured by Stripe.

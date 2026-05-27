@@ -200,6 +200,8 @@ export default function AdminDashboard() {
       ]),
     );
     loop.start();
+    return () => loop.stop();
+  }, [pulse]);
 
   const generateInvite = useCallback(async (role: "nemt" | "coordinator") => {
     if (generatingInvite) return;
@@ -1021,7 +1023,6 @@ function ModalRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-}
 const styles = StyleSheet.create({
   inviteRow: {
     flexDirection: "row",
