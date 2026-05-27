@@ -672,7 +672,7 @@ export default function BookRideScreen() {
                 sub: ((): string => {
                   const raw = (selfFullName ?? "").trim();
                   const isPhoneish = /^[+\d\s()-]+$/.test(raw);
-                  if (!raw || raw.length < 2 || isPhoneish) return "there";
+                  if (!raw || raw.length < 2 || isPhoneish) return "me";
                   return raw;
                 })(),
                 isSelf: true,

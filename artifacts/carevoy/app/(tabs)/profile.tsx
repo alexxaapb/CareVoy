@@ -1,9 +1,12 @@
 import { Feather } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { Linking,
+import {
   ActivityIndicator,
   Alert,
+  Image,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -28,6 +31,7 @@ type Profile = {
   full_name: string | null;
   phone: string | null;
   email: string | null;
+  avatar_url: string | null;
 };
 
 type RowProps = {
@@ -69,6 +73,7 @@ export default function SettingsScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const load = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
@@ -78,13 +83,14 @@ export default function SettingsScreen() {
     }
     const { data } = await supabase
       .from("patients")
-      .select("full_name, phone, email")
+      .select("full_name, phone, email, avatar_url")
       .eq("id", userId)
       .maybeSingle();
     setProfile({
       full_name: data?.full_name ?? null,
       phone: data?.phone ?? userData.user?.phone ?? null,
       email: data?.email ?? userData.user?.email ?? null,
+      avatar_url: data?.avatar_url ?? null,
     });
     await refreshCare();
   }, [refreshCare]);
@@ -138,6 +144,69 @@ export default function SettingsScreen() {
     Alert.alert(label, "Coming soon.");
   };
 
+  const pickAndUploadPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined")
+          window.alert("Allow photo library access to set a profile photo.");
+      } else {
+        Alert.alert(
+          "Permission needed",
+          "Please allow photo library access to set a profile photo.",
+        );
+      }
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
+    setUploadingPhoto(true);
+    try {
+      const uri = result.assets[0].uri;
+      const ext = uri.split(".").pop()?.toLowerCase() ?? "jpg";
+      const mimeType = ext === "png" ? "image/png" : "image/jpeg";
+      const path = `${userId}/avatar.${ext === "png" ? "png" : "jpg"}`;
+      const fetchResponse = await fetch(uri);
+      const blob = await fetchResponse.blob();
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { upsert: true, contentType: mimeType });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
+      const { error: updateError } = await supabase
+        .from("patients")
+        .update({ avatar_url: urlData.publicUrl })
+        .eq("id", userId);
+      if (updateError) throw updateError;
+      setProfile((prev) =>
+        prev
+          ? { ...prev, avatar_url: `${urlData.publicUrl}?t=${Date.now()}` }
+          : prev,
+      );
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Could not upload photo.";
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined")
+          window.alert(`Upload failed: ${msg}`);
+      } else {
+        Alert.alert("Upload failed", msg);
+      }
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.topBar}>
@@ -150,9 +219,32 @@ export default function SettingsScreen() {
             <ActivityIndicator color={TEAL} />
           ) : (
             <>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>J</Text>
-              </View>
+              <Pressable
+                onPress={pickAndUploadPhoto}
+                disabled={uploadingPhoto}
+                accessibilityLabel="Change profile photo"
+              >
+                <View style={styles.avatar}>
+                  {uploadingPhoto ? (
+                    <ActivityIndicator color={WHITE} size="small" />
+                  ) : profile?.avatar_url ? (
+                    <Image
+                      source={{ uri: profile.avatar_url }}
+                      style={styles.avatarImage}
+                    />
+                  ) : (
+                    <Text style={styles.avatarText}>
+                      {(profile?.full_name ?? profile?.phone ?? "U")
+                        .trim()
+                        .slice(0, 1)
+                        .toUpperCase()}
+                    </Text>
+                  )}
+                </View>
+                <View style={styles.cameraBadge}>
+                  <Feather name="camera" size={10} color={WHITE} />
+                </View>
+              </Pressable>
               <View style={{ flex: 1 }}>
                 <Text style={styles.profileName}>
                   {profile?.full_name && profile.full_name.trim().length > 1
@@ -290,6 +382,24 @@ const styles = StyleSheet.create({
     backgroundColor: TEAL,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 52,
+    height: 52,
+  },
+  cameraBadge: {
+    position: "absolute",
+    bottom: -2,
+    right: -4,
+    backgroundColor: NAVY,
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: WHITE,
   },
   avatarText: {
     color: NAVY,
