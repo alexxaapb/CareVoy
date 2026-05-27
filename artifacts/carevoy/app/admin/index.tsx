@@ -200,7 +200,7 @@ export default function AdminDashboard() {
       ]),
     );
     loop.start();
-  
+
   const generateInvite = useCallback(async (role: "nemt" | "coordinator") => {
     if (generatingInvite) return;
     setGeneratingInvite(role);
@@ -235,8 +235,6 @@ export default function AdminDashboard() {
     }
   }, [generatingInvite]);
 
-  return () => loop.stop();
-  }, [pulse]);
 
   const load = useCallback(async () => {
     const today = todayStr();
@@ -1023,6 +1021,7 @@ function ModalRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+}
 const styles = StyleSheet.create({
   inviteRow: {
     flexDirection: "row",
