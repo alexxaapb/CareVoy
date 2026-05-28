@@ -12,7 +12,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
@@ -275,11 +275,19 @@ function RootLayoutNav() {
     const inInvite = top === "invite";
     const inOnboarding = top === "onboarding";
     const inDriver = top === "driver";
+    const inNemt = top === "nemt";
+    const inFacility = top === "facility";
     const inComingSoon = top === "coming-soon";
     const inTabs = top === "(tabs)";
+    const isPartnersDomain =
+      Platform.OS === "web" &&
+      typeof window !== "undefined" &&
+      window.location.hostname.startsWith("partners.");
 
     if (!auth.userId) {
-      if (!inLogin && !inPartners && !inInvite) router.replace("/login");
+      if (!inLogin && !inPartners && !inInvite) {
+        router.replace(isPartnersDomain ? "/partners" : "/login");
+      }
       return;
     }
     // /partners is the universal "switch account" entrypoint — never bounce
@@ -288,11 +296,11 @@ function RootLayoutNav() {
     if (inPartners) return;
     if (inInvite) return;
     if (auth.role === "nemt") {
-      if (!inDriver) router.replace("/driver");
+      if (!inDriver && !inNemt) router.replace("/nemt");
       return;
     }
     if (auth.role === "coordinator") {
-      if (top !== "coordinator") router.replace("/coordinator");
+      if (top !== "coordinator" && !inFacility) router.replace("/facility");
       return;
     }
     if (auth.role === "admin") {
@@ -309,6 +317,8 @@ function RootLayoutNav() {
       (inLogin ||
         inOnboarding ||
         inDriver ||
+        inNemt ||
+        inFacility ||
         inComingSoon ||
         top === "coordinator" ||
         top === "admin")
@@ -337,7 +347,9 @@ function RootLayoutNav() {
           <Stack.Screen name="book-ride" options={{ headerShown: false }} />
           <Stack.Screen name="chat" options={{ headerShown: false }} />
           <Stack.Screen name="driver" options={{ headerShown: false }} />
+          <Stack.Screen name="nemt" options={{ headerShown: false }} />
           <Stack.Screen name="coordinator" options={{ headerShown: false }} />
+          <Stack.Screen name="facility" options={{ headerShown: false }} />
           <Stack.Screen name="admin" options={{ headerShown: false }} />
           <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
           <Stack.Screen name="care/add" options={{ headerShown: false }} />

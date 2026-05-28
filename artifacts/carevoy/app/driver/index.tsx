@@ -317,7 +317,8 @@ export default function DriverHomeScreen() {
   const signOut = async () => {
     await supabase.auth.signOut();
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      const dest = window.location.hostname.startsWith('partners.') ? '/partners' : '/login';
+      window.location.href = dest;
     } else {
       router.replace("/login");
     }
