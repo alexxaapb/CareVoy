@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -228,6 +229,8 @@ export default function BookRideScreen() {
   const [procedureType, setProcedureType] = useState("");
 
   const [lmnNotes, setLmnNotes] = useState("");
+  const [lmnImageUri, setLmnImageUri] = useState<string | null>(null);
+  const [uploadingLmn, setUploadingLmn] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringWeeks, setRecurringWeeks] = useState(4);
 
@@ -1092,16 +1095,71 @@ export default function BookRideScreen() {
                 onChangeText={setProcedureType}
               />
 
-              <Text style={styles.label}>Letter of Medical Necessity note (optional)</Text>
-              <TextInput
-                style={[styles.input, styles.textOnly, { minHeight: 64 }]}
-                placeholder="e.g. Patient requires medical transport for ongoing dialysis treatment per Dr. Smith"
-                placeholderTextColor={MUTED}
-                value={lmnNotes}
-                onChangeText={setLmnNotes}
-                multiline
-                numberOfLines={3}
-              />
+              <Text style={styles.label}>Letter of Medical Necessity (optional)</Text>
+              <Pressable
+                onPress={async () => {
+                  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                  if (status !== "granted") return;
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ["images"],
+                    allowsEditing: false,
+                    quality: 0.9,
+                  });
+                  if (result.canceled) return;
+                  const uri = result.assets[0].uri;
+                  setLmnImageUri(uri);
+                  // Upload to Supabase documents bucket
+                  const { data: { session } } = await supabase.auth.getSession();
+                  const userId = session?.user?.id;
+                  if (!userId) return;
+                  setUploadingLmn(true);
+                  try {
+                    const ext = uri.split(".").pop()?.toLowerCase() ?? "jpg";
+                    const path = `${userId}/lmn_${Date.now()}.${ext}`;
+                    const fetchRes = await fetch(uri);
+                    const blob = await fetchRes.blob();
+                    const { error: upErr } = await supabase.storage
+                      .from("documents")
+                      .upload(path, blob, { upsert: false, contentType: "image/jpeg" });
+                    if (!upErr) {
+                      const { data: urlData } = supabase.storage.from("documents").getPublicUrl(path);
+                      setLmnNotes(urlData.publicUrl);
+                    }
+                  } catch {}
+                  finally { setUploadingLmn(false); }
+                }}
+                style={({ pressed }) => [
+                  styles.input,
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    minHeight: 52,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                {uploadingLmn ? (
+                  <ActivityIndicator color={TEAL} size="small" />
+                ) : lmnImageUri ? (
+                  <>
+                    <Feather name="check-circle" size={18} color={TEAL} />
+                    <Text style={{ color: TEAL, fontSize: 14, fontWeight: "600", fontFamily: "System", flex: 1 }}>
+                      Letter uploaded
+                    </Text>
+                    <Pressable onPress={() => { setLmnImageUri(null); setLmnNotes(""); }}>
+                      <Feather name="x" size={16} color={MUTED} />
+                    </Pressable>
+                  </>
+                ) : (
+                  <>
+                    <Feather name="upload" size={18} color={MUTED} />
+                    <Text style={{ color: MUTED, fontSize: 14, fontFamily: "System" }}>
+                      Tap to upload letter image
+                    </Text>
+                  </>
+                )}
+              </Pressable>
 
               {facilityType === "dialysis" && (
                 <>

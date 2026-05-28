@@ -33,9 +33,11 @@ function normalizePhone(input: string): string {
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<"phone" | "code" | "booking-for">("phone");
+  const [step, setStep] = useState<"phone" | "code" | "profile" | "booking-for">("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,6 +91,43 @@ export default function LoginScreen() {
     });
     setLoading(false);
     if (err) { setError(err.message); return; }
+
+    // Check if user already has a name — skip profile step for returning users
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (userId) {
+      const { data: patient } = await supabase
+        .from("patients")
+        .select("full_name")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!patient?.full_name || patient.full_name.trim().length < 2) {
+        setStep("profile");
+        return;
+      }
+    }
+    setStep("booking-for");
+  };
+
+  const saveProfile = async () => {
+    setError(null);
+    if (!fullName.trim() || fullName.trim().split(" ").length < 1 || fullName.trim().length < 2) {
+      setError("Please enter your full name");
+      return;
+    }
+    setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) { setLoading(false); return; }
+    const { error: upErr } = await supabase
+      .from("patients")
+      .update({
+        full_name: fullName.trim(),
+        ...(email.trim() ? { email: email.trim() } : {}),
+      })
+      .eq("id", userId);
+    setLoading(false);
+    if (upErr) { setError(upErr.message); return; }
     setStep("booking-for");
   };
 
@@ -169,6 +208,44 @@ export default function LoginScreen() {
                 </Pressable>
                 <Pressable onPress={() => { setStep("phone"); setCode(""); setError(null); }} disabled={loading}>
                   <Text style={styles.link}>Use a different number</Text>
+                </Pressable>
+              </>
+            )}
+
+            {step === "profile" && (
+              <>
+                <Text style={styles.welcomeTitle}>One last thing</Text>
+                <Text style={styles.welcomeSub}>Tell us your name so we can personalize your rides.</Text>
+                <Text style={styles.label}>Full name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Alexandra B."
+                  placeholderTextColor={MUTED}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  editable={!loading}
+                />
+                <Text style={styles.label}>Email (for receipts)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="you@email.com"
+                  placeholderTextColor={MUTED}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  value={email}
+                  onChangeText={setEmail}
+                  editable={!loading}
+                />
+                {error ? <Text style={styles.error}>{error}</Text> : null}
+                <Pressable
+                  style={({ pressed }) => [styles.button, (loading || pressed) && styles.buttonPressed]}
+                  onPress={saveProfile}
+                  disabled={loading}
+                >
+                  {loading ? <ActivityIndicator color={NAVY} /> : <Text style={styles.buttonText}>Continue</Text>}
                 </Pressable>
               </>
             )}
