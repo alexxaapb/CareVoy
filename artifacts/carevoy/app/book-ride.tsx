@@ -227,6 +227,10 @@ export default function BookRideScreen() {
   const [hospitalCustom, setHospitalCustom] = useState<string>("");
   const [procedureType, setProcedureType] = useState("");
 
+  const [lmnNotes, setLmnNotes] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringWeeks, setRecurringWeeks] = useState(4);
+
   // Step 2
   const [rideType, setRideType] = useState<RideType>("pre_op");
   const [pickupAddress, setPickupAddress] = useState("");
@@ -562,30 +566,46 @@ export default function BookRideScreen() {
     const types: ("pre_op" | "post_op")[] =
       rideType === "both" ? ["pre_op", "post_op"] : [rideType];
 
-    const rows = types.map((t) => {
-      const isPre = t === "pre_op";
-      // For post-op, swap pickup and dropoff
-      const pickup = isPre ? pickupAddress.trim() : hospitalName;
-      const dropoff = isPre ? hospitalName : pickupAddress.trim();
-      // Pre-op pickup: 90 minutes before surgery. Post-op pickup: 2 hours after.
-      const pickupTime = new Date(surgeryDateTime);
-      if (isPre) pickupTime.setMinutes(pickupTime.getMinutes() - 90);
-      else pickupTime.setHours(pickupTime.getHours() + 2);
+    const weeksToSchedule = (facilityType === "dialysis" && isRecurring) ? recurringWeeks : 1;
+    const recurringSeriesId = weeksToSchedule > 1
+      ? Math.random().toString(36).slice(2) + Date.now().toString(36)
+      : null;
 
-      return {
-        patient_id: bookingPatientId,
-        ride_type: t,
-        pickup_address: pickup,
-        dropoff_address: dropoff,
-        pickup_time: pickupTime.toISOString(),
-        surgery_date: surgeryDateStr,
-        procedure_type: procedureType.trim(),
-        mobility_needs: mobility,
-        companion_requested: bringingCompanion,
-        status: "pending",
-        estimated_cost: 55,
-      };
-    });
+    const rows: object[] = [];
+    for (let week = 0; week < weeksToSchedule; week++) {
+      const weekOffset = week * 7 * 24 * 60 * 60 * 1000;
+      const weekSurgeryDateTime = new Date(surgeryDateTime.getTime() + weekOffset);
+      const weekSurgeryDateStr = weekSurgeryDateTime.toISOString().slice(0, 10);
+
+      types.forEach((t) => {
+        const isPre = t === "pre_op";
+        const pickup = isPre ? pickupAddress.trim() : hospitalName;
+        const dropoff = isPre ? hospitalName : pickupAddress.trim();
+        const pickupTime = new Date(weekSurgeryDateTime);
+        if (isPre) pickupTime.setMinutes(pickupTime.getMinutes() - 90);
+        else pickupTime.setHours(pickupTime.getHours() + 2);
+
+        rows.push({
+          patient_id: bookingPatientId,
+          ride_type: t,
+          pickup_address: pickup,
+          dropoff_address: dropoff,
+          pickup_time: pickupTime.toISOString(),
+          surgery_date: weekSurgeryDateStr,
+          procedure_type: procedureType.trim(),
+          mobility_needs: mobility,
+          companion_requested: bringingCompanion,
+          status: "pending",
+          estimated_cost: 55,
+          lmn_notes: lmnNotes.trim() || null,
+          ...(recurringSeriesId ? {
+            is_recurring: true,
+            recurring_weeks: weeksToSchedule,
+            recurring_series_id: recurringSeriesId,
+          } : {}),
+        });
+      });
+    }
 
     const { error: insertErr } = await supabase.from("rides").insert(rows);
     setSubmitting(false);
@@ -594,9 +614,7 @@ export default function BookRideScreen() {
       return;
     }
     // Save first ride details for "Add to Calendar" button on success screen.
-    // We use the surgery date/time itself as the calendar reminder so the user
-    // sees their appointment in their calendar (with pickup time noted).
-    const firstRow = rows[0];
+    const firstRow = rows[0] as { pickup_time: string; pickup_address: string; dropoff_address: string };
     const calendarStart = new Date(surgeryDateTime);
     const calendarEnd = new Date(surgeryDateTime);
     calendarEnd.setHours(calendarEnd.getHours() + 1);
@@ -609,7 +627,7 @@ export default function BookRideScreen() {
       startISO: calendarStart.toISOString(),
       endISO: calendarEnd.toISOString(),
       location: hospitalName,
-      description: `CareVoy ride booked.\n\nPickup: ${pickupLocal}\nFrom: ${firstRow.pickup_address}\nTo: ${firstRow.dropoff_address}${rows.length > 1 ? "\n\nReturn ride also booked." : ""}`,
+      description: `CareVoy ride booked.\n\nPickup: ${pickupLocal}\nFrom: ${firstRow.pickup_address}\nTo: ${firstRow.dropoff_address}${weeksToSchedule > 1 ? `\n\n${weeksToSchedule} weekly rides scheduled.` : rows.length > 1 ? "\n\nReturn ride also booked." : ""}`,
     });
     setStep(4);
     playSuccessAnimation();
@@ -1073,6 +1091,60 @@ export default function BookRideScreen() {
                 value={procedureType}
                 onChangeText={setProcedureType}
               />
+
+              <Text style={styles.label}>Letter of Medical Necessity note (optional)</Text>
+              <TextInput
+                style={[styles.input, styles.textOnly, { minHeight: 64 }]}
+                placeholder="e.g. Patient requires medical transport for ongoing dialysis treatment per Dr. Smith"
+                placeholderTextColor={MUTED}
+                value={lmnNotes}
+                onChangeText={setLmnNotes}
+                multiline
+                numberOfLines={3}
+              />
+
+              {facilityType === "dialysis" && (
+                <>
+                  <View style={[styles.toggleRow, { marginTop: 12, alignItems: "center" }]}>
+                    <Pressable
+                      onPress={() => setIsRecurring((v) => !v)}
+                      style={[styles.toggle, { flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, isRecurring && styles.toggleActive]}
+                    >
+                      <Text style={[styles.toggleText, isRecurring && styles.toggleTextActive]}>
+                        Recurring weekly (dialysis)
+                      </Text>
+                      <View style={{
+                        width: 20, height: 20, borderRadius: 10,
+                        backgroundColor: isRecurring ? TEAL : BORDER,
+                        alignItems: "center", justifyContent: "center",
+                      }}>
+                        {isRecurring && <Feather name="check" size={12} color={NAVY} />}
+                      </View>
+                    </Pressable>
+                  </View>
+                  {isRecurring && (
+                    <View style={{ marginTop: 8 }}>
+                      <Text style={styles.label}>Repeat for how many weeks?</Text>
+                      <View style={styles.toggleRow}>
+                        {[4, 8, 12, 26].map((w) => (
+                          <Pressable
+                            key={w}
+                            style={[styles.toggle, recurringWeeks === w && styles.toggleActive]}
+                            onPress={() => setRecurringWeeks(w)}
+                          >
+                            <Text style={[styles.toggleText, recurringWeeks === w && styles.toggleTextActive]}>
+                              {w}w
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                      <Text style={[styles.dateHelper, { marginTop: 6 }]}>
+                        {recurringWeeks} rides will be scheduled, one per week.
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
             </View>
           )}
 

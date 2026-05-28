@@ -1,5 +1,8 @@
 import * as Sentry from '@sentry/react-native';
 import { version } from './package.json';
+import appConfig from './app.json';
+
+const buildNumber = appConfig?.expo?.ios?.buildNumber ?? '1';
 
 Sentry.init({
   dsn: 'https://a8bde62c03f6d28e4ad7c2e1c41fd0c3@o4508634229653504.ingest.us.sentry.io/4508634231292928',
@@ -8,7 +11,7 @@ Sentry.init({
   enableNative: true,
   enableAutoSessionTracking: true,
   release: `co.carevoy.app@${version}`,
-  dist: '12',
+  dist: buildNumber,
 });
 
 export default Sentry;

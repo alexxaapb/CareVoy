@@ -86,6 +86,13 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function startOfWeekISO(): string {
+  const d = new Date();
+  const day = d.getDay();
+  d.setDate(d.getDate() - day);
+  return d.toISOString().slice(0, 10);
+}
+
 function endOfWeekISO(): string {
   const d = new Date();
   d.setDate(d.getDate() + 7);
@@ -243,6 +250,7 @@ function CoordinatorDashboard() {
   const [noShowsThisMonth, setNoShowsThisMonth] = useState(0);
   const [bookedThisMonth, setBookedThisMonth] = useState(0);
   const [avgCost, setAvgCost] = useState<number | null>(null);
+  const [weekCount, setWeekCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("dashboard");
   const [notifications, setNotifications] = useState<{id: string; message: string; status: string; created_at: string}[]>([]);
@@ -314,6 +322,8 @@ function CoordinatorDashboard() {
       return;
     }
     const today = todayStr();
+    const weekStart = startOfWeekISO();
+    const weekEnd = endOfWeekISO();
     const monthStart = startOfMonthISO();
     const lastMonthStart = startOfLastMonthISO();
     const lastMonthEnd = endOfLastMonthISO();
@@ -325,6 +335,7 @@ function CoordinatorDashboard() {
       noShowRes,
       bookedRes,
       monthRidesRes,
+      weekRes,
     ] = await Promise.all([
       supabase
         .from("notifications")
@@ -375,6 +386,12 @@ function CoordinatorDashboard() {
         .select("actual_cost, estimated_cost")
         .eq("hospital_id", c.hospital_id)
         .gte("surgery_date", monthStart),
+      supabase
+        .from("rides")
+        .select("id", { count: "exact", head: true })
+        .eq("hospital_id", c.hospital_id)
+        .gte("surgery_date", weekStart)
+        .lte("surgery_date", weekEnd),
     ]);
     setRides((ridesRes.data as unknown as Ride[]) ?? []);
     setMonthCount(monthRes.count ?? 0);
@@ -382,6 +399,7 @@ function CoordinatorDashboard() {
     setCompletedThisMonth(completedRes.count ?? 0);
     setNoShowsThisMonth(noShowRes.count ?? 0);
     setBookedThisMonth(bookedRes.count ?? 0);
+    setWeekCount(weekRes.count ?? 0);
     const costs = ((monthRidesRes.data as { actual_cost: number | null; estimated_cost: number | null }[] | null) ?? [])
       .map((r) => r.actual_cost ?? r.estimated_cost)
       .filter((n): n is number => typeof n === "number" && n > 0);
@@ -638,6 +656,12 @@ function CoordinatorDashboard() {
               color={NAVY}
               icon="trending-up"
             />
+            <StatCard
+              label="This Week"
+              value={weekCount}
+              color={TEAL}
+              icon="calendar"
+            />
           </View>
 
           {/* Performance Metrics */}
@@ -736,6 +760,36 @@ function CoordinatorDashboard() {
               );
             })}
           </View>
+
+          {/* Ride type breakdown */}
+          {(() => {
+            const counts: Record<string, number> = {};
+            rides.forEach((r) => {
+              const key = r.procedure_type?.trim() || "Unspecified";
+              counts[key] = (counts[key] ?? 0) + 1;
+            });
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            if (sorted.length === 0) return null;
+            const total = sorted.reduce((s, [, n]) => s + n, 0);
+            return (
+              <>
+                <Text style={styles.sectionLabel}>Most Common Ride Types</Text>
+                <View style={[styles.group, { padding: 16, marginBottom: 20 }]}>
+                  {sorted.map(([label, count]) => (
+                    <View key={label} style={{ marginBottom: 10 }}>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                        <Text style={{ color: NAVY, fontSize: 13, fontWeight: "600", fontFamily: "System", flex: 1 }} numberOfLines={1}>{label}</Text>
+                        <Text style={{ color: MUTED, fontSize: 12, fontFamily: "System" }}>{count} ({Math.round((count / total) * 100)}%)</Text>
+                      </View>
+                      <View style={{ height: 6, backgroundColor: BORDER, borderRadius: 3, overflow: "hidden" }}>
+                        <View style={{ height: 6, backgroundColor: TEAL, borderRadius: 3, width: `${Math.round((count / sorted[0][1]) * 100)}%` as unknown as number }} />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
+            );
+          })()}
 
           {/* Bulk action */}
           {pendingCount > 0 ? (

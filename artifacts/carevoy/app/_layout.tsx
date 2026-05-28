@@ -1,4 +1,5 @@
 import '../sentry.config'; // Add Sentry - must be first!
+import * as Sentry from '@sentry/react-native';
 import { StripeProvider } from "@stripe/stripe-react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
@@ -119,6 +120,7 @@ class LaunchErrorBoundary extends Component<
   }
   componentDidCatch(error: Error, info: { componentStack: string }) {
     console.error("[LaunchErrorBoundary]", error, info?.componentStack);
+    Sentry.captureException(error, { extra: { componentStack: info?.componentStack } });
   }
   render() {
     if (this.state.error || (this.props.extra && this.props.extra.length > 0)) {
