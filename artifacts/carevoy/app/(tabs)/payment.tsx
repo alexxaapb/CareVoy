@@ -333,6 +333,7 @@ export default function PaymentScreen() {
               <FontAwesome name="apple" size={14} color={NAVY} />
               <Text style={styles.walletChipText}>Apple Pay</Text>
             </Pressable>
+            {Platform.OS !== "ios" && (
             <Pressable
               onPress={onAddPaymentMethod}
               disabled={adding}
@@ -345,6 +346,7 @@ export default function PaymentScreen() {
               <Text style={styles.gPayG}>G</Text>
               <Text style={styles.walletChipText}>Google Pay</Text>
             </Pressable>
+            )}
             <Pressable
               onPress={onAddPaymentMethod}
               disabled={adding}
