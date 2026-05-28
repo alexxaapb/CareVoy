@@ -167,6 +167,7 @@ export default function AdminDashboard() {
   const [hospitals, setHospitals] = useState<HospitalStats[]>([]);
   const [partners, setPartners] = useState<NemtStats[]>([]);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ url: string; role: string } | null>(null);
   const [revenue, setRevenue] = useState({
     thisMonth: 0,
     lastMonth: 0,
@@ -226,11 +227,8 @@ export default function AdminDashboard() {
         Alert.alert("Error", data.error || "Failed to generate invite");
         return;
       }
-      await Clipboard.setStringAsync(data.invite_url);
-      Alert.alert(
-        "Invite Link Copied",
-        `${role === "nemt" ? "NEMT" : "Facility"} invite link copied to clipboard. Expires in 7 days.\n\n${data.invite_url}`
-      );
+      setInviteResult({ url: data.invite_url, role });
+      try { await Clipboard.setStringAsync(data.invite_url); } catch {}
     } catch (e) {
       Alert.alert("Error", e instanceof Error ? e.message : "Failed to generate invite");
     } finally {
@@ -435,7 +433,8 @@ export default function AdminDashboard() {
       console.error("Sign out error:", e);
     }
     if (typeof window !== "undefined") {
-      window.location.href = "/login";
+      const dest = window.location.hostname.startsWith("partners.") ? "/partners" : "/login";
+      window.location.href = dest;
     } else {
       router.replace("/login");
     }
@@ -711,6 +710,30 @@ export default function AdminDashboard() {
             </View>
           </View>
 
+          {inviteResult ? (
+            <View style={{ backgroundColor: "rgba(0,194,168,0.10)", borderWidth: 1, borderColor: TEAL, borderRadius: 14, padding: 16, marginBottom: 16, gap: 10 }}>
+              <Text style={{ color: NAVY, fontWeight: "700", fontSize: 14, fontFamily: "System" }}>
+                {inviteResult.role === "nemt" ? "NEMT Partner" : "Facility"} invite link ready
+              </Text>
+              <Text selectable style={{ color: NAVY, fontSize: 13, fontFamily: "System", wordBreak: "break-all" } as any}>
+                {inviteResult.url}
+              </Text>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                  onPress={async () => { try { await Clipboard.setStringAsync(inviteResult.url); } catch {} }}
+                  style={{ backgroundColor: TEAL, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 }}
+                >
+                  <Text style={{ color: NAVY, fontWeight: "700", fontSize: 13, fontFamily: "System" }}>Copy Link</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setInviteResult(null)}
+                  style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: BORDER }}
+                >
+                  <Text style={{ color: MUTED, fontSize: 13, fontFamily: "System" }}>Dismiss</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
           {/* Partner Invites */}
           <SectionTitle
             title="Invite Partners"
