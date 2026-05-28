@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -216,6 +217,17 @@ export default function HomeScreen() {
   const city = cityFromAddress(profile?.home_address);
   const [detectedCity, setDetectedCity] = useState<string | null>(null);
   const [requestingLocation, setRequestingLocation] = useState(false);
+
+  // Restore persisted city on mount so the pin label shows immediately
+  // without re-requesting location permission every session.
+  React.useEffect(() => {
+    AsyncStorage.getItem("carevoy_detected_city")
+      .then((val) => {
+        if (val) setDetectedCity(val);
+      })
+      .catch(() => {});
+  }, []);
+
   const requestLocation = useCallback(async () => {
     if (requestingLocation) return;
     setRequestingLocation(true);
@@ -223,6 +235,7 @@ export default function HomeScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setDetectedCity(null);
+        void AsyncStorage.removeItem("carevoy_detected_city");
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -232,14 +245,19 @@ export default function HomeScreen() {
       });
       const place = places[0];
       if (place?.city && place?.region) {
-        setDetectedCity(`${place.city}, ${place.region}`);
+        const val = `${place.city}, ${place.region}`;
+        setDetectedCity(val);
+        void AsyncStorage.setItem("carevoy_detected_city", val);
       } else if (place?.city) {
         setDetectedCity(place.city);
+        void AsyncStorage.setItem("carevoy_detected_city", place.city);
       } else {
         setDetectedCity(null);
+        void AsyncStorage.removeItem("carevoy_detected_city");
       }
     } catch {
       setDetectedCity(null);
+      void AsyncStorage.removeItem("carevoy_detected_city");
     } finally {
       setRequestingLocation(false);
     }
@@ -306,7 +324,9 @@ export default function HomeScreen() {
             </View>
             <View style={styles.pinLabel}>
               <Text style={styles.pinLabelText} numberOfLines={1}>
-                {requestingLocation ? "Locating…" : "Set your location"}
+                {requestingLocation
+                  ? "Locating…"
+                  : detectedCity ?? "Set your location"}
               </Text>
             </View>
           </Pressable>
