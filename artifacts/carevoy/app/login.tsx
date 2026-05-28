@@ -205,14 +205,6 @@ export default function LoginScreen() {
             )}
           </View>
 
-          {step !== "booking-for" && (
-            <View style={styles.footer}>
-              <Text style={styles.footerLabel}>Healthcare facility or driver?</Text>
-              <Pressable onPress={() => router.push("/partners")}>
-                <Text style={styles.footerLink}>Partner sign-in →</Text>
-              </Pressable>
-            </View>
-          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -262,9 +254,6 @@ const styles = StyleSheet.create({
   hint: { color: MUTED, fontSize: 12, marginTop: 14, textAlign: "center", fontFamily: "System" },
   link: { color: TEAL, fontSize: 14, textAlign: "center", marginTop: 16, fontFamily: "System" },
   error: { color: ERROR, fontSize: 13, marginBottom: 10, fontFamily: "System" },
-  footer: { alignItems: "center", paddingHorizontal: 12, gap: 4 },
-  footerLabel: { color: MUTED, fontSize: 13, fontFamily: "System" },
-  footerLink: { color: NAVY, fontSize: 13, fontWeight: "600", fontFamily: "System", textAlign: "center" },
 
   // Booking-for screen
   bookingTitle: {
