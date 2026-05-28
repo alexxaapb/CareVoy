@@ -295,6 +295,10 @@ function RootLayoutNav() {
     // offers a "Use different account" button.
     if (inPartners) return;
     if (inInvite) return;
+    if (isPartnersDomain && auth.role === "patient") {
+      if (!inPartners) router.replace("/partners");
+      return;
+    }
     if (auth.role === "nemt") {
       if (!inDriver && !inNemt) router.replace("/nemt");
       return;
