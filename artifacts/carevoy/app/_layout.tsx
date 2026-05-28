@@ -324,7 +324,7 @@ function RootLayoutNav() {
   }
 
   return (
-    <StripeProvider publishableKey="pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2" merchantIdentifier="merchant.co.carevoy">
+    <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_KEY ?? ""} merchantIdentifier="merchant.co.carevoy">
       <AuthRefreshContext.Provider value={{ refresh }}>
         <Stack screenOptions={{ headerBackTitle: "Back" }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
