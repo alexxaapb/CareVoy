@@ -28,7 +28,7 @@ const ERROR = "#EF4444";
 async function resolveRoleAndRedirect(
   router: ReturnType<typeof useRouter>,
   userId: string,
-) {
+): Promise<{ ok: boolean; adminOnly?: boolean }> {
   const [staffRes, coordRes] = await Promise.all([
     supabase.from("staff").select("role").eq("id", userId).maybeSingle(),
     supabase
@@ -38,18 +38,17 @@ async function resolveRoleAndRedirect(
       .maybeSingle(),
   ]);
   if (staffRes.data?.role === "admin") {
-    router.replace("/admin");
-    return true;
+    return { ok: true, adminOnly: true };
   }
   if (staffRes.data?.role === "nemt") {
     router.replace("/driver");
-    return true;
+    return { ok: true };
   }
   if (coordRes.data) {
     router.replace("/coordinator");
-    return true;
+    return { ok: true };
   }
-  return false;
+  return { ok: false };
 }
 
 export default function PartnersPortal() {
@@ -101,9 +100,14 @@ export default function PartnersPortal() {
       setError("Sign-in succeeded but no user was returned.");
       return;
     }
-    const ok = await resolveRoleAndRedirect(router, uid);
+    const result = await resolveRoleAndRedirect(router, uid);
     setLoading(false);
-    if (!ok) {
+    if (result.adminOnly) {
+      await supabase.auth.signOut();
+      setError(
+        "The admin dashboard is only available at carevoy.co on a desktop browser.",
+      );
+    } else if (!result.ok) {
       await supabase.auth.signOut();
       setError(
         "This account isn't linked to a partner role. Contact your CareVoy admin.",
