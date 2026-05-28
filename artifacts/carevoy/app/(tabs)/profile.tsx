@@ -75,8 +75,8 @@ export default function SettingsScreen() {
   const [signingOut, setSigningOut] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const load = useCallback(async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
     if (!userId) {
       setProfile(null);
       return;
@@ -88,8 +88,8 @@ export default function SettingsScreen() {
       .maybeSingle();
     setProfile({
       full_name: data?.full_name ?? null,
-      phone: data?.phone ?? userData.user?.phone ?? null,
-      email: data?.email ?? userData.user?.email ?? null,
+      phone: data?.phone ?? session.user?.phone ?? null,
+      email: data?.email ?? session.user?.email ?? null,
       avatar_url: data?.avatar_url ?? null,
     });
     await refreshCare();
@@ -112,7 +112,10 @@ export default function SettingsScreen() {
   const doSignOut = async () => {
     setSigningOut(true);
     try {
-      await supabase.auth.signOut();
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+      ]);
     } catch (error) {
       console.error("Sign out error:", error);
     }
@@ -168,8 +171,8 @@ export default function SettingsScreen() {
       quality: 0.8,
     });
     if (result.canceled) return;
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
     if (!userId) return;
     setUploadingPhoto(true);
     try {

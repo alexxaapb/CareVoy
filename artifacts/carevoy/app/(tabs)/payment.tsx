@@ -67,8 +67,8 @@ export default function PaymentScreen() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
     if (!userId) { setLoading(false); return; }
     setPatientId(userId);
     const { data } = await supabase

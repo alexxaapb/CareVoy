@@ -120,8 +120,8 @@ export default function ChatScreen() {
   useEffect(() => {
   // initial load: fetch user profile, create conversation, send greeting
     (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
       if (!userId) return;
       userIdRef.current = userId;
       setUserId(userId);
