@@ -191,18 +191,26 @@ export default function ChatScreen() {
         .concat(userMsg)
         .filter(m => m.role === "user" || m.role === "assistant")
         .map(m => ({ role: m.role, content: m.content }));
-      const res = await fetch(`${API_BASE}/api/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          messages: apiMessages,
-          patientId: userId,
-          conversationId: conversationIdRef.current,
-        }),
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      let res: Response;
+      try {
+        res = await fetch(`${API_BASE}/api/chat`, {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            messages: apiMessages,
+            patientId: userId,
+            conversationId: conversationIdRef.current,
+          }),
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       if (!res.ok) throw new Error("Failed to reach coordinator");
       const data = await res.json();
       const reply = data.reply;

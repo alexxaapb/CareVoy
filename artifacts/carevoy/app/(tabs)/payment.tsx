@@ -59,15 +59,17 @@ export default function PaymentScreen() {
   // demo never shows a real personal email.
   const [email, setEmail] = useState("");
 
+  const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
-    if (!userId) return;
+    if (!userId) { setLoading(false); return; }
     setPatientId(userId);
     const { data } = await supabase
       .from("patients")
@@ -79,6 +81,7 @@ export default function PaymentScreen() {
     // Methods are fetched server-side, scoped to the authenticated user.
     const list = await listPaymentMethods();
     setMethods(list);
+    setLoading(false);
   }, []);
 
   useFocusEffect(
@@ -299,7 +302,7 @@ export default function PaymentScreen() {
           {/* ADD METHOD CTA */}
           <Pressable
             onPress={onAddPaymentMethod}
-            disabled={adding}
+            disabled={adding || loading}
             accessibilityLabel="Add a payment method via Stripe"
             style={({ pressed }) => [
               styles.addBtn,
@@ -323,7 +326,7 @@ export default function PaymentScreen() {
           <View style={styles.walletHintRow}>
             <Pressable
               onPress={onAddPaymentMethod}
-              disabled={adding}
+              disabled={adding || loading}
               style={({ pressed }) => [
                 styles.walletChip,
                 (pressed || adding) && styles.pressed,
@@ -336,7 +339,7 @@ export default function PaymentScreen() {
             {Platform.OS !== "ios" && (
             <Pressable
               onPress={onAddPaymentMethod}
-              disabled={adding}
+              disabled={adding || loading}
               style={({ pressed }) => [
                 styles.walletChip,
                 (pressed || adding) && styles.pressed,
@@ -349,7 +352,7 @@ export default function PaymentScreen() {
             )}
             <Pressable
               onPress={onAddPaymentMethod}
-              disabled={adding}
+              disabled={adding || loading}
               style={({ pressed }) => [
                 styles.walletChip,
                 (pressed || adding) && styles.pressed,
