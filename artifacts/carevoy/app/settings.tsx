@@ -111,19 +111,14 @@ export default function SettingsScreen() {
   );
 
   const doSignOut = async () => {
-  setSigningOut(true);
-  try {
-    await supabase.auth.signOut();
-    // Force immediate navigation without waiting for auth state
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
     router.replace("/login");
-  } catch (error) {
-    console.error("Sign out error:", error);
-    // Still navigate even if sign out fails
-    router.replace("/login");
-  } finally {
-    setSigningOut(false);
-  }
-};
+  };
   const handleSignOut = () => {
     if (Platform.OS === "web") {
       // window.confirm is the only reliable way to confirm on web RN

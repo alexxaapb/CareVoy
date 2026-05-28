@@ -111,8 +111,11 @@ export default function SettingsScreen() {
 
   const doSignOut = async () => {
     setSigningOut(true);
-    await supabase.auth.signOut();
-    setSigningOut(false);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
     router.replace("/login");
   };
 

@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -1054,6 +1055,7 @@ export default function BookRideScreen() {
                 value={hospital}
                 customValue={hospitalCustom}
                 facilityType={facilityType}
+                facilities={dbFacilities[facilityType] ?? FACILITIES_BY_TYPE[facilityType] ?? []}
                 onSelect={(name) => {
                   setHospital(name);
                   if (!name.startsWith("Other")) setHospitalCustom("");
@@ -1370,12 +1372,14 @@ function FacilityAutocomplete({
   value,
   customValue,
   facilityType,
+  facilities,
   onSelect,
   onCustomChange,
 }: {
   value: string;
   customValue: string;
   facilityType: FacilityType;
+  facilities: string[];
   onSelect: (name: string) => void;
   onCustomChange: (name: string) => void;
 }) {
@@ -1385,12 +1389,9 @@ function FacilityAutocomplete({
   const displayValue = focused ? query : isOther ? "" : value;
 
   const choices = useMemo(() => {
-    const list =
-      facilityType === "other"
-        ? []
-        : [...FACILITIES_BY_TYPE[facilityType]];
-    return list;
-  }, [facilityType]);
+    if (facilityType === "other") return [];
+    return facilities;
+  }, [facilityType, facilities]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
