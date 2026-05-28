@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -389,13 +390,28 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    const fallback = setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 10000);
     (async () => {
       setLoading(true);
-      await load();
-      setLoading(false);
+      try {
+        await load();
+      } catch (e) {
+        console.error("Admin load error:", e);
+      }
+      if (!cancelled) {
+        clearTimeout(fallback);
+        setLoading(false);
+      }
     })();
     const t = setInterval(load, 15000);
-    return () => clearInterval(t);
+    return () => {
+      cancelled = true;
+      clearTimeout(fallback);
+      clearInterval(t);
+    };
   }, [load]);
 
   const dateStr = useMemo(
@@ -410,9 +426,16 @@ export default function AdminDashboard() {
   );
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+    try {
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+      ]);
+    } catch (e) {
+      console.error("Sign out error:", e);
+    }
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
     } else {
       router.replace("/login");
     }
@@ -423,9 +446,10 @@ export default function AdminDashboard() {
   const sidebarInner = (
     <>
       <View style={styles.brand}>
-        <View style={styles.logoMark}>
-          <Text style={styles.logoMarkText}>C</Text>
-        </View>
+        <Image
+          source={require("../../assets/images/icon.png")}
+          style={styles.logoMark}
+        />
         <Text style={styles.logoWord}>CareVoy</Text>
       </View>
       <View style={styles.navList}>
@@ -492,9 +516,10 @@ export default function AdminDashboard() {
                 <Feather name="menu" size={24} color={NAVY} />
               </Pressable>
               <View style={styles.mobileBrand}>
-                <View style={styles.mobileLogo}>
-                  <Text style={styles.mobileLogoText}>C</Text>
-                </View>
+                <Image
+                  source={require("../../assets/images/icon.png")}
+                  style={styles.mobileLogo}
+                />
                 <Text style={styles.mobileBrandText}>CareVoy</Text>
               </View>
               <View style={{ width: 24 }} />
@@ -1066,15 +1091,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: TEAL,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoMarkText: {
-    color: NAVY,
-    fontSize: 18,
-    fontWeight: "800",
-    fontFamily: "System",
+    overflow: "hidden",
   },
   logoWord: {
     color: NAVY,
@@ -1139,15 +1156,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: TEAL,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  mobileLogoText: {
-    color: NAVY,
-    fontSize: 14,
-    fontWeight: "800",
-    fontFamily: "System",
+    overflow: "hidden",
   },
   mobileBrandText: {
     color: NAVY,
