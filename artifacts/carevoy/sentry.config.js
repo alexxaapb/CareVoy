@@ -14,4 +14,7 @@ Sentry.init({
   dist: buildNumber,
 });
 
+// Remove this line once Sentry confirms first event received
+Sentry.captureMessage('CareVoy app launched - Sentry connected', 'info');
+
 export default Sentry;
