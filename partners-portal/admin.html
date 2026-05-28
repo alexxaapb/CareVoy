@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CareVoy Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F0F4F8; min-height: 100vh; }
+
+    /* Top bar */
+    .topbar { background: #050D1F; padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .logo { width: 32px; height: 32px; background: #00C2A8; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #050D1F; font-size: 16px; font-weight: 800; position: relative; }
+    .logo-arc { position: absolute; top: 5px; right: 4px; width: 8px; height: 8px; border: 1.5px solid #050D1F; border-radius: 50%; border-bottom-color: transparent; border-left-color: transparent; transform: rotate(45deg); }
+    .brand-name { color: #fff; font-size: 17px; font-weight: 700; }
+    .admin-pill { background: rgba(0,194,168,0.18); color: #00C2A8; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 10px; border-radius: 999px; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .date-label { color: #6B7280; font-size: 13px; }
+    .signout-btn { background: none; border: 1px solid rgba(255,255,255,0.15); color: #9CA3AF; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+    .signout-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+
+    /* Main layout */
+    .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; }
+    .page-title { color: #050D1F; font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+    .page-sub { color: #6B7280; font-size: 14px; margin-bottom: 28px; }
+
+    /* Stat cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: white; border-radius: 14px; padding: 20px; border: 1px solid #E2E8F0; }
+    .stat-label { color: #6B7280; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #050D1F; }
+    .stat-value.teal { color: #00C2A8; }
+
+    /* Section */
+    .section-title { color: #050D1F; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .section-sub { color: #6B7280; font-size: 13px; margin-bottom: 16px; }
+
+    /* Invite buttons */
+    .invite-row { display: flex; gap: 14px; margin-bottom: 36px; flex-wrap: wrap; }
+    .invite-btn { flex: 1; min-width: 200px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 24px; border-radius: 12px; border: none; cursor: pointer; font-size: 15px; font-weight: 700; font-family: inherit; transition: opacity 0.15s; }
+    .invite-btn:hover { opacity: 0.88; }
+    .invite-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .invite-btn.teal { background: #00C2A8; color: #050D1F; }
+    .invite-btn.navy { background: #050D1F; color: #00C2A8; }
+    .invite-icon { font-size: 18px; }
+
+    /* Table */
+    .table-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; margin-bottom: 32px; }
+    .table-head { display: flex; padding: 12px 18px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+    .th { font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.6px; }
+    .table-row { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F0F4F8; }
+    .table-row:last-child { border-bottom: none; }
+    .td { font-size: 13px; color: #050D1F; }
+    .td.muted { color: #6B7280; }
+    .col-name { flex: 2; }
+    .col-city { flex: 1.2; }
+    .col-rides { flex: 1; }
+    .col-status { flex: 0.8; }
+    .col-date { flex: 1.4; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .badge.green { background: #dcfce7; color: #16a34a; }
+    .badge.gray { background: #F0F4F8; color: #6B7280; }
+    .empty-row { padding: 36px 18px; text-align: center; color: #6B7280; font-size: 14px; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.18); opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 480px; text-align: center; }
+    .toast.show { opacity: 1; }
+
+    /* Invite modal overlay */
+    .modal-scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 50; align-items: center; justify-content: center; }
+    .modal-scrim.open { display: flex; }
+    .modal-card { background: white; border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; margin: 16px; }
+    .modal-title { color: #050D1F; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .modal-body { color: #374151; font-size: 14px; line-height: 1.6; margin-bottom: 20px; word-break: break-all; background: #F8FAFC; padding: 14px; border-radius: 10px; border: 1px solid #E2E8F0; }
+    .modal-foot { display: flex; gap: 10px; }
+    .modal-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; font-family: inherit; }
+    .modal-btn.copy { background: #00C2A8; color: #050D1F; }
+    .modal-btn.close { background: #F0F4F8; color: #374151; }
+    .modal-btn:hover { opacity: 0.88; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">C<div class="logo-arc"></div></div>
+    <span class="brand-name">CareVoy</span>
+    <span class="admin-pill">ADMIN</span>
+  </div>
+  <div class="topbar-right">
+    <span class="date-label" id="dateLabel"></span>
+    <button class="signout-btn" onclick="signOut()">Sign Out</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-title">Command Center</div>
+  <div class="page-sub" id="pageSub">Loading…</div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Patients</div>
+      <div class="stat-value" id="statPatients">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Rides</div>
+      <div class="stat-value teal" id="statActive">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Today's Rides</div>
+      <div class="stat-value" id="statToday">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Facilities</div>
+      <div class="stat-value" id="statFacilities">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">NEMT Partners</div>
+      <div class="stat-value" id="statNemt">—</div>
+    </div>
+  </div>
+
+  <!-- Invite Partners -->
+  <div class="section-title">Invite Partners</div>
+  <div class="section-sub">Generate a secure onboarding link. Each link expires in 7 days.</div>
+  <div class="invite-row">
+    <button class="invite-btn teal" id="btnFacility" onclick="generateInvite('coordinator')">
+      <span class="invite-icon">🏥</span> Invite Facility / Coordinator
+    </button>
+    <button class="invite-btn navy" id="btnNemt" onclick="generateInvite('nemt')">
+      <span class="invite-icon">🚐</span> Invite NEMT Partner
+    </button>
+  </div>
+
+  <!-- Facilities -->
+  <div class="section-title">Facilities</div>
+  <div class="section-sub" id="facilitiesSub"></div>
+  <div class="table-card" id="facilitiesTable">
+    <div class="table-head">
+      <div class="th col-name">Name</div>
+      <div class="th col-city">City</div>
+      <div class="th col-rides">Rides This Month</div>
+      <div class="th col-status">Status</div>
+    </div>
+    <div class="empty-row">Loading…</div>
+  </div>
+
+  <!-- NEMT Partners -->
+  <div class="section-title">NEMT Partners</div>
+  <div class="section-sub" id="nemtSub"></div>
+  <div class="table-card" id="nemtTable">
+    <div class="table-head">
+      <div class="th col-name">Company</div>
+      <div class="th col-city">City</div>
+      <div class="th col-rides">Total Rides</div>
+      <div class="th col-status">Active</div>
+      <div class="th col-date">Last Ride</div>
+    </div>
+    <div class="empty-row">Loading…</div>
+  </div>
+</div>
+
+<!-- Invite result modal -->
+<div class="modal-scrim" id="inviteModal">
+  <div class="modal-card">
+    <div class="modal-title" id="modalTitle">Invite Link Ready</div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="modal-btn copy" onclick="copyLink()">Copy Link</button>
+      <button class="modal-btn close" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPA_URL = 'https://byflpckbjjumxxjxoplk.supabase.co';
+  const SUPA_KEY = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+  const API = 'https://care-voy-api-server.vercel.app';
+
+  const token = sessionStorage.getItem('cv_admin_token');
+  if (!token) { window.location.href = '/'; }
+
+  var currentInviteUrl = '';
+
+  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString(undefined, {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+  });
+
+  function authHeaders() {
+    return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token };
+  }
+
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  async function loadStats() {
+    try {
+      var h = authHeaders();
+      var today = todayStr();
+      var [pRes, aRes, tRes, facRes, nemtRes] = await Promise.all([
+        fetch(SUPA_URL + '/rest/v1/patients?select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+        fetch(SUPA_URL + '/rest/v1/rides?status=in.(confirmed,en_route,arrived)&select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+        fetch(SUPA_URL + '/rest/v1/rides?pickup_time=gte.' + today + 'T00:00:00&pickup_time=lt.' + today + 'T23:59:59&select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+        fetch(SUPA_URL + '/rest/v1/hospitals?select=id,name,city,active,facility_type', { headers: h }),
+        fetch(SUPA_URL + '/rest/v1/nemt_partners?select=id,company_name,city,active', { headers: h }),
+      ]);
+
+      var pCount = parseInt(pRes.headers.get('Content-Range')?.split('/')[1] ?? '0');
+      var aCount = parseInt(aRes.headers.get('Content-Range')?.split('/')[1] ?? '0');
+      var tCount = parseInt(tRes.headers.get('Content-Range')?.split('/')[1] ?? '0');
+      var facilities = await facRes.json();
+      var nemts = await nemtRes.json();
+
+      document.getElementById('statPatients').textContent = pCount;
+      document.getElementById('statActive').textContent = aCount;
+      document.getElementById('statToday').textContent = tCount;
+      document.getElementById('statFacilities').textContent = Array.isArray(facilities) ? facilities.filter(f => f.active).length : 0;
+      document.getElementById('statNemt').textContent = Array.isArray(nemts) ? nemts.filter(n => n.active).length : 0;
+      document.getElementById('pageSub').textContent = 'Live data · refreshes every 30 seconds';
+
+      renderFacilities(Array.isArray(facilities) ? facilities : []);
+      renderNemt(Array.isArray(nemts) ? nemts : []);
+    } catch(e) {
+      document.getElementById('pageSub').textContent = 'Could not load data — check your connection';
+    }
+  }
+
+  function renderFacilities(list) {
+    var el = document.getElementById('facilitiesTable');
+    document.getElementById('facilitiesSub').textContent = list.length + ' total';
+    if (!list.length) {
+      el.innerHTML = '<div class="table-head"><div class="th col-name">Name</div><div class="th col-city">City</div><div class="th col-rides">Type</div><div class="th col-status">Status</div></div><div class="empty-row">No facilities yet. Invite one using the button above.</div>';
+      return;
+    }
+    var rows = list.map(function(f) {
+      var badge = f.active
+        ? '<span class="badge green">● Active</span>'
+        : '<span class="badge gray">Inactive</span>';
+      var type = (f.facility_type || 'hospital').replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+      return '<div class="table-row"><div class="td col-name">' + (f.name || '—') + '</div><div class="td muted col-city">' + (f.city || '—') + '</div><div class="td muted col-rides">' + type + '</div><div class="td col-status">' + badge + '</div></div>';
+    }).join('');
+    el.innerHTML = '<div class="table-head"><div class="th col-name">Name</div><div class="th col-city">City</div><div class="th col-rides">Type</div><div class="th col-status">Status</div></div>' + rows;
+  }
+
+  function renderNemt(list) {
+    var el = document.getElementById('nemtTable');
+    document.getElementById('nemtSub').textContent = list.length + ' total';
+    if (!list.length) {
+      el.innerHTML = '<div class="table-head"><div class="th col-name">Company</div><div class="th col-city">City</div><div class="th col-rides">Total Rides</div><div class="th col-status">Active</div><div class="th col-date">Last Ride</div></div><div class="empty-row">No NEMT partners yet. Invite one using the button above.</div>';
+      return;
+    }
+    var rows = list.map(function(p) {
+      var active = p.active ? '<span class="badge green">Yes</span>' : '<span class="badge gray">No</span>';
+      return '<div class="table-row"><div class="td col-name">' + (p.company_name || '—') + '</div><div class="td muted col-city">' + (p.city || '—') + '</div><div class="td muted col-rides">—</div><div class="td col-status">' + active + '</div><div class="td muted col-date">—</div></div>';
+    }).join('');
+    el.innerHTML = '<div class="table-head"><div class="th col-name">Company</div><div class="th col-city">City</div><div class="th col-rides">Total Rides</div><div class="th col-status">Active</div><div class="th col-date">Last Ride</div></div>' + rows;
+  }
+
+  async function generateInvite(role) {
+    var btnId = role === 'nemt' ? 'btnNemt' : 'btnFacility';
+    var btn = document.getElementById(btnId);
+    btn.disabled = true;
+    var orig = btn.innerHTML;
+    btn.innerHTML = (role === 'nemt' ? '<span class="invite-icon">🚐</span>' : '<span class="invite-icon">🏥</span>') + ' Generating…';
+    try {
+      var res = await fetch(API + '/api/invite/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ role: role })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate invite');
+      currentInviteUrl = data.invite_url;
+      document.getElementById('modalTitle').textContent = role === 'nemt' ? 'NEMT Partner Invite Link' : 'Facility Coordinator Invite Link';
+      document.getElementById('modalBody').textContent = data.invite_url;
+      document.getElementById('inviteModal').classList.add('open');
+    } catch(e) {
+      showToast('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+  }
+
+  function copyLink() {
+    if (!currentInviteUrl) return;
+    navigator.clipboard.writeText(currentInviteUrl).then(function() {
+      showToast('Invite link copied to clipboard!');
+      closeModal();
+    }).catch(function() {
+      showToast('Could not copy — please copy the link manually');
+    });
+  }
+
+  function closeModal() {
+    document.getElementById('inviteModal').classList.remove('open');
+    currentInviteUrl = '';
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
+  }
+
+  function signOut() {
+    sessionStorage.removeItem('cv_admin_token');
+    sessionStorage.removeItem('cv_admin_uid');
+    window.location.href = '/';
+  }
+
+  document.getElementById('inviteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  loadStats();
+  setInterval(loadStats, 30000);
+</script>
+</body>
+</html>
