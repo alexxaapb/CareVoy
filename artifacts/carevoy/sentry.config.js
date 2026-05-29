@@ -5,7 +5,7 @@ import appConfig from './app.json';
 const buildNumber = appConfig?.expo?.ios?.buildNumber ?? '1';
 
 Sentry.init({
-  dsn: 'https://a8bde62c03f6d28e4ad7c2e1c41fd0c3@o4508634229653504.ingest.us.sentry.io/4508634231292928',
+  dsn: 'https://1cef0416628d9c1fbcea7cdba1ad898d@o4511412235862016.ingest.us.sentry.io/4511412248969216',
   tracesSampleRate: 1.0,
   environment: __DEV__ ? 'development' : 'production',
   enableNative: true,
