@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCare } from "../../lib/careContext";
+import { isDemoMode } from "../../lib/demoMode";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -29,6 +30,8 @@ const MAP_GRID = "#E2E8F0";
 const HSA_BG = "#FEF3C7";
 const HSA_TEXT = "#B45309";
 const HSA_ICON_BG = "#F59E0B";
+
+const DETECTED_CITY_KEY = "carevoy_detected_city";
 
 type Ride = {
   id: string;
@@ -48,27 +51,28 @@ type PatientProfile = {
   home_address: string | null;
 };
 
-// Greeting fallback when patient hasn't set their name yet.
-// We never expose the raw phone number in the greeting.
-const GREETING_FALLBACK = "there";
+// Demo placeholder used in investor screenshots when the patient hasn't set
+// a real first name yet. We intentionally never expose the raw phone number
+// in the greeting.
+const DEMO_FIRST_NAME = "Jane";
 
 function firstName(full?: string | null): string {
-  if (!full) return GREETING_FALLBACK;
+  if (!full) return DEMO_FIRST_NAME;
   const trimmed = full.trim();
   // Phone-shaped strings (digits / +) → use the demo name, never expose the
   // user's phone in the greeting.
-  if (/^[+\d\s()-]+$/.test(trimmed)) return GREETING_FALLBACK;
+  if (/^[+\d\s()-]+$/.test(trimmed)) return DEMO_FIRST_NAME;
   // Email-shaped → derive a name-ish first part.
   if (trimmed.includes("@")) {
     const local = trimmed.split("@")[0] ?? "";
     const cleaned = local.replace(/[._-]+/g, " ").trim();
-    if (!cleaned) return GREETING_FALLBACK;
+    if (!cleaned) return DEMO_FIRST_NAME;
     const first = cleaned.split(/\s+/)[0] ?? "";
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   }
   // Single-letter "A"-style placeholders → demo name.
-  if (trimmed.length < 2) return GREETING_FALLBACK;
-  return trimmed.split(/\s+/)[0] ?? GREETING_FALLBACK;
+  if (trimmed.length < 2) return DEMO_FIRST_NAME;
+  return trimmed.split(/\s+/)[0] ?? DEMO_FIRST_NAME;
 }
 
 function timeGreeting(): string {
@@ -174,6 +178,33 @@ export default function HomeScreen() {
       (async () => {
         setLoading(true);
         await loadAll();
+        if (active && isDemoMode()) {
+          setProfile({
+            full_name: "Jane Doe",
+            home_address: "850 N High St, Columbus, OH 43215",
+          });
+          setCompletedCount(12);
+          setReimbursedTotal(640);
+          const inTwoDays = new Date();
+          inTwoDays.setDate(inTwoDays.getDate() + 2);
+          inTwoDays.setHours(9, 30, 0, 0);
+          setUpcoming([
+            {
+              id: "demo-ride-1",
+              ride_type: "pre_op",
+              pickup_address: "850 N High St, Columbus, OH 43215",
+              dropoff_address: "OhioHealth Riverside Methodist Hospital",
+              pickup_time: inTwoDays.toISOString(),
+              surgery_date: inTwoDays.toISOString(),
+              status: "confirmed",
+              actual_cost: null,
+              estimated_cost: 42,
+              hospitals: {
+                name: "OhioHealth Riverside Methodist Hospital",
+              },
+            } as Ride,
+          ]);
+        }
         if (active) setLoading(false);
       })();
       return () => {
@@ -218,14 +249,30 @@ export default function HomeScreen() {
   const [detectedCity, setDetectedCity] = useState<string | null>(null);
   const [requestingLocation, setRequestingLocation] = useState(false);
 
-  // Restore persisted city on mount so the pin label shows immediately
-  // without re-requesting location permission every session.
+  // Restore a previously detected city on app load so the map pin shows the
+  // last known location instead of prompting "Set your location" every time.
   React.useEffect(() => {
-    AsyncStorage.getItem("carevoy_detected_city")
-      .then((val) => {
-        if (val) setDetectedCity(val);
-      })
-      .catch(() => {});
+    let cancelled = false;
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(DETECTED_CITY_KEY);
+        if (!cancelled && stored) setDetectedCity(stored);
+      } catch {
+        // Ignore storage read errors — fall back to the prompt.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const persistCity = useCallback(async (value: string) => {
+    setDetectedCity(value);
+    try {
+      await AsyncStorage.setItem(DETECTED_CITY_KEY, value);
+    } catch {
+      // Non-fatal — the city still shows for this session.
+    }
   }, []);
 
   const requestLocation = useCallback(async () => {
@@ -234,8 +281,6 @@ export default function HomeScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setDetectedCity(null);
-        void AsyncStorage.removeItem("carevoy_detected_city");
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -245,23 +290,16 @@ export default function HomeScreen() {
       });
       const place = places[0];
       if (place?.city && place?.region) {
-        const val = `${place.city}, ${place.region}`;
-        setDetectedCity(val);
-        void AsyncStorage.setItem("carevoy_detected_city", val);
+        await persistCity(`${place.city}, ${place.region}`);
       } else if (place?.city) {
-        setDetectedCity(place.city);
-        void AsyncStorage.setItem("carevoy_detected_city", place.city);
-      } else {
-        setDetectedCity(null);
-        void AsyncStorage.removeItem("carevoy_detected_city");
+        await persistCity(place.city);
       }
     } catch {
-      setDetectedCity(null);
-      void AsyncStorage.removeItem("carevoy_detected_city");
+      // Ignore location errors — leave the existing label untouched.
     } finally {
       setRequestingLocation(false);
     }
-  }, [requestingLocation]);
+  }, [requestingLocation, persistCity]);
   const showSwitcher = careRecipients.length > 0;
 
   return (
@@ -278,11 +316,9 @@ export default function HomeScreen() {
         }
       >
         {/* Greeting */}
-        {greetingName && greetingName !== "there" ? (
-          <Text style={styles.greetingSmall}>
-            Hello, {greetingName}
-          </Text>
-        ) : null}
+        <Text style={styles.greetingSmall}>
+          {timeGreeting()}, {greetingName}
+        </Text>
         <Text style={styles.headline}>
           Where are you{"\n"}headed{" "}
           <Text style={styles.headlineItalic}>today?</Text>
@@ -326,7 +362,7 @@ export default function HomeScreen() {
               <Text style={styles.pinLabelText} numberOfLines={1}>
                 {requestingLocation
                   ? "Locating…"
-                  : detectedCity ?? "Set your location"}
+                  : (detectedCity ?? "Set your location")}
               </Text>
             </View>
           </Pressable>
@@ -508,21 +544,21 @@ const styles = StyleSheet.create({
   greetingSmall: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
     marginBottom: 6,
   },
   headline: {
     color: NAVY,
     fontSize: 32,
     lineHeight: 38,
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     fontWeight: "700",
     letterSpacing: -0.6,
     marginBottom: 22,
   },
   headlineItalic: {
     color: TEAL,
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     fontWeight: "700",
   },
 
@@ -606,7 +642,7 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.2,
   },
 
@@ -625,7 +661,7 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     letterSpacing: -0.2,
   },
   bookBtnArrow: {
@@ -660,13 +696,13 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 13,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   hsaText: {
     color: HSA_TEXT,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     flex: 1,
   },
 
@@ -689,7 +725,7 @@ const styles = StyleSheet.create({
   statNum: {
     color: NAVY,
     fontSize: 28,
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     fontWeight: "700",
     letterSpacing: -0.6,
     lineHeight: 32,
@@ -697,7 +733,7 @@ const styles = StyleSheet.create({
   statLabel: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "System",
+    fontFamily: "Inter_500Medium",
     marginTop: 4,
   },
 
@@ -712,7 +748,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: "uppercase",
     marginBottom: 8,
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   switcherRow: {
     gap: 8,
@@ -738,7 +774,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     maxWidth: 130,
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   personPillTextSelected: { color: NAVY },
   addPill: {
@@ -753,7 +789,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     marginBottom: 10,
     letterSpacing: -0.2,
   },
@@ -781,7 +817,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 10,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: 0.3,
   },
   rideStatus: {
@@ -789,13 +825,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
     letterSpacing: 0.5,
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   rideTitle: {
     color: NAVY,
     fontSize: 14,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   rideRow: {
     flexDirection: "row",
@@ -806,6 +842,6 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 12,
     flex: 1,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 });

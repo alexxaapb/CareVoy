@@ -20,6 +20,7 @@ const TEAL = "#00C2A8";
 const GOLD = "#F5A623";
 const WHITE = "#FFFFFF";
 const MUTED = "#6B7280";
+const LIGHT_MUTED = "#94A3B8";
 const INPUT_BG = "#F8FAFC";
 const BORDER = "#E2E8F0";
 const ERROR = "#EF4444";
@@ -33,11 +34,9 @@ function normalizePhone(input: string): string {
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<"phone" | "code" | "profile" | "booking-for">("phone");
+  const [step, setStep] = useState<"phone" | "code" | "booking-for">("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,35 +48,12 @@ export default function LoginScreen() {
     }
     const normalized = normalizePhone(phone);
     setLoading(true);
-
-    // Call Edge Function for server-side rate limiting
-    try {
-      const response = await fetch(
-        `https://byflpckbjjumxxjxoplk.supabase.co/functions/v1/send-otp-rate-limited`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ phone: normalized }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setLoading(false);
-        setError(result.error || 'Failed to send code');
-        return;
-      }
-
-      setLoading(false);
-      setStep("code");
-    } catch (err) {
-      setLoading(false);
-      setError('Network error. Please try again.');
-    }
+    const { error: err } = await supabase.auth.signInWithOtp({
+      phone: normalized,
+    });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
+    setStep("code");
   };
 
   const verifyCode = async () => {
@@ -91,43 +67,6 @@ export default function LoginScreen() {
     });
     setLoading(false);
     if (err) { setError(err.message); return; }
-
-    // Check if user already has a name — skip profile step for returning users
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    if (userId) {
-      const { data: patient } = await supabase
-        .from("patients")
-        .select("full_name")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!patient?.full_name || patient.full_name.trim().length < 2) {
-        setStep("profile");
-        return;
-      }
-    }
-    setStep("booking-for");
-  };
-
-  const saveProfile = async () => {
-    setError(null);
-    if (!fullName.trim() || fullName.trim().split(" ").length < 1 || fullName.trim().length < 2) {
-      setError("Please enter your full name");
-      return;
-    }
-    setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    if (!userId) { setLoading(false); return; }
-    const { error: upErr } = await supabase
-      .from("patients")
-      .update({
-        full_name: fullName.trim(),
-        ...(email.trim() ? { email: email.trim() } : {}),
-      })
-      .eq("id", userId);
-    setLoading(false);
-    if (upErr) { setError(upErr.message); return; }
     setStep("booking-for");
   };
 
@@ -149,11 +88,13 @@ export default function LoginScreen() {
           <View style={styles.brand}>
             <Image
               source={require("../assets/images/icon.png")}
-              style={{ width: 90, height: 90, marginBottom: 16, borderRadius: 20 }}
+              style={styles.logoMark}
               resizeMode="contain"
             />
-            <Text style={styles.welcomeTitle}>Welcome</Text>
-            <Text style={styles.welcomeSub}>Enter your number to continue</Text>
+            <Text style={styles.brandWord}>CareVoy</Text>
+            <Text style={styles.tagline}>
+              Medical rides. HSA/FSA. Simplified.
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -212,44 +153,6 @@ export default function LoginScreen() {
               </>
             )}
 
-            {step === "profile" && (
-              <>
-                <Text style={styles.welcomeTitle}>One last thing</Text>
-                <Text style={styles.welcomeSub}>Tell us your name so we can personalize your rides.</Text>
-                <Text style={styles.label}>Full name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Alexandra B."
-                  placeholderTextColor={MUTED}
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  value={fullName}
-                  onChangeText={setFullName}
-                  editable={!loading}
-                />
-                <Text style={styles.label}>Email (for receipts)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="you@email.com"
-                  placeholderTextColor={MUTED}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  value={email}
-                  onChangeText={setEmail}
-                  editable={!loading}
-                />
-                {error ? <Text style={styles.error}>{error}</Text> : null}
-                <Pressable
-                  style={({ pressed }) => [styles.button, (loading || pressed) && styles.buttonPressed]}
-                  onPress={saveProfile}
-                  disabled={loading}
-                >
-                  {loading ? <ActivityIndicator color={NAVY} /> : <Text style={styles.buttonText}>Continue</Text>}
-                </Pressable>
-              </>
-            )}
-
             {step === "booking-for" && (
               <>
                 <Text style={styles.bookingTitle}>Who are you booking for?</Text>
@@ -261,7 +164,8 @@ export default function LoginScreen() {
                   style={({ pressed }) => [styles.choiceCard, pressed && styles.choiceCardPressed]}
                   onPress={() => handleBookingFor(true)}
                 >
-                    <View style={styles.choiceText}>
+                  <Text style={styles.choiceEmoji}>🙋</Text>
+                  <View style={styles.choiceText}>
                     <Text style={styles.choiceTitle}>Myself</Text>
                     <Text style={styles.choiceDesc}>I'm booking my own medical rides</Text>
                   </View>
@@ -272,7 +176,8 @@ export default function LoginScreen() {
                   style={({ pressed }) => [styles.choiceCard, styles.choiceCardAlt, pressed && styles.choiceCardPressed]}
                   onPress={() => handleBookingFor(false)}
                 >
-                    <View style={styles.choiceText}>
+                  <Text style={styles.choiceEmoji}>👨‍👩‍👧</Text>
+                  <View style={styles.choiceText}>
                     <Text style={styles.choiceTitle}>Someone else</Text>
                     <Text style={styles.choiceDesc}>I'm helping a family member or patient</Text>
                   </View>
@@ -282,6 +187,14 @@ export default function LoginScreen() {
             )}
           </View>
 
+          {step !== "booking-for" && (
+            <View style={styles.footer}>
+              <Text style={styles.footerLabel}>NEMT driver or facility staff?</Text>
+              <Text style={styles.footerLink}>
+                Sign in at carevoy.co/partners on your computer.
+              </Text>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -289,7 +202,7 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: WHITE },
+  safe: { flex: 1, backgroundColor: NAVY },
   flex: { flex: 1 },
   container: {
     flex: 1,
@@ -298,53 +211,60 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 40,
   },
-  brand: { alignItems: "center", marginTop: 48, marginBottom: 8 },
-  logoImg: { width: 64, height: 64, marginBottom: 12, borderRadius: 16 },
-  tagline: { color: MUTED, fontSize: 15, marginTop: 4, fontFamily: "System" },
+  brand: { alignItems: "center", marginTop: 24 },
+  logoMark: { width: 88, height: 88, borderRadius: 22, marginBottom: 14 },
+  brandWord: { color: WHITE, fontSize: 30, fontWeight: "700", fontFamily: "Inter_700Bold", letterSpacing: 0.3 },
+  tagline: { color: LIGHT_MUTED, fontSize: 15, marginTop: 6, fontFamily: "Inter_400Regular" },
   form: { width: "100%" },
-  welcomeTitle: { color: NAVY, fontSize: 26, fontWeight: "700", fontFamily: "System", textAlign: "center", marginBottom: 4 },
-  welcomeSub: { color: MUTED, fontSize: 14, fontFamily: "System", textAlign: "center", marginBottom: 28 },
-  label: { color: NAVY, fontSize: 12, fontWeight: "600", fontFamily: "System", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
-  subLabel: { color: MUTED, fontSize: 13, marginBottom: 12, fontFamily: "System" },
+  label: { color: WHITE, fontSize: 15, fontWeight: "600", fontFamily: "Inter_600SemiBold", marginBottom: 6 },
+  subLabel: { color: LIGHT_MUTED, fontSize: 13, marginBottom: 12, fontFamily: "Inter_400Regular" },
   input: {
     backgroundColor: INPUT_BG,
     color: NAVY,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    fontFamily: "System",
-    marginBottom: 12,
-  },
-  codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontFamily: "System" },
-  button: {
-    backgroundColor: NAVY,
-    borderRadius: 12,
+    borderRadius: 14,
+    paddingHorizontal: 18,
     paddingVertical: 16,
+    fontSize: 17,
+    fontFamily: "Inter_500Medium",
+    marginBottom: 14,
+  },
+  codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontFamily: "Inter_600SemiBold" },
+  button: {
+    backgroundColor: TEAL,
+    borderRadius: 14,
+    paddingVertical: 18,
     alignItems: "center",
     marginTop: 4,
+    shadowColor: TEAL,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  buttonPressed: { opacity: 0.85 },
-  buttonText: { color: WHITE, fontSize: 16, fontWeight: "700", fontFamily: "System" },
-  hint: { color: MUTED, fontSize: 12, marginTop: 14, textAlign: "center", fontFamily: "System" },
-  link: { color: TEAL, fontSize: 14, textAlign: "center", marginTop: 16, fontFamily: "System" },
-  error: { color: ERROR, fontSize: 13, marginBottom: 10, fontFamily: "System" },
+  buttonPressed: { opacity: 0.9 },
+  buttonText: { color: NAVY, fontSize: 17, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  hint: { color: LIGHT_MUTED, fontSize: 13, marginTop: 16, textAlign: "center", fontFamily: "Inter_400Regular" },
+  link: { color: TEAL, fontSize: 14, textAlign: "center", marginTop: 16, fontFamily: "Inter_500Medium" },
+  error: { color: ERROR, fontSize: 13, marginBottom: 10, fontFamily: "Inter_500Medium" },
+  footer: { alignItems: "center", paddingHorizontal: 12, gap: 4 },
+  footerLabel: { color: LIGHT_MUTED, fontSize: 13, fontFamily: "Inter_500Medium" },
+  footerLink: { color: WHITE, fontSize: 13, fontFamily: "Inter_600SemiBold", textAlign: "center" },
 
   // Booking-for screen
   bookingTitle: {
-    color: NAVY,
+    color: WHITE,
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     marginBottom: 8,
     textAlign: "center",
   },
   bookingSubtitle: {
-    color: MUTED,
+    color: LIGHT_MUTED,
     fontSize: 14,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
     textAlign: "center",
     marginBottom: 32,
   },
@@ -364,8 +284,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0FDFB",
   },
   choiceCardPressed: { opacity: 0.8 },
+  choiceEmoji: { fontSize: 28 },
   choiceText: { flex: 1 },
-  choiceTitle: { color: NAVY, fontSize: 16, fontWeight: "700", fontFamily: "System", marginBottom: 2 },
-  choiceDesc: { color: MUTED, fontSize: 13, fontFamily: "System" },
+  choiceTitle: { color: NAVY, fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold", marginBottom: 2 },
+  choiceDesc: { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular" },
   choiceArrow: { color: TEAL, fontSize: 20, fontWeight: "700" },
 });

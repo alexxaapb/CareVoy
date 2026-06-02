@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Linking,
+import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -66,7 +66,6 @@ export default function OnboardingScreen() {
   const { refresh } = useAuthRefresh();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [tosAccepted, setTosAccepted] = useState(false);
 
   // Step 1
   const [fullName, setFullName] = useState("");
@@ -120,7 +119,6 @@ export default function OnboardingScreen() {
   const goNext = () => {
     setError(null);
     if (step === 1) {
-      if (!tosAccepted) { setError("Please accept the Terms of Service and Privacy Policy to continue."); return; }
       if (!fullName.trim()) return setError("Please enter your full name");
       if (!isValidEmail(email))
         return setError("Please enter a valid email address");
@@ -303,7 +301,7 @@ export default function OnboardingScreen() {
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder="Full name"
+                placeholder="Jane Doe"
                 placeholderTextColor={MUTED}
                 value={fullName}
                 onChangeText={setFullName}
@@ -401,17 +399,6 @@ export default function OnboardingScreen() {
                 inputStyle={styles.input}
                 zIndex={50}
               />
-              <View style={{ flexDirection: "row", alignItems: "flex-start", marginTop: 20, gap: 10 }}>
-                <Pressable onPress={() => setTosAccepted(v => !v)} style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: tosAccepted ? TEAL : MUTED, backgroundColor: tosAccepted ? TEAL : "transparent", alignItems: "center", justifyContent: "center", marginTop: 1 }}>
-                  {tosAccepted && <Feather name="check" size={14} color="#fff" />}
-                </Pressable>
-                <Text style={{ flex: 1, fontSize: 13, color: MUTED, lineHeight: 20 }}>
-                  {"I agree to the "}
-                  <Text style={{ color: TEAL, textDecorationLine: "underline" }} onPress={() => Linking.openURL("https://www.carevoy.co/terms")}>Terms of Service</Text>
-                  {" and "}
-                  <Text style={{ color: TEAL, textDecorationLine: "underline" }} onPress={() => Linking.openURL("https://www.carevoy.co/privacy-policy")}>Privacy Policy</Text>
-                </Text>
-              </View>
             </>
           )}
 
@@ -670,7 +657,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
@@ -684,7 +671,7 @@ const styles = StyleSheet.create({
     color: TEAL,
     fontSize: 14,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   progress: {
     flexDirection: "row",
@@ -707,21 +694,21 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: -0.5,
   },
   subtitle: {
     color: MUTED,
     fontSize: 14,
     marginTop: 8,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
     lineHeight: 21,
   },
   label: {
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     marginBottom: 6,
     marginTop: 14,
   },
@@ -730,7 +717,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 6,
     marginTop: -2,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
   input: {
     backgroundColor: INPUT_BG,
@@ -741,7 +728,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    fontFamily: "System",
+    fontFamily: "Inter_500Medium",
   },
   multiline: { minHeight: 72, textAlignVertical: "top", paddingTop: 14 },
   placeholder: { color: MUTED },
@@ -755,7 +742,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 11,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.4,
     textTransform: "uppercase",
     marginBottom: 4,
@@ -763,7 +750,7 @@ const styles = StyleSheet.create({
   dobInput: {
     textAlign: "center",
     letterSpacing: 2,
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   checkbox: {
     width: 22,
@@ -803,13 +790,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   choiceSub: {
     color: MUTED,
     fontSize: 12,
     marginTop: 2,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
   button: {
     backgroundColor: TEAL,
@@ -823,7 +810,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   pressed: { opacity: 0.85 },
   bigChoice: {
@@ -851,13 +838,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   bigChoiceSub: {
     color: MUTED,
     fontSize: 13,
     marginTop: 4,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
     lineHeight: 18,
   },
   bigChoiceDisabled: { opacity: 0.6 },
@@ -865,6 +852,6 @@ const styles = StyleSheet.create({
     color: ERROR,
     fontSize: 13,
     marginTop: 16,
-    fontFamily: "System",
+    fontFamily: "Inter_500Medium",
   },
 });

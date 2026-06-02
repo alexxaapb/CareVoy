@@ -1,6 +1,6 @@
-import { useStripe } from "@stripe/stripe-react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -18,9 +18,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Required } from "../../components/Required";
+import { isDemoMode } from "../../lib/demoMode";
 import {
-  createSetupIntent,
+  createSetupSession,
   detachPaymentMethod,
+  getReturnUrl,
   listPaymentMethods,
   type SavedPaymentMethod,
 } from "../../lib/paymentsApi";
@@ -48,7 +50,6 @@ function brandLabel(brand: string): string {
 }
 
 export default function PaymentScreen() {
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [methods, setMethods] = useState<SavedPaymentMethod[]>([]);
   const [hasCustomer, setHasCustomer] = useState(false);
   const [patientId, setPatientId] = useState<string | null>(null);
@@ -57,31 +58,50 @@ export default function PaymentScreen() {
   // Investor-screenshot-safe default. The user can overwrite this in the
   // input and Save; we only seed it as a clean placeholder value so the
   // demo never shows a real personal email.
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("janedoe@gmail.com");
 
-  const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    if (!userId) { setLoading(false); return; }
+    if (isDemoMode()) {
+      setPatientId("demo-jane");
+      setHasCustomer(true);
+      setMethods([
+        {
+          id: "demo-pm-1",
+          brand: "visa",
+          last4: "4242",
+          expMonth: 12,
+          expYear: 2028,
+        },
+        {
+          id: "demo-pm-2",
+          brand: "mastercard",
+          last4: "5577",
+          expMonth: 3,
+          expYear: 2027,
+        },
+      ]);
+      return;
+    }
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
     setPatientId(userId);
     const { data } = await supabase
       .from("patients")
       .select("email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
-    if (data?.email) setEmail(data.email);
+    // Intentionally do NOT load any saved email from the DB into the demo
+    // build — keep "janedoe@gmail.com" visible for investor screenshots.
     setHasCustomer(!!data?.stripe_customer_id?.startsWith("cus_"));
     // Methods are fetched server-side, scoped to the authenticated user.
     const list = await listPaymentMethods();
     setMethods(list);
-    setLoading(false);
   }, []);
 
   useFocusEffect(
@@ -121,45 +141,25 @@ export default function PaymentScreen() {
 
     setAdding(true);
     try {
-      const { clientSecret, customerId } = await createSetupIntent({
+      const { url } = await createSetupSession({
         email: email.trim() || undefined,
+        returnUrl: getReturnUrl(),
       });
-      const { error: initError } = await initPaymentSheet({
-        customerId,
-        setupIntentClientSecret: clientSecret,
-        merchantDisplayName: "CareVoy",
-        allowsDelayedPaymentMethods: false,
-        applePay: {
-          merchantCountryCode: "US",
-        },
-        googlePay: {
-          merchantCountryCode: "US",
-          testEnv: false,
-        },
-        appearance: {
-          colors: {
-            primary: "#00C2A8",
-            background: "#FFFFFF",
-            componentBackground: "#F8FAFC",
-            componentBorder: "#E2E8F0",
-            primaryText: "#050D1F",
-            secondaryText: "#6B7280",
-          },
-        },
-      });
-      if (initError) throw new Error(initError.message);
-      const { error: presentError } = await presentPaymentSheet();
-      if (presentError) {
-        if (presentError.code !== "Canceled") {
-          throw new Error(presentError.message);
-        }
+
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined") window.location.href = url;
       } else {
+        await WebBrowser.openBrowserAsync(url, {
+          presentationStyle:
+            WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+          dismissButtonStyle: "done",
+        });
+        // Refresh from Stripe — the actual saved cards are the source of truth.
         await load();
-        setSuccess("Payment method saved successfully.");
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(`Unable to set up payment: ${msg}. Please try again or contact support@carevoy.co`);
+      setError(`Could not start Stripe checkout. ${msg}`);
     } finally {
       setAdding(false);
     }
@@ -302,7 +302,7 @@ export default function PaymentScreen() {
           {/* ADD METHOD CTA */}
           <Pressable
             onPress={onAddPaymentMethod}
-            disabled={adding || loading}
+            disabled={adding}
             accessibilityLabel="Add a payment method via Stripe"
             style={({ pressed }) => [
               styles.addBtn,
@@ -324,44 +324,20 @@ export default function PaymentScreen() {
           </Pressable>
 
           <View style={styles.walletHintRow}>
-            <Pressable
-              onPress={onAddPaymentMethod}
-              disabled={adding || loading}
-              style={({ pressed }) => [
-                styles.walletChip,
-                (pressed || adding) && styles.pressed,
-              ]}
-              accessibilityLabel="Pay with Apple Pay"
-            >
+            <View style={styles.walletChip}>
               <FontAwesome name="apple" size={14} color={NAVY} />
               <Text style={styles.walletChipText}>Apple Pay</Text>
-            </Pressable>
-            {Platform.OS !== "ios" && (
-            <Pressable
-              onPress={onAddPaymentMethod}
-              disabled={adding || loading}
-              style={({ pressed }) => [
-                styles.walletChip,
-                (pressed || adding) && styles.pressed,
-              ]}
-              accessibilityLabel="Pay with Google Pay"
-            >
-              <Text style={styles.gPayG}>G</Text>
-              <Text style={styles.walletChipText}>Google Pay</Text>
-            </Pressable>
-            )}
-            <Pressable
-              onPress={onAddPaymentMethod}
-              disabled={adding || loading}
-              style={({ pressed }) => [
-                styles.walletChip,
-                (pressed || adding) && styles.pressed,
-              ]}
-              accessibilityLabel="Pay with a card"
-            >
+            </View>
+            {Platform.OS !== "ios" ? (
+              <View style={styles.walletChip}>
+                <Text style={styles.gPayG}>G</Text>
+                <Text style={styles.walletChipText}>Google Pay</Text>
+              </View>
+            ) : null}
+            <View style={styles.walletChip}>
               <Feather name="credit-card" size={14} color={NAVY} />
               <Text style={styles.walletChipText}>Card</Text>
-            </Pressable>
+            </View>
           </View>
           <Text style={styles.secureRow}>
             <Feather name="lock" size={11} color={MUTED} /> Secured by Stripe.
@@ -395,7 +371,7 @@ export default function PaymentScreen() {
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="your@email.com"
+              placeholder="janedoe@gmail.com"
               placeholderTextColor={MUTED}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -448,7 +424,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -457,7 +433,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 8,
     marginBottom: 24,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 
   hsaCard: {
@@ -481,7 +457,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: 0.3,
   },
   taxBadge: {
@@ -494,21 +470,21 @@ const styles = StyleSheet.create({
     color: GREEN,
     fontSize: 11,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: 0.6,
   },
   hsaHelper: {
     color: NAVY,
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 
   sectionLabel: {
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     marginTop: 28,
     marginBottom: 10,
   },
@@ -528,7 +504,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 
   methodRow: {
@@ -557,12 +533,12 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   methodSub: {
     color: MUTED,
     fontSize: 12,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
     marginTop: 2,
   },
   methodRemove: {
@@ -587,7 +563,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
 
   walletHintRow: {
@@ -612,27 +588,27 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   gPayG: {
     color: "#4285F4",
     fontWeight: "700",
     fontSize: 14,
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   secureRow: {
     color: MUTED,
     fontSize: 11,
     textAlign: "center",
     marginTop: 8,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 
   fieldLabel: {
     color: NAVY,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     marginTop: 14,
     marginBottom: 6,
     letterSpacing: 0.4,
@@ -646,7 +622,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === "ios" ? 14 : 11,
     color: NAVY,
     fontSize: 15,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 
   receiptCard: {
@@ -665,21 +641,21 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   toggleSub: {
     color: MUTED,
     fontSize: 12,
     lineHeight: 16,
     marginTop: 2,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 
   error: {
     color: ERROR,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     marginTop: 16,
   },
   successCard: {
@@ -697,7 +673,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 13,
     flex: 1,
-    fontFamily: "System",
+    fontFamily: "Inter_500Medium",
   },
 
   footer: {
@@ -717,10 +693,8 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: 0.3,
   },
   pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
 });
-
-

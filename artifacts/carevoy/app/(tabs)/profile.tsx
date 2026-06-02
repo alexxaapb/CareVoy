@@ -3,18 +3,20 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
-  Linking,
+  Alert,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCare } from "../../lib/careContext";
+import { isDemoMode } from "../../lib/demoMode";
 import { supabase } from "../../lib/supabase";
 
 const NAVY = "#050D1F";
@@ -29,7 +31,6 @@ type Profile = {
   full_name: string | null;
   phone: string | null;
   email: string | null;
-  avatar_url: string | null;
 };
 
 type RowProps = {
@@ -71,23 +72,36 @@ export default function SettingsScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+  const [editVisible, setEditVisible] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    if (isDemoMode()) {
+      setProfile({
+        full_name: "Jane Doe",
+        phone: null,
+        email: "janedoe@gmail.com",
+      });
+      return;
+    }
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
     if (!userId) {
       setProfile(null);
       return;
     }
     const { data } = await supabase
       .from("patients")
-      .select("full_name, phone, email, avatar_url")
+      .select("full_name, phone, email")
       .eq("id", userId)
       .maybeSingle();
     setProfile({
       full_name: data?.full_name ?? null,
-      phone: data?.phone ?? session.user?.phone ?? null,
-      email: data?.email ?? session.user?.email ?? null,
-      avatar_url: data?.avatar_url ?? null,
+      phone: data?.phone ?? userData.user?.phone ?? null,
+      email: data?.email ?? userData.user?.email ?? null,
     });
     await refreshCare();
   }, [refreshCare]);
@@ -109,14 +123,14 @@ export default function SettingsScreen() {
   const doSignOut = async () => {
     setSigningOut(true);
     try {
-      await Promise.race([
-        supabase.auth.signOut(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
-      ]);
-    } catch (error) {
-      console.error("Sign out error:", error);
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore sign-out errors — we always want to leave the session and
+      // return to the login screen rather than crash or get stuck.
+    } finally {
+      setSigningOut(false);
+      router.replace("/login");
     }
-    router.replace("/login");
   };
 
   const handleSignOut = () => {
@@ -147,6 +161,54 @@ export default function SettingsScreen() {
     Alert.alert(label, "Coming soon.");
   };
 
+  const openEditProfile = () => {
+    setEditName(profile?.full_name ?? "");
+    setEditEmail(profile?.email ?? "");
+    setEditError(null);
+    setEditVisible(true);
+  };
+
+  const saveEditProfile = async () => {
+    setEditError(null);
+    if (!editName.trim()) {
+      setEditError("Please enter your name.");
+      return;
+    }
+    if (editEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail.trim())) {
+      setEditError("Please enter a valid email address.");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) {
+        setEditError("You're not signed in. Please log in again.");
+        return;
+      }
+      const { error: updateErr } = await supabase
+        .from("patients")
+        .update({
+          full_name: editName.trim(),
+          email: editEmail.trim() || null,
+        })
+        .eq("id", userId);
+      if (updateErr) {
+        setEditError(updateErr.message);
+        return;
+      }
+      setProfile((prev) => ({
+        full_name: editName.trim(),
+        phone: prev?.phone ?? null,
+        email: editEmail.trim() || null,
+      }));
+      setEditVisible(false);
+    } catch (e) {
+      setEditError((e as Error)?.message ?? "Couldn't save your changes.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -161,27 +223,19 @@ export default function SettingsScreen() {
           ) : (
             <>
               <View style={styles.avatar}>
-                {profile?.avatar_url ? (
-                  <Image
-                    source={{ uri: profile.avatar_url }}
-                    style={styles.avatarImage}
-                  />
-                ) : (
-                  <Text style={styles.avatarText}>
-                    {(profile?.full_name ?? profile?.phone ?? "U")
-                      .trim()
-                      .slice(0, 1)
-                      .toUpperCase()}
-                  </Text>
-                )}
+                <Text style={styles.avatarText}>J</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.profileName}>
                   {profile?.full_name && profile.full_name.trim().length > 1
                     ? profile.full_name
-                    : profile?.full_name || ""}
+                    : "Jane Doe"}
                 </Text>
-                <Text style={styles.profileSub}>{profile?.email || ""}</Text>
+                <Text style={styles.profileSub}>
+                  {profile?.email?.trim()
+                    ? profile.email
+                    : (profile?.phone ?? "No email on file")}
+                </Text>
               </View>
             </>
           )}
@@ -193,7 +247,7 @@ export default function SettingsScreen() {
             icon="user"
             label="Edit profile"
             sub="Name, phone, and email"
-            onPress={comingSoon("Edit profile")}
+            onPress={openEditProfile}
           />
           <View style={styles.divider} />
           <MenuRow
@@ -244,7 +298,7 @@ export default function SettingsScreen() {
             icon="help-circle"
             label="Help & Support"
             sub="support@carevoy.co"
-            onPress={() => Linking.openURL("mailto:support@carevoy.co")}
+            onPress={comingSoon("Help & Support")}
           />
           <View style={styles.divider} />
           <MenuRow
@@ -263,6 +317,74 @@ export default function SettingsScreen() {
 
         <Text style={styles.versionText}>CareVoy · v1.0</Text>
       </ScrollView>
+
+      <Modal
+        visible={editVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditVisible(false)}
+      >
+        <Pressable
+          style={styles.modalScrim}
+          onPress={() => (!savingEdit ? setEditVisible(false) : undefined)}
+        >
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalHead}>
+              <Text style={styles.modalTitle}>Edit profile</Text>
+              <Pressable
+                onPress={() => setEditVisible(false)}
+                hitSlop={8}
+                disabled={savingEdit}
+              >
+                <Feather name="x" size={20} color={MUTED} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.modalLabel}>Full name</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Jane Doe"
+              placeholderTextColor={MUTED}
+              autoCapitalize="words"
+              editable={!savingEdit}
+            />
+
+            <Text style={styles.modalLabel}>Email address</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={editEmail}
+              onChangeText={setEditEmail}
+              placeholder="you@example.com"
+              placeholderTextColor={MUTED}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              editable={!savingEdit}
+            />
+
+            {editError ? (
+              <Text style={styles.modalError}>{editError}</Text>
+            ) : null}
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalSaveBtn,
+                (savingEdit || pressed) && styles.pressed,
+              ]}
+              onPress={() => void saveEditProfile()}
+              disabled={savingEdit}
+            >
+              {savingEdit ? (
+                <ActivityIndicator color={NAVY} />
+              ) : (
+                <Text style={styles.modalSaveText}>Save changes</Text>
+              )}
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -290,7 +412,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   container: { padding: 20, paddingBottom: 60 },
   profileCard: {
@@ -312,48 +434,30 @@ const styles = StyleSheet.create({
     backgroundColor: TEAL,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
-  },
-  avatarImage: {
-    width: 52,
-    height: 52,
-  },
-  cameraBadge: {
-    position: "absolute",
-    bottom: -2,
-    right: -4,
-    backgroundColor: NAVY,
-    borderRadius: 9,
-    width: 18,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: WHITE,
   },
   avatarText: {
     color: NAVY,
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   profileName: {
     color: NAVY,
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   profileSub: {
     color: MUTED,
     fontSize: 13,
     marginTop: 3,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
   groupLabel: {
     color: MUTED,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.5,
     textTransform: "uppercase",
     marginTop: 8,
@@ -386,13 +490,13 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
   },
   rowSub: {
     color: MUTED,
     fontSize: 12,
     marginTop: 2,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
   divider: {
     height: 1,
@@ -405,6 +509,70 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     marginTop: 12,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
+  },
+  modalScrim: {
+    flex: 1,
+    backgroundColor: "rgba(5,13,31,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 440,
+    backgroundColor: WHITE,
+    borderRadius: 18,
+    padding: 22,
+  },
+  modalHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    color: NAVY,
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  modalLabel: {
+    color: NAVY,
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    marginBottom: 6,
+  },
+  modalInput: {
+    backgroundColor: CARD,
+    color: NAVY,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    fontFamily: "Inter_500Medium",
+    marginBottom: 14,
+  },
+  modalError: {
+    color: RED,
+    fontSize: 13,
+    marginBottom: 12,
+    fontFamily: "Inter_500Medium",
+  },
+  modalSaveBtn: {
+    backgroundColor: TEAL,
+    borderRadius: 12,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: 2,
+  },
+  modalSaveText: {
+    color: NAVY,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
   },
 });
