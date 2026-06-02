@@ -1,6 +1,10 @@
-import '../sentry.config'; // Add Sentry - must be first!
-import * as Sentry from '@sentry/react-native';
-import { StripeProvider } from "@stripe/stripe-react-native";
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  useFonts,
+} from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -12,13 +16,13 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { CareProvider } from "../lib/careContext";
+import { isDemoMode } from "../lib/demoMode";
 import { supabase } from "../lib/supabase";
-import * as SecureStore from "expo-secure-store";
 
 // Capture any module-evaluation errors that happen before React mounts so we
 // can show them on screen instead of silently crashing to the home screen.
@@ -120,7 +124,6 @@ class LaunchErrorBoundary extends Component<
   }
   componentDidCatch(error: Error, info: { componentStack: string }) {
     console.error("[LaunchErrorBoundary]", error, info?.componentStack);
-    Sentry.captureException(error, { extra: { componentStack: info?.componentStack } });
   }
   render() {
     if (this.state.error || (this.props.extra && this.props.extra.length > 0)) {
@@ -157,44 +160,6 @@ export function useAuthRefresh() {
   return useContext(AuthRefreshContext);
 }
 
-const ROLE_KEY = "carevoy_last_role";
-
-function AnimatedSplash({ onDone }: { onDone: () => void }) {
-  const scale = React.useRef(new Animated.Value(0.82)).current;
-  const opacity = React.useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    Animated.parallel([
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: 800,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 600,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setTimeout(onDone, 400);
-    });
-  }, []);
-
-  return (
-    <View style={{ flex: 1, backgroundColor: "#050D1F", alignItems: "center", justifyContent: "center" }}>
-      <Animated.View style={{ transform: [{ scale }], opacity, alignItems: "center" }}>
-        <Image
-          source={require("../assets/images/icon.png")}
-          style={{ width: 200, height: 200, borderRadius: 46 }}
-          resizeMode="contain"
-        />
-      </Animated.View>
-    </View>
-  );
-}
-
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
@@ -203,9 +168,7 @@ function RootLayoutNav() {
     role: "unknown",
     onboarded: null,
   });
-
   const [ready, setReady] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
 
   const refreshFromUser = useCallback(async (userId: string | null) => {
     if (!userId) {
@@ -254,12 +217,19 @@ function RootLayoutNav() {
   }, [refreshFromUser]);
 
   useEffect(() => {
+    // Demo mode (pitch-deck screenshots): skip Supabase auth entirely and
+    // pretend the demo patient is signed in & onboarded. No subscription.
+    if (isDemoMode()) {
+      setAuth({ userId: "demo-jane", role: "patient", onboarded: true });
+      setReady(true);
+      return;
+    }
     (async () => {
       const { data } = await supabase.auth.getSession();
       await refreshFromUser(data.session?.user.id ?? null);
       setReady(true);
     })();
-    const { data: sub } = supabase.auth.onAuthStateChange(async (evt, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_evt, s) => {
       await refreshFromUser(s?.user.id ?? null);
     });
     return () => {
@@ -269,24 +239,28 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (!ready) return;
+    // Demo mode: never redirect — the URL is the source of truth so the
+    // screenshot tool can capture any screen directly.
+    if (isDemoMode()) return;
     const top = segments[0];
     const inLogin = top === "login";
     const inPartners = top === "partners";
-    const inInvite = top === "invite";
     const inOnboarding = top === "onboarding";
     const inDriver = top === "driver";
-    const inNemt = top === "nemt";
-    const inFacility = top === "facility";
     const inComingSoon = top === "coming-soon";
     const inTabs = top === "(tabs)";
-    const isPartnersDomain =
-      Platform.OS === "web" &&
-      typeof window !== "undefined" &&
-      window.location.hostname.startsWith("partners.");
 
     if (!auth.userId) {
-      if (!inLogin && !inPartners && !inInvite) {
-        router.replace(isPartnersDomain ? "/partners" : "/login");
+      // On the partner web domain (partners.carevoy.co), unauthenticated
+      // visitors belong on the partner portal, not the patient login screen.
+      const onPartnersDomain =
+        Platform.OS === "web" &&
+        typeof window !== "undefined" &&
+        window.location?.hostname?.startsWith("partners.");
+      if (onPartnersDomain) {
+        if (!inPartners) router.replace("/partners");
+      } else if (!inLogin && !inPartners) {
+        router.replace("/login");
       }
       return;
     }
@@ -294,17 +268,12 @@ function RootLayoutNav() {
     // anyone away from it. The page itself shows the current session and
     // offers a "Use different account" button.
     if (inPartners) return;
-    if (inInvite) return;
-    if (isPartnersDomain && auth.role === "patient") {
-      if (!inPartners) router.replace("/partners");
-      return;
-    }
     if (auth.role === "nemt") {
-      if (!inDriver && !inNemt) router.replace("/nemt");
+      if (!inDriver) router.replace("/driver");
       return;
     }
     if (auth.role === "coordinator") {
-      if (top !== "coordinator" && !inFacility) router.replace("/facility");
+      if (top !== "coordinator") router.replace("/coordinator");
       return;
     }
     if (auth.role === "admin") {
@@ -321,8 +290,6 @@ function RootLayoutNav() {
       (inLogin ||
         inOnboarding ||
         inDriver ||
-        inNemt ||
-        inFacility ||
         inComingSoon ||
         top === "coordinator" ||
         top === "admin")
@@ -335,43 +302,44 @@ function RootLayoutNav() {
     void inTabs;
   }, [ready, auth, segments, router]);
 
-  if (showSplash) {
-    return <AnimatedSplash onDone={() => setShowSplash(false)} />;
-  }
-
   return (
-    <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_KEY ?? ""} merchantIdentifier="merchant.co.carevoy">
-      <AuthRefreshContext.Provider value={{ refresh }}>
-        <Stack screenOptions={{ headerBackTitle: "Back" }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="partners" options={{ headerShown: false }} />
-          <Stack.Screen name="invite" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-          <Stack.Screen name="book-ride" options={{ headerShown: false }} />
-          <Stack.Screen name="chat" options={{ headerShown: false }} />
-          <Stack.Screen name="driver" options={{ headerShown: false }} />
-          <Stack.Screen name="nemt" options={{ headerShown: false }} />
-          <Stack.Screen name="coordinator" options={{ headerShown: false }} />
-          <Stack.Screen name="facility" options={{ headerShown: false }} />
-          <Stack.Screen name="admin" options={{ headerShown: false }} />
-          <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
-          <Stack.Screen name="care/add" options={{ headerShown: false }} />
-        </Stack>
-      </AuthRefreshContext.Provider>
-    </StripeProvider>
+    <AuthRefreshContext.Provider value={{ refresh }}>
+      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="partners" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="book-ride" options={{ headerShown: false }} />
+        <Stack.Screen name="chat" options={{ headerShown: false }} />
+        <Stack.Screen name="driver" options={{ headerShown: false }} />
+        <Stack.Screen name="coordinator" options={{ headerShown: false }} />
+        <Stack.Screen name="admin" options={{ headerShown: false }} />
+        <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
+        <Stack.Screen name="care/add" options={{ headerShown: false }} />
+      </Stack>
+    </AuthRefreshContext.Provider>
   );
 }
 
 export default function RootLayout() {
-  // fonts removed - using system font
-
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+  const demo = isDemoMode();
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (fontsLoaded || fontError || demo) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError, demo]);
 
   // Demo mode renders immediately so the screenshot tool catches painted UI.
-  // fonts removed
+  // While fonts load, paint a navy full-screen view that matches the splash
+  // background so there's no white flash between the native splash and the app.
+  if (!demo && !fontsLoaded && !fontError)
+    return <View style={{ flex: 1, backgroundColor: "#050D1F" }} />;
 
   // If anything failed during module evaluation, show the visible error screen
   // immediately instead of attempting to render the app.

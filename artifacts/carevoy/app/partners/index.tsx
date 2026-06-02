@@ -1,9 +1,8 @@
 import { Feather } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -28,7 +27,7 @@ const ERROR = "#EF4444";
 async function resolveRoleAndRedirect(
   router: ReturnType<typeof useRouter>,
   userId: string,
-): Promise<{ ok: boolean }> {
+) {
   const [staffRes, coordRes] = await Promise.all([
     supabase.from("staff").select("role").eq("id", userId).maybeSingle(),
     supabase
@@ -39,17 +38,17 @@ async function resolveRoleAndRedirect(
   ]);
   if (staffRes.data?.role === "admin") {
     router.replace("/admin");
-    return { ok: true };
+    return true;
   }
   if (staffRes.data?.role === "nemt") {
-    router.replace("/nemt");
-    return { ok: true };
+    router.replace("/driver");
+    return true;
   }
   if (coordRes.data) {
-    router.replace("/facility");
-    return { ok: true };
+    router.replace("/coordinator");
+    return true;
   }
-  return { ok: false };
+  return false;
 }
 
 export default function PartnersPortal() {
@@ -59,25 +58,28 @@ export default function PartnersPortal() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
 
-  // Always start fresh at /partners — sign out any existing session so the
-  // user can cleanly log into their partner account. This prevents accidental
-  // auto-redirects when a patient session is still active.
+  // Show the current session (if any) — but DON'T auto-redirect. The user came
+  // to /partners on purpose, probably to switch accounts. Auto-bouncing them
+  // into whichever dashboard their current session points at would trap them.
   useEffect(() => {
-    const timeout = setTimeout(() => setChecking(false), 3000);
     (async () => {
-      try {
-        await supabase.auth.signOut();
-      } catch (e) {
-        console.warn('Sign out failed:', e);
-      } finally {
-        clearTimeout(timeout);
-        setChecking(false);
-      }
+      const { data } = await supabase.auth.getSession();
+      setCurrentEmail(data.session?.user?.email ?? null);
+      setChecking(false);
     })();
-    return () => clearTimeout(timeout);
   }, []);
+
+  const switchAccount = async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
+    setCurrentEmail(null);
+    setEmail("");
+    setPassword("");
+    setError(null);
+    setLoading(false);
+  };
 
   const onSignIn = async () => {
     setError(null);
@@ -101,9 +103,9 @@ export default function PartnersPortal() {
       setError("Sign-in succeeded but no user was returned.");
       return;
     }
-    const result = await resolveRoleAndRedirect(router, uid);
+    const ok = await resolveRoleAndRedirect(router, uid);
     setLoading(false);
-    if (!result.ok) {
+    if (!ok) {
       await supabase.auth.signOut();
       setError(
         "This account isn't linked to a partner role. Contact your CareVoy admin.",
@@ -123,7 +125,6 @@ export default function PartnersPortal() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -134,11 +135,9 @@ export default function PartnersPortal() {
         >
           <View style={styles.card}>
             <View style={styles.brandRow}>
-              <Image
-                source={require("../../assets/images/icon.png")}
-                style={styles.logoMark}
-                resizeMode="contain"
-              />
+              <View style={styles.logoMark}>
+                <Text style={styles.logoMarkText}>C</Text>
+              </View>
               <View>
                 <Text style={styles.brandWord}>CareVoy</Text>
                 <Text style={styles.brandSub}>Partner Portal</Text>
@@ -150,6 +149,71 @@ export default function PartnersPortal() {
               For NEMT drivers, hospital coordinators, and CareVoy admins.
               Patients should use the CareVoy mobile app instead.
             </Text>
+
+            {currentEmail ? (
+              <View
+                style={{
+                  backgroundColor: "#F8FAFC",
+                  borderColor: "#E2E8F0",
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  padding: 12,
+                  marginTop: 16,
+                  marginBottom: 4,
+                }}
+              >
+                <Text style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>
+                  Currently signed in as
+                </Text>
+                <Text
+                  style={{
+                    color: NAVY,
+                    fontSize: 14,
+                    fontWeight: "600",
+                    marginBottom: 10,
+                  }}
+                >
+                  {currentEmail}
+                </Text>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Pressable
+                    onPress={async () => {
+                      const { data } = await supabase.auth.getSession();
+                      const uid = data.session?.user?.id;
+                      if (uid) await resolveRoleAndRedirect(router, uid);
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: TEAL,
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: WHITE, fontWeight: "600" }}>
+                      Continue
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={switchAccount}
+                    disabled={loading}
+                    style={{
+                      flex: 1,
+                      backgroundColor: WHITE,
+                      borderColor: BORDER,
+                      borderWidth: 1,
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: NAVY, fontWeight: "600" }}>
+                      Use different account
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
 
             <Text style={styles.label}>Work email</Text>
             <TextInput
@@ -165,24 +229,15 @@ export default function PartnersPortal() {
             />
 
             <Text style={styles.label}>Password</Text>
-            <View style={{ position: 'relative' }}>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor={MUTED}
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                editable={!loading}
-              />
-              <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: 14, top: 0, bottom: 0, justifyContent: 'center' }}
-                hitSlop={8}
-              >
-                <Text style={{ color: TEAL, fontSize: 12, fontWeight: "600" }}>{showPassword ? "HIDE" : "SHOW"}</Text>
-              </Pressable>
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="••••••••"
+              placeholderTextColor={MUTED}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              editable={!loading}
+            />
 
             {error ? (
               <View style={styles.errorRow}>
@@ -253,20 +308,29 @@ const styles = StyleSheet.create({
   logoMark: {
     width: 44,
     height: 44,
-    borderRadius: 10,
+    borderRadius: 12,
+    backgroundColor: TEAL,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoMarkText: {
+    color: NAVY,
+    fontSize: 22,
+    fontWeight: "800",
+    fontFamily: "Inter_700Bold",
   },
   brandWord: {
     color: NAVY,
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: -0.3,
   },
   brandSub: {
     color: TEAL,
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
@@ -274,7 +338,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
     letterSpacing: -0.4,
   },
   subtitle: {
@@ -283,13 +347,13 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: 8,
     marginBottom: 22,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
   label: {
     color: NAVY,
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "System",
+    fontFamily: "Inter_600SemiBold",
     marginBottom: 6,
     marginTop: 4,
   },
@@ -302,7 +366,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 15,
-    fontFamily: "System",
+    fontFamily: "Inter_500Medium",
     marginBottom: 14,
   },
   button: {
@@ -317,7 +381,7 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "System",
+    fontFamily: "Inter_700Bold",
   },
   errorRow: {
     flexDirection: "row",
@@ -334,7 +398,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: ERROR,
     fontSize: 13,
-    fontFamily: "System",
+    fontFamily: "Inter_500Medium",
     flex: 1,
   },
   footer: {
@@ -350,6 +414,6 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     flex: 1,
-    fontFamily: "System",
+    fontFamily: "Inter_400Regular",
   },
 });
