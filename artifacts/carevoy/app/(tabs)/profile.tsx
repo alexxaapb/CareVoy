@@ -102,8 +102,8 @@ export default function SettingsScreen() {
       .maybeSingle();
     setProfile({
       full_name: data?.full_name ?? null,
-      phone: data?.phone ?? userData.user?.phone ?? null,
-      email: data?.email ?? userData.user?.email ?? null,
+      phone: data?.phone ?? session?.user?.phone ?? null,
+      email: data?.email ?? session?.user?.email ?? null,
     });
     await refreshCare();
   }, [refreshCare]);
@@ -187,8 +187,8 @@ export default function SettingsScreen() {
     }
     setSavingEdit(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
       if (!userId) {
         setEditError("You're not signed in. Please log in again.");
         return;

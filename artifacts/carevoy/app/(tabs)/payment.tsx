@@ -85,8 +85,10 @@ export default function PaymentScreen() {
       ]);
       return;
     }
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
     if (!userId) return;
     setPatientId(userId);
     const { data } = await supabase
@@ -94,8 +96,7 @@ export default function PaymentScreen() {
       .select("email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
-    // Intentionally do NOT load any saved email from the DB into the demo
-    // build — keep "janedoe@gmail.com" visible for investor screenshots.
+    setEmail(data?.email ?? session?.user?.email ?? "");
     setHasCustomer(!!data?.stripe_customer_id?.startsWith("cus_"));
     // Methods are fetched server-side, scoped to the authenticated user.
     const list = await listPaymentMethods();
