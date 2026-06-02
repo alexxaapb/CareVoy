@@ -47,8 +47,10 @@ export function CareProvider({ children }: { children: React.ReactNode }) {
   const [activePatientId, setActivePatientId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id ?? null;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const userId = session?.user?.id ?? null;
     if (!userId) {
       setSelfPatientId(null);
       setSelfFullName(null);

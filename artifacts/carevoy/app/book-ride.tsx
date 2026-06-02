@@ -324,8 +324,10 @@ export default function BookRideScreen() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
       if (!userId) return;
       const targetId = activePatientId ?? userId;
 
@@ -549,8 +551,10 @@ export default function BookRideScreen() {
       return;
     }
     setSubmitting(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
     const bookingPatientId = activePatientId ?? userId;
     if (!userId || !bookingPatientId || !surgeryDate || !surgeryTime) {
       setSubmitting(false);

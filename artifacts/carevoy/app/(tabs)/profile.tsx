@@ -87,8 +87,10 @@ export default function SettingsScreen() {
       });
       return;
     }
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
     if (!userId) {
       setProfile(null);
       return;
@@ -123,7 +125,12 @@ export default function SettingsScreen() {
   const doSignOut = async () => {
     setSigningOut(true);
     try {
-      await supabase.auth.signOut();
+      // Race signOut against a short timeout so a stalled token refresh
+      // can't leave the button stuck on "Signing out...".
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((resolve) => setTimeout(resolve, 2500)),
+      ]);
     } catch {
       // Ignore sign-out errors — we always want to leave the session and
       // return to the login screen rather than crash or get stuck.

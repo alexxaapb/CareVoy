@@ -55,10 +55,7 @@ export default function PaymentScreen() {
   const [patientId, setPatientId] = useState<string | null>(null);
 
   const [autoEmail, setAutoEmail] = useState(true);
-  // Investor-screenshot-safe default. The user can overwrite this in the
-  // input and Save; we only seed it as a clean placeholder value so the
-  // demo never shows a real personal email.
-  const [email, setEmail] = useState("janedoe@gmail.com");
+  const [email, setEmail] = useState("");
 
   const [adding, setAdding] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
@@ -68,6 +65,7 @@ export default function PaymentScreen() {
   const load = useCallback(async () => {
     if (isDemoMode()) {
       setPatientId("demo-jane");
+      setEmail("janedoe@gmail.com");
       setHasCustomer(true);
       setMethods([
         {
