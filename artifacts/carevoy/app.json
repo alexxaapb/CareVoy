@@ -1,13 +1,13 @@
 {
   "expo": {
     "name": "CareVoy",
-    "slug": "carevoy",
+    "slug": "workspace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "carevoy",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
@@ -47,6 +47,7 @@
       "eas": {
         "projectId": "f70bca6e-82e7-4cea-8455-4d6077dcb765"
       }
-    }
+    },
+    "owner": "carevoy"
   }
 }
