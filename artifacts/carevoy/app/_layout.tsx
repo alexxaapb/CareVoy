@@ -356,7 +356,11 @@ export default function RootLayout() {
     return (
       <LaunchErrorBoundary extra={moduleLoadErrors}>
         <SafeAreaProvider>
-          <StripeProvider publishableKey="pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2">
+          <StripeProvider
+            publishableKey="pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2"
+            merchantIdentifier="merchant.co.carevoy"
+            urlScheme="carevoy"
+          >
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <CareProvider>

@@ -331,22 +331,6 @@ export default function PaymentScreen() {
             )}
           </Pressable>
 
-          <View style={styles.walletHintRow}>
-            <View style={styles.walletChip}>
-              <FontAwesome name="apple" size={14} color={NAVY} />
-              <Text style={styles.walletChipText}>Apple Pay</Text>
-            </View>
-            {Platform.OS !== "ios" ? (
-              <View style={styles.walletChip}>
-                <Text style={styles.gPayG}>G</Text>
-                <Text style={styles.walletChipText}>Google Pay</Text>
-              </View>
-            ) : null}
-            <View style={styles.walletChip}>
-              <Feather name="credit-card" size={14} color={NAVY} />
-              <Text style={styles.walletChipText}>Card</Text>
-            </View>
-          </View>
           <Text style={styles.secureRow}>
             <Feather name="lock" size={11} color={MUTED} /> Secured by Stripe.
             Your card details never touch CareVoy&apos;s servers.
