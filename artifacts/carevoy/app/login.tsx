@@ -132,6 +132,22 @@ export default function LoginScreen() {
                 <Text style={styles.hint}>
                   We&apos;ll text you a 6-digit code to verify your number.
                 </Text>
+                <Text
+                  style={{
+                    color: MUTED,
+                    fontSize: 11,
+                    lineHeight: 16,
+                    textAlign: "center",
+                    marginTop: 14,
+                  }}
+                >
+                  By tapping Send Code, you agree to receive SMS messages from
+                  CareVoy at the number provided, including one-time verification
+                  codes and ride updates. Msg &amp; data rates may apply. Msg
+                  frequency varies. Reply STOP to cancel, HELP for help. See our
+                  Privacy Policy at carevoy.co/privacy-policy and Terms at
+                  carevoy.co/terms.
+                </Text>
               </>
             )}
 

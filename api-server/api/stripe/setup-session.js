@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
 
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
-      payment_method_types: ["card"],
+      automatic_payment_methods: { enabled: true, allow_redirects: "never" },
       usage: "off_session",
     });
 

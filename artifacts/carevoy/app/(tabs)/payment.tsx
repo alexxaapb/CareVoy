@@ -148,6 +148,7 @@ export default function PaymentScreen() {
       const { error: initError } = await initPaymentSheet({
         merchantDisplayName: "CareVoy",
         setupIntentClientSecret: clientSecret,
+        applePay: { merchantCountryCode: "US" },
       });
       if (initError) {
         setError(initError.message);

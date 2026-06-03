@@ -1,10 +1,11 @@
 import { Feather } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import * as Location from "expo-location";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Easing,
   KeyboardAvoidingView,
@@ -1100,35 +1101,50 @@ export default function BookRideScreen() {
               <Text style={styles.label}>Letter of Medical Necessity (optional)</Text>
               <Pressable
                 onPress={async () => {
-                  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                  if (status !== "granted") return;
-                  const result = await ImagePicker.launchImageLibraryAsync({
-                    mediaTypes: ["images"],
-                    allowsEditing: false,
-                    quality: 0.9,
+                  const result = await DocumentPicker.getDocumentAsync({
+                    type: ["application/pdf", "image/*"],
+                    copyToCacheDirectory: true,
+                    multiple: false,
                   });
                   if (result.canceled) return;
-                  const uri = result.assets[0].uri;
-                  setLmnImageUri(uri);
-                  // Upload to Supabase documents bucket
+                  const file = result.assets[0];
+                  const MAX_BYTES = 10 * 1024 * 1024;
+                  if (file.size && file.size > MAX_BYTES) {
+                    Alert.alert("File too large", "Please choose a file under 10 MB.");
+                    return;
+                  }
                   const { data: { session } } = await supabase.auth.getSession();
                   const userId = session?.user?.id;
-                  if (!userId) return;
+                  if (!userId) {
+                    Alert.alert("Not signed in", "Please sign in before uploading.");
+                    return;
+                  }
+                  setLmnImageUri(file.uri);
                   setUploadingLmn(true);
                   try {
-                    const ext = uri.split(".").pop()?.toLowerCase() ?? "jpg";
-                    const path = `${userId}/lmn_${Date.now()}.${ext}`;
-                    const fetchRes = await fetch(uri);
+                    const fname = file.name ?? `lmn_${Date.now()}`;
+                    const ext = fname.includes(".") ? fname.split(".").pop()!.toLowerCase() : "pdf";
+                    const storagePath = `${userId}/lmn_${Date.now()}.${ext}`;
+                    const fetchRes = await fetch(file.uri);
                     const blob = await fetchRes.blob();
                     const { error: upErr } = await supabase.storage
-                      .from("documents")
-                      .upload(path, blob, { upsert: false, contentType: "image/jpeg" });
-                    if (!upErr) {
-                      const { data: urlData } = supabase.storage.from("documents").getPublicUrl(path);
-                      setLmnNotes(urlData.publicUrl);
+                      .from("loi-documents")
+                      .upload(storagePath, blob, {
+                        upsert: false,
+                        contentType: file.mimeType ?? "application/octet-stream",
+                      });
+                    if (upErr) {
+                      Alert.alert("Upload failed", "Please try again.");
+                      setLmnImageUri(null);
+                    } else {
+                      setLmnNotes(storagePath);
                     }
-                  } catch {}
-                  finally { setUploadingLmn(false); }
+                  } catch {
+                    Alert.alert("Upload failed", "Please try again.");
+                    setLmnImageUri(null);
+                  } finally {
+                    setUploadingLmn(false);
+                  }
                 }}
                 style={({ pressed }) => [
                   styles.input,
@@ -1157,7 +1173,7 @@ export default function BookRideScreen() {
                   <>
                     <Feather name="upload" size={18} color={MUTED} />
                     <Text style={{ color: MUTED, fontSize: 14, fontFamily: "System" }}>
-                      Tap to upload letter image
+                      Tap to upload PDF or image
                     </Text>
                   </>
                 )}
