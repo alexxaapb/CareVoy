@@ -251,27 +251,25 @@ export default function BookRideScreen() {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [dbFacilities, setDbFacilities] = useState<Record<string, string[]>>({});
 
-  // Load facilities from Supabase
+  // Load facilities from Supabase. The hospitals table has no facility_type
+  // column, so we show every active facility regardless of the selected type.
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from('hospitals')
-        .select('name, city, facility_type')
+        .select('name, city')
         .eq('active', true)
         .order('name');
       if (data && data.length > 0) {
-        const grouped: Record<string, string[]> = {
-          hospital: [],
-          assisted_living: [],
-          dialysis: [],
-          other: [],
-        };
-        data.forEach((h: { name: string; type?: string }) => {
-          const t = h.facility_type ?? 'hospital';
-          if (grouped[t]) grouped[t].push(h.name);
-          else grouped['other'].push(h.name);
+        const names = (data as { name: string | null }[])
+          .map((h) => h.name)
+          .filter((n): n is string => !!n && n.trim().length > 0);
+        setDbFacilities({
+          hospital: names,
+          assisted_living: names,
+          dialysis: names,
+          other: names,
         });
-        setDbFacilities(grouped);
       }
     })();
   }, []);

@@ -60,13 +60,22 @@ export default function LoginScreen() {
     setError(null);
     if (code.length !== 6) { setError("Enter the 6-digit code"); return; }
     setLoading(true);
-    const { error: err } = await supabase.auth.verifyOtp({
+    const { data: verifyData, error: err } = await supabase.auth.verifyOtp({
       phone: normalizePhone(phone),
       token: code,
       type: "sms",
     });
     setLoading(false);
     if (err) { setError(err.message); return; }
+    // Persist the verified OTP phone onto the patient row so it shows in the
+    // profile. The row is created by the auth trigger, so a plain update is safe.
+    const userId = verifyData.user?.id;
+    if (userId) {
+      await supabase
+        .from("patients")
+        .update({ phone: normalizePhone(phone) })
+        .eq("id", userId);
+    }
     setStep("booking-for");
   };
 

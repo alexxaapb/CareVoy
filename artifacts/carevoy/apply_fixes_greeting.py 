@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+# Run from artifacts/carevoy/ -> python3 apply_fixes_greeting.py
+# Remove the "Good evening, Jane" greeting from the home screen. Exact match or skip.
+
+path = "app/(tabs)/index.tsx"
+
+before = '''        {/* Greeting */}
+        <Text style={styles.greetingSmall}>
+          {timeGreeting()}, {greetingName}
+        </Text>
+'''
+after = ''''''
+
+with open(path, "r", encoding="utf-8") as f:
+    content = f.read()
+n = content.count(before)
+if n == 1:
+    content = content.replace(before, after)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+    print("OK    index: greeting removed")
+elif n == 0:
+    print("MISS  greeting (no exact match)")
+else:
+    print(f"AMBIG greeting (found {n} times)")
