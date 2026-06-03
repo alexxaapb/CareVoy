@@ -197,14 +197,6 @@ export default function LoginScreen() {
             )}
           </View>
 
-          {step !== "booking-for" && (
-            <View style={styles.footer}>
-              <Text style={styles.footerLabel}>NEMT driver or facility staff?</Text>
-              <Text style={styles.footerLink}>
-                Sign in at carevoy.co/partners on your computer.
-              </Text>
-            </View>
-          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

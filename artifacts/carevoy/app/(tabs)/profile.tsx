@@ -230,7 +230,7 @@ export default function SettingsScreen() {
           ) : (
             <>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>J</Text>
+                <Text style={styles.avatarText}>{profile?.full_name?.trim()?.charAt(0)?.toUpperCase() ?? "?"}</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.profileName}>

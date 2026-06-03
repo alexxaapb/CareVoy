@@ -14,8 +14,8 @@ export type SavedPaymentMethod = {
 };
 
 function url(path: string): string {
-  const dom = process.env["EXPO_PUBLIC_DOMAIN"];
-  if (dom) return `https://${dom}${path}`;
+  const api = process.env["EXPO_PUBLIC_API_URL"];
+  if (api) return `${api}${path}`;
   return path;
 }
 
@@ -33,7 +33,7 @@ export async function createSetupSession(input: {
     "Content-Type": "application/json",
     ...(await authHeader()),
   };
-  const res = await fetch(url("/api/payments/setup-session"), {
+  const res = await fetch(url("/api/stripe/setup-session"), {
     method: "POST",
     headers,
     body: JSON.stringify(input),
@@ -48,7 +48,7 @@ export async function createSetupSession(input: {
 export async function listPaymentMethods(): Promise<SavedPaymentMethod[]> {
   const headers = await authHeader();
   if (!headers.Authorization) return [];
-  const res = await fetch(url("/api/payments/methods"), { headers });
+  const res = await fetch(url("/api/stripe/list-methods"), { headers });
   if (!res.ok) return [];
   const data = (await res.json()) as { methods?: SavedPaymentMethod[] };
   return data.methods ?? [];
@@ -57,7 +57,7 @@ export async function listPaymentMethods(): Promise<SavedPaymentMethod[]> {
 export async function detachPaymentMethod(id: string): Promise<boolean> {
   const headers = await authHeader();
   if (!headers.Authorization) return false;
-  const res = await fetch(url(`/api/payments/methods/${id}`), {
+  const res = await fetch(url(`/api/stripe/detach-method?id=${id}`), {
     method: "DELETE",
     headers,
   });
@@ -82,5 +82,5 @@ export function getReturnUrl(): string {
   }
   const dom = process.env["EXPO_PUBLIC_DOMAIN"];
   const base = dom ? `https://${dom}` : "";
-  return `${base}/api/payments/return`;
+  return base || "https://carevoy.co";
 }
