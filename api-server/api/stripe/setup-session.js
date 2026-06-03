@@ -28,17 +28,34 @@ module.exports = async (req, res) => {
       .maybeSingle();
 
     let customerId = patient?.stripe_customer_id;
+
+    // Validate the stored customer still exists in this Stripe mode; if it was
+    // deleted or created in a different mode (test vs live), discard it.
+    if (customerId) {
+      try {
+        const existing = await stripe.customers.retrieve(customerId);
+        if (existing && existing.deleted) customerId = null;
+      } catch (err) {
+        customerId = null;
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: email || user.email,
         metadata: { patientId: user.id },
       });
       customerId = customer.id;
-      await supabase
-        .from("patients")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
     }
+
+    // Always persist with upsert so the ID lands even when no patients row
+    // exists yet (a plain update silently affects 0 rows in that case).
+    await supabase
+      .from("patients")
+      .upsert(
+        { id: user.id, stripe_customer_id: customerId },
+        { onConflict: "id" }
+      );
 
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
