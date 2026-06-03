@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -127,6 +127,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [authFallbackName, setAuthFallbackName] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const loadAll = useCallback(async () => {
     if (!activePatientId) {
@@ -176,7 +177,9 @@ export default function HomeScreen() {
     useCallback(() => {
       let active = true;
       (async () => {
-        setLoading(true);
+        // Show the loading state only on first load; on tab re-focus refresh
+        // silently so the screen stays populated and instant.
+        if (!hasLoadedRef.current) setLoading(true);
         await loadAll();
         if (active && isDemoMode()) {
           setProfile({
@@ -205,7 +208,10 @@ export default function HomeScreen() {
             } as Ride,
           ]);
         }
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          hasLoadedRef.current = true;
+        }
       })();
       return () => {
         active = false;

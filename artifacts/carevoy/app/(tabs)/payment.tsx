@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Switch,
@@ -60,6 +61,8 @@ export default function PaymentScreen() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -84,6 +87,7 @@ export default function PaymentScreen() {
           expYear: 2027,
         },
       ]);
+      setLoaded(true);
       return;
     }
     const {
@@ -102,6 +106,7 @@ export default function PaymentScreen() {
     // Methods are fetched server-side, scoped to the authenticated user.
     const list = await listPaymentMethods();
     setMethods(list);
+    setLoaded(true);
   }, []);
 
   useFocusEffect(
@@ -109,6 +114,22 @@ export default function PaymentScreen() {
       load();
     }, [load]),
   );
+
+  // Re-fetch when the auth session hydrates — a cold start can focus this
+  // screen before Supabase restores the session, which would otherwise strand
+  // a stale "No cards" state until a manual refresh.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      void load();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [load]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }, [load]);
 
   // Web: when Stripe redirects back here with ?stripe_status=success|cancel,
   // surface the result and clean the URL.
@@ -236,6 +257,13 @@ export default function PaymentScreen() {
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={TEAL}
+            />
+          }
         >
           <Text style={styles.title}>Pay with Your HSA or FSA</Text>
           <Text style={styles.subtitle}>
@@ -264,7 +292,12 @@ export default function PaymentScreen() {
 
           {/* SAVED METHODS */}
           <Text style={styles.sectionLabel}>Saved payment methods</Text>
-          {methods.length === 0 ? (
+          {!loaded ? (
+            <View style={styles.emptyMethodsCard}>
+              <ActivityIndicator color={TEAL} />
+              <Text style={styles.emptyMethodsText}>Loading your cards…</Text>
+            </View>
+          ) : methods.length === 0 ? (
             <View style={styles.emptyMethodsCard}>
               <Feather name="credit-card" size={20} color={MUTED} />
               <Text style={styles.emptyMethodsText}>

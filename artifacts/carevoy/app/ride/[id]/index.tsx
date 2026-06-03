@@ -237,7 +237,7 @@ export default function RideDetailScreen() {
               Alert.alert("Couldn't cancel", cancelErr.message);
               return;
             }
-            await load();
+            router.replace("/(tabs)");
           },
         },
       ],
@@ -537,7 +537,9 @@ export default function RideDetailScreen() {
               </View>
             </View>
             <Text style={styles.paymentMethod}>
-              Paid with {methodLabel(payment?.payment_method ?? null)}
+              {payment?.payment_method
+                ? `Paid with ${methodLabel(payment.payment_method)}`
+                : "Charged to your card on file after the ride"}
             </Text>
             <View style={styles.irsBadge}>
               <Feather name="shield" size={12} color={TEAL} />

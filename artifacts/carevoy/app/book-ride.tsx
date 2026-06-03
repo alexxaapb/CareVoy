@@ -1593,6 +1593,11 @@ function FacilityAutocomplete({
         </View>
         {focused ? (
           <View style={facilityStyles.dropdown}>
+            <ScrollView
+              style={{ maxHeight: 280 }}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+            >
             {filtered.map((name, idx) => (
               <Pressable
                 key={name}
@@ -1634,6 +1639,7 @@ function FacilityAutocomplete({
                   : "Other - I'll type it in"}
               </Text>
             </Pressable>
+            </ScrollView>
           </View>
         ) : null}
       </View>

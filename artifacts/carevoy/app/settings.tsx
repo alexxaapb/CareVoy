@@ -110,10 +110,7 @@ export default function SettingsScreen() {
   const doSignOut = async () => {
     setSigningOut(true);
     try {
-      await Promise.race([
-        supabase.auth.signOut(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
-      ]);
+      await supabase.auth.signOut({ scope: "local" });
     } catch (error) {
       console.error("Sign out error:", error);
     }
