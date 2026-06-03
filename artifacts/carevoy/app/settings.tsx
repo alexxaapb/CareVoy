@@ -242,7 +242,7 @@ export default function SettingsScreen() {
           <MenuRow
             icon="user"
             label="Edit profile"
-            sub="Name, phone, and email"
+            sub="Name and email"
             onPress={comingSoon("Edit profile")}
           />
           <View style={styles.divider} />

@@ -71,7 +71,8 @@ export default function LoginScreen() {
     // profile. The row is created by the auth trigger, so a plain update is safe.
     const userId = verifyData.user?.id;
     if (userId) {
-      await supabase
+      // fire-and-forget so a failed phone-save never blocks sign-in
+      supabase
         .from("patients")
         .update({ phone: normalizePhone(phone) })
         .eq("id", userId);
