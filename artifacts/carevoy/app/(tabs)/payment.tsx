@@ -1,6 +1,5 @@
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,13 +15,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useStripe } from "@stripe/stripe-react-native";
 
 import { Required } from "../../components/Required";
 import { isDemoMode } from "../../lib/demoMode";
 import {
   createSetupSession,
   detachPaymentMethod,
-  getReturnUrl,
   listPaymentMethods,
   type SavedPaymentMethod,
 } from "../../lib/paymentsApi";
@@ -61,6 +60,8 @@ export default function PaymentScreen() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const load = useCallback(async () => {
     if (isDemoMode()) {
@@ -140,25 +141,32 @@ export default function PaymentScreen() {
 
     setAdding(true);
     try {
-      const { url } = await createSetupSession({
+      const { clientSecret } = await createSetupSession({
         email: email.trim() || undefined,
-        returnUrl: getReturnUrl(),
       });
 
-      if (Platform.OS === "web") {
-        if (typeof window !== "undefined") window.location.href = url;
-      } else {
-        await WebBrowser.openBrowserAsync(url, {
-          presentationStyle:
-            WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-          dismissButtonStyle: "done",
-        });
-        // Refresh from Stripe — the actual saved cards are the source of truth.
-        await load();
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: "CareVoy",
+        setupIntentClientSecret: clientSecret,
+      });
+      if (initError) {
+        setError(initError.message);
+        return;
       }
+
+      const { error: presentError } = await presentPaymentSheet();
+      if (presentError) {
+        if (presentError.code !== "Canceled") {
+          setError(presentError.message);
+        }
+        return;
+      }
+
+      setSuccess("Payment method saved.");
+      await load();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(`Could not start Stripe checkout. ${msg}`);
+      setError(`Could not add a payment method. ${msg}`);
     } finally {
       setAdding(false);
     }

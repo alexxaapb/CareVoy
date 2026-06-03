@@ -27,8 +27,7 @@ async function authHeader(): Promise<Record<string, string>> {
 
 export async function createSetupSession(input: {
   email?: string;
-  returnUrl: string;
-}): Promise<{ url: string; customerId: string }> {
+}): Promise<{ clientSecret: string; customerId: string }> {
   const headers = {
     "Content-Type": "application/json",
     ...(await authHeader()),
@@ -42,7 +41,7 @@ export async function createSetupSession(input: {
     const text = await res.text();
     throw new Error(`setup-session failed: ${res.status} ${text}`);
   }
-  return (await res.json()) as { url: string; customerId: string };
+  return (await res.json()) as { clientSecret: string; customerId: string };
 }
 
 export async function listPaymentMethods(): Promise<SavedPaymentMethod[]> {

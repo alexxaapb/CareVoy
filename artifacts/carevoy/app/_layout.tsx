@@ -23,6 +23,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { CareProvider } from "../lib/careContext";
 import { isDemoMode } from "../lib/demoMode";
 import { supabase } from "../lib/supabase";
+import { StripeProvider } from "@stripe/stripe-react-native";
 
 // Capture any module-evaluation errors that happen before React mounts so we
 // can show them on screen instead of silently crashing to the home screen.
@@ -355,6 +356,7 @@ export default function RootLayout() {
     return (
       <LaunchErrorBoundary extra={moduleLoadErrors}>
         <SafeAreaProvider>
+          <StripeProvider publishableKey="pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2">
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <CareProvider>
@@ -362,6 +364,7 @@ export default function RootLayout() {
               </CareProvider>
             </GestureHandlerRootView>
           </QueryClientProvider>
+          </StripeProvider>
         </SafeAreaProvider>
       </LaunchErrorBoundary>
     );

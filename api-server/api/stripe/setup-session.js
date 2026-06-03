@@ -19,11 +19,8 @@ module.exports = async (req, res) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ error: "Unauthorized" });
 
-    const { email, returnUrl } = req.body || {};
-    const baseUrl = returnUrl || "https://carevoy.co";
+    const { email } = req.body || {};
 
-    // Reuse the patient's Stripe customer, or create one and persist it
-    // so list-methods can find the saved cards later.
     const { data: patient } = await supabase
       .from("patients")
       .select("stripe_customer_id")
@@ -43,15 +40,13 @@ module.exports = async (req, res) => {
         .eq("id", user.id);
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "setup",
+    const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
       payment_method_types: ["card"],
-      success_url: baseUrl,
-      cancel_url: baseUrl,
+      usage: "off_session",
     });
 
-    res.status(200).json({ url: session.url, customerId });
+    res.status(200).json({ clientSecret: setupIntent.client_secret, customerId });
   } catch (e) {
     console.error("setup-session error:", e);
     res.status(500).json({ error: e.message });
