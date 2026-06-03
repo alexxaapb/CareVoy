@@ -218,6 +218,32 @@ export default function RideDetailScreen() {
     });
   };
 
+  const cancelRide = () => {
+    if (!ride) return;
+    Alert.alert(
+      "Cancel this ride?",
+      "This will cancel your scheduled pickup. You can book a new ride afterward.",
+      [
+        { text: "Keep ride", style: "cancel" },
+        {
+          text: "Cancel ride",
+          style: "destructive",
+          onPress: async () => {
+            const { error: cancelErr } = await supabase
+              .from("rides")
+              .update({ status: "cancelled" })
+              .eq("id", ride.id);
+            if (cancelErr) {
+              Alert.alert("Couldn't cancel", cancelErr.message);
+              return;
+            }
+            await load();
+          },
+        },
+      ],
+    );
+  };
+
   const emailReceipt = async () => {
     if (!ride || !patient?.email) {
       Alert.alert("No email on file");
@@ -378,21 +404,8 @@ export default function RideDetailScreen() {
           <Text style={styles.sectionTitle}>Ride details</Text>
           <View style={styles.card}>
             <DetailRow
-              icon="calendar"
-              label="Surgery date"
-              value={
-                ride.surgery_date
-                  ? new Date(ride.surgery_date).toLocaleDateString(undefined, {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : "—"
-              }
-            />
-            <DetailRow
               icon="clock"
-              label="Pickup time"
+              label="Pickup date & time"
               value={formatDateTime(ride.pickup_time)}
             />
             <DetailRow
@@ -422,6 +435,36 @@ export default function RideDetailScreen() {
             ) : null}
           </View>
         </View>
+
+        {/* Cancel ride */}
+        {["pending", "confirmed", "assigned"].includes(statusKey) ? (
+          <View style={styles.section}>
+            <Pressable
+              onPress={cancelRide}
+              style={({ pressed }) => [
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#EF4444",
+                  backgroundColor: "rgba(239,68,68,0.06)",
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <Feather name="x-circle" size={18} color="#EF4444" />
+              <Text
+                style={{ color: "#EF4444", fontWeight: "700", fontSize: 15 }}
+              >
+                Cancel ride
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* Driver */}
         {hasDriver ? (

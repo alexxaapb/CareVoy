@@ -49,8 +49,9 @@ export async function listPaymentMethods(): Promise<SavedPaymentMethod[]> {
   if (!headers.Authorization) return [];
   const res = await fetch(url("/api/stripe/list-methods"), { headers });
   if (!res.ok) return [];
-  const data = (await res.json()) as { methods?: SavedPaymentMethod[] };
-  return data.methods ?? [];
+  // The endpoint returns a bare array, not { methods: [...] }.
+  const data = (await res.json()) as SavedPaymentMethod[];
+  return Array.isArray(data) ? data : [];
 }
 
 export async function detachPaymentMethod(id: string): Promise<boolean> {

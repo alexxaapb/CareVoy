@@ -24,6 +24,7 @@ import { Required } from "../components/Required";
 import { openInCalendar } from "../lib/addToCalendar";
 import { useCare } from "../lib/careContext";
 import { supabase } from "../lib/supabase";
+import { listPaymentMethods } from "../lib/paymentsApi";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
@@ -347,13 +348,17 @@ export default function BookRideScreen() {
         .maybeSingle();
       if (payer?.email) setReceiptEmail(payer.email);
       else if (pat?.email) setReceiptEmail(pat.email);
-      if (payer?.hsa_fsa_card_token) {
-        const m = payer.hsa_fsa_card_token.match(/(\d{4})$/);
-        setHsaCardOnFile(m ? m[1] : "••••");
-      }
-      if (payer?.stripe_customer_id) {
-        const m = payer.stripe_customer_id.match(/(\d{4})$/);
-        setStdCardOnFile(m ? m[1] : "••••");
+      // Real saved card from Stripe (via list-methods), not parsed from the
+      // customer-ID string. One saved card serves both options; null shows the
+      // add-card prompt instead of phantom dots.
+      try {
+        const methods = await listPaymentMethods();
+        const last4 = methods && methods.length > 0 ? methods[0].last4 : null;
+        setHsaCardOnFile(last4);
+        setStdCardOnFile(last4);
+      } catch {
+        setHsaCardOnFile(null);
+        setStdCardOnFile(null);
       }
     })();
   }, [activePatientId]);
@@ -561,6 +566,21 @@ export default function BookRideScreen() {
       return;
     }
 
+    // One live booking at a time: block a new ride while one is still active.
+    const { data: activeRides } = await supabase
+      .from("rides")
+      .select("id")
+      .eq("patient_id", bookingPatientId)
+      .in("status", ["pending", "confirmed", "assigned", "en_route", "arrived"])
+      .limit(1);
+    if (activeRides && activeRides.length > 0) {
+      setSubmitting(false);
+      setError(
+        "You already have an active ride. Please cancel it before booking a new one.",
+      );
+      return;
+    }
+
     const surgeryDateTime = combineDateTime(surgeryDate, surgeryTime);
     const surgeryDateStr = surgeryDate.toISOString().slice(0, 10);
     const hospitalName = finalHospitalName();
@@ -587,9 +607,10 @@ export default function BookRideScreen() {
         const isPre = t === "pre_op";
         const pickup = isPre ? pickupAddress.trim() : hospitalName;
         const dropoff = isPre ? hospitalName : pickupAddress.trim();
+        // The time the user picks IS the pickup time for the pre-op leg.
+        // For a round-trip return leg, default to a few hours later.
         const pickupTime = new Date(weekSurgeryDateTime);
-        if (isPre) pickupTime.setMinutes(pickupTime.getMinutes() - 90);
-        else pickupTime.setHours(pickupTime.getHours() + 2);
+        if (!isPre) pickupTime.setHours(pickupTime.getHours() + 4);
 
         rows.push({
           patient_id: bookingPatientId,
@@ -904,13 +925,13 @@ export default function BookRideScreen() {
         >
           {step === 1 && (
             <View>
-              <Text style={styles.stepTitle}>Surgery details</Text>
+              <Text style={styles.stepTitle}>Pickup details</Text>
               <Text style={styles.stepSub}>
-                When and where is your procedure?
+                When do you need to be picked up?
               </Text>
 
               <Text style={styles.label}>
-                Surgery date<Required />
+                Pickup date<Required />
               </Text>
               <View style={styles.dateRow}>
                 <View style={[styles.dateField, { flex: 1 }]}>
@@ -971,7 +992,7 @@ export default function BookRideScreen() {
               ) : null}
 
               <Text style={styles.label}>
-                Surgery time<Required />
+                Pickup time<Required />
               </Text>
               <View style={styles.dateRow}>
                 <View style={[styles.dateField, { flex: 1 }]}>
