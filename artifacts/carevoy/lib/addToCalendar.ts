@@ -1,6 +1,5 @@
 import { Alert, Platform } from "react-native";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
+import * as Calendar from "expo-calendar";
 import * as Linking from "expo-linking";
 
 export type CalendarEvent = {
@@ -43,39 +42,46 @@ export function buildOutlookUrl(evt: CalendarEvent): string {
   return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
 }
 
-function buildICS(evt: CalendarEvent): string {
-  const esc = (s: string) => s.replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
-  return [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//CareVoy//Ride//EN",
-    "BEGIN:VEVENT",
-    `UID:${Date.now()}@carevoy.co`,
-    `DTSTAMP:${formatGCalDate(new Date().toISOString())}`,
-    `DTSTART:${formatGCalDate(evt.startISO)}`,
-    `DTEND:${formatGCalDate(evt.endISO)}`,
-    `SUMMARY:${esc(evt.title.trim())}`,
-    evt.location ? `LOCATION:${esc(evt.location)}` : "",
-    evt.description ? `DESCRIPTION:${esc(evt.description)}` : "",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].filter(Boolean).join("\r\n");
-}
-
+// Apple: insert directly via expo-calendar. No share sheet / .ics — iOS can't
+// reliably present a share sheet from inside an Alert button, which is why the
+// previous approach silently closed.
 export async function openAppleCalendar(evt: CalendarEvent): Promise<void> {
-  const ics = buildICS(evt);
-  const fileUri = `${FileSystem.cacheDirectory}carevoy-ride.ics`;
-  await FileSystem.writeAsStringAsync(fileUri, ics, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(fileUri, {
-      mimeType: "text/calendar",
-      UTI: "com.apple.ical.ics",
-      dialogTitle: "Add ride to calendar",
+  try {
+    const { status } = await Calendar.requestCalendarPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Calendar access needed",
+        "Turn on calendar access for CareVoy in Settings to add your ride.",
+      );
+      return;
+    }
+    let calendarId: string | null = null;
+    if (Platform.OS === "ios") {
+      const def = await Calendar.getDefaultCalendarAsync();
+      calendarId = def?.id ?? null;
+    }
+    if (!calendarId) {
+      const cals = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+      const writable = cals.find((c) => c.allowsModifications);
+      calendarId = writable?.id ?? cals[0]?.id ?? null;
+    }
+    if (!calendarId) {
+      Alert.alert("No calendar found", "Couldn't find a calendar to add your ride to.");
+      return;
+    }
+    await Calendar.createEventAsync(calendarId, {
+      title: evt.title,
+      startDate: new Date(evt.startISO),
+      endDate: new Date(evt.endISO),
+      location: evt.location,
+      notes: evt.description,
     });
-  } else {
-    await Linking.openURL(fileUri);
+    Alert.alert("Added to calendar", "Your ride is on your calendar.");
+  } catch (e) {
+    Alert.alert(
+      "Couldn't add to calendar",
+      e instanceof Error ? e.message : "Please try again.",
+    );
   }
 }
 
