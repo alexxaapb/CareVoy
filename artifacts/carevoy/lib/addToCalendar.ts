@@ -1,5 +1,6 @@
 import { Alert, Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import * as Linking from "expo-linking";
 
 export type CalendarEvent = {
@@ -67,7 +68,15 @@ export async function openAppleCalendar(evt: CalendarEvent): Promise<void> {
   await FileSystem.writeAsStringAsync(fileUri, ics, {
     encoding: FileSystem.EncodingType.UTF8,
   });
-  await Linking.openURL(fileUri);
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(fileUri, {
+      mimeType: "text/calendar",
+      UTI: "com.apple.ical.ics",
+      dialogTitle: "Add ride to calendar",
+    });
+  } else {
+    await Linking.openURL(fileUri);
+  }
 }
 
 // Single entry point — presents a chooser, then routes to the selected calendar.

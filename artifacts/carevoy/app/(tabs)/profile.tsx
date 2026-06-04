@@ -127,7 +127,7 @@ export default function SettingsScreen() {
     try {
       // Race signOut against a short timeout so a stalled token refresh
       // can't leave the button stuck on "Signing out...".
-      await supabase.auth.signOut({ scope: "local" });
+      await supabase.auth.signOut();
     } catch {
       // Ignore sign-out errors — we always want to leave the session and
       // return to the login screen rather than crash or get stuck.

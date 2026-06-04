@@ -110,7 +110,7 @@ export default function SettingsScreen() {
   const doSignOut = async () => {
     setSigningOut(true);
     try {
-      await supabase.auth.signOut({ scope: "local" });
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Sign out error:", error);
     }
