@@ -594,7 +594,11 @@ export default function BookRideScreen() {
 
     const weeksToSchedule = (facilityType === "dialysis" && isRecurring) ? recurringWeeks : 1;
     const recurringSeriesId = weeksToSchedule > 1
-      ? Math.random().toString(36).slice(2) + Date.now().toString(36)
+      ? "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (ch) => {
+          const r = (Math.random() * 16) | 0;
+          const v = ch === "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        })
       : null;
 
     const rows: object[] = [];
