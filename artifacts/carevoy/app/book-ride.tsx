@@ -222,9 +222,14 @@ export default function BookRideScreen() {
   const [timeHour, setTimeHour] = useState("");
   const [timeMinute, setTimeMinute] = useState("");
   const [timeAmPm, setTimeAmPm] = useState<"AM" | "PM">("AM");
+  const [returnTimeHour, setReturnTimeHour] = useState("");
+  const [returnTimeMinute, setReturnTimeMinute] = useState("");
+  const [returnTimeAmPm, setReturnTimeAmPm] = useState<"AM" | "PM">("PM");
+  const [returnTime, setReturnTime] = useState<Date | null>(null);
   const dateDayRef = useRef<TextInput>(null);
   const dateYearRef = useRef<TextInput>(null);
   const timeMinRef = useRef<TextInput>(null);
+  const returnTimeMinRef = useRef<TextInput>(null);
   const [facilityType, setFacilityType] = useState<FacilityType>("hospital");
   const [hospital, setHospital] = useState<string>("");
   const [hospitalCustom, setHospitalCustom] = useState<string>("");
@@ -372,6 +377,10 @@ export default function BookRideScreen() {
     const t = buildSurgeryTime(timeHour, timeMinute, timeAmPm);
     setSurgeryTime(t);
   }, [timeHour, timeMinute, timeAmPm]);
+  useEffect(() => {
+    const t = buildSurgeryTime(returnTimeHour, returnTimeMinute, returnTimeAmPm);
+    setReturnTime(t);
+  }, [returnTimeHour, returnTimeMinute, returnTimeAmPm]);
 
   // Pre-fill from AI extraction
   useEffect(() => {
@@ -432,7 +441,9 @@ export default function BookRideScreen() {
   const validateStep1 = (): string | null => {
     if (!surgeryDate) return "Please select date";
     if (!surgeryTime) return "Please select time";
-    if (!hospital) return "Please select a destination facility";
+    if (rideType === "both" && !returnTime)
+      return "Please choose a return pickup time";
+    if (!hospital) return "Please select a facility";
     if (hospital.startsWith("Other") && !hospitalCustom.trim())
       return "Please type the facility name";
     if (!procedureType.trim())
@@ -581,6 +592,10 @@ export default function BookRideScreen() {
       return;
     }
 
+    if (rideType === "both" && !returnTime) {
+      setError("Please choose a return pickup time for your round trip.");
+      return;
+    }
     const surgeryDateTime = combineDateTime(surgeryDate, surgeryTime);
     const surgeryDateStr = surgeryDate.toISOString().slice(0, 10);
     const hospitalName = finalHospitalName();
@@ -612,9 +627,11 @@ export default function BookRideScreen() {
         const pickup = isPre ? pickupAddress.trim() : hospitalName;
         const dropoff = isPre ? hospitalName : pickupAddress.trim();
         // The time the user picks IS the pickup time for the pre-op leg.
-        // For a round-trip return leg, default to a few hours later.
+        // For a round-trip return leg, use the return time the user chose.
         const pickupTime = new Date(weekSurgeryDateTime);
-        if (!isPre) pickupTime.setHours(pickupTime.getHours() + 4);
+        if (rideType === "both" && !isPre && returnTime) {
+          pickupTime.setHours(returnTime.getHours(), returnTime.getMinutes(), 0, 0);
+        }
 
         rows.push({
           patient_id: bookingPatientId,
@@ -929,10 +946,37 @@ export default function BookRideScreen() {
         >
           {step === 1 && (
             <View>
-              <Text style={styles.stepTitle}>Pickup details</Text>
+              <Text style={styles.stepTitle}>Trip details</Text>
               <Text style={styles.stepSub}>
-                When do you need to be picked up?
+                Where is this ride going, and when?
               </Text>
+              <Text style={styles.label}>Ride direction</Text>
+              <View style={styles.toggleRow}>
+                {[
+                  { v: "pre_op" as RideType, label: "To facility" },
+                  { v: "post_op" as RideType, label: "From facility" },
+                  { v: "both" as RideType, label: "Round trip" },
+                ].map((opt) => (
+                  <Pressable
+                    key={opt.v}
+                    style={[
+                      styles.toggle,
+                      rideType === opt.v && styles.toggleActive,
+                    ]}
+                    onPress={() => setRideType(opt.v)}
+                  >
+                    <Text
+                      style={[
+                        styles.toggleText,
+                        rideType === opt.v && styles.toggleTextActive,
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
 
               <Text style={styles.label}>
                 Pickup date<Required />
@@ -1063,6 +1107,82 @@ export default function BookRideScreen() {
               </View>
               {surgeryTime ? (
                 <Text style={styles.dateHelper}>{formatTime(surgeryTime)}</Text>
+              ) : null}
+              {rideType === "both" ? (
+                <>
+                  <Text style={styles.label}>
+                    Return pickup time<Required />
+                  </Text>
+                  <Text style={styles.dateHelper}>
+                    When you want to be picked up to head home.
+                  </Text>
+                  <View style={styles.dateRow}>
+                    <View style={[styles.dateField, { flex: 1 }]}>
+                      <Text style={styles.dateFieldLabel}>Hour</Text>
+                      <TextInput
+                        style={styles.dateInput}
+                        placeholder="1"
+                        placeholderTextColor={MUTED}
+                        value={returnTimeHour}
+                        onChangeText={(v) => {
+                          const clean = v.replace(/\D/g, "").slice(0, 2);
+                          setReturnTimeHour(clean);
+                          if (clean.length === 2) returnTimeMinRef.current?.focus();
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        returnKeyType="next"
+                      />
+                    </View>
+                    <View style={[styles.dateField, { flex: 1 }]}>
+                      <Text style={styles.dateFieldLabel}>Minute</Text>
+                      <TextInput
+                        ref={returnTimeMinRef}
+                        style={styles.dateInput}
+                        placeholder="30"
+                        placeholderTextColor={MUTED}
+                        value={returnTimeMinute}
+                        onChangeText={(v) => {
+                          const clean = v.replace(/\D/g, "").slice(0, 2);
+                          setReturnTimeMinute(clean);
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        returnKeyType="done"
+                      />
+                    </View>
+                    <View style={[styles.dateField, { flex: 1.4 }]}>
+                      <Text style={styles.dateFieldLabel}>AM / PM</Text>
+                      <View style={styles.ampmRow}>
+                        {(["AM", "PM"] as const).map((v) => {
+                          const active = returnTimeAmPm === v;
+                          return (
+                            <Pressable
+                              key={v}
+                              onPress={() => setReturnTimeAmPm(v)}
+                              style={[
+                                styles.ampmBtn,
+                                active && styles.ampmBtnActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.ampmText,
+                                  active && styles.ampmTextActive,
+                                ]}
+                              >
+                                {v}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  </View>
+                  {returnTime ? (
+                    <Text style={styles.dateHelper}>{formatTime(returnTime)}</Text>
+                  ) : null}
+                </>
               ) : null}
 
               <Text style={styles.label}>
@@ -1256,35 +1376,14 @@ export default function BookRideScreen() {
                 Pickup info and any special needs.
               </Text>
 
-              <Text style={styles.label}>Ride type</Text>
-              <View style={styles.toggleRow}>
-                {[
-                  { v: "pre_op" as RideType, label: "Pre-op" },
-                  { v: "post_op" as RideType, label: "Post-op" },
-                  { v: "both" as RideType, label: "Both" },
-                ].map((opt) => (
-                  <Pressable
-                    key={opt.v}
-                    style={[
-                      styles.toggle,
-                      rideType === opt.v && styles.toggleActive,
-                    ]}
-                    onPress={() => setRideType(opt.v)}
-                  >
-                    <Text
-                      style={[
-                        styles.toggleText,
-                        rideType === opt.v && styles.toggleTextActive,
-                      ]}
-                    >
-                      {opt.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
 
               <Text style={styles.label}>
-                Pickup address<Required />
+                {rideType === "post_op"
+                  ? "Drop-off address (going home)"
+                  : rideType === "both"
+                  ? "Your home address"
+                  : "Pickup address (where we get you)"}
+                <Required />
               </Text>
               <Pressable
                 onPress={detectLocation}
