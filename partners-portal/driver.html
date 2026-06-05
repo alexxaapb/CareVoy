@@ -1,384 +1,499 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CareVoy — Driver Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Poppins', -apple-system, sans-serif; background: #F0F4F8; min-height: 100vh; }
-
-    #loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .spinner { width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #00C2A8; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Topbar ── */
-    .topbar { background: #fff; border-bottom: 1px solid #E2E8F0; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-    .topbar-left { display: flex; flex-direction: column; }
-    .topbar-title { color: #050D1F; font-size: 15px; font-weight: 700; }
-    .topbar-sub { color: #9CA3AF; font-size: 11px; }
-    .signout-link { background: none; border: none; color: #9CA3AF; font-size: 13px; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; }
-    .signout-link:hover { background: #F0F4F8; color: #374151; }
-
-    /* ── Page ── */
-    .page { max-width: 720px; margin: 0 auto; padding: 24px 20px 64px; }
-
-    /* ── Earnings ── */
-    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF; margin-bottom: 10px; }
-    .earnings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-    .earn-card { background: white; border-radius: 12px; border: 1px solid #E2E8F0; padding: 16px 18px; }
-    .earn-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6B7280; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-    .earn-icon { font-size: 13px; opacity: 0.6; }
-    .earn-value { font-size: 26px; font-weight: 700; color: #050D1F; }
-    .earn-value.teal { color: #00C2A8; }
-    .earn-sub { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
-
-    /* ── Performance ── */
-    .perf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-    .perf-card { background: white; border-radius: 12px; border: 1px solid #E2E8F0; padding: 16px 18px; }
-    .perf-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6B7280; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-    .perf-value { font-size: 24px; font-weight: 700; color: #050D1F; }
-    .perf-value.teal { color: #00C2A8; }
-    .perf-value.gold { color: #F5A623; }
-    .perf-sub { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
-
-    /* ── MVP banner ── */
-    .mvp-banner { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 9px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .mvp-icon { font-size: 13px; }
-    .mvp-text { font-size: 12px; color: #92400e; }
-
-    /* ── Ride cards ── */
-    .rides-section { }
-    .ride-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; padding: 18px; margin-bottom: 12px; }
-    .ride-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .ride-time { font-size: 16px; font-weight: 700; color: #00C2A8; }
-    .ride-patient { font-size: 16px; font-weight: 700; color: #050D1F; margin-bottom: 10px; }
-    .ride-details { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-    .ride-detail-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #374151; }
-    .ride-detail-icon { flex-shrink: 0; width: 16px; text-align: center; color: #9CA3AF; margin-top: 1px; }
-    .ride-tags { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-    .tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 7px; font-size: 11px; font-weight: 600; }
-    .tag-blue { background: #dbeafe; color: #1d4ed8; }
-    .tag-gold { background: #fef3c7; color: #b45309; }
-    .tag-teal { background: #d1faf4; color: #047857; }
-    .tag-gray { background: #F0F4F8; color: #6B7280; }
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CareVoy — Driver Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Poppins',-apple-system,sans-serif; background:#F0F4F8; min-height:100vh; display:flex; }
+    .sidebar { width:200px; min-height:100vh; background:#050D1F; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:20; }
+    .sidebar-brand { padding:18px 16px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.07); }
+    .brand-name { color:#fff; font-size:15px; font-weight:700; }
+    .sidebar-nav { flex:1; padding:14px 10px; display:flex; flex-direction:column; gap:2px; }
+    .nav-item { display:flex; align-items:center; padding:10px 12px; border-radius:9px; color:#9CA3AF; font-size:13px; font-weight:500; cursor:pointer; border:none; background:none; font-family:inherit; width:100%; text-align:left; transition:all 0.15s; }
+    .nav-item:hover { background:rgba(255,255,255,0.06); color:#fff; }
+    .nav-item.active { background:rgba(0,194,168,0.15); color:#00C2A8; font-weight:600; }
+    .main { margin-left:200px; flex:1; min-height:100vh; display:flex; flex-direction:column; }
+    .topbar { background:#050D1F; padding:0 28px; height:58px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .role-pill { font-size:10px; font-weight:700; letter-spacing:1.5px; padding:4px 10px; border-radius:999px; background:rgba(0,194,168,0.18); color:#00C2A8; }
+    .signout-btn { background:none; border:1px solid rgba(255,255,255,0.18); color:#9CA3AF; padding:6px 16px; border-radius:8px; cursor:pointer; font-size:12px; font-family:inherit; }
+    .signout-btn:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
+    .page { padding:24px 28px 64px; max-width:760px; }
+    /* Stats */
+    .earn-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+    .earn-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E2E8F0; }
+    .earn-label { color:#6B7280; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
+    .earn-value { font-size:26px; font-weight:700; color:#050D1F; }
+    .earn-value.teal { color:#00C2A8; }
+    .earn-sub { font-size:11px; color:#9CA3AF; margin-top:2px; }
+    .perf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+    .perf-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E2E8F0; }
+    /* Section label */
+    .sec-label { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+    /* Ride cards */
+    .ride-card { background:#fff; border-radius:14px; border:1px solid #E2E8F0; padding:18px 20px; margin-bottom:12px; transition:box-shadow 0.15s; }
+    .ride-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.07); }
+    .ride-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .ride-time { font-size:16px; font-weight:700; color:#00C2A8; }
+    .ride-patient { font-size:16px; font-weight:700; color:#050D1F; margin-bottom:10px; }
+    .ride-details { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+    .ride-detail { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#374151; }
+    .ride-detail-icon { width:16px; text-align:center; color:#9CA3AF; flex-shrink:0; margin-top:1px; font-size:12px; }
+    .ride-tags { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+    .tag { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:7px; font-size:11px; font-weight:600; }
+    .tag-blue { background:#dbeafe; color:#1d4ed8; }
+    .tag-teal { background:#d1faf4; color:#047857; }
+    .tag-gold { background:#fef3c7; color:#b45309; }
     /* Status badges */
-    .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-    .status-confirmed { background: #dbeafe; color: #1d4ed8; }
-    .status-en_route  { background: #fef3c7; color: #b45309; }
-    .status-arrived   { background: #dcfce7; color: #16a34a; }
-    .status-completed { background: #F0F4F8; color: #6B7280; }
-    .status-assigned  { background: #d1faf4; color: #047857; }
-    .status-pending   { background: #F0F4F8; color: #6B7280; }
-
+    .badge { display:inline-flex; align-items:center; gap:3px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:700; }
+    .b-blue { background:#dbeafe; color:#1d4ed8; }
+    .b-gold { background:#fef3c7; color:#b45309; }
+    .b-teal { background:#d1faf4; color:#047857; }
+    .b-green { background:#dcfce7; color:#16a34a; }
+    .b-gray { background:#F0F4F8; color:#6B7280; }
+    .b-orange { background:#ffedd5; color:#c2410c; }
     /* Action buttons */
-    .ride-action { width: 100%; padding: 13px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .ride-action.start    { background: #00C2A8; color: #050D1F; }
-    .ride-action.complete { background: #16a34a; color: white; }
-    .ride-action.done     { background: #F0F4F8; color: #9CA3AF; border: 1px solid #E2E8F0; cursor: default; }
-    .ride-action.accept   { background: #050D1F; color: #00C2A8; }
-    .ride-action:hover:not(.done) { opacity: 0.88; }
-
-    /* No partner warning */
-    .warn-card { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 14px; padding: 24px; }
-    .warn-title { color: #92400e; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .warn-body  { color: #78350f; font-size: 14px; line-height: 1.5; }
-
+    .ride-action { width:100%; padding:13px; border-radius:10px; border:none; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity 0.15s; }
+    .ride-action:hover { opacity:0.88; }
+    .act-start    { background:#00C2A8; color:#050D1F; }
+    .act-complete { background:#16a34a; color:#fff; }
+    .act-done     { background:#F0F4F8; color:#9CA3AF; border:1px solid #E2E8F0; cursor:default; }
+    .act-done:hover { opacity:1; }
+    /* Warn */
+    .warn-card { background:#fef3c7; border:1px solid #f59e0b; border-radius:14px; padding:24px; }
+    .warn-title { color:#92400e; font-size:16px; font-weight:700; margin-bottom:6px; }
+    .warn-body { color:#78350f; font-size:13px; line-height:1.5; }
+    /* History table */
+    .panel { background:#fff; border-radius:14px; border:1px solid #E2E8F0; overflow:hidden; margin-bottom:20px; }
+    .panel-hd { padding:14px 18px; border-bottom:1px solid #F0F4F8; display:flex; justify-content:space-between; align-items:center; }
+    .panel-title { color:#050D1F; font-size:14px; font-weight:700; }
+    .tbl-head { display:grid; grid-template-columns:1.4fr 1fr 1fr 0.8fr; padding:9px 18px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; }
+    .th { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.5px; }
+    .tbl-row { display:grid; grid-template-columns:1.4fr 1fr 1fr 0.8fr; align-items:center; padding:12px 18px; border-bottom:1px solid #F0F4F8; }
+    .tbl-row:last-child { border-bottom:none; }
+    .td { font-size:13px; color:#050D1F; }
+    .td.muted { color:#6B7280; font-size:12px; }
+    .empty { padding:40px; text-align:center; color:#9CA3AF; font-size:13px; }
+    /* Settings */
+    .settings-section { background:#fff; border-radius:14px; border:1px solid #E2E8F0; padding:22px; margin-bottom:16px; }
+    .settings-title { font-size:14px; font-weight:700; color:#050D1F; margin-bottom:14px; border-bottom:1px solid #F0F4F8; padding-bottom:10px; }
+    .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F0F4F8; gap:12px; }
+    .settings-row:last-child { border-bottom:none; }
+    .settings-key { font-size:11px; font-weight:700; color:#6B7280; text-transform:uppercase; }
+    .settings-val { font-size:13px; color:#050D1F; text-align:right; }
+    /* MVP banner */
+    .mvp-banner { background:#fef3c7; border:1px solid #f59e0b; border-radius:9px; padding:10px 14px; margin-bottom:16px; font-size:12px; color:#92400e; }
     /* Toast */
-    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 400px; text-align: center; }
-    .toast.show { opacity: 1; }
-    .toast.success { background: #065f46; }
-
-    @media (max-width: 480px) { .earnings-grid, .perf-grid { grid-template-columns: 1fr 1fr; } }
-  </style>
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#050D1F; color:#fff; padding:13px 22px; border-radius:12px; font-size:13px; font-weight:600; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; max-width:400px; text-align:center; }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#065f46; }
+    #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F0F4F8; z-index:100; }
+    .spinner { width:36px; height:36px; border:3px solid #E2E8F0; border-top-color:#00C2A8; border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.earn-grid,.perf-grid{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
 
 <div id="loading"><div class="spinner"></div></div>
 
-<div id="app" style="display:none">
+<div id="app" style="display:none;width:100%">
+
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <img src="/carevoy-icon-centered.svg" width="32" height="32" style="border-radius:7px;flex-shrink:0">
+    <span class="brand-name">CareVoy</span>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showNav('overview',this)">Overview</button>
+    <button class="nav-item" onclick="showNav('schedule',this)">My Schedule</button>
+    <button class="nav-item" onclick="showNav('history',this)">Ride History</button>
+    <button class="nav-item" onclick="showNav('earnings',this)">Earnings</button>
+    <button class="nav-item" onclick="showNav('settings',this)">Settings</button>
+  </nav>
+  <div style="padding:14px 10px;border-top:1px solid rgba(255,255,255,0.07)">
+    <div id="sidebarPartner" style="color:#6B7280;font-size:11px;padding:4px 12px;line-height:1.4"></div>
+  </div>
+</div>
+
+<div class="main">
   <div class="topbar">
-    <div class="topbar-left" style="display:flex;align-items:center;gap:10px">
-      <img src="/carevoy-icon-centered.svg" width="32" height="32" style="border-radius:7px;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:10px">
       <div>
-        <div class="topbar-title" id="topTitle">NEMT Driver Portal</div>
-        <div class="topbar-sub" id="topSub"></div>
+        <div style="color:#fff;font-size:15px;font-weight:700">NEMT Driver Portal</div>
+        <div style="color:#6B7280;font-size:11px" id="topSub"></div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:12px"><span style="color:#9CA3AF;font-size:13px" id="driverLabel">Driver</span><button style="background:none;border:1px solid rgba(255,255,255,0.2);color:#9CA3AF;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit" onclick="signOut()">Sign Out</button></div>
+    <div class="topbar-right">
+      <span class="role-pill">DRIVER</span>
+      <button class="signout-btn" onclick="signOut()">Sign Out</button>
+    </div>
   </div>
 
-  <div class="page">
+  <!-- ── OVERVIEW ── -->
+  <div class="page" id="sec-overview">
 
-    <!-- Earnings -->
-    <div class="section-label">Earnings</div>
-    <div class="earnings-grid">
+    <div class="sec-label">Earnings</div>
+    <div class="earn-grid">
       <div class="earn-card">
-        <div class="earn-label">Today <span class="earn-icon">$</span></div>
+        <div class="earn-label">Today</div>
         <div class="earn-value teal" id="earnToday">—</div>
         <div class="earn-sub" id="earnTodaySub">— rides</div>
       </div>
       <div class="earn-card">
-        <div class="earn-label">This Week <span class="earn-icon">📅</span></div>
+        <div class="earn-label">This Week</div>
         <div class="earn-value" id="earnWeek">—</div>
         <div class="earn-sub" id="earnWeekSub">— completed</div>
       </div>
       <div class="earn-card">
-        <div class="earn-label">This Month <span class="earn-icon">↗</span></div>
+        <div class="earn-label">This Month</div>
         <div class="earn-value" id="earnMonth">—</div>
         <div class="earn-sub" id="earnMonthSub">— completed</div>
       </div>
     </div>
 
-    <!-- Performance -->
-    <div class="section-label">Performance</div>
+    <div class="sec-label">Performance</div>
     <div class="perf-grid">
       <div class="perf-card">
-        <div class="perf-label">Completion Rate <span>✓</span></div>
-        <div class="perf-value teal" id="perfCompletion">—</div>
-        <div class="perf-sub">this month</div>
+        <div class="earn-label">Completion Rate</div>
+        <div class="earn-value teal" id="perfComp">—</div>
+        <div class="earn-sub">this month</div>
       </div>
       <div class="perf-card">
-        <div class="perf-label">Avg Fare <span>$</span></div>
-        <div class="perf-value" id="perfAvgFare">—</div>
-        <div class="perf-sub">per ride</div>
+        <div class="earn-label">Avg Fare</div>
+        <div class="earn-value" id="perfFare">—</div>
+        <div class="earn-sub">per ride</div>
       </div>
       <div class="perf-card">
-        <div class="perf-label">Cancelled / No-Show <span>⚠</span></div>
-        <div class="perf-value gold" id="perfCancelled">—</div>
-        <div class="perf-sub">this month</div>
+        <div class="earn-label">Cancelled / No-Show</div>
+        <div class="earn-value" style="color:#F5A623" id="perfCanc">—</div>
+        <div class="earn-sub">this month</div>
       </div>
     </div>
 
-    <!-- Today's rides -->
-    <div class="section-label">Today's Rides</div>
-
-    <div class="mvp-banner">
-      <span class="mvp-icon">ℹ</span>
-      <span class="mvp-text">MVP testing tool — for simulating ride status before NEMT API integration.</span>
+    <div class="sec-label">Today's Rides</div>
+    <div class="mvp-banner">ℹ MVP — simulating ride status before full NEMT dispatch API integration.</div>
+    <div id="todayRidesSection">
+      <div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">Loading today's rides…</div>
     </div>
-
-    <div class="rides-section" id="ridesSection">
-      <div class="empty-state" style="text-align:center;padding:40px;color:#9CA3AF;background:white;border-radius:14px;border:1px solid #E2E8F0">Loading rides…</div>
-    </div>
-
   </div>
-</div>
+
+  <!-- ── SCHEDULE ── -->
+  <div class="page" id="sec-schedule" style="display:none">
+    <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:4px">My Schedule</div>
+    <div style="font-size:13px;color:#6B7280;margin-bottom:22px">Upcoming assigned rides</div>
+    <div class="panel">
+      <div class="tbl-head" style="grid-template-columns:1.4fr 1fr 1.2fr 0.8fr">
+        <div class="th">Patient</div>
+        <div class="th">Date & Time</div>
+        <div class="th">Destination</div>
+        <div class="th">Status</div>
+      </div>
+      <div id="scheduleBody"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY ── -->
+  <div class="page" id="sec-history" style="display:none">
+    <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:4px">Ride History</div>
+    <div style="font-size:13px;color:#6B7280;margin-bottom:22px">All completed rides</div>
+    <div class="panel">
+      <div class="tbl-head">
+        <div class="th">Patient</div>
+        <div class="th">Date</div>
+        <div class="th">Destination</div>
+        <div class="th">Fare</div>
+      </div>
+      <div id="historyBody"><div class="empty">No completed rides yet.</div></div>
+    </div>
+  </div>
+
+  <!-- ── EARNINGS ── -->
+  <div class="page" id="sec-earnings" style="display:none">
+    <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:4px">Earnings</div>
+    <div style="font-size:13px;color:#6B7280;margin-bottom:22px">Detailed breakdown</div>
+    <div class="panel" style="padding:24px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">This Month Total</div>
+          <div style="font-size:32px;font-weight:700;color:#050D1F" id="earningsMonthBig">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">All Time Total</div>
+          <div style="font-size:32px;font-weight:700;color:#00C2A8" id="earningsAllTime">—</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#6B7280">Detailed payout statements are sent monthly to your registered email by your NEMT company dispatcher.</div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="sec-settings" style="display:none">
+    <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:4px">Settings</div>
+    <div style="font-size:13px;color:#6B7280;margin-bottom:22px">Your driver account</div>
+
+    <div class="settings-section">
+      <div class="settings-title">Account</div>
+      <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setName">—</span></div>
+      <div class="settings-row"><span class="settings-key">NEMT Company</span><span class="settings-val" id="setCompany">—</span></div>
+      <div class="settings-row"><span class="settings-key">Role</span><span class="settings-val">Driver</span></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">Assignment</div>
+      <div style="font-size:13px;color:#6B7280;line-height:1.6">To update your NEMT company assignment or vehicle type, contact your CareVoy admin at <a href="mailto:admin@carevoy.co" style="color:#00C2A8;text-decoration:none">admin@carevoy.co</a>.</div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">Notifications</div>
+      <div style="font-size:13px;color:#6B7280;line-height:1.6">You receive push notifications (coming soon) and SMS alerts when a new ride is assigned to you.</div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
 
 <div class="toast" id="toast"></div>
 
 <script>
-  var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
-  var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
-  var AVG_FARE = 46;
+var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+var AVG_FARE = 46;
 
-  var token = sessionStorage.getItem('cv_nemt_token');
-  var uid   = sessionStorage.getItem('cv_nemt_uid');
-  if (!token || !uid) { window.location.href = '/'; }
+var token = sessionStorage.getItem('cv_nemt_token');
+var uid   = sessionStorage.getItem('cv_nemt_uid');
+if (!token || !uid) { window.location.href = '/'; }
 
-  var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
-  var staffInfo  = null;
-  var allRides   = [];
-  // Simulated status overrides for MVP testing
-  var statusOverrides = {};
+var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+var staffInfo = null;
+var partnerInfo = null;
+var allRides = [];
+var statusOverrides = {};
 
-  // ── Init ──────────────────────────────────────────────
-  async function init() {
-    try {
-      var sRes = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=*', { headers: H });
-      var sData = await sRes.json();
-      staffInfo = sData[0];
+var STATUS_CLASS = {
+  pending:'b-gray', confirmed:'b-teal', assigned:'b-teal',
+  en_route:'b-gold', arrived:'b-green', completed:'b-green', cancelled:'b-gray'
+};
+var STATUS_LABELS = {
+  pending:'Pending', confirmed:'Confirmed', assigned:'Assigned',
+  en_route:'En Route', arrived:'Arrived', completed:'Completed', cancelled:'Cancelled'
+};
+function badge(s) {
+  return '<span class="badge ' + (STATUS_CLASS[s]||'b-gray') + '">● ' + (STATUS_LABELS[s]||s) + '</span>';
+}
 
-      if (!staffInfo || !staffInfo.nemt_partner_id) {
-        showNoPartner();
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        return;
-      }
+async function init() {
+  try {
+    var sr = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=*', { headers: H });
+    var sd = await sr.json();
+    staffInfo = sd[0] || null;
 
-      // Get partner name
-      var pRes = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name', { headers: H });
-      var pData = await pRes.json();
-      var partnerName = pData[0] ? pData[0].company_name : 'NEMT Partner';
-
-      var today = new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
-      document.getElementById('topTitle').textContent = 'NEMT Driver Portal';
-      document.getElementById('topSub').textContent = partnerName + ' · ' + today;
-
-      await loadRides();
+    if (!staffInfo || !staffInfo.nemt_partner_id) {
+      showNoPartner();
       document.getElementById('loading').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-    } catch(e) {
-      document.getElementById('loading').innerHTML = '<div style="text-align:center;color:#6B7280"><p style="font-size:18px;margin-bottom:8px">⚠️</p><p>' + e.message + '</p></div>';
-    }
-  }
-
-  // ── Load rides ────────────────────────────────────────
-  async function loadRides() {
-    if (!staffInfo || !staffInfo.nemt_partner_id) return;
-    var today = todayStr();
-    var res = await fetch(
-      SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + staffInfo.nemt_partner_id +
-      '&pickup_time=gte.' + today + 'T00:00:00&pickup_time=lt.' + today + 'T23:59:59' +
-      '&select=*&order=pickup_time.asc',
-      { headers: H }
-    );
-    allRides = await res.json();
-    if (!Array.isArray(allRides)) allRides = [];
-
-    // Also get month/week rides for stats
-    var weekAgo  = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
-    var monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30);
-
-    var allRes = await fetch(
-      SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + staffInfo.nemt_partner_id + '&select=status,actual_cost,pickup_time',
-      { headers: H }
-    );
-    var allData = await allRes.json();
-    if (!Array.isArray(allData)) allData = [];
-
-    computeStats(allData);
-    renderRides();
-  }
-
-  // ── Stats ─────────────────────────────────────────────
-  function computeStats(all) {
-    var today = todayStr();
-    var now = new Date();
-    var weekStart = new Date(now); weekStart.setDate(now.getDate()-7); weekStart.setHours(0,0,0,0);
-    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    var todayRides = allRides; // already filtered to today
-    var weekRides  = all.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= weekStart; });
-    var monthRides = all.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= monthStart; });
-
-    var todayDone  = todayRides.filter(function(r){ return getStatus(r) === 'completed'; }).length;
-    var weekDone   = weekRides.filter(function(r){ return r.status === 'completed'; }).length;
-    var monthDone  = monthRides.filter(function(r){ return r.status === 'completed'; }).length;
-    var monthCanc  = monthRides.filter(function(r){ return r.status === 'cancelled'; }).length;
-
-    var todayEarnings  = todayDone  * AVG_FARE;
-    var weekEarnings   = weekDone   * AVG_FARE;
-    var monthEarnings  = monthDone  * AVG_FARE;
-    var compRate = monthRides.length > 0 ? Math.round((monthDone/monthRides.length)*100) : 0;
-
-    document.getElementById('earnToday').textContent    = '$' + todayEarnings;
-    document.getElementById('earnTodaySub').textContent = todayRides.length + ' ride' + (todayRides.length===1?'':'s');
-    document.getElementById('earnWeek').textContent     = '$' + weekEarnings;
-    document.getElementById('earnWeekSub').textContent  = weekDone + ' completed';
-    document.getElementById('earnMonth').textContent    = '$' + monthEarnings;
-    document.getElementById('earnMonthSub').textContent = monthDone + ' completed';
-
-    document.getElementById('perfCompletion').textContent = compRate + '%';
-    document.getElementById('perfAvgFare').textContent    = '$' + AVG_FARE;
-    document.getElementById('perfCancelled').textContent  = monthCanc;
-  }
-
-  // ── Render rides ──────────────────────────────────────
-  function getStatus(r) {
-    return statusOverrides[r.id] || r.status;
-  }
-
-  function renderRides() {
-    var section = document.getElementById('ridesSection');
-    if (!allRides.length) {
-      section.innerHTML = '<div style="text-align:center;padding:40px;color:#9CA3AF;background:white;border-radius:14px;border:1px solid #E2E8F0">No rides assigned for today.</div>';
+      document.getElementById('app').style.display = 'flex';
       return;
     }
-    section.innerHTML = allRides.map(function(r){ return rideCard(r); }).join('');
+
+    var pr = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name,city', { headers: H });
+    var pd = await pr.json();
+    partnerInfo = pd[0] || null;
+
+    var partnerName = partnerInfo ? partnerInfo.company_name : 'NEMT Partner';
+    document.getElementById('topSub').textContent = partnerName + ' · ' + new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+    document.getElementById('sidebarPartner').textContent = partnerName;
+    document.getElementById('setName').textContent = staffInfo.full_name || '—';
+    document.getElementById('setCompany').textContent = partnerName;
+
+    await loadRides();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '<div style="text-align:center;color:#6B7280"><p style="font-size:16px">⚠️</p><p style="font-size:13px;margin-top:6px">' + e.message + '</p></div>';
+  }
+}
+
+async function loadRides() {
+  if (!staffInfo || !staffInfo.nemt_partner_id) return;
+  var today = todayStr();
+  var r = await fetch(
+    SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + staffInfo.nemt_partner_id + '&select=*&order=pickup_time.asc',
+    { headers: H }
+  );
+  allRides = await r.json();
+  if (!Array.isArray(allRides)) allRides = [];
+
+  computeStats();
+  renderTodayRides();
+  renderSchedule();
+  renderHistory();
+}
+
+function computeStats() {
+  var today = todayStr();
+  var now = new Date();
+  var weekStart = new Date(now); weekStart.setDate(now.getDate()-7); weekStart.setHours(0,0,0,0);
+  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  var todayR  = allRides.filter(function(r){ return r.pickup_time && r.pickup_time.startsWith(today); });
+  var weekR   = allRides.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= weekStart; });
+  var monthR  = allRides.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= monthStart; });
+
+  var todayDone  = todayR.filter(function(r){ return getStatus(r)==='completed'; }).length;
+  var weekDone   = weekR.filter(function(r){ return r.status==='completed'; }).length;
+  var monthDone  = monthR.filter(function(r){ return r.status==='completed'; }).length;
+  var monthCanc  = monthR.filter(function(r){ return r.status==='cancelled'; }).length;
+  var compRate   = monthR.length > 0 ? Math.round((monthDone/monthR.length)*100) : 0;
+
+  document.getElementById('earnToday').textContent    = '$' + todayDone * AVG_FARE;
+  document.getElementById('earnTodaySub').textContent = todayR.length + ' ride' + (todayR.length===1?'':'s');
+  document.getElementById('earnWeek').textContent     = '$' + weekDone * AVG_FARE;
+  document.getElementById('earnWeekSub').textContent  = weekDone + ' completed';
+  document.getElementById('earnMonth').textContent    = '$' + monthDone * AVG_FARE;
+  document.getElementById('earnMonthSub').textContent = monthDone + ' completed';
+  document.getElementById('perfComp').textContent     = compRate + '%';
+  document.getElementById('perfFare').textContent     = '$' + AVG_FARE;
+  document.getElementById('perfCanc').textContent     = monthCanc;
+  document.getElementById('earningsMonthBig').textContent = '$' + monthDone * AVG_FARE;
+  document.getElementById('earningsAllTime').textContent  = '$' + allRides.filter(function(r){return r.status==='completed';}).length * AVG_FARE;
+}
+
+function getStatus(r) { return statusOverrides[r.id] || r.status; }
+
+function renderTodayRides() {
+  var today = todayStr();
+  var todayR = allRides.filter(function(r){ return r.pickup_time && r.pickup_time.startsWith(today); });
+  var section = document.getElementById('todayRidesSection');
+  if (!todayR.length) {
+    section.innerHTML = '<div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">No rides assigned for today.</div>';
+    return;
+  }
+  section.innerHTML = todayR.map(function(r){ return rideCard(r); }).join('');
+}
+
+function rideCard(r) {
+  var status = getStatus(r);
+  var t = r.pickup_time ? new Date(r.pickup_time) : null;
+  var timeStr = t ? t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+  var proc = r.procedure_type || 'Medical transport';
+  var dest = r.dropoff_address || r.hospital_name || '—';
+  var addr = r.pickup_address || 'Patient to confirm address';
+
+  var statusBadge = '<span class="badge ' + (STATUS_CLASS[status]||'b-gray') + '">● ' + (STATUS_LABELS[status]||status) + '</span>';
+
+  var tags = '';
+  if (r.companion_requested) tags += '<span class="tag tag-blue">Companion</span>';
+  if (r.caregiver_name) tags += '<span class="tag tag-teal">Caregiver booking</span>';
+  if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('wheelchair')) tags += '<span class="tag tag-teal">Wheelchair</span>';
+  if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('extra')) tags += '<span class="tag tag-gold">Extra time</span>';
+
+  var actionBtn = '';
+  if (['assigned','confirmed','pending'].includes(status)) {
+    actionBtn = '<button class="ride-action act-start" onclick="updateStatus(\'' + r.id + '\',\'en_route\')">▶ Start Ride</button>';
+  } else if (['en_route','arrived'].includes(status)) {
+    actionBtn = '<button class="ride-action act-complete" onclick="updateStatus(\'' + r.id + '\',\'completed\')">✓ Complete Ride</button>';
+  } else if (status === 'completed') {
+    actionBtn = '<button class="ride-action act-done" disabled>✓ Completed</button>';
   }
 
-  function rideCard(r) {
-    var status = getStatus(r);
-    var t = r.pickup_time ? new Date(r.pickup_time) : null;
-    var timeStr = t ? t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
-    var proc = r.procedure_type || 'Medical transport';
-    var hospital = r.dropoff_address || r.hospital_name || '—';
-    var addr = r.pickup_address || '—';
+  return '<div class="ride-card" id="card-' + r.id + '">' +
+    '<div class="ride-card-header"><span class="ride-time">' + timeStr + '</span>' + statusBadge + '</div>' +
+    '<div class="ride-patient">' + esc(r.patient_name || 'Patient') + '</div>' +
+    '<div class="ride-details">' +
+      '<div class="ride-detail"><span class="ride-detail-icon">◎</span><span>' + esc(addr) + '</span></div>' +
+      '<div class="ride-detail"><span class="ride-detail-icon">→</span><span>' + esc(dest) + '</span></div>' +
+      '<div class="ride-detail"><span class="ride-detail-icon">+</span><span>' + esc(proc) + '</span></div>' +
+    '</div>' +
+    (tags ? '<div class="ride-tags">' + tags + '</div>' : '') +
+    actionBtn +
+  '</div>';
+}
 
-    var badge = '<span class="status-badge status-' + status + '">● ' + status.replace('_',' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) + '</span>';
-
-    var tags = '';
-    if (r.companion_requested) tags += '<span class="tag tag-blue">👤 Companion</span>';
-    if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('wheelchair')) tags += '<span class="tag tag-teal">♿ Wheelchair</span>';
-    if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('extra')) tags += '<span class="tag tag-gold">⏱ Extra time</span>';
-    if (!tags && r.mobility_needs) tags = '<span class="tag tag-gray">' + esc(r.mobility_needs) + '</span>';
-
-    var actionBtn = '';
-    if (status === 'assigned' || status === 'confirmed' || status === 'pending') {
-      actionBtn = '<button class="ride-action start" onclick="updateRideStatus(\'' + r.id + '\', \'en_route\')">▶ Start Ride</button>';
-    } else if (status === 'en_route' || status === 'arrived') {
-      actionBtn = '<button class="ride-action complete" onclick="updateRideStatus(\'' + r.id + '\', \'completed\')">✓ Complete Ride</button>';
-    } else if (status === 'completed') {
-      actionBtn = '<button class="ride-action done" disabled>✓ Completed</button>';
-    }
-
-    return '<div class="ride-card" id="card-' + r.id + '">' +
-      '<div class="ride-card-header"><span class="ride-time">' + timeStr + '</span>' + badge + '</div>' +
-      '<div class="ride-patient">' + esc(r.patient_name || 'Patient') + '</div>' +
-      '<div class="ride-details">' +
-        '<div class="ride-detail-row"><span class="ride-detail-icon">📍</span><span>' + esc(addr) + '</span></div>' +
-        '<div class="ride-detail-row"><span class="ride-detail-icon">➤</span><span>' + esc(hospital) + '</span></div>' +
-        '<div class="ride-detail-row"><span class="ride-detail-icon">✚</span><span>' + esc(proc) + '</span></div>' +
-      '</div>' +
-      (tags ? '<div class="ride-tags">' + tags + '</div>' : '') +
-      actionBtn +
-    '</div>';
-  }
-
-  // ── Status updates ────────────────────────────────────
-  async function updateRideStatus(rideId, newStatus) {
-    // Optimistic UI update
-    statusOverrides[rideId] = newStatus;
-    var card = document.getElementById('card-' + rideId);
-    var r = allRides.find(function(x){ return x.id === rideId; });
-    if (card && r) {
-      card.outerHTML = rideCard(Object.assign({}, r));
-      // Re-bind after replace
-    }
-    renderRides();
-
-    var label = { en_route: 'En route — ride started', completed: 'Ride completed!' };
-    showToast('✓ ' + (label[newStatus] || newStatus), 'success');
-
-    // Write to Supabase
-    try {
-      await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
-        method: 'PATCH',
-        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ status: newStatus })
-      });
-    } catch(e) { /* silently ignore — optimistic update already applied */ }
-  }
-
-  function showNoPartner() {
-    var section = document.getElementById('ridesSection');
-    if (section) {
-      section.innerHTML = '<div class="warn-card"><div class="warn-title">Not linked to a transport company</div><div class="warn-body">Your account isn\'t connected to an NEMT partner yet. Contact your CareVoy admin to get assigned.</div></div>';
-    }
-    // Hide stats sections
-    ['earnToday','earnWeek','earnMonth','perfCompletion','perfAvgFare','perfCancelled'].forEach(function(id){
-      var el = document.getElementById(id); if (el) el.textContent = '—';
+// ── Status update — writes to Supabase, coordinator + admin see it instantly ──
+async function updateStatus(rideId, newStatus) {
+  statusOverrides[rideId] = newStatus;
+  renderTodayRides(); // optimistic
+  showToast(newStatus === 'en_route' ? 'Ride started — en route' : 'Ride completed', 'ok');
+  try {
+    await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status: newStatus })
     });
-  }
+    // Coordinator dashboard and admin dashboard both poll Supabase every 30s
+    // so they see the update automatically without any additional call needed
+  } catch(e) { /* optimistic update already shown */ }
+  await loadRides();
+}
 
-  function signOut() { sessionStorage.removeItem('cv_nemt_token'); sessionStorage.removeItem('cv_nemt_uid'); window.location.href = '/'; }
+function renderSchedule() {
+  var upcoming = allRides.filter(function(r){
+    return r.pickup_time && new Date(r.pickup_time) >= new Date() && !['completed','cancelled'].includes(getStatus(r));
+  });
+  var body = document.getElementById('scheduleBody');
+  if (!upcoming.length) { body.innerHTML = '<div class="empty">No upcoming rides scheduled.</div>'; return; }
+  body.innerHTML = upcoming.map(function(r){
+    var t = r.pickup_time ? new Date(r.pickup_time) : null;
+    var dt = t ? t.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+    return '<div class="tbl-row" style="grid-template-columns:1.4fr 1fr 1.2fr 0.8fr">' +
+      '<div class="td">' + esc(r.patient_name||'Patient') + '</div>' +
+      '<div class="td muted">' + dt + '</div>' +
+      '<div class="td muted">' + esc(r.dropoff_address||'—') + '</div>' +
+      '<div class="td"><span class="badge ' + (STATUS_CLASS[getStatus(r)]||'b-gray') + '">● ' + (STATUS_LABELS[getStatus(r)]||getStatus(r)) + '</span></div>' +
+      '</div>';
+  }).join('');
+}
 
-  function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
-  function pad(n) { return String(n).padStart(2,'0'); }
-  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function showToast(msg, type) {
-    var t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show' + (type ? ' ' + type : '');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(function(){ t.classList.remove('show'); }, 3500);
-  }
+function renderHistory() {
+  var done = allRides.filter(function(r){ return getStatus(r) === 'completed'; });
+  var body = document.getElementById('historyBody');
+  if (!done.length) { body.innerHTML = '<div class="empty">No completed rides yet.</div>'; return; }
+  body.innerHTML = done.map(function(r){
+    var t = r.pickup_time ? new Date(r.pickup_time) : null;
+    var dt = t ? t.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}) : '—';
+    return '<div class="tbl-row">' +
+      '<div class="td">' + esc(r.patient_name||'Patient') + '</div>' +
+      '<div class="td muted">' + dt + '</div>' +
+      '<div class="td muted">' + esc(r.dropoff_address||'—') + '</div>' +
+      '<div class="td" style="font-weight:700;color:#050D1F">$' + AVG_FARE + '</div>' +
+      '</div>';
+  }).join('');
+}
 
-  init();
-  setInterval(loadRides, 30000);
+function showNoPartner() {
+  document.getElementById('todayRidesSection').innerHTML =
+    '<div class="warn-card"><div class="warn-title">Not linked to a transport company</div>' +
+    '<div class="warn-body">Your account isn\'t connected to an NEMT partner yet. Contact your CareVoy admin at admin@carevoy.co to get assigned.</div></div>';
+  ['earnToday','earnWeek','earnMonth','perfComp','perfFare','perfCanc'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.textContent = '—';
+  });
+}
+
+function showNav(name, el) {
+  ['overview','schedule','history','earnings','settings'].forEach(function(s){
+    document.getElementById('sec-' + s).style.display = s === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  if (name === 'schedule') renderSchedule();
+  if (name === 'history') renderHistory();
+}
+
+function signOut() { sessionStorage.removeItem('cv_nemt_token'); sessionStorage.removeItem('cv_nemt_uid'); window.location.href = '/'; }
+function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function pad(n) { return String(n).padStart(2,'0'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (type?' '+type:'');
+  clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('show'); }, 3500);
+}
+
+init();
+setInterval(loadRides, 30000);
 </script>
 </body>
 </html>

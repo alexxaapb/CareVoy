@@ -96,6 +96,8 @@
     .nemt-grid { grid-template-columns: 2fr 1fr 1fr 0.7fr 1.2fr; }
     .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
     .badge.green { background: #dcfce7; color: #16a34a; }
+    .badge.red    { background: #fee2e2; color: #dc2626; }
+    .badge.blue   { background: #dbeafe; color: #1d4ed8; }
     .badge.gray { background: #F0F4F8; color: #6B7280; }
     .badge.teal { background: #d1faf4; color: #047857; }
     .badge.gold { background: #fef3c7; color: #b45309; }
@@ -163,9 +165,6 @@
     <button class="nav-item" onclick="showSection('revenue')">Revenue</button>
     <button class="nav-item" onclick="showSection('settings')">Settings</button>
   </nav>
-  <div class="sidebar-footer">
-    <button class="signout-btn" onclick="signOut()">Sign Out</button>
-  </div>
 </div>
 
 <!-- Main -->
@@ -474,7 +473,7 @@
       var tStr = t ? 'Jun ' + t.getDate() + ', ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
       var badge = statusBadge(r.status);
       return '<div class="rides-row">' +
-        '<div class="td">' + esc(r.patient_name || 'Patient') + '</div>' +
+        '<div class="td">' + esc(r.patient_name || 'Patient') + (r.caregiver_name ? '<br><span style="font-size:10px;color:#9CA3AF">via ' + esc(r.caregiver_name) + '</span>' : '') + '</div>' +
         '<div class="td muted" style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.hospital_name || r.dropoff_address || '—') + '</div>' +
         '<div class="td muted" style="font-size:12px">' + esc(r.nemt_partner_name || (r.nemt_partner_id ? 'Assigned' : '—')) + '</div>' +
         '<div class="td">' + badge + '</div>' +
@@ -545,8 +544,18 @@
   }
 
   function statusBadge(s) {
-    var map = { pending:'gray', confirmed:'teal', assigned:'teal', en_route:'gold', arrived:'green', completed:'green', cancelled:'gray' };
-    var labels = { pending:'PENDING', confirmed:'CONFIRMED', assigned:'ASSIGNED', en_route:'EN ROUTE', arrived:'ARRIVED', completed:'COMPLETED', cancelled:'CANCELLED' };
+    var map = {
+      invited:'gray', reminder_sent:'gold', no_response:'red',
+      app_downloaded:'blue', pending:'gold', confirmed:'teal',
+      assigned:'teal', en_route:'gold', arrived:'green',
+      completed:'green', cancelled:'gray'
+    };
+    var labels = {
+      invited:'INVITE SENT', reminder_sent:'REMINDER SENT', no_response:'NO RESPONSE',
+      app_downloaded:'APP DOWNLOADED', pending:'PENDING', confirmed:'CONFIRMED',
+      assigned:'ASSIGNED', en_route:'EN ROUTE', arrived:'ARRIVED',
+      completed:'COMPLETED', cancelled:'CANCELLED'
+    };
     return '<span class="badge ' + (map[s]||'gray') + '">● ' + (labels[s]||s.toUpperCase()) + '</span>';
   }
 
