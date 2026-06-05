@@ -181,15 +181,15 @@
         <span class="sidebar-brand-name">CareVoy</span>
       </div>
       <nav class="sidebar-nav">
-        <button class="nav-item active">⊞ &nbsp;Dashboard</button>
-        <button class="nav-item">👤 &nbsp;My Patients</button>
-        <button class="nav-item">➤ &nbsp;Rides</button>
-        <button class="nav-item">🔔 &nbsp;Alerts</button>
-        <button class="nav-item">⚙ &nbsp;Settings</button>
+        <button class="nav-item active">Dashboard</button>
+        <button class="nav-item">My Patients</button>
+        <button class="nav-item">Rides</button>
+        <button class="nav-item">Alerts</button>
+        <button class="nav-item">Settings</button>
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-facility" id="sidebarFacility"></div>
-        <button class="signout-link" onclick="signOut()">↪ &nbsp;Sign Out</button>
+        
       </div>
     </div>
 
@@ -200,7 +200,7 @@
           <div class="topbar-title" id="pageTitle">Coordinator Dashboard</div>
           <div class="topbar-sub" id="pageSub"></div>
         </div>
-        <button class="book-btn" onclick="openBookModal()">＋ &nbsp;Book a Ride</button>
+        <div style="display:flex;align-items:center;gap:12px"><span class="role-pill coord" style="background:rgba(245,166,35,0.2);color:#F5A623;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:999px">COORDINATOR</span><button class="signout-topbar" onclick="signOut()" style="background:none;border:1px solid rgba(5,13,31,0.2);color:#374151;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit">Sign Out</button><button class="book-btn" onclick="openBookModal()">+ Book a Ride</button></div>
       </div>
 
       <div class="page">
@@ -208,19 +208,19 @@
         <!-- Top stats -->
         <div class="stats-row">
           <div class="stat-card">
-            <div class="stat-label">Today's Appointments </div>
+            <div class="stat-label">Today's Appointments</div>
             <div class="stat-value" id="statSurgeries">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Rides Confirmed </div>
+            <div class="stat-label">Rides Confirmed</div>
             <div class="stat-value teal" id="statConfirmed">—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Need Transport </div>
+            <div class="stat-label">Need Transport</div>
             <div class="stat-value gold" id="statNeedTransport">—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">This Month Total <span class="stat-icon">↗</span></div>
+            <div class="stat-label">This Month Total</div>
             <div class="stat-value" id="statMonth">—</div>
           </div>
         </div>
@@ -228,7 +228,7 @@
         <!-- Growth metrics -->
         <div class="growth-row">
           <div class="growth-card">
-            <div class="growth-label">MoM Growth <span class="growth-icon">↗</span></div>
+            <div class="growth-label">MoM Growth </div>
             <div class="growth-value green" id="growthMoM">—</div>
             <div class="growth-sub" id="growthMoMSub">vs last month</div>
           </div>
@@ -248,7 +248,7 @@
             <div class="growth-sub" id="growthNoShowSub">this month</div>
           </div>
           <div class="growth-card">
-            <div class="growth-label">Avg Ride Cost <span class="growth-icon">$</span></div>
+            <div class="growth-label">Avg Ride Cost </div>
             <div class="growth-value" id="growthAvgCost">—</div>
             <div class="growth-sub">per booked ride</div>
           </div>

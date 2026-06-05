@@ -20,9 +20,6 @@
     .nav-item.active { background: rgba(0,194,168,0.15); color: #00C2A8; }
     .nav-icon { font-size: 15px; width: 18px; text-align: center; }
     .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
-    .admin-badge { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
-    .admin-dot { width: 8px; height: 8px; border-radius: 50%; background: #00C2A8; }
-    .admin-label { color: #00C2A8; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
     .signout-btn { width: 100%; padding: 10px 12px; background: none; border: none; color: #6B7280; font-size: 13px; font-family: inherit; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px; border-radius: 8px; margin-top: 4px; }
     .signout-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
@@ -135,6 +132,16 @@
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.18); opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 480px; text-align: center; }
     .toast.show { opacity: 1; }
 
+
+    .role-pill { font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 10px; border-radius: 999px; }
+    .role-pill.admin { background: rgba(0,194,168,0.18); color: #00C2A8; }
+    .role-pill.coord { background: rgba(245,166,35,0.2); color: #F5A623; }
+    .role-pill.driver { background: rgba(0,194,168,0.18); color: #00C2A8; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-role-label { color: #9CA3AF; font-size: 13px; }
+    .signout-topbar { background: none; border: 1px solid rgba(255,255,255,0.2); color: #9CA3AF; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+    .signout-topbar:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+
     @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(3, 1fr); } .two-col { grid-template-columns: 1fr; } }
     @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
@@ -150,15 +157,14 @@
   <nav class="sidebar-nav">
     <button class="nav-item active" onclick="showSection('overview')">Overview</button>
     <button class="nav-item" onclick="showSection('patients')">All Patients</button>
-    <button class="nav-item" onclick="showSection('rides')"><span class="nav-icon">➤</span> All Rides</button>
+    <button class="nav-item" onclick="showSection('rides')">All Rides</button>
     <button class="nav-item" onclick="showSection('facilities')">Facilities</button>
     <button class="nav-item" onclick="showSection('partners')">NEMT Partners</button>
-    <button class="nav-item" onclick="showSection('revenue')"><span class="nav-icon">$</span> Revenue</button>
+    <button class="nav-item" onclick="showSection('revenue')">Revenue</button>
     <button class="nav-item" onclick="showSection('settings')">Settings</button>
   </nav>
   <div class="sidebar-footer">
-    <div class="admin-badge"><div class="admin-dot"></div><span class="admin-label">Admin</span></div>
-    <button class="signout-btn" onclick="signOut()"><span>↪</span> Sign Out</button>
+    <button class="signout-btn" onclick="signOut()">Sign Out</button>
   </div>
 </div>
 
@@ -170,6 +176,10 @@
       <span class="live-label">Live</span>
       <span class="date-label" id="dateLabel"></span>
     </div>
+    <div class="topbar-right">
+      <span class="role-pill admin">ADMIN</span>
+      <button class="signout-topbar" onclick="signOut()">Sign Out</button>
+    </div>
   </div>
 
   <div class="page">
@@ -179,23 +189,23 @@
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-label">Total Patients </div>
+        <div class="stat-label">Total Patients</div>
         <div class="stat-value" id="statPatients">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Active Rides <span class="stat-icon">➤</span></div>
+        <div class="stat-label">Active Rides</div>
         <div class="stat-value teal" id="statActive">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Today's Rides </div>
+        <div class="stat-label">Today's Rides</div>
         <div class="stat-value" id="statToday">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">This Month Revenue <span class="stat-icon">↗</span></div>
+        <div class="stat-label">This Month Revenue</div>
         <div class="stat-value teal" id="statRevenue">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Pending Alerts </div>
+        <div class="stat-label">Pending Alerts</div>
         <div class="stat-value gold" id="statAlerts">—</div>
       </div>
     </div>
@@ -203,11 +213,11 @@
     <!-- Facilities Active stat -->
     <div class="stats-row" style="grid-template-columns: repeat(2,1fr) 1fr; margin-bottom: 28px;">
       <div class="stat-card" style="grid-column:1">
-        <div class="stat-label">Facilities Active </div>
+        <div class="stat-label">Facilities Active</div>
         <div class="stat-value" id="statFacilitiesActive">—</div>
       </div>
       <div class="stat-card" style="grid-column:2">
-        <div class="stat-label">NEMT Partners </div>
+        <div class="stat-label">NEMT Partners</div>
         <div class="stat-value" id="statNemt">—</div>
       </div>
     </div>
@@ -412,8 +422,6 @@
       var sumLast = Array.isArray(revLastData) ? revLastData.reduce(function(s,r){ return s + (parseFloat(r.amount)||0); }, 0) : 0;
       var sumAll  = Array.isArray(revAllData)  ? revAllData.reduce(function(s,r){ return s + (parseFloat(r.amount)||0); }, 0) : 0;
 
-      // Fallback demo data if no real payments yet
-      
 
       document.getElementById('statPatients').textContent = pCount;
       document.getElementById('statActive').textContent   = aCount;
@@ -492,16 +500,11 @@
       }
     });
 
-    // Static recent events when not enough live data
-    var defaults = [
-      { text: 'Ride completed for Margaret Torres', who: 'COORDINATOR · 12 min ago', dot: '' },
-      { text: 'Pickup confirmed for tomorrow 8:00 AM', who: 'PATIENT · 45 min ago', dot: '' },
-      { text: 'Receipt available — IRS code 213(d)', who: 'PATIENT · 1 hr ago', dot: 'gold' },
-      { text: 'New facility coordinator registered', who: 'ADMIN · 2 hr ago', dot: 'gray' },
-      { text: 'NEMT partner completed 3 rides today', who: 'SYSTEM · 3 hr ago', dot: '' },
-    ];
-
-    items = items.concat(defaults).slice(0, 8);
+    if (!items.length) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:13px">No recent activity yet</div>';
+      return;
+    }
+    items = items.slice(0, 8);
 
     list.innerHTML = items.map(function(item) {
       return '<div class="activity-item">' +
@@ -552,7 +555,7 @@
     var btn = document.getElementById(btnId);
     btn.disabled = true;
     var orig = btn.innerHTML;
-    btn.innerHTML = (role === 'nemt' ? '🚐' : '🏥') + ' &nbsp; Generating…';
+    btn.innerHTML = 'Generating…';
     try {
       var res = await fetch(API + '/api/invite/create', {
         method: 'POST',
