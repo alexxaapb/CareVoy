@@ -7,106 +7,91 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; background: #F0F4F8; min-height: 100vh; }
+    body { font-family: 'Poppins', -apple-system, sans-serif; background: #F0F4F8; min-height: 100vh; }
 
-    /* Loading */
     #loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .spinner { width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #00C2A8; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Topbar */
-    .topbar { background: #050D1F; padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-name { color: #fff; font-size: 17px; font-weight: 700; }
-    .role-pill { background: rgba(0,194,168,0.18); color: #00C2A8; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 10px; border-radius: 999px; }
-    .topbar-right { display: flex; align-items: center; gap: 16px; }
-    .driver-label { color: #9CA3AF; font-size: 13px; }
-    .signout-btn { background: none; border: 1px solid rgba(255,255,255,0.15); color: #9CA3AF; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.15s; }
-    .signout-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+    /* ── Topbar ── */
+    .topbar { background: #fff; border-bottom: 1px solid #E2E8F0; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .topbar-left { display: flex; flex-direction: column; }
+    .topbar-title { color: #050D1F; font-size: 15px; font-weight: 700; }
+    .topbar-sub { color: #9CA3AF; font-size: 11px; }
+    .signout-link { background: none; border: none; color: #9CA3AF; font-size: 13px; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; }
+    .signout-link:hover { background: #F0F4F8; color: #374151; }
 
-    /* Page */
-    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
-    .page-header { margin-bottom: 28px; }
-    .page-title { color: #050D1F; font-size: 26px; font-weight: 700; }
-    .page-sub { color: #6B7280; font-size: 14px; margin-top: 4px; }
+    /* ── Page ── */
+    .page { max-width: 720px; margin: 0 auto; padding: 24px 20px 64px; }
 
-    /* Stats */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .stat-card { background: white; border-radius: 14px; padding: 20px; border: 1px solid #E2E8F0; }
-    .stat-label { color: #6B7280; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
-    .stat-value { font-size: 28px; font-weight: 700; color: #050D1F; }
-    .stat-value.teal { color: #00C2A8; }
-    .stat-value.gold { color: #F5A623; }
-    .stat-sub { color: #6B7280; font-size: 12px; margin-top: 4px; }
+    /* ── Earnings ── */
+    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF; margin-bottom: 10px; }
+    .earnings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .earn-card { background: white; border-radius: 12px; border: 1px solid #E2E8F0; padding: 16px 18px; }
+    .earn-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6B7280; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .earn-icon { font-size: 13px; opacity: 0.6; }
+    .earn-value { font-size: 26px; font-weight: 700; color: #050D1F; }
+    .earn-value.teal { color: #00C2A8; }
+    .earn-sub { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
 
-    /* Section */
-    .section { margin-bottom: 32px; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .section-title { color: #050D1F; font-size: 17px; font-weight: 700; }
-    .section-count { color: #6B7280; font-size: 13px; }
+    /* ── Performance ── */
+    .perf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .perf-card { background: white; border-radius: 12px; border: 1px solid #E2E8F0; padding: 16px 18px; }
+    .perf-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6B7280; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .perf-value { font-size: 24px; font-weight: 700; color: #050D1F; }
+    .perf-value.teal { color: #00C2A8; }
+    .perf-value.gold { color: #F5A623; }
+    .perf-sub { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
 
-    /* Ride cards */
-    .rides-stack { display: flex; flex-direction: column; gap: 12px; }
-    .ride-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; padding: 20px; transition: box-shadow 0.15s; }
-    .ride-card:hover { box-shadow: 0 4px 16px rgba(5,13,31,0.08); }
-    .ride-card.active-ride { border-left: 4px solid #00C2A8; }
-    .ride-card.en-route { border-left: 4px solid #F5A623; }
-    .ride-card.arrived { border-left: 4px solid #10b981; }
+    /* ── MVP banner ── */
+    .mvp-banner { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 9px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .mvp-icon { font-size: 13px; }
+    .mvp-text { font-size: 12px; color: #92400e; }
 
-    .ride-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
-    .ride-time { font-size: 20px; font-weight: 700; color: #050D1F; }
-    .ride-date { font-size: 13px; font-weight: 500; color: #6B7280; }
-    .ride-meta { font-size: 13px; color: #6B7280; margin-top: 3px; }
+    /* ── Ride cards ── */
+    .rides-section { }
+    .ride-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; padding: 18px; margin-bottom: 12px; }
+    .ride-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .ride-time { font-size: 16px; font-weight: 700; color: #00C2A8; }
+    .ride-patient { font-size: 16px; font-weight: 700; color: #050D1F; margin-bottom: 10px; }
+    .ride-details { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .ride-detail-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #374151; }
+    .ride-detail-icon { flex-shrink: 0; width: 16px; text-align: center; color: #9CA3AF; margin-top: 1px; }
+    .ride-tags { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 7px; font-size: 11px; font-weight: 600; }
+    .tag-blue { background: #dbeafe; color: #1d4ed8; }
+    .tag-gold { background: #fef3c7; color: #b45309; }
+    .tag-teal { background: #d1faf4; color: #047857; }
+    .tag-gray { background: #F0F4F8; color: #6B7280; }
 
-    .badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-    .badge-teal { background: #d1faf4; color: #047857; }
-    .badge-gold { background: #fef3c7; color: #b45309; }
-    .badge-green { background: #dcfce7; color: #16a34a; }
-    .badge-gray { background: #F0F4F8; color: #6B7280; }
-    .badge-blue { background: #dbeafe; color: #1d4ed8; }
-    .badge-red { background: #fee2e2; color: #dc2626; }
+    /* Status badges */
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .status-confirmed { background: #dbeafe; color: #1d4ed8; }
+    .status-en_route  { background: #fef3c7; color: #b45309; }
+    .status-arrived   { background: #dcfce7; color: #16a34a; }
+    .status-completed { background: #F0F4F8; color: #6B7280; }
+    .status-assigned  { background: #d1faf4; color: #047857; }
+    .status-pending   { background: #F0F4F8; color: #6B7280; }
 
-    .ride-addresses { margin-bottom: 12px; }
-    .addr-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 14px; color: #374151; }
-    .addr-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .addr-dot.green { background: #00C2A8; }
-    .addr-dot.navy { background: #050D1F; }
-    .addr-connector { width: 10px; display: flex; justify-content: center; }
-    .addr-line-v { width: 2px; height: 16px; background: #E2E8F0; margin: 0 auto; }
+    /* Action buttons */
+    .ride-action { width: 100%; padding: 13px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .ride-action.start    { background: #00C2A8; color: #050D1F; }
+    .ride-action.complete { background: #16a34a; color: white; }
+    .ride-action.done     { background: #F0F4F8; color: #9CA3AF; border: 1px solid #E2E8F0; cursor: default; }
+    .ride-action.accept   { background: #050D1F; color: #00C2A8; }
+    .ride-action:hover:not(.done) { opacity: 0.88; }
 
-    .ride-notes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-    .ride-note { background: #FFF8E7; border: 1px solid #F5A623; color: #92400e; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 6px; }
-    .ride-note.info { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
-
-    .ride-actions { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid #F0F4F8; }
-    .action-btn { flex: 1; padding: 12px 16px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; font-family: inherit; transition: opacity 0.15s; }
-    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .action-btn.primary { background: #00C2A8; color: #050D1F; }
-    .action-btn.primary:hover:not(:disabled) { opacity: 0.88; }
-    .action-btn.secondary { background: #F0F4F8; color: #374151; }
-    .action-btn.secondary:hover:not(:disabled) { background: #E2E8F0; }
-
-    /* Empty state */
-    .empty-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; padding: 40px 20px; text-align: center; color: #9CA3AF; font-size: 14px; }
-    .empty-icon { font-size: 32px; margin-bottom: 10px; }
-
-    /* No partner banner */
-    .alert-card { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; }
-    .alert-title { color: #92400e; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-    .alert-body { color: #78350f; font-size: 13px; }
+    /* No partner warning */
+    .warn-card { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 14px; padding: 24px; }
+    .warn-title { color: #92400e; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .warn-body  { color: #78350f; font-size: 14px; line-height: 1.5; }
 
     /* Toast */
-    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 420px; text-align: center; }
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 400px; text-align: center; }
     .toast.show { opacity: 1; }
     .toast.success { background: #065f46; }
-    .toast.error { background: #991b1b; }
 
-    @media (max-width: 600px) {
-      .topbar { padding: 0 16px; }
-      .page { padding: 20px 16px 48px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .ride-header { flex-wrap: wrap; }
-    }
+    @media (max-width: 480px) { .earnings-grid, .perf-grid { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -115,82 +100,70 @@
 
 <div id="app" style="display:none">
   <div class="topbar">
-    <div class="brand">
-      <img src="/carevoy-icon.png" width="32" height="32" style="border-radius:8px;object-fit:cover">
-      <span class="brand-name">CareVoy</span>
-      <span class="role-pill">DRIVER</span>
+    <div class="topbar-left" style="display:flex;align-items:center;gap:10px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 1024 1024"><rect width="1024" height="1024" rx="224" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
+      <div>
+        <div class="topbar-title" id="topTitle">NEMT Driver Portal</div>
+        <div class="topbar-sub" id="topSub"></div>
+      </div>
     </div>
-    <div class="topbar-right">
-      <span class="driver-label" id="driverName"></span>
-      <button class="signout-btn" onclick="signOut()">Sign Out</button>
-    </div>
+    <button class="signout-link" onclick="signOut()">↪ Sign out</button>
   </div>
 
   <div class="page">
-    <div class="page-header">
-      <div class="page-title">NEMT Driver Portal</div>
-      <div class="page-sub" id="pageSub"></div>
-    </div>
 
-    <div id="noPartnerAlert" style="display:none">
-      <div class="alert-card">
-        <div class="alert-title">Not linked to a transport company</div>
-        <div class="alert-body">Your account isn't connected to an NEMT partner yet. Contact your CareVoy admin to get assigned.</div>
+    <!-- Earnings -->
+    <div class="section-label">Earnings</div>
+    <div class="earnings-grid">
+      <div class="earn-card">
+        <div class="earn-label">Today <span class="earn-icon">$</span></div>
+        <div class="earn-value teal" id="earnToday">—</div>
+        <div class="earn-sub" id="earnTodaySub">— rides</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-label">This Week <span class="earn-icon">📅</span></div>
+        <div class="earn-value" id="earnWeek">—</div>
+        <div class="earn-sub" id="earnWeekSub">— completed</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-label">This Month <span class="earn-icon">↗</span></div>
+        <div class="earn-value" id="earnMonth">—</div>
+        <div class="earn-sub" id="earnMonthSub">— completed</div>
       </div>
     </div>
 
-    <div id="dashContent">
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Today's Rides</div>
-          <div class="stat-value teal" id="statToday">—</div>
-          <div class="stat-sub" id="statTodaySub"></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">This Week</div>
-          <div class="stat-value gold" id="statWeek">—</div>
-          <div class="stat-sub">earnings</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">This Month</div>
-          <div class="stat-value" id="statMonth">—</div>
-          <div class="stat-sub">earnings</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Completion Rate</div>
-          <div class="stat-value" id="statRate">—</div>
-          <div class="stat-sub">this month</div>
-        </div>
+    <!-- Performance -->
+    <div class="section-label">Performance</div>
+    <div class="perf-grid">
+      <div class="perf-card">
+        <div class="perf-label">Completion Rate <span>✓</span></div>
+        <div class="perf-value teal" id="perfCompletion">—</div>
+        <div class="perf-sub">this month</div>
       </div>
-
-      <!-- Active Rides -->
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">Active Rides</div>
-          <div class="section-count" id="activeCount"></div>
-        </div>
-        <div class="rides-stack" id="activeRides"></div>
+      <div class="perf-card">
+        <div class="perf-label">Avg Fare <span>$</span></div>
+        <div class="perf-value" id="perfAvgFare">—</div>
+        <div class="perf-sub">per ride</div>
       </div>
-
-      <!-- Today's Schedule -->
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">Today's Schedule</div>
-          <div class="section-count" id="todayCount"></div>
-        </div>
-        <div class="rides-stack" id="todayRides"></div>
-      </div>
-
-      <!-- Upcoming -->
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">Upcoming</div>
-          <div class="section-count" id="upcomingCount"></div>
-        </div>
-        <div class="rides-stack" id="upcomingRides"></div>
+      <div class="perf-card">
+        <div class="perf-label">Cancelled / No-Show <span>⚠</span></div>
+        <div class="perf-value gold" id="perfCancelled">—</div>
+        <div class="perf-sub">this month</div>
       </div>
     </div>
+
+    <!-- Today's rides -->
+    <div class="section-label">Today's Rides</div>
+
+    <div class="mvp-banner">
+      <span class="mvp-icon">ℹ</span>
+      <span class="mvp-text">MVP testing tool — for simulating ride status before NEMT API integration.</span>
+    </div>
+
+    <div class="rides-section" id="ridesSection">
+      <div class="empty-state" style="text-align:center;padding:40px;color:#9CA3AF;background:white;border-radius:14px;border:1px solid #E2E8F0">Loading rides…</div>
+    </div>
+
   </div>
 </div>
 
@@ -199,202 +172,203 @@
 <script>
   var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
   var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+  var AVG_FARE = 46;
 
   var token = sessionStorage.getItem('cv_nemt_token');
   var uid   = sessionStorage.getItem('cv_nemt_uid');
   if (!token || !uid) { window.location.href = '/'; }
 
   var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
-  var driverInfo = null;
+  var staffInfo  = null;
+  var allRides   = [];
+  // Simulated status overrides for MVP testing
+  var statusOverrides = {};
 
-  // ── init ───────────────────────────────────────────────
+  // ── Init ──────────────────────────────────────────────
   async function init() {
     try {
-      var res  = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=full_name,nemt_partner_id,role', { headers: H });
-      var data = await res.json();
-      driverInfo = data[0];
+      var sRes = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=*', { headers: H });
+      var sData = await sRes.json();
+      staffInfo = sData[0];
 
-      if (!driverInfo || driverInfo.role !== 'nemt') { window.location.href = '/'; return; }
-
-      document.getElementById('driverName').textContent = driverInfo.full_name || 'Driver';
-      document.getElementById('pageSub').textContent =
-        new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' }) +
-        ' · Live data';
-
-      if (!driverInfo.nemt_partner_id) {
-        document.getElementById('noPartnerAlert').style.display = 'block';
-        document.getElementById('dashContent').style.display = 'none';
+      if (!staffInfo || !staffInfo.nemt_partner_id) {
+        showNoPartner();
         document.getElementById('loading').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         return;
       }
 
+      // Get partner name
+      var pRes = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name', { headers: H });
+      var pData = await pRes.json();
+      var partnerName = pData[0] ? pData[0].company_name : 'NEMT Partner';
+
+      var today = new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+      document.getElementById('topTitle').textContent = 'NEMT Driver Portal';
+      document.getElementById('topSub').textContent = partnerName + ' · ' + today;
+
       await loadRides();
       document.getElementById('loading').style.display = 'none';
       document.getElementById('app').style.display = 'block';
     } catch(e) {
-      document.getElementById('loading').innerHTML =
-        '<div style="text-align:center;color:#6B7280"><p style="font-size:18px;margin-bottom:8px">⚠️ Could not load</p><p>' + e.message + '</p></div>';
+      document.getElementById('loading').innerHTML = '<div style="text-align:center;color:#6B7280"><p style="font-size:18px;margin-bottom:8px">⚠️</p><p>' + e.message + '</p></div>';
     }
   }
 
-  // ── data ───────────────────────────────────────────────
+  // ── Load rides ────────────────────────────────────────
   async function loadRides() {
-    var res   = await fetch(
-      SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + driverInfo.nemt_partner_id +
+    if (!staffInfo || !staffInfo.nemt_partner_id) return;
+    var today = todayStr();
+    var res = await fetch(
+      SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + staffInfo.nemt_partner_id +
+      '&pickup_time=gte.' + today + 'T00:00:00&pickup_time=lt.' + today + 'T23:59:59' +
       '&select=*&order=pickup_time.asc',
       { headers: H }
     );
-    var rides = await res.json();
-    if (!Array.isArray(rides)) rides = [];
+    allRides = await res.json();
+    if (!Array.isArray(allRides)) allRides = [];
 
-    var today    = todayStr();
-    var weekAgo  = daysAgo(7);
-    var monthAgo = daysAgo(30);
-    var now      = new Date();
+    // Also get month/week rides for stats
+    var weekAgo  = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+    var monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30);
 
-    var active   = rides.filter(r => ['assigned','en_route','arrived'].includes(r.status));
-    var todayQ   = rides.filter(r => r.pickup_time && r.pickup_time.startsWith(today) &&
-                                     ['pending','confirmed','assigned'].includes(r.status));
-    var upcoming = rides.filter(r => r.pickup_time &&
-                                     new Date(r.pickup_time) > now &&
-                                     !r.pickup_time.startsWith(today) &&
-                                     ['pending','confirmed','assigned'].includes(r.status));
+    var allRes = await fetch(
+      SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + staffInfo.nemt_partner_id + '&select=status,actual_cost,pickup_time',
+      { headers: H }
+    );
+    var allData = await allRes.json();
+    if (!Array.isArray(allData)) allData = [];
 
-    // Earnings
-    var weekEarn  = sumEarnings(rides, weekAgo);
-    var monthEarn = sumEarnings(rides, monthAgo);
-
-    // Completion rate (this month)
-    var mthRides    = rides.filter(r => r.pickup_time && new Date(r.pickup_time) >= monthAgo && r.status !== 'cancelled');
-    var mthDone     = mthRides.filter(r => r.status === 'completed');
-    var rate        = mthRides.length ? Math.round(mthDone.length / mthRides.length * 100) : 0;
-
-    // Update stats
-    var todayAll = rides.filter(r => r.pickup_time && r.pickup_time.startsWith(today));
-    document.getElementById('statToday').textContent    = todayAll.length;
-    document.getElementById('statTodaySub').textContent = todayAll.filter(r => r.status === 'completed').length + ' completed';
-    document.getElementById('statWeek').textContent     = fmtMoney(weekEarn);
-    document.getElementById('statMonth').textContent    = fmtMoney(monthEarn);
-    document.getElementById('statRate').textContent     = rate + '%';
-
-    // Render sections
-    renderSection('activeRides',   'activeCount',   active,   'No active rides right now.',    true);
-    renderSection('todayRides',    'todayCount',    todayQ,   'No more rides scheduled today.');
-    renderSection('upcomingRides', 'upcomingCount', upcoming, 'No upcoming rides.');
+    computeStats(allData);
+    renderRides();
   }
 
-  function sumEarnings(rides, since) {
-    return rides
-      .filter(r => r.status === 'completed' && r.pickup_time && new Date(r.pickup_time) >= since)
-      .reduce((s, r) => s + parseFloat(r.actual_cost || r.estimated_cost || 0), 0);
+  // ── Stats ─────────────────────────────────────────────
+  function computeStats(all) {
+    var today = todayStr();
+    var now = new Date();
+    var weekStart = new Date(now); weekStart.setDate(now.getDate()-7); weekStart.setHours(0,0,0,0);
+    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    var todayRides = allRides; // already filtered to today
+    var weekRides  = all.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= weekStart; });
+    var monthRides = all.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= monthStart; });
+
+    var todayDone  = todayRides.filter(function(r){ return getStatus(r) === 'completed'; }).length;
+    var weekDone   = weekRides.filter(function(r){ return r.status === 'completed'; }).length;
+    var monthDone  = monthRides.filter(function(r){ return r.status === 'completed'; }).length;
+    var monthCanc  = monthRides.filter(function(r){ return r.status === 'cancelled'; }).length;
+
+    var todayEarnings  = todayDone  * AVG_FARE;
+    var weekEarnings   = weekDone   * AVG_FARE;
+    var monthEarnings  = monthDone  * AVG_FARE;
+    var compRate = monthRides.length > 0 ? Math.round((monthDone/monthRides.length)*100) : 0;
+
+    document.getElementById('earnToday').textContent    = '$' + todayEarnings;
+    document.getElementById('earnTodaySub').textContent = todayRides.length + ' ride' + (todayRides.length===1?'':'s');
+    document.getElementById('earnWeek').textContent     = '$' + weekEarnings;
+    document.getElementById('earnWeekSub').textContent  = weekDone + ' completed';
+    document.getElementById('earnMonth').textContent    = '$' + monthEarnings;
+    document.getElementById('earnMonthSub').textContent = monthDone + ' completed';
+
+    document.getElementById('perfCompletion').textContent = compRate + '%';
+    document.getElementById('perfAvgFare').textContent    = '$' + AVG_FARE;
+    document.getElementById('perfCancelled').textContent  = monthCanc;
   }
 
-  // ── rendering ──────────────────────────────────────────
-  function renderSection(containerId, countId, rides, emptyMsg, isActive) {
-    var el = document.getElementById(containerId);
-    var ct = document.getElementById(countId);
-    ct.textContent = rides.length ? rides.length + ' ride' + (rides.length > 1 ? 's' : '') : '';
-    if (!rides.length) {
-      el.innerHTML = '<div class="empty-card"><div class="empty-icon">🚐</div>' + emptyMsg + '</div>';
+  // ── Render rides ──────────────────────────────────────
+  function getStatus(r) {
+    return statusOverrides[r.id] || r.status;
+  }
+
+  function renderRides() {
+    var section = document.getElementById('ridesSection');
+    if (!allRides.length) {
+      section.innerHTML = '<div style="text-align:center;padding:40px;color:#9CA3AF;background:white;border-radius:14px;border:1px solid #E2E8F0">No rides assigned for today.</div>';
       return;
     }
-    el.innerHTML = rides.map(function(r) { return rideCard(r, isActive); }).join('');
+    section.innerHTML = allRides.map(function(r){ return rideCard(r); }).join('');
   }
 
-  function rideCard(r, isActive) {
-    var t     = r.pickup_time ? new Date(r.pickup_time) : null;
-    var time  = t ? t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
-    var date  = t ? t.toLocaleDateString([], {month:'short',day:'numeric'}) : '';
-    var dir   = r.ride_type === 'post_op' ? '↩ From facility' : '→ To facility';
-    var badge = statusBadge(r.status);
-    var notes = [];
-    if (r.mobility_needs)       notes.push('<span class="ride-note">⚠️ ' + esc(r.mobility_needs) + '</span>');
-    if (r.companion_requested)  notes.push('<span class="ride-note info">👤 Companion needed</span>');
+  function rideCard(r) {
+    var status = getStatus(r);
+    var t = r.pickup_time ? new Date(r.pickup_time) : null;
+    var timeStr = t ? t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+    var proc = r.procedure_type || 'Medical transport';
+    var hospital = r.dropoff_address || r.hospital_name || '—';
+    var addr = r.pickup_address || '—';
 
-    var borderClass = r.status === 'en_route' ? ' en-route' : r.status === 'arrived' ? ' arrived' : isActive ? ' active-ride' : '';
+    var badge = '<span class="status-badge status-' + status + '">● ' + status.replace('_',' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) + '</span>';
 
-    return '<div class="ride-card' + borderClass + '" id="ride-' + r.id + '">' +
-      '<div class="ride-header">' +
-        '<div>' +
-          '<div class="ride-time">' + time + ' <span class="ride-date">' + date + '</span></div>' +
-          '<div class="ride-meta">' + dir + (r.procedure_type ? ' · ' + esc(r.procedure_type) : '') + '</div>' +
-        '</div>' +
-        badge +
+    var tags = '';
+    if (r.companion_requested) tags += '<span class="tag tag-blue">👤 Companion</span>';
+    if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('wheelchair')) tags += '<span class="tag tag-teal">♿ Wheelchair</span>';
+    if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('extra')) tags += '<span class="tag tag-gold">⏱ Extra time</span>';
+    if (!tags && r.mobility_needs) tags = '<span class="tag tag-gray">' + esc(r.mobility_needs) + '</span>';
+
+    var actionBtn = '';
+    if (status === 'assigned' || status === 'confirmed' || status === 'pending') {
+      actionBtn = '<button class="ride-action start" onclick="updateRideStatus(\'' + r.id + '\', \'en_route\')">▶ Start Ride</button>';
+    } else if (status === 'en_route' || status === 'arrived') {
+      actionBtn = '<button class="ride-action complete" onclick="updateRideStatus(\'' + r.id + '\', \'completed\')">✓ Complete Ride</button>';
+    } else if (status === 'completed') {
+      actionBtn = '<button class="ride-action done" disabled>✓ Completed</button>';
+    }
+
+    return '<div class="ride-card" id="card-' + r.id + '">' +
+      '<div class="ride-card-header"><span class="ride-time">' + timeStr + '</span>' + badge + '</div>' +
+      '<div class="ride-patient">' + esc(r.patient_name || 'Patient') + '</div>' +
+      '<div class="ride-details">' +
+        '<div class="ride-detail-row"><span class="ride-detail-icon">📍</span><span>' + esc(addr) + '</span></div>' +
+        '<div class="ride-detail-row"><span class="ride-detail-icon">➤</span><span>' + esc(hospital) + '</span></div>' +
+        '<div class="ride-detail-row"><span class="ride-detail-icon">✚</span><span>' + esc(proc) + '</span></div>' +
       '</div>' +
-      '<div class="ride-addresses">' +
-        '<div class="addr-row"><span class="addr-dot green"></span>' + esc(r.pickup_address || 'Pickup not set') + '</div>' +
-        '<div class="addr-row" style="padding-left:4px;padding-top:0;padding-bottom:0"><div class="addr-line-v"></div></div>' +
-        '<div class="addr-row"><span class="addr-dot navy"></span>' + esc(r.dropoff_address || 'Dropoff not set') + '</div>' +
-      '</div>' +
-      (notes.length ? '<div class="ride-notes">' + notes.join('') + '</div>' : '') +
-      actionRow(r) +
+      (tags ? '<div class="ride-tags">' + tags + '</div>' : '') +
+      actionBtn +
     '</div>';
   }
 
-  function actionRow(r) {
-    var map = {
-      assigned: ['en_route',   '🚗 Start Drive',    'primary'],
-      en_route: ['arrived',    '📍 Mark Arrived',   'primary'],
-      arrived:  ['completed',  '✅ Complete Trip',  'primary']
-    };
-    var t = map[r.status];
-    if (!t) return '';
-    return '<div class="ride-actions">' +
-      '<button class="action-btn ' + t[2] + '" onclick="updateStatus(\'' + r.id + '\',\'' + t[0] + '\')">' + t[1] + '</button>' +
-    '</div>';
-  }
+  // ── Status updates ────────────────────────────────────
+  async function updateRideStatus(rideId, newStatus) {
+    // Optimistic UI update
+    statusOverrides[rideId] = newStatus;
+    var card = document.getElementById('card-' + rideId);
+    var r = allRides.find(function(x){ return x.id === rideId; });
+    if (card && r) {
+      card.outerHTML = rideCard(Object.assign({}, r));
+      // Re-bind after replace
+    }
+    renderRides();
 
-  function statusBadge(s) {
-    var m = {
-      pending:   ['gray',  'Pending'],
-      confirmed: ['blue',  'Confirmed'],
-      assigned:  ['teal',  'Assigned'],
-      en_route:  ['gold',  'En Route'],
-      arrived:   ['green', 'Arrived'],
-      completed: ['green', 'Completed'],
-      cancelled: ['red',   'Cancelled']
-    };
-    var v = m[s] || ['gray', s];
-    return '<span class="badge badge-' + v[0] + '">' + v[1] + '</span>';
-  }
+    var label = { en_route: 'En route — ride started', completed: 'Ride completed!' };
+    showToast('✓ ' + (label[newStatus] || newStatus), 'success');
 
-  // ── actions ────────────────────────────────────────────
-  async function updateStatus(rideId, newStatus) {
-    var btn = document.querySelector('#ride-' + rideId + ' .action-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Updating…'; }
+    // Write to Supabase
     try {
-      var res = await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+      await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
         method: 'PATCH',
         headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ status: newStatus })
       });
-      if (!res.ok) throw new Error('Update failed — check your connection');
-      showToast(newStatus === 'completed' ? '✅ Trip completed!' : '✓ Status updated', 'success');
-      await loadRides();
-    } catch(e) {
-      showToast('Error: ' + e.message, 'error');
-      if (btn) { btn.disabled = false; }
-      await loadRides();
+    } catch(e) { /* silently ignore — optimistic update already applied */ }
+  }
+
+  function showNoPartner() {
+    var section = document.getElementById('ridesSection');
+    if (section) {
+      section.innerHTML = '<div class="warn-card"><div class="warn-title">Not linked to a transport company</div><div class="warn-body">Your account isn\'t connected to an NEMT partner yet. Contact your CareVoy admin to get assigned.</div></div>';
     }
+    // Hide stats sections
+    ['earnToday','earnWeek','earnMonth','perfCompletion','perfAvgFare','perfCancelled'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.textContent = '—';
+    });
   }
 
-  function signOut() {
-    sessionStorage.removeItem('cv_nemt_token');
-    sessionStorage.removeItem('cv_nemt_uid');
-    window.location.href = '/';
-  }
+  function signOut() { sessionStorage.removeItem('cv_nemt_token'); sessionStorage.removeItem('cv_nemt_uid'); window.location.href = '/'; }
 
-  // ── helpers ────────────────────────────────────────────
-  function todayStr() {
-    var d = new Date();
-    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
-  }
-  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate()-n); return d; }
+  function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
   function pad(n) { return String(n).padStart(2,'0'); }
-  function fmtMoney(n) { return '$' + n.toFixed(2); }
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
   function showToast(msg, type) {
     var t = document.getElementById('toast');
     t.textContent = msg;

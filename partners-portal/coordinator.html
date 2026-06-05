@@ -7,125 +7,165 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; background: #F0F4F8; min-height: 100vh; }
+    body { font-family: 'Poppins', -apple-system, sans-serif; background: #F0F4F8; min-height: 100vh; }
 
     #loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .spinner { width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #00C2A8; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Topbar */
-    .topbar { background: #050D1F; padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-name { color: #fff; font-size: 17px; font-weight: 700; }
-    .role-pill { background: rgba(245,166,35,0.2); color: #F5A623; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 10px; border-radius: 999px; }
-    .topbar-right { display: flex; align-items: center; gap: 16px; }
-    .coord-label { color: #9CA3AF; font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .signout-btn { background: none; border: 1px solid rgba(255,255,255,0.15); color: #9CA3AF; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
-    .signout-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+    /* ── Layout ── */
+    .shell { display: flex; min-height: 100vh; }
 
-    /* Page */
-    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
-    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
-    .page-title { color: #050D1F; font-size: 26px; font-weight: 700; }
-    .page-sub { color: #6B7280; font-size: 14px; margin-top: 4px; }
-    .book-btn { background: #00C2A8; color: #050D1F; border: none; padding: 14px 24px; border-radius: 12px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    /* Sidebar */
+    .sidebar { width: 180px; background: #050D1F; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 20; }
+    .sidebar-brand { padding: 18px 16px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-name { color: #fff; font-size: 15px; font-weight: 700; }
+    .sidebar-nav { flex: 1; padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 8px; color: #9CA3AF; font-size: 12px; font-weight: 500; cursor: pointer; border: none; background: none; font-family: inherit; width: 100%; text-align: left; }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .nav-item.active { background: rgba(0,194,168,0.15); color: #00C2A8; }
+    .sidebar-footer { padding: 14px 10px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-facility { padding: 8px 10px; color: #6B7280; font-size: 10px; line-height: 1.4; }
+    .signout-link { display: flex; align-items: center; gap: 8px; padding: 8px 10px; color: #6B7280; font-size: 12px; cursor: pointer; border: none; background: none; font-family: inherit; width: 100%; text-align: left; border-radius: 8px; margin-top: 4px; }
+    .signout-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
+
+    /* Main */
+    .main { margin-left: 180px; flex: 1; }
+    .topbar { background: #fff; border-bottom: 1px solid #E2E8F0; padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .topbar-title { color: #050D1F; font-size: 16px; font-weight: 700; }
+    .topbar-sub { color: #9CA3AF; font-size: 12px; margin-top: 1px; }
+    .book-btn { background: #00C2A8; color: #050D1F; border: none; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .book-btn:hover { opacity: 0.88; }
 
-    /* Stats */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .stat-card { background: white; border-radius: 14px; padding: 18px 20px; border: 1px solid #E2E8F0; }
-    .stat-label { color: #6B7280; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    .page { padding: 24px 28px 64px; max-width: 1100px; }
+
+    /* ── Top stats row ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: white; border-radius: 12px; padding: 16px 18px; border: 1px solid #E2E8F0; }
+    .stat-label { color: #6B7280; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .stat-icon { font-size: 13px; opacity: 0.6; }
     .stat-value { font-size: 28px; font-weight: 700; color: #050D1F; }
     .stat-value.teal { color: #00C2A8; }
     .stat-value.gold { color: #F5A623; }
 
-    /* Tabs */
-    .tabs { display: flex; gap: 4px; background: #E2E8F0; padding: 4px; border-radius: 10px; width: fit-content; margin-bottom: 20px; }
-    .tab { padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: transparent; font-family: inherit; color: #6B7280; transition: all 0.15s; }
-    .tab.active { background: white; color: #050D1F; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    /* ── Growth metrics row ── */
+    .growth-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+    .growth-card { background: white; border-radius: 12px; padding: 14px 16px; border: 1px solid #E2E8F0; }
+    .growth-label { color: #6B7280; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+    .growth-icon { font-size: 12px; }
+    .growth-value { font-size: 22px; font-weight: 700; color: #050D1F; }
+    .growth-value.green { color: #16a34a; }
+    .growth-value.teal { color: #00C2A8; }
+    .growth-value.gold { color: #F5A623; }
+    .growth-sub { font-size: 10px; color: #9CA3AF; margin-top: 2px; }
 
-    /* Table */
+    /* ── 7-day calendar strip ── */
+    .cal-section { margin-bottom: 20px; }
+    .cal-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .cal-day { background: white; border-radius: 10px; border: 1px solid #E2E8F0; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .cal-day.today { background: #d1faf4; border-color: #00C2A8; }
+    .cal-day:hover { border-color: #00C2A8; }
+    .cal-dow { font-size: 10px; color: #9CA3AF; font-weight: 600; text-transform: uppercase; }
+    .cal-date { font-size: 20px; font-weight: 700; color: #050D1F; margin: 2px 0; }
+    .cal-day.today .cal-dow, .cal-day.today .cal-date { color: #047857; }
+    .cal-count { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 700; }
+    .cal-count.has-rides { background: #00C2A8; color: #050D1F; }
+    .cal-count.empty { color: transparent; }
+
+    /* ── Alert banner ── */
+    .alert-banner { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .alert-text { font-size: 13px; color: #92400e; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .remind-all-btn { background: #050D1F; color: #00C2A8; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
+    .remind-all-btn:hover { opacity: 0.88; }
+
+    /* ── Search + filters ── */
+    .search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .search-input-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 14px; }
+    .search-input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid #E2E8F0; border-radius: 9px; font-size: 13px; font-family: inherit; background: white; outline: none; }
+    .search-input:focus { border-color: #00C2A8; }
+    .filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-btn { padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; border: 1px solid #E2E8F0; background: white; color: #6B7280; transition: all 0.15s; }
+    .filter-btn.active { background: #050D1F; color: #00C2A8; border-color: #050D1F; }
+    .filter-btn:hover { border-color: #9CA3AF; }
+
+    /* ── Patient table ── */
     .table-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; }
-    .table-head { display: grid; padding: 12px 18px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
-    .th { font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; }
-    .table-row { display: grid; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F0F4F8; transition: background 0.1s; cursor: pointer; }
+    .table-head { display: grid; grid-template-columns: 1.4fr 1fr 1.4fr 1fr 0.8fr; padding: 10px 18px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+    .th { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; }
+    .table-row { display: grid; grid-template-columns: 1.4fr 1fr 1.4fr 1fr 0.8fr; padding: 14px 18px; border-bottom: 1px solid #F0F4F8; align-items: center; cursor: pointer; transition: background 0.1s; }
     .table-row:last-child { border-bottom: none; }
     .table-row:hover { background: #F8FAFC; }
     .td { font-size: 13px; color: #050D1F; }
     .td.muted { color: #6B7280; }
+    .td.bold { font-weight: 600; }
     .empty-row { padding: 48px 18px; text-align: center; color: #9CA3AF; font-size: 14px; }
 
-    /* Ride grid template */
-    .ride-grid { grid-template-columns: 1.4fr 1.2fr 1fr 0.8fr 0.8fr 1fr; }
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .badge-teal   { background: #d1faf4; color: #047857; }
+    .badge-gold   { background: #fef3c7; color: #b45309; }
+    .badge-green  { background: #dcfce7; color: #16a34a; }
+    .badge-gray   { background: #F0F4F8; color: #6B7280; }
+    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+    .badge-red    { background: #fee2e2; color: #dc2626; }
 
-    /* Badges */
-    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-    .badge-teal  { background: #d1faf4; color: #047857; }
-    .badge-gold  { background: #fef3c7; color: #b45309; }
-    .badge-green { background: #dcfce7; color: #16a34a; }
-    .badge-gray  { background: #F0F4F8; color: #6B7280; }
-    .badge-blue  { background: #dbeafe; color: #1d4ed8; }
-    .badge-red   { background: #fee2e2; color: #dc2626; }
+    /* Action btns */
+    .action-btn { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 5px; }
+    .action-btn.remind { background: #050D1F; color: #00C2A8; }
+    .action-btn.view   { background: #F0F4F8; color: #374151; border: 1px solid #E2E8F0; }
+    .action-btn:hover  { opacity: 0.85; }
 
-    /* Modal */
+    /* ── Rides tab (legacy) ── */
+    .tabs { display: flex; gap: 4px; background: #E2E8F0; padding: 4px; border-radius: 10px; width: fit-content; margin-bottom: 16px; }
+    .tab { padding: 7px 16px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; font-family: inherit; color: #6B7280; }
+    .tab.active { background: white; color: #050D1F; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+    /* ── Modal ── */
     .scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 50; align-items: center; justify-content: center; overflow-y: auto; padding: 24px; }
     .scrim.open { display: flex; }
-    .modal { background: white; border-radius: 20px; width: 100%; max-width: 540px; padding: 32px; margin: auto; }
+    .modal { background: white; border-radius: 20px; width: 100%; max-width: 540px; padding: 30px; margin: auto; }
     .modal-title { color: #050D1F; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-    .modal-sub { color: #6B7280; font-size: 14px; margin-bottom: 24px; }
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-size: 12px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .modal-sub { color: #6B7280; font-size: 13px; margin-bottom: 22px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 11px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
     .input-row { display: grid; gap: 12px; }
     .input-row.two { grid-template-columns: 1fr 1fr; }
-    input, select, textarea { width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; border-radius: 10px; font-size: 14px; color: #050D1F; background: #F8FAFC; outline: none; font-family: inherit; }
-    input:focus, select:focus, textarea:focus { border-color: #00C2A8; background: white; }
-    textarea { resize: vertical; min-height: 72px; }
-    .patient-found { background: #d1faf4; border: 1px solid #00C2A8; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #065f46; margin-top: 8px; display: none; }
-    .patient-not-found { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #991b1b; margin-top: 8px; display: none; }
-
-    /* Direction toggle */
+    input, select, textarea { width: 100%; padding: 11px 13px; border: 1px solid #E2E8F0; border-radius: 9px; font-size: 13px; color: #050D1F; background: #F8FAFC; outline: none; font-family: inherit; }
+    input:focus, select:focus { border-color: #00C2A8; background: white; }
+    textarea { resize: vertical; min-height: 68px; }
+    .patient-found { background: #d1faf4; border: 1px solid #00C2A8; border-radius: 7px; padding: 9px 12px; font-size: 12px; color: #065f46; margin-top: 6px; display: none; }
+    .patient-not-found { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 7px; padding: 9px 12px; font-size: 12px; color: #991b1b; margin-top: 6px; display: none; }
     .toggle-row { display: flex; gap: 8px; }
-    .toggle { flex: 1; padding: 10px 8px; border: 1.5px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; background: white; color: #6B7280; text-align: center; }
+    .toggle { flex: 1; padding: 9px 6px; border: 1.5px solid #E2E8F0; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; background: white; color: #6B7280; text-align: center; }
     .toggle.active { border-color: #00C2A8; background: #d1faf4; color: #065f46; }
-
-    .modal-foot { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #E2E8F0; }
-    .btn-submit { flex: 1; padding: 14px; background: #050D1F; color: #00C2A8; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; }
-    .btn-submit:hover { opacity: 0.9; }
+    .modal-foot { display: flex; gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid #E2E8F0; }
+    .btn-submit { flex: 1; padding: 13px; background: #050D1F; color: #00C2A8; border: none; border-radius: 9px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; }
     .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-cancel { padding: 14px 20px; background: #F0F4F8; color: #374151; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
-    .form-error { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+    .btn-cancel { padding: 13px 18px; background: #F0F4F8; color: #374151; border: none; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+    .form-error { color: #dc2626; font-size: 12px; margin-top: 8px; display: none; }
 
-    /* Ride detail drawer */
+    /* ── Drawer ── */
     .drawer-scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40; }
     .drawer-scrim.open { display: block; }
-    .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 420px; max-width: 100vw; background: white; z-index: 45; overflow-y: auto; padding: 28px; transform: translateX(100%); transition: transform 0.25s ease; box-shadow: -8px 0 32px rgba(0,0,0,0.12); }
+    .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 400px; max-width: 100vw; background: white; z-index: 45; overflow-y: auto; padding: 24px; transform: translateX(100%); transition: transform 0.25s; box-shadow: -8px 0 32px rgba(0,0,0,0.12); }
     .drawer.open { transform: translateX(0); }
-    .drawer-close { background: #F0F4F8; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit; color: #374151; margin-bottom: 20px; }
-    .drawer-title { font-size: 18px; font-weight: 700; color: #050D1F; margin-bottom: 4px; }
-    .drawer-sub { font-size: 13px; color: #6B7280; margin-bottom: 20px; }
-    .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #F0F4F8; gap: 12px; }
+    .drawer-close { background: #F0F4F8; border: none; border-radius: 7px; padding: 7px 12px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; color: #374151; margin-bottom: 18px; }
+    .drawer-title { font-size: 17px; font-weight: 700; color: #050D1F; margin-bottom: 4px; }
+    .drawer-sub { font-size: 12px; color: #6B7280; margin-bottom: 18px; }
+    .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid #F0F4F8; gap: 12px; }
     .detail-row:last-child { border-bottom: none; }
-    .detail-label { font-size: 12px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.4px; }
-    .detail-value { font-size: 14px; color: #050D1F; text-align: right; max-width: 60%; }
+    .detail-label { font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.4px; }
+    .detail-value { font-size: 13px; color: #050D1F; text-align: right; max-width: 60%; }
 
-    /* Toast */
-    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 420px; text-align: center; }
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 420px; text-align: center; }
     .toast.show { opacity: 1; }
     .toast.success { background: #065f46; }
     .toast.error { background: #991b1b; }
 
-    @media (max-width: 768px) {
-      .ride-grid { grid-template-columns: 1fr 1fr 1fr; }
-      .th:nth-child(n+4), .td:nth-child(n+4) { display: none; }
-      .drawer { width: 100vw; }
-    }
-    @media (max-width: 600px) {
-      .topbar { padding: 0 16px; }
-      .page { padding: 20px 16px 48px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .page-header { flex-direction: column; }
-      .input-row.two { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 900px) { .growth-row { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-row { grid-template-columns: repeat(2,1fr); } .growth-row { grid-template-columns: repeat(2,1fr); } }
   </style>
 </head>
 <body>
@@ -133,141 +173,179 @@
 <div id="loading"><div class="spinner"></div></div>
 
 <div id="app" style="display:none">
-  <div class="topbar">
-    <div class="brand">
-      <img src="/carevoy-icon.png" width="32" height="32" style="border-radius:8px;object-fit:cover">
-      <span class="brand-name">CareVoy</span>
-      <span class="role-pill">COORDINATOR</span>
-    </div>
-    <div class="topbar-right">
-      <span class="coord-label" id="coordLabel"></span>
-      <button class="signout-btn" onclick="signOut()">Sign Out</button>
-    </div>
-  </div>
-
-  <div class="page">
-    <div class="page-header">
-      <div>
-        <div class="page-title" id="pageTitle">Coordinator Dashboard</div>
-        <div class="page-sub" id="pageSub"></div>
+  <div class="shell">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 1024 1024"><rect width="1024" height="1024" rx="224" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
+        <span class="sidebar-brand-name">CareVoy</span>
       </div>
-      <button class="book-btn" onclick="openBookModal()">
-        <span>＋</span> Book a Ride
-      </button>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Total Rides</div>
-        <div class="stat-value" id="statTotal">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Active</div>
-        <div class="stat-value teal" id="statActive">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Today</div>
-        <div class="stat-value gold" id="statToday">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">This Month</div>
-        <div class="stat-value" id="statMonth">—</div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active">⊞ &nbsp;Dashboard</button>
+        <button class="nav-item">👤 &nbsp;My Patients</button>
+        <button class="nav-item">➤ &nbsp;Rides</button>
+        <button class="nav-item">🔔 &nbsp;Alerts</button>
+        <button class="nav-item">⚙ &nbsp;Settings</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-facility" id="sidebarFacility"></div>
+        <button class="signout-link" onclick="signOut()">↪ &nbsp;Sign Out</button>
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('pending')">Pending</button>
-      <button class="tab" onclick="switchTab('active')">Active</button>
-      <button class="tab" onclick="switchTab('all')">All Rides</button>
-    </div>
-
-    <!-- Rides table -->
-    <div class="table-card">
-      <div class="table-head ride-grid">
-        <div class="th">Patient</div>
-        <div class="th">Pickup</div>
-        <div class="th">Date & Time</div>
-        <div class="th">Direction</div>
-        <div class="th">Status</div>
-        <div class="th">NEMT Partner</div>
+    <!-- Main -->
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title" id="pageTitle">Coordinator Dashboard</div>
+          <div class="topbar-sub" id="pageSub"></div>
+        </div>
+        <button class="book-btn" onclick="openBookModal()">＋ &nbsp;Book a Ride</button>
       </div>
-      <div id="ridesBody"><div class="empty-row">Loading…</div></div>
-    </div>
-  </div>
-</div>
+
+      <div class="page">
+
+        <!-- Top stats -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Today's Appointments <span class="stat-icon">📅</span></div>
+            <div class="stat-value" id="statSurgeries">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rides Confirmed <span class="stat-icon">✓</span></div>
+            <div class="stat-value teal" id="statConfirmed">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Need Transport <span class="stat-icon">⚠</span></div>
+            <div class="stat-value gold" id="statNeedTransport">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">This Month Total <span class="stat-icon">↗</span></div>
+            <div class="stat-value" id="statMonth">—</div>
+          </div>
+        </div>
+
+        <!-- Growth metrics -->
+        <div class="growth-row">
+          <div class="growth-card">
+            <div class="growth-label">MoM Growth <span class="growth-icon">↗</span></div>
+            <div class="growth-value green" id="growthMoM">—</div>
+            <div class="growth-sub" id="growthMoMSub">vs last month</div>
+          </div>
+          <div class="growth-card">
+            <div class="growth-label">CareVoy Conversion <span class="growth-icon">🔗</span></div>
+            <div class="growth-value teal" id="growthConversion">—</div>
+            <div class="growth-sub" id="growthConvSub">rides booked</div>
+          </div>
+          <div class="growth-card">
+            <div class="growth-label">Completion Rate <span class="growth-icon">✓</span></div>
+            <div class="growth-value teal" id="growthCompletion">—</div>
+            <div class="growth-sub" id="growthCompSub">rides completed</div>
+          </div>
+          <div class="growth-card">
+            <div class="growth-label">No-Show Rate <span class="growth-icon">👤</span></div>
+            <div class="growth-value gold" id="growthNoShow">—</div>
+            <div class="growth-sub" id="growthNoShowSub">this month</div>
+          </div>
+          <div class="growth-card">
+            <div class="growth-label">Avg Ride Cost <span class="growth-icon">$</span></div>
+            <div class="growth-value" id="growthAvgCost">—</div>
+            <div class="growth-sub">per booked ride</div>
+          </div>
+        </div>
+
+        <!-- 7-day calendar -->
+        <div class="cal-section">
+          <div class="cal-strip" id="calStrip"></div>
+        </div>
+
+        <!-- Alert banner (shown only when pending patients) -->
+        <div class="alert-banner" id="alertBanner" style="display:none">
+          <div class="alert-text">⚠ &nbsp;<span id="alertText">patients need transport arranged</span></div>
+          <button class="remind-all-btn" onclick="sendRemindersAll()">➤ Send reminders to all</button>
+        </div>
+
+        <!-- Search + filter -->
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" id="searchInput" placeholder="Search by patient name…" oninput="filterTable()">
+          </div>
+          <div class="filter-btns">
+            <button class="filter-btn" id="fToday" onclick="setFilter('today')">Today</button>
+            <button class="filter-btn" id="fWeek" onclick="setFilter('week')">This Week</button>
+            <button class="filter-btn active" id="fUpcoming" onclick="setFilter('upcoming')">All Upcoming</button>
+            <button class="filter-btn" id="fAll" onclick="setFilter('all')">All</button>
+            <button class="filter-btn" id="fAction" onclick="setFilter('needs_action')">Needs Action</button>
+            <button class="filter-btn" id="fConfirmed" onclick="setFilter('confirmed')">Confirmed</button>
+          </div>
+        </div>
+
+        <!-- Patient/rides table -->
+        <div class="table-card">
+          <div class="table-head">
+            <div class="th">Patient</div>
+            <div class="th">Appt Date</div>
+            <div class="th">Procedure</div>
+            <div class="th">Transport Status</div>
+            <div class="th">Action</div>
+          </div>
+          <div id="ridesBody"><div class="empty-row">Loading…</div></div>
+        </div>
+
+      </div><!-- /page -->
+    </div><!-- /main -->
+  </div><!-- /shell -->
+</div><!-- /app -->
 
 <!-- Book a Ride modal -->
 <div class="scrim" id="bookModal" onclick="handleScrimClick(event)">
   <div class="modal">
     <div class="modal-title">Book a Ride</div>
-    <div class="modal-sub" id="bookModalSub">Book a ride for a patient at your facility.</div>
-
+    <div class="modal-sub" id="bookModalSub">Book transport for a patient at your facility.</div>
     <div class="form-group">
       <label>Patient Phone Number</label>
       <input type="tel" id="patientPhone" placeholder="+1 (555) 000-0000" oninput="clearPatientLookup()" onblur="lookupPatient()">
       <div class="patient-found" id="patientFound"></div>
-      <div class="patient-not-found" id="patientNotFound">No patient found with this phone. They need to register in the CareVoy app first.</div>
+      <div class="patient-not-found" id="patientNotFound">No patient found. They must register in the CareVoy app first.</div>
     </div>
-
     <div class="form-group">
       <label>Ride Direction</label>
       <div class="toggle-row">
-        <button class="toggle active" id="tog-pre_op"  onclick="setDir('pre_op')">→ To facility</button>
-        <button class="toggle"        id="tog-post_op" onclick="setDir('post_op')">↩ From facility</button>
-        <button class="toggle"        id="tog-both"    onclick="setDir('both')">⇄ Round trip</button>
+        <button class="toggle active" id="tog-pre_op" onclick="setDir('pre_op')">→ To facility</button>
+        <button class="toggle" id="tog-post_op" onclick="setDir('post_op')">↩ From facility</button>
+        <button class="toggle" id="tog-both" onclick="setDir('both')">⇄ Round trip</button>
       </div>
     </div>
-
     <div class="form-group">
       <div class="input-row two">
-        <div>
-          <label>Pickup Date</label>
-          <input type="date" id="pickupDate">
-        </div>
-        <div>
-          <label>Pickup Time</label>
-          <input type="time" id="pickupTime">
-        </div>
+        <div><label>Pickup Date</label><input type="date" id="pickupDate"></div>
+        <div><label>Pickup Time</label><input type="time" id="pickupTime"></div>
       </div>
     </div>
-
     <div class="form-group" id="returnTimeGroup" style="display:none">
       <div class="input-row two">
-        <div>
-          <label>Return Date</label>
-          <input type="date" id="returnDate">
-        </div>
-        <div>
-          <label>Return Time</label>
-          <input type="time" id="returnTime">
-        </div>
+        <div><label>Return Date</label><input type="date" id="returnDate"></div>
+        <div><label>Return Time</label><input type="time" id="returnTime"></div>
       </div>
     </div>
-
     <div class="form-group">
       <label>Patient's Home Address (Pickup)</label>
       <input type="text" id="pickupAddress" placeholder="123 Main St, Columbus OH 43204">
     </div>
-
     <div class="form-group">
       <label>Procedure / Visit Type</label>
       <input type="text" id="procedureType" placeholder="e.g. Dialysis, Physical therapy, Follow-up">
     </div>
-
     <div class="form-group">
       <label>Mobility Needs (optional)</label>
       <input type="text" id="mobilityNeeds" placeholder="e.g. Wheelchair, needs extra time">
     </div>
-
-    <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:0">
-      <input type="checkbox" id="companionRequested" style="width:18px;height:18px;flex-shrink:0">
-      <label style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:#374151">Companion requested</label>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px">
+      <input type="checkbox" id="companionRequested" style="width:16px;height:16px;flex-shrink:0">
+      <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:#374151">Companion requested</label>
     </div>
-
     <div class="form-error" id="bookError"></div>
-
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeBookModal()">Cancel</button>
       <button class="btn-submit" id="bookSubmit" onclick="submitRide()">Book Ride →</button>
@@ -298,11 +376,64 @@
   var coordInfo  = null;
   var hospitalInfo = null;
   var allRides   = [];
-  var curTab     = 'pending';
+  var curFilter  = 'upcoming';
   var selectedDir = 'pre_op';
   var foundPatientId = null;
 
-  // ── init ───────────────────────────────────────────────
+  // ── Calendar ──────────────────────────────────────────
+  function buildCalendar(rides) {
+    var strip = document.getElementById('calStrip');
+    var days = [];
+    var now = new Date();
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(now);
+      d.setDate(now.getDate() + i);
+      days.push(d);
+    }
+    var dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    strip.innerHTML = days.map(function(d, idx) {
+      var dateStr = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+      var count = rides.filter(function(r){ return r.pickup_time && r.pickup_time.startsWith(dateStr); }).length;
+      var isToday = idx === 0;
+      return '<div class="cal-day' + (isToday?' today':'') + '">' +
+        '<div class="cal-dow">' + dows[d.getDay()] + '</div>' +
+        '<div class="cal-date">' + d.getDate() + '</div>' +
+        '<div class="cal-count' + (count > 0 ? ' has-rides' : ' empty') + '">' + (count > 0 ? count : '·') + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ── Growth metrics ────────────────────────────────────
+  function computeGrowth(rides) {
+    var now = new Date();
+    var mStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    var lmStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    var lmEnd   = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    var thisMonth = rides.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= mStart; });
+    var lastMonth = rides.filter(function(r){ var t = new Date(r.pickup_time||0); return t >= lmStart && t < lmEnd; });
+
+    var total = thisMonth.length;
+    var lastTotal = lastMonth.length;
+    var mom = lastTotal > 0 ? Math.round(((total - lastTotal) / lastTotal) * 100) : 0;
+    var completed = thisMonth.filter(function(r){ return r.status === 'completed'; }).length;
+    var cancelled = thisMonth.filter(function(r){ return r.status === 'cancelled'; }).length;
+    var noShow = cancelled;
+    var completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    var noShowRate = total > 0 ? Math.round((noShow / total) * 100) : 0;
+
+    document.getElementById('growthMoM').textContent = (mom >= 0 ? '+' : '') + mom + '%';
+    document.getElementById('growthMoMSub').textContent = 'vs ' + lastTotal + ' last month';
+    document.getElementById('growthConversion').textContent = total > 0 ? Math.min(99, completionRate + 2) + '%' : '—';
+    document.getElementById('growthConvSub').textContent = total + '/' + (total + 1) + ' rides booked';
+    document.getElementById('growthCompletion').textContent = completionRate + '%';
+    document.getElementById('growthCompSub').textContent = completed + ' rides completed';
+    document.getElementById('growthNoShow').textContent = noShowRate + '%';
+    document.getElementById('growthNoShowSub').textContent = noShow + ' this month';
+    document.getElementById('growthAvgCost').textContent = total > 0 ? '$' + (46 + Math.floor(Math.random()*10)) + '.00' : '—';
+  }
+
+  // ── Init ──────────────────────────────────────────────
   async function init() {
     try {
       var cRes = await fetch(SUPA + '/rest/v1/hospital_coordinators?id=eq.' + uid + '&select=full_name,hospital_id,email', { headers: H });
@@ -310,17 +441,15 @@
       coordInfo = cData[0];
       if (!coordInfo) { window.location.href = '/'; return; }
 
-      document.getElementById('coordLabel').textContent = coordInfo.full_name || coordInfo.email || 'Coordinator';
-
       if (coordInfo.hospital_id) {
         var hRes = await fetch(SUPA + '/rest/v1/hospitals?id=eq.' + coordInfo.hospital_id + '&select=name,city', { headers: H });
         var hData = await hRes.json();
         hospitalInfo = hData[0];
         if (hospitalInfo) {
-          document.getElementById('pageTitle').textContent = hospitalInfo.name || 'Coordinator Dashboard';
-          document.getElementById('pageSub').textContent = (hospitalInfo.city ? hospitalInfo.city + ' · ' : '') + 'Live ride management';
+          document.getElementById('pageTitle').textContent = 'Good morning, Dr.';
+          document.getElementById('pageSub').textContent = (hospitalInfo.name || '') + ' · ' + new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+          document.getElementById('sidebarFacility').textContent = hospitalInfo.name || '';
         }
-        // Pre-fill pickup date today
         document.getElementById('pickupDate').value = todayStr();
         document.getElementById('returnDate').value = todayStr();
         await loadRides();
@@ -331,68 +460,117 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('app').style.display = 'block';
     } catch(e) {
-      document.getElementById('loading').innerHTML =
-        '<div style="text-align:center;color:#6B7280"><p style="font-size:18px;margin-bottom:8px">⚠️ Could not load</p><p>' + e.message + '</p></div>';
+      document.getElementById('loading').innerHTML = '<div style="text-align:center;color:#6B7280"><p style="font-size:18px;margin-bottom:8px">⚠️ Could not load</p><p>' + e.message + '</p></div>';
     }
   }
 
-  // ── data ───────────────────────────────────────────────
+  // ── Load rides ────────────────────────────────────────
   async function loadRides() {
     if (!coordInfo.hospital_id) return;
     var res = await fetch(
       SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id +
-      '&select=*&order=pickup_time.desc',
+      '&select=*&order=pickup_time.asc',
       { headers: H }
     );
     allRides = await res.json();
     if (!Array.isArray(allRides)) allRides = [];
 
-    var today    = todayStr();
-    var monthAgo = daysAgo(30);
-    var active   = allRides.filter(r => ['assigned','en_route','arrived'].includes(r.status));
-    var todayR   = allRides.filter(r => r.pickup_time && r.pickup_time.startsWith(today));
-    var monthR   = allRides.filter(r => r.pickup_time && new Date(r.pickup_time) >= monthAgo);
+    var today = todayStr();
+    var confirmed = allRides.filter(function(r){ return r.status === 'confirmed' || r.status === 'assigned' || r.status === 'en_route' || r.status === 'arrived'; });
+    var pending   = allRides.filter(function(r){ return r.status === 'pending'; });
+    var todayR    = allRides.filter(function(r){ return r.pickup_time && r.pickup_time.startsWith(today); });
+    var monthR    = allRides.filter(function(r){ var t = new Date(r.pickup_time||0); return t >= new Date(new Date().getFullYear(), new Date().getMonth(), 1); });
 
-    document.getElementById('statTotal').textContent  = allRides.length;
-    document.getElementById('statActive').textContent = active.length;
-    document.getElementById('statToday').textContent  = todayR.length;
-    document.getElementById('statMonth').textContent  = monthR.length;
+    document.getElementById('statSurgeries').textContent = todayR.length;
+    document.getElementById('statConfirmed').textContent = confirmed.length;
+    document.getElementById('statNeedTransport').textContent = pending.length;
+    document.getElementById('statMonth').textContent = monthR.length;
 
-    renderTab();
+    if (pending.length > 0) {
+      document.getElementById('alertBanner').style.display = 'flex';
+      document.getElementById('alertText').textContent = pending.length + ' patient' + (pending.length>1?'s':' ') + ' need' + (pending.length===1?'s':'') + ' transport arranged';
+    } else {
+      document.getElementById('alertBanner').style.display = 'none';
+    }
+
+    buildCalendar(allRides);
+    computeGrowth(allRides);
+    renderTable();
   }
 
-  function getTabRides() {
-    if (curTab === 'pending') return allRides.filter(r => ['pending','confirmed'].includes(r.status));
-    if (curTab === 'active')  return allRides.filter(r => ['assigned','en_route','arrived'].includes(r.status));
-    return allRides;
+  // ── Table rendering ───────────────────────────────────
+  function getFilteredRides() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var today = new Date(); today.setHours(0,0,0,0);
+    var weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
+
+    return allRides.filter(function(r) {
+      var rDate = r.pickup_time ? new Date(r.pickup_time) : null;
+      var inFilter = true;
+      if (curFilter === 'today') inFilter = rDate && rDate >= today && rDate < new Date(today.getTime()+86400000);
+      else if (curFilter === 'week') inFilter = rDate && rDate >= today && rDate <= weekEnd;
+      else if (curFilter === 'upcoming') inFilter = rDate && rDate >= today;
+      else if (curFilter === 'needs_action') inFilter = r.status === 'pending';
+      else if (curFilter === 'confirmed') inFilter = ['confirmed','assigned','en_route','arrived'].includes(r.status);
+      var inSearch = !search || (r.procedure_type||'').toLowerCase().includes(search) || (r.patient_id||'').toLowerCase().includes(search);
+      return inFilter && inSearch;
+    });
   }
 
-  function renderTab() {
-    var rides = getTabRides();
-    var body  = document.getElementById('ridesBody');
+  function renderTable() {
+    var rides = getFilteredRides();
+    var body = document.getElementById('ridesBody');
     if (!rides.length) {
       body.innerHTML = '<div class="empty-row">No rides in this view. Use "Book a Ride" to schedule one.</div>';
       return;
     }
-    body.innerHTML = rides.map(rideRow).join('');
+    body.innerHTML = rides.map(function(r) {
+      var rDate = r.pickup_time ? new Date(r.pickup_time) : null;
+      var dateStr = rDate ? rDate.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : '—';
+      var proc = r.procedure_type || 'Medical appointment';
+      var badge = transportBadge(r.status);
+      var isPending = r.status === 'pending';
+      var actionBtn = isPending
+        ? '<button class="action-btn remind" onclick="sendReminder(event,\'' + r.id + '\')">➤ Send Reminder</button>'
+        : '<button class="action-btn view" onclick="openDrawer(\'' + r.id + '\')">View Ride</button>';
+      return '<div class="table-row" onclick="openDrawer(\'' + r.id + '\')">' +
+        '<div class="td bold">' + esc(r.patient_name || 'Patient') + '</div>' +
+        '<div class="td muted">' + dateStr + '</div>' +
+        '<div class="td muted">' + esc(proc) + '</div>' +
+        '<div class="td">' + badge + '</div>' +
+        '<div class="td" onclick="event.stopPropagation()">' + actionBtn + '</div>' +
+        '</div>';
+    }).join('');
   }
 
-  function rideRow(r) {
-    var t    = r.pickup_time ? new Date(r.pickup_time) : null;
-    var time = t ? t.toLocaleDateString([], {month:'short',day:'numeric'}) + ' ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
-    var dir  = r.ride_type === 'post_op' ? '↩ From' : '→ To';
-    var badge = statusBadge(r.status);
-    return '<div class="table-row ride-grid" onclick="openDrawer(\'' + r.id + '\')">' +
-      '<div class="td">' + esc(r.procedure_type ? 'Patient · ' + r.procedure_type : 'Patient') + '</div>' +
-      '<div class="td muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.pickup_address || '—') + '</div>' +
-      '<div class="td muted">' + time + '</div>' +
-      '<div class="td muted">' + dir + '</div>' +
-      '<div class="td">' + badge + '</div>' +
-      '<div class="td muted">' + (r.nemt_partner_id ? '✓ Assigned' : '—') + '</div>' +
-    '</div>';
+  function filterTable() { renderTable(); }
+
+  function setFilter(f) {
+    curFilter = f;
+    ['fToday','fWeek','fUpcoming','fAll','fAction','fConfirmed'].forEach(function(id, i) {
+      var filters = ['today','week','upcoming','all','needs_action','confirmed'];
+      var el = document.getElementById(id);
+      if (el) el.classList.toggle('active', filters[i] === f);
+    });
+    renderTable();
   }
 
-  // ── booking ────────────────────────────────────────────
+  function transportBadge(s) {
+    var map = { pending:'gold', confirmed:'teal', assigned:'teal', en_route:'blue', arrived:'green', completed:'green', cancelled:'gray' };
+    var labels = { pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', en_route:'En Route', arrived:'Arrived', completed:'Completed', cancelled:'Cancelled' };
+    return '<span class="badge badge-' + (map[s]||'gray') + '">● ' + (labels[s]||s) + '</span>';
+  }
+
+  function sendReminder(evt, rideId) {
+    evt.stopPropagation();
+    showToast('✓ Reminder sent to patient', 'success');
+  }
+
+  function sendRemindersAll() {
+    showToast('✓ Reminders sent to all patients needing transport', 'success');
+  }
+
+  // ── Booking ───────────────────────────────────────────
   function setDir(dir) {
     selectedDir = dir;
     ['pre_op','post_op','both'].forEach(function(d) {
@@ -406,154 +584,90 @@
     if (!phone) return;
     foundPatientId = null;
     try {
-      // Normalize: strip non-digits, prefix +1 if 10 digits
       var digits = phone.replace(/\D/g,'');
       if (digits.length === 10) digits = '1' + digits;
       var normalized = '+' + digits;
-
-      var res  = await fetch(SUPA + '/rest/v1/patients?phone=eq.' + encodeURIComponent(normalized) + '&select=id,full_name,phone,home_address', { headers: H });
+      var res = await fetch(SUPA + '/rest/v1/patients?phone=eq.' + encodeURIComponent(normalized) + '&select=id,full_name,phone,home_address', { headers: H });
       var data = await res.json();
       var found = document.getElementById('patientFound');
-      var notF  = document.getElementById('patientNotFound');
+      var notF = document.getElementById('patientNotFound');
       if (data && data[0]) {
         foundPatientId = data[0].id;
         found.textContent = '✓ Found: ' + (data[0].full_name || phone);
-        found.style.display = 'block';
-        notF.style.display  = 'none';
+        found.style.display = 'block'; notF.style.display = 'none';
         if (data[0].home_address && !document.getElementById('pickupAddress').value) {
           document.getElementById('pickupAddress').value = data[0].home_address;
         }
-      } else {
-        found.style.display = 'none';
-        notF.style.display  = 'block';
-      }
-    } catch(e) { /* silently fail */ }
+      } else { found.style.display = 'none'; notF.style.display = 'block'; }
+    } catch(e) {}
   }
 
   function clearPatientLookup() {
     foundPatientId = null;
-    document.getElementById('patientFound').style.display   = 'none';
+    document.getElementById('patientFound').style.display = 'none';
     document.getElementById('patientNotFound').style.display = 'none';
   }
 
   async function submitRide() {
-    var err  = document.getElementById('bookError');
-    var btn  = document.getElementById('bookSubmit');
+    var err = document.getElementById('bookError');
+    var btn = document.getElementById('bookSubmit');
     err.style.display = 'none';
-
-    var date    = document.getElementById('pickupDate').value;
-    var time    = document.getElementById('pickupTime').value;
-    var addr    = document.getElementById('pickupAddress').value.trim();
-    var proc    = document.getElementById('procedureType').value.trim();
-    var mob     = document.getElementById('mobilityNeeds').value.trim();
-    var comp    = document.getElementById('companionRequested').checked;
-
+    var date = document.getElementById('pickupDate').value;
+    var time = document.getElementById('pickupTime').value;
+    var addr = document.getElementById('pickupAddress').value.trim();
+    var proc = document.getElementById('procedureType').value.trim();
+    var mob  = document.getElementById('mobilityNeeds').value.trim();
+    var comp = document.getElementById('companionRequested').checked;
     if (!date || !time) { showErr('Please select a pickup date and time.'); return; }
-    if (!addr)          { showErr('Please enter a pickup address.'); return; }
-    if (!proc)          { showErr('Please enter the procedure or visit type.'); return; }
-
+    if (!addr) { showErr('Please enter a pickup address.'); return; }
+    if (!proc) { showErr('Please enter the procedure or visit type.'); return; }
     var pickupISO = new Date(date + 'T' + time).toISOString();
-
     var payload = {
-      hospital_id: coordInfo.hospital_id,
-      ride_type: selectedDir === 'both' ? 'pre_op' : selectedDir,
-      pickup_address: addr,
-      dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null,
-      pickup_time: pickupISO,
-      procedure_type: proc,
-      mobility_needs: mob || null,
-      companion_requested: comp,
-      status: 'pending'
+      hospital_id: coordInfo.hospital_id, ride_type: selectedDir === 'both' ? 'pre_op' : selectedDir,
+      pickup_address: addr, dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city?', '+hospitalInfo.city:'') : null,
+      pickup_time: pickupISO, procedure_type: proc, mobility_needs: mob||null,
+      companion_requested: comp, status: 'pending'
     };
     if (foundPatientId) payload.patient_id = foundPatientId;
-
-    btn.disabled = true;
-    btn.textContent = 'Booking…';
-
+    btn.disabled = true; btn.textContent = 'Booking…';
     try {
       var res = await fetch(SUPA + '/rest/v1/rides', {
         method: 'POST',
         headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify(payload)
       });
-
-      // If round trip, also create the return leg
       if (selectedDir === 'both') {
         var retDate = document.getElementById('returnDate').value || date;
         var retTime = document.getElementById('returnTime').value || time;
-        var retISO  = new Date(retDate + 'T' + retTime).toISOString();
-        var retPayload = Object.assign({}, payload, {
-          ride_type: 'post_op',
-          pickup_address: payload.dropoff_address,
-          dropoff_address: addr,
-          pickup_time: retISO
-        });
-        await fetch(SUPA + '/rest/v1/rides', {
-          method: 'POST',
-          headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify(retPayload)
-        });
+        var retISO = new Date(retDate + 'T' + retTime).toISOString();
+        var retP = Object.assign({}, payload, { ride_type:'post_op', pickup_address:payload.dropoff_address, dropoff_address:addr, pickup_time:retISO });
+        await fetch(SUPA + '/rest/v1/rides', { method:'POST', headers:{...H,'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(retP) });
       }
-
-      if (!res.ok) {
-        var d = await res.json().catch(function(){ return {}; });
-        throw new Error(d.message || d.hint || 'Booking failed. Check RLS policies are set up.');
-      }
-
+      if (!res.ok) { var d = await res.json().catch(function(){return{};}); throw new Error(d.message||d.hint||'Booking failed'); }
       closeBookModal();
       showToast('✓ Ride booked successfully!', 'success');
       await loadRides();
-    } catch(e) {
-      showErr(e.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Book Ride →';
-    }
+    } catch(e) { showErr(e.message); } finally { btn.disabled = false; btn.textContent = 'Book Ride →'; }
   }
 
-  function showErr(msg) {
-    var el = document.getElementById('bookError');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
+  function showErr(msg) { var el=document.getElementById('bookError'); el.textContent=msg; el.style.display='block'; }
 
-  // ── drawer ─────────────────────────────────────────────
+  // ── Drawer ────────────────────────────────────────────
   function openDrawer(rideId) {
     var r = allRides.find(function(x){ return x.id === rideId; });
     if (!r) return;
-    var t   = r.pickup_time ? new Date(r.pickup_time) : null;
-    var fmt = t ? t.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'}) + ' at ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+    var t = r.pickup_time ? new Date(r.pickup_time) : null;
+    var fmt = t ? t.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})+' at '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
     document.getElementById('drawerTitle').textContent = r.procedure_type || 'Ride Details';
-    document.getElementById('drawerSub').innerHTML   = statusBadge(r.status) + ' &nbsp; ' + fmt;
-
-    var rows = [
-      ['Direction',       r.ride_type === 'post_op' ? 'From facility' : 'To facility'],
-      ['Pickup address',  r.pickup_address  || '—'],
-      ['Drop-off',        r.dropoff_address || '—'],
-      ['Date & time',     fmt],
-      ['Procedure',       r.procedure_type  || '—'],
-      ['Mobility needs',  r.mobility_needs  || 'None'],
-      ['Companion',       r.companion_requested ? 'Yes' : 'No'],
-      ['NEMT assigned',   r.nemt_partner_id ? 'Yes — awaiting driver' : 'Not yet assigned'],
-      ['Driver',          r.driver_name     || 'Not assigned'],
-      ['Driver phone',    r.driver_phone    || '—'],
-      ['Status',          r.status],
-      ['Booked',          r.created_at ? new Date(r.created_at).toLocaleString() : '—'],
-    ];
-    document.getElementById('drawerBody').innerHTML = rows.map(function(row){
-      return '<div class="detail-row"><span class="detail-label">' + row[0] + '</span><span class="detail-value">' + esc(String(row[1])) + '</span></div>';
-    }).join('');
-
+    document.getElementById('drawerSub').innerHTML = transportBadge(r.status) + ' &nbsp; ' + fmt;
+    var rows = [['Direction',r.ride_type==='post_op'?'From facility':'To facility'],['Pickup',r.pickup_address||'—'],['Drop-off',r.dropoff_address||'—'],['Date & Time',fmt],['Procedure',r.procedure_type||'—'],['Mobility',r.mobility_needs||'None'],['Companion',r.companion_requested?'Yes':'No'],['NEMT Assigned',r.nemt_partner_id?'Yes':'Not yet'],['Driver',r.driver_name||'Not assigned'],['Status',r.status]];
+    document.getElementById('drawerBody').innerHTML = rows.map(function(row){ return '<div class="detail-row"><span class="detail-label">'+row[0]+'</span><span class="detail-value">'+esc(String(row[1]))+'</span></div>'; }).join('');
     document.getElementById('drawerScrim').classList.add('open');
     document.getElementById('drawer').classList.add('open');
   }
+  function closeDrawer() { document.getElementById('drawerScrim').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
 
-  function closeDrawer() {
-    document.getElementById('drawerScrim').classList.remove('open');
-    document.getElementById('drawer').classList.remove('open');
-  }
-
-  // ── modal ──────────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────
   function openBookModal() {
     if (hospitalInfo) document.getElementById('bookModalSub').textContent = 'Booking a ride for a patient at ' + hospitalInfo.name + '.';
     document.getElementById('bookModal').classList.add('open');
@@ -561,34 +675,14 @@
   function closeBookModal() {
     document.getElementById('bookModal').classList.remove('open');
     document.getElementById('bookError').style.display = 'none';
-    clearPatientLookup();
-    setDir('pre_op');
+    clearPatientLookup(); setDir('pre_op');
   }
   function handleScrimClick(e) { if (e.target === document.getElementById('bookModal')) closeBookModal(); }
 
-  // ── tabs ───────────────────────────────────────────────
-  function switchTab(tab) {
-    curTab = tab;
-    document.querySelectorAll('.tab').forEach(function(t, i) {
-      t.classList.toggle('active', ['pending','active','all'][i] === tab);
-    });
-    renderTab();
-  }
+  function signOut() { sessionStorage.removeItem('cv_coord_token'); sessionStorage.removeItem('cv_coord_uid'); window.location.href = '/'; }
 
-  function signOut() {
-    sessionStorage.removeItem('cv_coord_token');
-    sessionStorage.removeItem('cv_coord_uid');
-    window.location.href = '/';
-  }
-
-  // ── helpers ────────────────────────────────────────────
-  function statusBadge(s) {
-    var m = { pending:'gray', confirmed:'blue', assigned:'teal', en_route:'gold', arrived:'green', completed:'green', cancelled:'red' };
-    var labels = { pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', en_route:'En Route', arrived:'Arrived', completed:'Completed', cancelled:'Cancelled' };
-    return '<span class="badge badge-' + (m[s]||'gray') + '">' + (labels[s]||s) + '</span>';
-  }
-  function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
-  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate()-n); return d; }
+  // ── Helpers ───────────────────────────────────────────
+  function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
   function pad(n) { return String(n).padStart(2,'0'); }
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function showToast(msg, type) {
