@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CareVoy — Driver Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif; background: #F0F4F8; min-height: 100vh; }
+
+    /* Loading */
+    #loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #00C2A8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Topbar */
+    .topbar { background: #050D1F; padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-name { color: #fff; font-size: 17px; font-weight: 700; }
+    .role-pill { background: rgba(0,194,168,0.18); color: #00C2A8; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 10px; border-radius: 999px; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .driver-label { color: #9CA3AF; font-size: 13px; }
+    .signout-btn { background: none; border: 1px solid rgba(255,255,255,0.15); color: #9CA3AF; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.15s; }
+    .signout-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+
+    /* Page */
+    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+    .page-header { margin-bottom: 28px; }
+    .page-title { color: #050D1F; font-size: 26px; font-weight: 700; }
+    .page-sub { color: #6B7280; font-size: 14px; margin-top: 4px; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: white; border-radius: 14px; padding: 20px; border: 1px solid #E2E8F0; }
+    .stat-label { color: #6B7280; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #050D1F; }
+    .stat-value.teal { color: #00C2A8; }
+    .stat-value.gold { color: #F5A623; }
+    .stat-sub { color: #6B7280; font-size: 12px; margin-top: 4px; }
+
+    /* Section */
+    .section { margin-bottom: 32px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .section-title { color: #050D1F; font-size: 17px; font-weight: 700; }
+    .section-count { color: #6B7280; font-size: 13px; }
+
+    /* Ride cards */
+    .rides-stack { display: flex; flex-direction: column; gap: 12px; }
+    .ride-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; padding: 20px; transition: box-shadow 0.15s; }
+    .ride-card:hover { box-shadow: 0 4px 16px rgba(5,13,31,0.08); }
+    .ride-card.active-ride { border-left: 4px solid #00C2A8; }
+    .ride-card.en-route { border-left: 4px solid #F5A623; }
+    .ride-card.arrived { border-left: 4px solid #10b981; }
+
+    .ride-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+    .ride-time { font-size: 20px; font-weight: 700; color: #050D1F; }
+    .ride-date { font-size: 13px; font-weight: 500; color: #6B7280; }
+    .ride-meta { font-size: 13px; color: #6B7280; margin-top: 3px; }
+
+    .badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .badge-teal { background: #d1faf4; color: #047857; }
+    .badge-gold { background: #fef3c7; color: #b45309; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+    .badge-gray { background: #F0F4F8; color: #6B7280; }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-red { background: #fee2e2; color: #dc2626; }
+
+    .ride-addresses { margin-bottom: 12px; }
+    .addr-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 14px; color: #374151; }
+    .addr-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .addr-dot.green { background: #00C2A8; }
+    .addr-dot.navy { background: #050D1F; }
+    .addr-connector { width: 10px; display: flex; justify-content: center; }
+    .addr-line-v { width: 2px; height: 16px; background: #E2E8F0; margin: 0 auto; }
+
+    .ride-notes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .ride-note { background: #FFF8E7; border: 1px solid #F5A623; color: #92400e; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 6px; }
+    .ride-note.info { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+
+    .ride-actions { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid #F0F4F8; }
+    .action-btn { flex: 1; padding: 12px 16px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; font-family: inherit; transition: opacity 0.15s; }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .action-btn.primary { background: #00C2A8; color: #050D1F; }
+    .action-btn.primary:hover:not(:disabled) { opacity: 0.88; }
+    .action-btn.secondary { background: #F0F4F8; color: #374151; }
+    .action-btn.secondary:hover:not(:disabled) { background: #E2E8F0; }
+
+    /* Empty state */
+    .empty-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; padding: 40px 20px; text-align: center; color: #9CA3AF; font-size: 14px; }
+    .empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+    /* No partner banner */
+    .alert-card { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; }
+    .alert-title { color: #92400e; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .alert-body { color: #78350f; font-size: 13px; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 420px; text-align: center; }
+    .toast.show { opacity: 1; }
+    .toast.success { background: #065f46; }
+    .toast.error { background: #991b1b; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 0 16px; }
+      .page { padding: 20px 16px 48px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .ride-header { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div></div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="brand">
+      <img src="/carevoy-icon.png" width="32" height="32" style="border-radius:8px;object-fit:cover">
+      <span class="brand-name">CareVoy</span>
+      <span class="role-pill">DRIVER</span>
+    </div>
+    <div class="topbar-right">
+      <span class="driver-label" id="driverName"></span>
+      <button class="signout-btn" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <div class="page-title">NEMT Driver Portal</div>
+      <div class="page-sub" id="pageSub"></div>
+    </div>
+
+    <div id="noPartnerAlert" style="display:none">
+      <div class="alert-card">
+        <div class="alert-title">Not linked to a transport company</div>
+        <div class="alert-body">Your account isn't connected to an NEMT partner yet. Contact your CareVoy admin to get assigned.</div>
+      </div>
+    </div>
+
+    <div id="dashContent">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today's Rides</div>
+          <div class="stat-value teal" id="statToday">—</div>
+          <div class="stat-sub" id="statTodaySub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Week</div>
+          <div class="stat-value gold" id="statWeek">—</div>
+          <div class="stat-sub">earnings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Month</div>
+          <div class="stat-value" id="statMonth">—</div>
+          <div class="stat-sub">earnings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Completion Rate</div>
+          <div class="stat-value" id="statRate">—</div>
+          <div class="stat-sub">this month</div>
+        </div>
+      </div>
+
+      <!-- Active Rides -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Active Rides</div>
+          <div class="section-count" id="activeCount"></div>
+        </div>
+        <div class="rides-stack" id="activeRides"></div>
+      </div>
+
+      <!-- Today's Schedule -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Today's Schedule</div>
+          <div class="section-count" id="todayCount"></div>
+        </div>
+        <div class="rides-stack" id="todayRides"></div>
+      </div>
+
+      <!-- Upcoming -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Upcoming</div>
+          <div class="section-count" id="upcomingCount"></div>
+        </div>
+        <div class="rides-stack" id="upcomingRides"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+  var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+
+  var token = sessionStorage.getItem('cv_nemt_token');
+  var uid   = sessionStorage.getItem('cv_nemt_uid');
+  if (!token || !uid) { window.location.href = '/'; }
+
+  var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+  var driverInfo = null;
+
+  // ── init ───────────────────────────────────────────────
+  async function init() {
+    try {
+      var res  = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=full_name,nemt_partner_id,role', { headers: H });
+      var data = await res.json();
+      driverInfo = data[0];
+
+      if (!driverInfo || driverInfo.role !== 'nemt') { window.location.href = '/'; return; }
+
+      document.getElementById('driverName').textContent = driverInfo.full_name || 'Driver';
+      document.getElementById('pageSub').textContent =
+        new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' }) +
+        ' · Live data';
+
+      if (!driverInfo.nemt_partner_id) {
+        document.getElementById('noPartnerAlert').style.display = 'block';
+        document.getElementById('dashContent').style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        return;
+      }
+
+      await loadRides();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    } catch(e) {
+      document.getElementById('loading').innerHTML =
+        '<div style="text-align:center;color:#6B7280"><p style="font-size:18px;margin-bottom:8px">⚠️ Could not load</p><p>' + e.message + '</p></div>';
+    }
+  }
+
+  // ── data ───────────────────────────────────────────────
+  async function loadRides() {
+    var res   = await fetch(
+      SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + driverInfo.nemt_partner_id +
+      '&select=*&order=pickup_time.asc',
+      { headers: H }
+    );
+    var rides = await res.json();
+    if (!Array.isArray(rides)) rides = [];
+
+    var today    = todayStr();
+    var weekAgo  = daysAgo(7);
+    var monthAgo = daysAgo(30);
+    var now      = new Date();
+
+    var active   = rides.filter(r => ['assigned','en_route','arrived'].includes(r.status));
+    var todayQ   = rides.filter(r => r.pickup_time && r.pickup_time.startsWith(today) &&
+                                     ['pending','confirmed','assigned'].includes(r.status));
+    var upcoming = rides.filter(r => r.pickup_time &&
+                                     new Date(r.pickup_time) > now &&
+                                     !r.pickup_time.startsWith(today) &&
+                                     ['pending','confirmed','assigned'].includes(r.status));
+
+    // Earnings
+    var weekEarn  = sumEarnings(rides, weekAgo);
+    var monthEarn = sumEarnings(rides, monthAgo);
+
+    // Completion rate (this month)
+    var mthRides    = rides.filter(r => r.pickup_time && new Date(r.pickup_time) >= monthAgo && r.status !== 'cancelled');
+    var mthDone     = mthRides.filter(r => r.status === 'completed');
+    var rate        = mthRides.length ? Math.round(mthDone.length / mthRides.length * 100) : 0;
+
+    // Update stats
+    var todayAll = rides.filter(r => r.pickup_time && r.pickup_time.startsWith(today));
+    document.getElementById('statToday').textContent    = todayAll.length;
+    document.getElementById('statTodaySub').textContent = todayAll.filter(r => r.status === 'completed').length + ' completed';
+    document.getElementById('statWeek').textContent     = fmtMoney(weekEarn);
+    document.getElementById('statMonth').textContent    = fmtMoney(monthEarn);
+    document.getElementById('statRate').textContent     = rate + '%';
+
+    // Render sections
+    renderSection('activeRides',   'activeCount',   active,   'No active rides right now.',    true);
+    renderSection('todayRides',    'todayCount',    todayQ,   'No more rides scheduled today.');
+    renderSection('upcomingRides', 'upcomingCount', upcoming, 'No upcoming rides.');
+  }
+
+  function sumEarnings(rides, since) {
+    return rides
+      .filter(r => r.status === 'completed' && r.pickup_time && new Date(r.pickup_time) >= since)
+      .reduce((s, r) => s + parseFloat(r.actual_cost || r.estimated_cost || 0), 0);
+  }
+
+  // ── rendering ──────────────────────────────────────────
+  function renderSection(containerId, countId, rides, emptyMsg, isActive) {
+    var el = document.getElementById(containerId);
+    var ct = document.getElementById(countId);
+    ct.textContent = rides.length ? rides.length + ' ride' + (rides.length > 1 ? 's' : '') : '';
+    if (!rides.length) {
+      el.innerHTML = '<div class="empty-card"><div class="empty-icon">🚐</div>' + emptyMsg + '</div>';
+      return;
+    }
+    el.innerHTML = rides.map(function(r) { return rideCard(r, isActive); }).join('');
+  }
+
+  function rideCard(r, isActive) {
+    var t     = r.pickup_time ? new Date(r.pickup_time) : null;
+    var time  = t ? t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+    var date  = t ? t.toLocaleDateString([], {month:'short',day:'numeric'}) : '';
+    var dir   = r.ride_type === 'post_op' ? '↩ From facility' : '→ To facility';
+    var badge = statusBadge(r.status);
+    var notes = [];
+    if (r.mobility_needs)       notes.push('<span class="ride-note">⚠️ ' + esc(r.mobility_needs) + '</span>');
+    if (r.companion_requested)  notes.push('<span class="ride-note info">👤 Companion needed</span>');
+
+    var borderClass = r.status === 'en_route' ? ' en-route' : r.status === 'arrived' ? ' arrived' : isActive ? ' active-ride' : '';
+
+    return '<div class="ride-card' + borderClass + '" id="ride-' + r.id + '">' +
+      '<div class="ride-header">' +
+        '<div>' +
+          '<div class="ride-time">' + time + ' <span class="ride-date">' + date + '</span></div>' +
+          '<div class="ride-meta">' + dir + (r.procedure_type ? ' · ' + esc(r.procedure_type) : '') + '</div>' +
+        '</div>' +
+        badge +
+      '</div>' +
+      '<div class="ride-addresses">' +
+        '<div class="addr-row"><span class="addr-dot green"></span>' + esc(r.pickup_address || 'Pickup not set') + '</div>' +
+        '<div class="addr-row" style="padding-left:4px;padding-top:0;padding-bottom:0"><div class="addr-line-v"></div></div>' +
+        '<div class="addr-row"><span class="addr-dot navy"></span>' + esc(r.dropoff_address || 'Dropoff not set') + '</div>' +
+      '</div>' +
+      (notes.length ? '<div class="ride-notes">' + notes.join('') + '</div>' : '') +
+      actionRow(r) +
+    '</div>';
+  }
+
+  function actionRow(r) {
+    var map = {
+      assigned: ['en_route',   '🚗 Start Drive',    'primary'],
+      en_route: ['arrived',    '📍 Mark Arrived',   'primary'],
+      arrived:  ['completed',  '✅ Complete Trip',  'primary']
+    };
+    var t = map[r.status];
+    if (!t) return '';
+    return '<div class="ride-actions">' +
+      '<button class="action-btn ' + t[2] + '" onclick="updateStatus(\'' + r.id + '\',\'' + t[0] + '\')">' + t[1] + '</button>' +
+    '</div>';
+  }
+
+  function statusBadge(s) {
+    var m = {
+      pending:   ['gray',  'Pending'],
+      confirmed: ['blue',  'Confirmed'],
+      assigned:  ['teal',  'Assigned'],
+      en_route:  ['gold',  'En Route'],
+      arrived:   ['green', 'Arrived'],
+      completed: ['green', 'Completed'],
+      cancelled: ['red',   'Cancelled']
+    };
+    var v = m[s] || ['gray', s];
+    return '<span class="badge badge-' + v[0] + '">' + v[1] + '</span>';
+  }
+
+  // ── actions ────────────────────────────────────────────
+  async function updateStatus(rideId, newStatus) {
+    var btn = document.querySelector('#ride-' + rideId + ' .action-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Updating…'; }
+    try {
+      var res = await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+        method: 'PATCH',
+        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (!res.ok) throw new Error('Update failed — check your connection');
+      showToast(newStatus === 'completed' ? '✅ Trip completed!' : '✓ Status updated', 'success');
+      await loadRides();
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+      if (btn) { btn.disabled = false; }
+      await loadRides();
+    }
+  }
+
+  function signOut() {
+    sessionStorage.removeItem('cv_nemt_token');
+    sessionStorage.removeItem('cv_nemt_uid');
+    window.location.href = '/';
+  }
+
+  // ── helpers ────────────────────────────────────────────
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  }
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate()-n); return d; }
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function fmtMoney(n) { return '$' + n.toFixed(2); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.classList.remove('show'); }, 3500);
+  }
+
+  init();
+  setInterval(loadRides, 30000);
+</script>
+</body>
+</html>

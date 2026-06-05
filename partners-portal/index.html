@@ -4,88 +4,146 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CareVoy — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8FAFC; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    body { font-family: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F0F4F8; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     .card { background: white; border-radius: 20px; padding: 48px 40px; width: 100%; max-width: 420px; border: 1px solid #E2E8F0; box-shadow: 0 4px 24px rgba(5,13,31,0.06); }
-    h1 { font-size: 26px; font-weight: 700; color: #050D1F; margin-bottom: 6px; }
-    .subtitle { color: #6B7280; font-size: 14px; margin-bottom: 32px; }
-    label { display: block; font-size: 12px; font-weight: 600; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 16px; }
-    input { width: 100%; padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 15px; color: #050D1F; background: #F8FAFC; outline: none; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .brand-text { color: #050D1F; font-size: 18px; font-weight: 700; letter-spacing: -0.2px; }
+    .brand-sub { color: #00C2A8; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+    h1 { font-size: 24px; font-weight: 700; color: #050D1F; margin-bottom: 6px; }
+    .subtitle { color: #6B7280; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+    label { display: block; font-size: 12px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 16px; }
+    input { width: 100%; padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 15px; color: #050D1F; background: #F8FAFC; outline: none; font-family: inherit; }
     input:focus { border-color: #00C2A8; background: white; }
     .pw-wrap { position: relative; }
-    .pw-wrap input { padding-right: 48px; }
-    .pw-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6B7280; font-size: 16px; padding: 0; width: auto; }
-    .submit { width: 100%; padding: 16px; background: #050D1F; color: #00C2A8; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 24px; font-family: inherit; }
+    .pw-wrap input { padding-right: 56px; }
+    .pw-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6B7280; font-size: 13px; font-weight: 600; font-family: inherit; padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pw-eye:hover { color: #050D1F; }
+    .submit { width: 100%; padding: 16px; background: #050D1F; color: #00C2A8; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 24px; font-family: inherit; letter-spacing: 0.2px; }
     .submit:hover { opacity: 0.9; }
     .submit:disabled { opacity: 0.6; cursor: not-allowed; }
-    .error { color: #EF4444; font-size: 13px; margin-top: 10px; display: none; }
+    .error { color: #EF4444; font-size: 13px; margin-top: 10px; display: none; background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; }
     .footer { text-align: center; margin-top: 24px; color: #6B7280; font-size: 13px; }
     .footer a { color: #050D1F; font-weight: 600; text-decoration: none; }
+    .footer a:hover { color: #00C2A8; }
+    @media (max-width: 480px) { .card { padding: 32px 24px; margin: 16px; border-radius: 16px; } }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Sign in</h1>
-    <p class="subtitle">CareVoy partner &amp; admin access</p>
-    <label>Email</label>
-    <input type="email" id="email" placeholder="you@facility.com" />
+    <div class="brand">
+      <img src="/carevoy-icon.png" width="32" height="32" style="border-radius:8px;object-fit:cover">
+      <div>
+        <div class="brand-text">CareVoy</div>
+        <div class="brand-sub">Partner Portal</div>
+      </div>
+    </div>
+    <h1>Sign in to your dashboard</h1>
+    <p class="subtitle">For NEMT drivers, hospital coordinators, and CareVoy admins. Patients should use the CareVoy mobile app instead.</p>
+    <label>Work email</label>
+    <input type="email" id="email" placeholder="you@nemtcompany.com" autocomplete="email">
     <label>Password</label>
     <div class="pw-wrap">
-      <input type="password" id="password" placeholder="Password" />
-      <button class="pw-eye" onclick="togglePw()" type="button" id="eyeBtn">show</button>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      <button class="pw-eye" onclick="togglePw()" type="button" id="eyeBtn">SHOW</button>
     </div>
     <div id="error" class="error"></div>
     <button class="submit" id="btn" onclick="signIn()">Sign In</button>
-    <div class="footer">Patient? <a href="https://apps.apple.com/us/app/carevoy/id6768714735">Download the app</a></div>
+    <div class="footer">Are you a patient? <a href="https://apps.apple.com/us/app/carevoy/id6768714735" target="_blank">Download CareVoy from the App Store or Google Play.</a></div>
   </div>
+
   <script>
-    const URL = 'https://byflpckbjjumxxjxoplk.supabase.co';
-    const KEY = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+    var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 
     function togglePw() {
       var i = document.getElementById('password');
       var b = document.getElementById('eyeBtn');
-      if (i.type === 'password') { i.type = 'text'; b.textContent = 'hide'; }
-      else { i.type = 'password'; b.textContent = 'show'; }
+      if (i.type === 'password') { i.type = 'text'; b.textContent = 'HIDE'; }
+      else { i.type = 'password'; b.textContent = 'SHOW'; }
     }
 
     async function signIn() {
-      var email = document.getElementById('email').value.trim();
+      var email    = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value;
-      var err = document.getElementById('error');
-      var btn = document.getElementById('btn');
-      err.style.display = 'none';
-      if (!email || !password) { err.textContent = 'Enter your email and password.'; err.style.display = 'block'; return; }
-      btn.disabled = true; btn.textContent = 'Signing in...';
+      var errEl    = document.getElementById('error');
+      var btn      = document.getElementById('btn');
+      errEl.style.display = 'none';
+
+      if (!email || !password) {
+        errEl.textContent = 'Please enter your email and password.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
       try {
-        var r = await fetch(URL + '/auth/v1/token?grant_type=password', {
+        // Authenticate
+        var authRes = await fetch(SUPA + '/auth/v1/token?grant_type=password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': KEY },
           body: JSON.stringify({ email: email, password: password })
         });
-        var d = await r.json();
-        if (!r.ok) throw new Error(d.error_description || d.message || 'Login failed');
-        var token = d.access_token;
-        var uid = d.user.id;
-        var h = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
-        var sr = await fetch(URL + '/rest/v1/staff?id=eq.' + uid + '&select=role', { headers: h });
-        var sd = await sr.json();
-        var role = sd[0] && sd[0].role;
-        var cr = await fetch(URL + '/rest/v1/hospital_coordinators?id=eq.' + uid + '&select=id', { headers: h });
-        var cd = await cr.json();
+        var authData = await authRes.json();
+        if (!authRes.ok) throw new Error(authData.error_description || authData.message || 'Login failed. Check your email and password.');
+
+        var token = authData.access_token;
+        var uid   = authData.user.id;
+        var H     = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+
+        // Check staff role
+        var staffRes  = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=role', { headers: H });
+        var staffData = await staffRes.json();
+        var role = staffData[0] && staffData[0].role;
+
         if (role === 'admin') {
+          // Admin: save token and go to admin dashboard
           sessionStorage.setItem('cv_admin_token', token);
-          sessionStorage.setItem('cv_admin_uid', uid);
+          sessionStorage.setItem('cv_admin_uid',   uid);
           window.location.href = '/admin.html';
-        } else if (role === 'nemt') window.location.href = '/driver';
-        else if (cd[0]) window.location.href = '/coordinator';
-        else throw new Error('No partner role found. Contact your CareVoy admin.');
+          return;
+        }
+
+        if (role === 'nemt') {
+          // NEMT driver: save token and go to driver portal
+          sessionStorage.setItem('cv_nemt_token', token);
+          sessionStorage.setItem('cv_nemt_uid',   uid);
+          window.location.href = '/driver';
+          return;
+        }
+
+        if (role === 'coordinator') {
+          // Staff coordinator: save token and go to coordinator portal
+          sessionStorage.setItem('cv_coord_token', token);
+          sessionStorage.setItem('cv_coord_uid',   uid);
+          window.location.href = '/coordinator';
+          return;
+        }
+
+        // Check hospital_coordinators table (invited coordinators not yet in staff)
+        var coordRes  = await fetch(SUPA + '/rest/v1/hospital_coordinators?id=eq.' + uid + '&select=id', { headers: H });
+        var coordData = await coordRes.json();
+        if (coordData && coordData[0]) {
+          sessionStorage.setItem('cv_coord_token', token);
+          sessionStorage.setItem('cv_coord_uid',   uid);
+          window.location.href = '/coordinator';
+          return;
+        }
+
+        throw new Error('No role found for this account. Contact your CareVoy admin.');
+
       } catch(e) {
-        err.textContent = e.message; err.style.display = 'block';
-        btn.disabled = false; btn.textContent = 'Sign In';
+        errEl.textContent   = e.message;
+        errEl.style.display = 'block';
+        btn.disabled        = false;
+        btn.textContent     = 'Sign In';
       }
     }
+
     document.addEventListener('keydown', function(e) { if (e.key === 'Enter') signIn(); });
   </script>
 </body>

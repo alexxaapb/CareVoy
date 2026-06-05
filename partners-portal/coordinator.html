@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CareVoy — Coordinator Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif; background: #F0F4F8; min-height: 100vh; }
+
+    #loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #00C2A8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Topbar */
+    .topbar { background: #050D1F; padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-name { color: #fff; font-size: 17px; font-weight: 700; }
+    .role-pill { background: rgba(245,166,35,0.2); color: #F5A623; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 10px; border-radius: 999px; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .coord-label { color: #9CA3AF; font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .signout-btn { background: none; border: 1px solid rgba(255,255,255,0.15); color: #9CA3AF; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+    .signout-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+
+    /* Page */
+    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
+    .page-title { color: #050D1F; font-size: 26px; font-weight: 700; }
+    .page-sub { color: #6B7280; font-size: 14px; margin-top: 4px; }
+    .book-btn { background: #00C2A8; color: #050D1F; border: none; padding: 14px 24px; border-radius: 12px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .book-btn:hover { opacity: 0.88; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: white; border-radius: 14px; padding: 18px 20px; border: 1px solid #E2E8F0; }
+    .stat-label { color: #6B7280; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #050D1F; }
+    .stat-value.teal { color: #00C2A8; }
+    .stat-value.gold { color: #F5A623; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; background: #E2E8F0; padding: 4px; border-radius: 10px; width: fit-content; margin-bottom: 20px; }
+    .tab { padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: transparent; font-family: inherit; color: #6B7280; transition: all 0.15s; }
+    .tab.active { background: white; color: #050D1F; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+    /* Table */
+    .table-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; }
+    .table-head { display: grid; padding: 12px 18px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+    .th { font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .table-row { display: grid; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F0F4F8; transition: background 0.1s; cursor: pointer; }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: #F8FAFC; }
+    .td { font-size: 13px; color: #050D1F; }
+    .td.muted { color: #6B7280; }
+    .empty-row { padding: 48px 18px; text-align: center; color: #9CA3AF; font-size: 14px; }
+
+    /* Ride grid template */
+    .ride-grid { grid-template-columns: 1.4fr 1.2fr 1fr 0.8fr 0.8fr 1fr; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .badge-teal  { background: #d1faf4; color: #047857; }
+    .badge-gold  { background: #fef3c7; color: #b45309; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+    .badge-gray  { background: #F0F4F8; color: #6B7280; }
+    .badge-blue  { background: #dbeafe; color: #1d4ed8; }
+    .badge-red   { background: #fee2e2; color: #dc2626; }
+
+    /* Modal */
+    .scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 50; align-items: center; justify-content: center; overflow-y: auto; padding: 24px; }
+    .scrim.open { display: flex; }
+    .modal { background: white; border-radius: 20px; width: 100%; max-width: 540px; padding: 32px; margin: auto; }
+    .modal-title { color: #050D1F; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .modal-sub { color: #6B7280; font-size: 14px; margin-bottom: 24px; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 12px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .input-row { display: grid; gap: 12px; }
+    .input-row.two { grid-template-columns: 1fr 1fr; }
+    input, select, textarea { width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; border-radius: 10px; font-size: 14px; color: #050D1F; background: #F8FAFC; outline: none; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { border-color: #00C2A8; background: white; }
+    textarea { resize: vertical; min-height: 72px; }
+    .patient-found { background: #d1faf4; border: 1px solid #00C2A8; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #065f46; margin-top: 8px; display: none; }
+    .patient-not-found { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #991b1b; margin-top: 8px; display: none; }
+
+    /* Direction toggle */
+    .toggle-row { display: flex; gap: 8px; }
+    .toggle { flex: 1; padding: 10px 8px; border: 1.5px solid #E2E8F0; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; background: white; color: #6B7280; text-align: center; }
+    .toggle.active { border-color: #00C2A8; background: #d1faf4; color: #065f46; }
+
+    .modal-foot { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #E2E8F0; }
+    .btn-submit { flex: 1; padding: 14px; background: #050D1F; color: #00C2A8; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .btn-submit:hover { opacity: 0.9; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cancel { padding: 14px 20px; background: #F0F4F8; color: #374151; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+    .form-error { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+
+    /* Ride detail drawer */
+    .drawer-scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40; }
+    .drawer-scrim.open { display: block; }
+    .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 420px; max-width: 100vw; background: white; z-index: 45; overflow-y: auto; padding: 28px; transform: translateX(100%); transition: transform 0.25s ease; box-shadow: -8px 0 32px rgba(0,0,0,0.12); }
+    .drawer.open { transform: translateX(0); }
+    .drawer-close { background: #F0F4F8; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit; color: #374151; margin-bottom: 20px; }
+    .drawer-title { font-size: 18px; font-weight: 700; color: #050D1F; margin-bottom: 4px; }
+    .drawer-sub { font-size: 13px; color: #6B7280; margin-bottom: 20px; }
+    .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #F0F4F8; gap: 12px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { font-size: 12px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.4px; }
+    .detail-value { font-size: 14px; color: #050D1F; text-align: right; max-width: 60%; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #050D1F; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 420px; text-align: center; }
+    .toast.show { opacity: 1; }
+    .toast.success { background: #065f46; }
+    .toast.error { background: #991b1b; }
+
+    @media (max-width: 768px) {
+      .ride-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .th:nth-child(n+4), .td:nth-child(n+4) { display: none; }
+      .drawer { width: 100vw; }
+    }
+    @media (max-width: 600px) {
+      .topbar { padding: 0 16px; }
+      .page { padding: 20px 16px 48px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .page-header { flex-direction: column; }
+      .input-row.two { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div></div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="brand">
+      <img src="/carevoy-icon.png" width="32" height="32" style="border-radius:8px;object-fit:cover">
+      <span class="brand-name">CareVoy</span>
+      <span class="role-pill">COORDINATOR</span>
+    </div>
+    <div class="topbar-right">
+      <span class="coord-label" id="coordLabel"></span>
+      <button class="signout-btn" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="pageTitle">Coordinator Dashboard</div>
+        <div class="page-sub" id="pageSub"></div>
+      </div>
+      <button class="book-btn" onclick="openBookModal()">
+        <span>＋</span> Book a Ride
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Rides</div>
+        <div class="stat-value" id="statTotal">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active</div>
+        <div class="stat-value teal" id="statActive">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Today</div>
+        <div class="stat-value gold" id="statToday">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">This Month</div>
+        <div class="stat-value" id="statMonth">—</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('pending')">Pending</button>
+      <button class="tab" onclick="switchTab('active')">Active</button>
+      <button class="tab" onclick="switchTab('all')">All Rides</button>
+    </div>
+
+    <!-- Rides table -->
+    <div class="table-card">
+      <div class="table-head ride-grid">
+        <div class="th">Patient</div>
+        <div class="th">Pickup</div>
+        <div class="th">Date & Time</div>
+        <div class="th">Direction</div>
+        <div class="th">Status</div>
+        <div class="th">NEMT Partner</div>
+      </div>
+      <div id="ridesBody"><div class="empty-row">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Book a Ride modal -->
+<div class="scrim" id="bookModal" onclick="handleScrimClick(event)">
+  <div class="modal">
+    <div class="modal-title">Book a Ride</div>
+    <div class="modal-sub" id="bookModalSub">Book a ride for a patient at your facility.</div>
+
+    <div class="form-group">
+      <label>Patient Phone Number</label>
+      <input type="tel" id="patientPhone" placeholder="+1 (555) 000-0000" oninput="clearPatientLookup()" onblur="lookupPatient()">
+      <div class="patient-found" id="patientFound"></div>
+      <div class="patient-not-found" id="patientNotFound">No patient found with this phone. They need to register in the CareVoy app first.</div>
+    </div>
+
+    <div class="form-group">
+      <label>Ride Direction</label>
+      <div class="toggle-row">
+        <button class="toggle active" id="tog-pre_op"  onclick="setDir('pre_op')">→ To facility</button>
+        <button class="toggle"        id="tog-post_op" onclick="setDir('post_op')">↩ From facility</button>
+        <button class="toggle"        id="tog-both"    onclick="setDir('both')">⇄ Round trip</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="input-row two">
+        <div>
+          <label>Pickup Date</label>
+          <input type="date" id="pickupDate">
+        </div>
+        <div>
+          <label>Pickup Time</label>
+          <input type="time" id="pickupTime">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group" id="returnTimeGroup" style="display:none">
+      <div class="input-row two">
+        <div>
+          <label>Return Date</label>
+          <input type="date" id="returnDate">
+        </div>
+        <div>
+          <label>Return Time</label>
+          <input type="time" id="returnTime">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Patient's Home Address (Pickup)</label>
+      <input type="text" id="pickupAddress" placeholder="123 Main St, Columbus OH 43204">
+    </div>
+
+    <div class="form-group">
+      <label>Procedure / Visit Type</label>
+      <input type="text" id="procedureType" placeholder="e.g. Dialysis, Physical therapy, Follow-up">
+    </div>
+
+    <div class="form-group">
+      <label>Mobility Needs (optional)</label>
+      <input type="text" id="mobilityNeeds" placeholder="e.g. Wheelchair, needs extra time">
+    </div>
+
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:0">
+      <input type="checkbox" id="companionRequested" style="width:18px;height:18px;flex-shrink:0">
+      <label style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:#374151">Companion requested</label>
+    </div>
+
+    <div class="form-error" id="bookError"></div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeBookModal()">Cancel</button>
+      <button class="btn-submit" id="bookSubmit" onclick="submitRide()">Book Ride →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ride detail drawer -->
+<div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <button class="drawer-close" onclick="closeDrawer()">← Back</button>
+  <div class="drawer-title" id="drawerTitle">Ride Details</div>
+  <div class="drawer-sub" id="drawerSub"></div>
+  <div id="drawerBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+  var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+
+  var token = sessionStorage.getItem('cv_coord_token');
+  var uid   = sessionStorage.getItem('cv_coord_uid');
+  if (!token || !uid) { window.location.href = '/'; }
+
+  var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+  var coordInfo  = null;
+  var hospitalInfo = null;
+  var allRides   = [];
+  var curTab     = 'pending';
+  var selectedDir = 'pre_op';
+  var foundPatientId = null;
+
+  // ── init ───────────────────────────────────────────────
+  async function init() {
+    try {
+      var cRes = await fetch(SUPA + '/rest/v1/hospital_coordinators?id=eq.' + uid + '&select=full_name,hospital_id,email', { headers: H });
+      var cData = await cRes.json();
+      coordInfo = cData[0];
+      if (!coordInfo) { window.location.href = '/'; return; }
+
+      document.getElementById('coordLabel').textContent = coordInfo.full_name || coordInfo.email || 'Coordinator';
+
+      if (coordInfo.hospital_id) {
+        var hRes = await fetch(SUPA + '/rest/v1/hospitals?id=eq.' + coordInfo.hospital_id + '&select=name,city', { headers: H });
+        var hData = await hRes.json();
+        hospitalInfo = hData[0];
+        if (hospitalInfo) {
+          document.getElementById('pageTitle').textContent = hospitalInfo.name || 'Coordinator Dashboard';
+          document.getElementById('pageSub').textContent = (hospitalInfo.city ? hospitalInfo.city + ' · ' : '') + 'Live ride management';
+        }
+        // Pre-fill pickup date today
+        document.getElementById('pickupDate').value = todayStr();
+        document.getElementById('returnDate').value = todayStr();
+        await loadRides();
+      } else {
+        document.getElementById('pageSub').textContent = 'Not linked to a facility — contact your CareVoy admin';
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    } catch(e) {
+      document.getElementById('loading').innerHTML =
+        '<div style="text-align:center;color:#6B7280"><p style="font-size:18px;margin-bottom:8px">⚠️ Could not load</p><p>' + e.message + '</p></div>';
+    }
+  }
+
+  // ── data ───────────────────────────────────────────────
+  async function loadRides() {
+    if (!coordInfo.hospital_id) return;
+    var res = await fetch(
+      SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id +
+      '&select=*&order=pickup_time.desc',
+      { headers: H }
+    );
+    allRides = await res.json();
+    if (!Array.isArray(allRides)) allRides = [];
+
+    var today    = todayStr();
+    var monthAgo = daysAgo(30);
+    var active   = allRides.filter(r => ['assigned','en_route','arrived'].includes(r.status));
+    var todayR   = allRides.filter(r => r.pickup_time && r.pickup_time.startsWith(today));
+    var monthR   = allRides.filter(r => r.pickup_time && new Date(r.pickup_time) >= monthAgo);
+
+    document.getElementById('statTotal').textContent  = allRides.length;
+    document.getElementById('statActive').textContent = active.length;
+    document.getElementById('statToday').textContent  = todayR.length;
+    document.getElementById('statMonth').textContent  = monthR.length;
+
+    renderTab();
+  }
+
+  function getTabRides() {
+    if (curTab === 'pending') return allRides.filter(r => ['pending','confirmed'].includes(r.status));
+    if (curTab === 'active')  return allRides.filter(r => ['assigned','en_route','arrived'].includes(r.status));
+    return allRides;
+  }
+
+  function renderTab() {
+    var rides = getTabRides();
+    var body  = document.getElementById('ridesBody');
+    if (!rides.length) {
+      body.innerHTML = '<div class="empty-row">No rides in this view. Use "Book a Ride" to schedule one.</div>';
+      return;
+    }
+    body.innerHTML = rides.map(rideRow).join('');
+  }
+
+  function rideRow(r) {
+    var t    = r.pickup_time ? new Date(r.pickup_time) : null;
+    var time = t ? t.toLocaleDateString([], {month:'short',day:'numeric'}) + ' ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+    var dir  = r.ride_type === 'post_op' ? '↩ From' : '→ To';
+    var badge = statusBadge(r.status);
+    return '<div class="table-row ride-grid" onclick="openDrawer(\'' + r.id + '\')">' +
+      '<div class="td">' + esc(r.procedure_type ? 'Patient · ' + r.procedure_type : 'Patient') + '</div>' +
+      '<div class="td muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.pickup_address || '—') + '</div>' +
+      '<div class="td muted">' + time + '</div>' +
+      '<div class="td muted">' + dir + '</div>' +
+      '<div class="td">' + badge + '</div>' +
+      '<div class="td muted">' + (r.nemt_partner_id ? '✓ Assigned' : '—') + '</div>' +
+    '</div>';
+  }
+
+  // ── booking ────────────────────────────────────────────
+  function setDir(dir) {
+    selectedDir = dir;
+    ['pre_op','post_op','both'].forEach(function(d) {
+      document.getElementById('tog-' + d).classList.toggle('active', d === dir);
+    });
+    document.getElementById('returnTimeGroup').style.display = dir === 'both' ? 'block' : 'none';
+  }
+
+  async function lookupPatient() {
+    var phone = document.getElementById('patientPhone').value.trim();
+    if (!phone) return;
+    foundPatientId = null;
+    try {
+      // Normalize: strip non-digits, prefix +1 if 10 digits
+      var digits = phone.replace(/\D/g,'');
+      if (digits.length === 10) digits = '1' + digits;
+      var normalized = '+' + digits;
+
+      var res  = await fetch(SUPA + '/rest/v1/patients?phone=eq.' + encodeURIComponent(normalized) + '&select=id,full_name,phone,home_address', { headers: H });
+      var data = await res.json();
+      var found = document.getElementById('patientFound');
+      var notF  = document.getElementById('patientNotFound');
+      if (data && data[0]) {
+        foundPatientId = data[0].id;
+        found.textContent = '✓ Found: ' + (data[0].full_name || phone);
+        found.style.display = 'block';
+        notF.style.display  = 'none';
+        if (data[0].home_address && !document.getElementById('pickupAddress').value) {
+          document.getElementById('pickupAddress').value = data[0].home_address;
+        }
+      } else {
+        found.style.display = 'none';
+        notF.style.display  = 'block';
+      }
+    } catch(e) { /* silently fail */ }
+  }
+
+  function clearPatientLookup() {
+    foundPatientId = null;
+    document.getElementById('patientFound').style.display   = 'none';
+    document.getElementById('patientNotFound').style.display = 'none';
+  }
+
+  async function submitRide() {
+    var err  = document.getElementById('bookError');
+    var btn  = document.getElementById('bookSubmit');
+    err.style.display = 'none';
+
+    var date    = document.getElementById('pickupDate').value;
+    var time    = document.getElementById('pickupTime').value;
+    var addr    = document.getElementById('pickupAddress').value.trim();
+    var proc    = document.getElementById('procedureType').value.trim();
+    var mob     = document.getElementById('mobilityNeeds').value.trim();
+    var comp    = document.getElementById('companionRequested').checked;
+
+    if (!date || !time) { showErr('Please select a pickup date and time.'); return; }
+    if (!addr)          { showErr('Please enter a pickup address.'); return; }
+    if (!proc)          { showErr('Please enter the procedure or visit type.'); return; }
+
+    var pickupISO = new Date(date + 'T' + time).toISOString();
+
+    var payload = {
+      hospital_id: coordInfo.hospital_id,
+      ride_type: selectedDir === 'both' ? 'pre_op' : selectedDir,
+      pickup_address: addr,
+      dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null,
+      pickup_time: pickupISO,
+      procedure_type: proc,
+      mobility_needs: mob || null,
+      companion_requested: comp,
+      status: 'pending'
+    };
+    if (foundPatientId) payload.patient_id = foundPatientId;
+
+    btn.disabled = true;
+    btn.textContent = 'Booking…';
+
+    try {
+      var res = await fetch(SUPA + '/rest/v1/rides', {
+        method: 'POST',
+        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+      });
+
+      // If round trip, also create the return leg
+      if (selectedDir === 'both') {
+        var retDate = document.getElementById('returnDate').value || date;
+        var retTime = document.getElementById('returnTime').value || time;
+        var retISO  = new Date(retDate + 'T' + retTime).toISOString();
+        var retPayload = Object.assign({}, payload, {
+          ride_type: 'post_op',
+          pickup_address: payload.dropoff_address,
+          dropoff_address: addr,
+          pickup_time: retISO
+        });
+        await fetch(SUPA + '/rest/v1/rides', {
+          method: 'POST',
+          headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(retPayload)
+        });
+      }
+
+      if (!res.ok) {
+        var d = await res.json().catch(function(){ return {}; });
+        throw new Error(d.message || d.hint || 'Booking failed. Check RLS policies are set up.');
+      }
+
+      closeBookModal();
+      showToast('✓ Ride booked successfully!', 'success');
+      await loadRides();
+    } catch(e) {
+      showErr(e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Book Ride →';
+    }
+  }
+
+  function showErr(msg) {
+    var el = document.getElementById('bookError');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  // ── drawer ─────────────────────────────────────────────
+  function openDrawer(rideId) {
+    var r = allRides.find(function(x){ return x.id === rideId; });
+    if (!r) return;
+    var t   = r.pickup_time ? new Date(r.pickup_time) : null;
+    var fmt = t ? t.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'}) + ' at ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+    document.getElementById('drawerTitle').textContent = r.procedure_type || 'Ride Details';
+    document.getElementById('drawerSub').innerHTML   = statusBadge(r.status) + ' &nbsp; ' + fmt;
+
+    var rows = [
+      ['Direction',       r.ride_type === 'post_op' ? 'From facility' : 'To facility'],
+      ['Pickup address',  r.pickup_address  || '—'],
+      ['Drop-off',        r.dropoff_address || '—'],
+      ['Date & time',     fmt],
+      ['Procedure',       r.procedure_type  || '—'],
+      ['Mobility needs',  r.mobility_needs  || 'None'],
+      ['Companion',       r.companion_requested ? 'Yes' : 'No'],
+      ['NEMT assigned',   r.nemt_partner_id ? 'Yes — awaiting driver' : 'Not yet assigned'],
+      ['Driver',          r.driver_name     || 'Not assigned'],
+      ['Driver phone',    r.driver_phone    || '—'],
+      ['Status',          r.status],
+      ['Booked',          r.created_at ? new Date(r.created_at).toLocaleString() : '—'],
+    ];
+    document.getElementById('drawerBody').innerHTML = rows.map(function(row){
+      return '<div class="detail-row"><span class="detail-label">' + row[0] + '</span><span class="detail-value">' + esc(String(row[1])) + '</span></div>';
+    }).join('');
+
+    document.getElementById('drawerScrim').classList.add('open');
+    document.getElementById('drawer').classList.add('open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawerScrim').classList.remove('open');
+    document.getElementById('drawer').classList.remove('open');
+  }
+
+  // ── modal ──────────────────────────────────────────────
+  function openBookModal() {
+    if (hospitalInfo) document.getElementById('bookModalSub').textContent = 'Booking a ride for a patient at ' + hospitalInfo.name + '.';
+    document.getElementById('bookModal').classList.add('open');
+  }
+  function closeBookModal() {
+    document.getElementById('bookModal').classList.remove('open');
+    document.getElementById('bookError').style.display = 'none';
+    clearPatientLookup();
+    setDir('pre_op');
+  }
+  function handleScrimClick(e) { if (e.target === document.getElementById('bookModal')) closeBookModal(); }
+
+  // ── tabs ───────────────────────────────────────────────
+  function switchTab(tab) {
+    curTab = tab;
+    document.querySelectorAll('.tab').forEach(function(t, i) {
+      t.classList.toggle('active', ['pending','active','all'][i] === tab);
+    });
+    renderTab();
+  }
+
+  function signOut() {
+    sessionStorage.removeItem('cv_coord_token');
+    sessionStorage.removeItem('cv_coord_uid');
+    window.location.href = '/';
+  }
+
+  // ── helpers ────────────────────────────────────────────
+  function statusBadge(s) {
+    var m = { pending:'gray', confirmed:'blue', assigned:'teal', en_route:'gold', arrived:'green', completed:'green', cancelled:'red' };
+    var labels = { pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', en_route:'En Route', arrived:'Arrived', completed:'Completed', cancelled:'Cancelled' };
+    return '<span class="badge badge-' + (m[s]||'gray') + '">' + (labels[s]||s) + '</span>';
+  }
+  function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate()-n); return d; }
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.classList.remove('show'); }, 3500);
+  }
+
+  init();
+  setInterval(loadRides, 30000);
+</script>
+</body>
+</html>
