@@ -148,13 +148,13 @@
     <span class="sidebar-brand-text">CareVoy</span>
   </div>
   <nav class="sidebar-nav">
-    <button class="nav-item active" onclick="showSection('overview')"><span class="nav-icon">⊞</span> Overview</button>
-    <button class="nav-item" onclick="showSection('patients')"><span class="nav-icon">👤</span> All Patients</button>
+    <button class="nav-item active" onclick="showSection('overview')">Overview</button>
+    <button class="nav-item" onclick="showSection('patients')">All Patients</button>
     <button class="nav-item" onclick="showSection('rides')"><span class="nav-icon">➤</span> All Rides</button>
-    <button class="nav-item" onclick="showSection('facilities')"><span class="nav-icon">🏥</span> Facilities</button>
-    <button class="nav-item" onclick="showSection('partners')"><span class="nav-icon">🚐</span> NEMT Partners</button>
+    <button class="nav-item" onclick="showSection('facilities')">Facilities</button>
+    <button class="nav-item" onclick="showSection('partners')">NEMT Partners</button>
     <button class="nav-item" onclick="showSection('revenue')"><span class="nav-icon">$</span> Revenue</button>
-    <button class="nav-item" onclick="showSection('settings')"><span class="nav-icon">⚙</span> Settings</button>
+    <button class="nav-item" onclick="showSection('settings')">Settings</button>
   </nav>
   <div class="sidebar-footer">
     <div class="admin-badge"><div class="admin-dot"></div><span class="admin-label">Admin</span></div>
@@ -179,7 +179,7 @@
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-label">Total Patients <span class="stat-icon">👤</span></div>
+        <div class="stat-label">Total Patients </div>
         <div class="stat-value" id="statPatients">—</div>
       </div>
       <div class="stat-card">
@@ -187,7 +187,7 @@
         <div class="stat-value teal" id="statActive">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Today's Rides <span class="stat-icon">📅</span></div>
+        <div class="stat-label">Today's Rides </div>
         <div class="stat-value" id="statToday">—</div>
       </div>
       <div class="stat-card">
@@ -195,7 +195,7 @@
         <div class="stat-value teal" id="statRevenue">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Pending Alerts <span class="stat-icon">🔔</span></div>
+        <div class="stat-label">Pending Alerts </div>
         <div class="stat-value gold" id="statAlerts">—</div>
       </div>
     </div>
@@ -203,11 +203,11 @@
     <!-- Facilities Active stat -->
     <div class="stats-row" style="grid-template-columns: repeat(2,1fr) 1fr; margin-bottom: 28px;">
       <div class="stat-card" style="grid-column:1">
-        <div class="stat-label">Facilities Active <span class="stat-icon">🏥</span></div>
+        <div class="stat-label">Facilities Active </div>
         <div class="stat-value" id="statFacilitiesActive">—</div>
       </div>
       <div class="stat-card" style="grid-column:2">
-        <div class="stat-label">NEMT Partners <span class="stat-icon">🚐</span></div>
+        <div class="stat-label">NEMT Partners </div>
         <div class="stat-value" id="statNemt">—</div>
       </div>
     </div>
@@ -283,10 +283,10 @@
       </div>
       <div class="invite-row">
         <button class="invite-btn teal" id="btnFacility" onclick="generateInvite('coordinator')">
-          🏥 &nbsp; Invite Facility / Coordinator
+          Invite Facility / Coordinator
         </button>
         <button class="invite-btn navy" id="btnNemt" onclick="generateInvite('nemt')">
-          🚐 &nbsp; Invite NEMT Partner
+          Invite NEMT Partner
         </button>
       </div>
     </div>
@@ -413,7 +413,7 @@
       var sumAll  = Array.isArray(revAllData)  ? revAllData.reduce(function(s,r){ return s + (parseFloat(r.amount)||0); }, 0) : 0;
 
       // Fallback demo data if no real payments yet
-      if (sumAll === 0) { sumThis = 28475; sumLast = 21340; sumAll = 184220; alertCount = 3; }
+      
 
       document.getElementById('statPatients').textContent = pCount;
       document.getElementById('statActive').textContent   = aCount;
