@@ -144,6 +144,9 @@
     .signout-topbar { background: none; border: 1px solid rgba(255,255,255,0.2); color: #9CA3AF; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
     .signout-topbar:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
 
+    .page-overlay { max-width:1200px;margin:0 auto;padding:28px 28px 64px; }
+    .page-overlay .page-title { color:#050D1F;font-size:22px;font-weight:700;margin-bottom:4px; }
+    .page-overlay .page-sub { color:#6B7280;font-size:13px;margin-bottom:22px; }
     @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(3, 1fr); } .two-col { grid-template-columns: 1fr; } }
     @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
@@ -153,7 +156,7 @@
 <!-- Sidebar -->
 <div class="sidebar">
   <div class="sidebar-brand">
-    <img src="/carevoy-icon-centered.svg" width="32" height="32" style="border-radius:7px;flex-shrink:0">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9IiMwNjBEMUYiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjAuMzQgNjkxLjk1KSBzY2FsZSgwLjUwOTEgLTAuNTA5MSkiPjxwYXRoIGQ9Ik0zODMgNzEyUTUxNSA3MTIgNjA1LjAgNjQxLjVRNjk1IDU3MSA3MjEgNDUwSDUxMFE0OTEgNDkwIDQ1Ny41IDUxMS4wUTQyNCA1MzIgMzgwIDUzMlEzMTIgNTMyIDI3MS41IDQ4My41UTIzMSA0MzUgMjMxIDM1NFEyMzEgMjcyIDI3MS41IDIyMy41UTMxMiAxNzUgMzgwIDE3NVE0MjQgMTc1IDQ1Ny41IDE5Ni4wUTQ5MSAyMTcgNTEwIDI1N0g3MjFRNjk1IDEzNiA2MDUuMCA2NS41UTUxNSAtNSAzODMgLTVRMjc5IC01IDE5OS4wIDQwLjVRMTE5IDg2IDc1LjUgMTY3LjVRMzIgMjQ5IDMyIDM1NFEzMiA0NTggNzUuNSA1MzkuNVExMTkgNjIxIDE5OS4wIDY2Ni41UTI3OSA3MTIgMzgzIDcxMloiIGZpbGw9IiNGRkZGRkYiLz48L2c+PHBhdGggZD0iTSA3NTguMjAgNTU1LjQxIEEgMjUwIDI1MCAwIDEgMSA3NTguMjAgNDY4LjU5IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMEMyQTgiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9Ijc1OC4yMCIgY3k9IjU1NS40MSIgcj0iMTciIGZpbGw9IiNGNUE2MjMiLz48Y2lyY2xlIGN4PSI3NTguMjAiIGN5PSI0NjguNTkiIHI9IjE3IiBmaWxsPSIjRjVBNjIzIi8+PC9zdmc+" width="32" height="32" style="border-radius:7px;flex-shrink:0">
     <span class="sidebar-brand-text">CareVoy</span>
   </div>
   <nav class="sidebar-nav">
@@ -185,6 +188,7 @@
     <div class="page-title" id="pageTitle">Command Center</div>
     <div class="page-sub" id="pageSub">Live data · refreshes every 30 seconds</div>
 
+    <div id="sec-overview">
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card">
@@ -330,8 +334,114 @@
       </div>
       <div class="empty-row">Loading…</div>
     </div>
+    </div><!-- /sec-overview -->
   </div>
 </div>
+
+<!-- ── ALL PATIENTS ── -->
+<div id="sec-patients" style="display:none" class="page-overlay">
+  <div class="page-title">All Patients</div>
+  <div class="page-sub">All registered patients across facilities</div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:40px;text-align:center;color:#9CA3AF;font-size:13px">
+    Patient list will appear here once patients register through the app.
+  </div>
+</div>
+
+<!-- ── ALL RIDES ── -->
+<div id="sec-rides" style="display:none" class="page-overlay">
+  <div class="page-title">All Rides</div>
+  <div class="page-sub">Complete ride history across all facilities</div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0" id="allRidesPanel">
+    <div class="rides-table-head" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">
+      <div class="th">Patient</div><div class="th">Hospital</div><div class="th">NEMT Partner</div>
+      <div class="th">Status</div><div class="th">Date</div><div class="th">Action</div>
+    </div>
+    <div id="allRidesBody"><div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading…</div></div>
+  </div>
+</div>
+
+<!-- ── FACILITIES ── -->
+<div id="sec-facilities" style="display:none" class="page-overlay">
+  <div class="page-title">Facilities</div>
+  <div class="page-sub">All onboarded facility partners</div>
+  <div id="facilitiesFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
+    <div class="tbl-head fac-grid">
+      <div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div>
+    </div>
+    <div id="facilitiesFullBody"><div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading…</div></div>
+  </div>
+</div>
+
+<!-- ── NEMT PARTNERS ── -->
+<div id="sec-partners" style="display:none" class="page-overlay">
+  <div class="page-title">NEMT Partners</div>
+  <div class="page-sub">All transport partners in your network</div>
+  <div id="nemtFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
+    <div class="tbl-head nemt-grid">
+      <div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div>
+    </div>
+    <div id="nemtFullBody"><div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading…</div></div>
+  </div>
+</div>
+
+<!-- ── REVENUE ── -->
+<div id="sec-revenue" style="display:none" class="page-overlay">
+  <div class="page-title">Revenue</div>
+  <div class="page-sub">Payment and revenue tracking</div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:16px">Monthly Summary</div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500;color:#374151">This Month</span><span style="font-size:13px;font-weight:700;color:#050D1F" id="revThisMonth2">—</span></div>
+      <div style="background:#E2E8F0;border-radius:6px;height:10px;overflow:hidden"><div class="rev-bar-fill" id="revThisBar2" style="width:0%"></div></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500;color:#374151">Last Month</span><span style="font-size:13px;font-weight:700;color:#050D1F" id="revLastMonth2">—</span></div>
+      <div style="background:#E2E8F0;border-radius:6px;height:10px;overflow:hidden"><div class="rev-bar-fill last" id="revLastBar2" style="width:0%"></div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #E2E8F0">
+      <span style="font-size:13px;color:#6B7280">Total all time</span>
+      <span style="font-size:18px;font-weight:700;color:#050D1F" id="revAllTime2">—</span>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px">Payment Methods</div>
+    <div style="font-size:13px;color:#6B7280">HSA / FSA / Card breakdowns will appear here once rides complete with payment.</div>
+  </div>
+</div>
+
+<!-- ── SETTINGS ── -->
+<div id="sec-settings" style="display:none" class="page-overlay">
+  <div class="page-title">Settings</div>
+  <div class="page-sub">Portal configuration and account management</div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:16px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Project Connections</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F0F4F8">
+      <div><div style="font-size:13px;font-weight:600;color:#050D1F">Supabase Database</div><div style="font-size:12px;color:#9CA3AF">byflpckbjjumxxjxoplk.supabase.co</div></div>
+      <span style="background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">● Connected</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F0F4F8">
+      <div><div style="font-size:13px;font-weight:600;color:#050D1F">API Server</div><div style="font-size:12px;color:#9CA3AF">care-voy-api-server.vercel.app</div></div>
+      <span style="background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">● Connected</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+      <div><div style="font-size:13px;font-weight:600;color:#050D1F">Partner Portal</div><div style="font-size:12px;color:#9CA3AF">partners.carevoy.co</div></div>
+      <span style="background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">● Live</span>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Automatic Reminders</div>
+    <div style="font-size:13px;color:#374151;line-height:1.6">CareVoy automatically sends a reminder SMS to patients or caregivers who have not confirmed their ride within <strong>48 hours</strong> of receiving their invite. Configured via <code style="background:#F0F4F8;padding:2px 6px;border-radius:4px">pg_cron</code> in Supabase.</div>
+  </div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Admin Accounts</div>
+    <div style="font-size:13px;color:#6B7280;line-height:1.6">Additional admin accounts are added via the Supabase <code style="background:#F0F4F8;padding:2px 6px;border-radius:4px">staff</code> table with <code style="background:#F0F4F8;padding:2px 6px;border-radius:4px">role = admin</code>. Contact your developer to add new admins.</div>
+  </div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Notifications & Webhooks</div>
+    <div style="font-size:13px;color:#6B7280;line-height:1.6">Email alerts for new ride bookings, partner signups, and payment events. Configure in Supabase → Database → Webhooks.</div>
+  </div>
+</div>
+
 
 <!-- Invite modal -->
 <div class="modal-scrim" id="inviteModal">
@@ -599,11 +709,53 @@
   }
 
   function showSection(name) {
+    var sections = ['overview','patients','rides','facilities','partners','revenue','settings'];
+    // Update nav active state
     document.querySelectorAll('.nav-item').forEach(function(el, i) {
-      var names = ['overview','patients','rides','facilities','partners','revenue','settings'];
-      el.classList.toggle('active', names[i] === name);
+      el.classList.toggle('active', sections[i] === name);
     });
-    // Future: show/hide sections
+    // Show/hide the main overview content
+    var overviewEl = document.getElementById('sec-overview');
+    if (overviewEl) overviewEl.style.display = name === 'overview' ? 'block' : 'none';
+    // Show/hide section overlays
+    ['patients','rides','facilities','partners','revenue','settings'].forEach(function(s) {
+      var el = document.getElementById('sec-' + s);
+      if (el) el.style.display = s === name ? 'block' : 'none';
+    });
+    // Populate revenue section with same data as overview
+    if (name === 'revenue') {
+      var t1 = document.getElementById('revThisMonth');
+      var t2 = document.getElementById('revThisMonth2');
+      if (t1 && t2) t2.textContent = t1.textContent;
+      var l1 = document.getElementById('revLastMonth');
+      var l2 = document.getElementById('revLastMonth2');
+      if (l1 && l2) l2.textContent = l1.textContent;
+      var a1 = document.getElementById('revAllTime');
+      var a2 = document.getElementById('revAllTime2');
+      if (a1 && a2) a2.textContent = a1.textContent;
+      setTimeout(function(){
+        var tb = document.getElementById('revThisBar'); var tb2 = document.getElementById('revThisBar2');
+        if (tb && tb2) tb2.style.width = tb.style.width;
+        var lb = document.getElementById('revLastBar'); var lb2 = document.getElementById('revLastBar2');
+        if (lb && lb2) lb2.style.width = lb.style.width;
+      }, 100);
+    }
+    // Populate facilities/partners full views with same data
+    if (name === 'facilities') {
+      var src = document.getElementById('facilitiesTable');
+      var dst = document.getElementById('facilitiesFullPanel');
+      if (src && dst) dst.innerHTML = src.innerHTML;
+    }
+    if (name === 'partners') {
+      var src2 = document.getElementById('nemtTable');
+      var dst2 = document.getElementById('nemtFullPanel');
+      if (src2 && dst2) dst2.innerHTML = src2.innerHTML;
+    }
+    if (name === 'rides') {
+      var src3 = document.getElementById('liveRidesBody');
+      var dst3 = document.getElementById('allRidesBody');
+      if (src3 && dst3) dst3.innerHTML = src3.innerHTML;
+    }
   }
 
   function showToast(msg) {
