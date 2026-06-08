@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9IiMwNjBEMUYiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjAuMzQgNjkxLjk1KSBzY2FsZSgwLjUwOTEgLTAuNTA5MSkiPjxwYXRoIGQ9Ik0zODMgNzEyUTUxNSA3MTIgNjA1LjAgNjQxLjVRNjk1IDU3MSA3MjEgNDUwSDUxMFE0OTEgNDkwIDQ1Ny41IDUxMS4wUTQyNCA1MzIgMzgwIDUzMlEzMTIgNTMyIDI3MS41IDQ4My41UTIzMSA0MzUgMjMxIDM1NFEyMzEgMjcyIDI3MS41IDIyMy41UTMxMiAxNzUgMzgwIDE3NVE0MjQgMTc1IDQ1Ny41IDE5Ni4wUTQ5MSAyMTcgNTEwIDI1N0g3MjFRNjk1IDEzNiA2MDUuMCA2NS41UTUxNSAtNSAzODMgLTVRMjc5IC01IDE5OS4wIDQwLjVRMTE5IDg2IDc1LjUgMTY3LjVRMzIgMjQ5IDMyIDM1NFEzMiA0NTggNzUuNSA1MzkuNVExMTkgNjIxIDE5OS4wIDY2Ni41UTI3OSA3MTIgMzgzIDcxMloiIGZpbGw9IiNGRkZGRkYiLz48L2c+PHBhdGggZD0iTSA3NTguMjAgNTU1LjQxIEEgMjUwIDI1MCAwIDEgMSA3NTguMjAgNDY4LjU5IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMEMyQTgiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9Ijc1OC4yMCIgY3k9IjU1NS40MSIgcj0iMTciIGZpbGw9IiNGNUE2MjMiLz48Y2lyY2xlIGN4PSI3NTguMjAiIGN5PSI0NjguNTkiIHI9IjE3IiBmaWxsPSIjRjVBNjIzIi8+PC9zdmc+">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CareVoy — Sign In</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -41,7 +42,7 @@
       </div>
     </div>
     <h1>Sign in to your dashboard</h1>
-    <p class="subtitle">For NEMT drivers, hospital coordinators, and CareVoy admins. Patients should use the CareVoy mobile app instead.</p>
+    <p class="subtitle">For NEMT drivers, hospital coordinators, and CareVoy admins.</p>
     <label>Work email</label>
     <input type="email" id="email" placeholder="you@nemtcompany.com" autocomplete="email">
     <label>Password</label>
@@ -51,7 +52,15 @@
     </div>
     <div id="error" class="error"></div>
     <button class="submit" id="btn" onclick="signIn()">Sign In</button>
-    <div class="footer">Are you a patient? <a href="https://apps.apple.com/us/app/carevoy/id6768714735" target="_blank">Download CareVoy from the App Store or Google Play.</a></div>
+    <div class="footer" style="margin-top:20px">
+      Are you a patient? <a href="https://apps.apple.com/us/app/carevoy/id6768714735" target="_blank">Download the CareVoy app.</a>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid #F0F4F8;text-align:center">
+      <a href="https://form.typeform.com/to/suAuYFZ0" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#00C2A8;color:#050D1F;font-size:13px;font-weight:700;padding:10px 20px;border-radius:9px;text-decoration:none;font-family:inherit;transition:opacity 0.15s" onmouseover="this.style.opacity=0.88" onmouseout="this.style.opacity=1">
+        Become a Partner →
+      </a>
+      <div style="color:#9CA3AF;font-size:11px;margin-top:8px">For NEMT companies and healthcare facilities</div>
+    </div>
   </div>
 
   <script>
