@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CareVoy — Partner Signup</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Poppins',-apple-system,sans-serif; background:#F0F4F8; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .card { background:#fff; border-radius:20px; padding:44px 40px; width:100%; max-width:480px; border:1px solid #E2E8F0; box-shadow:0 4px 24px rgba(5,13,31,0.07); }
+  .brand { display:flex; align-items:center; gap:10px; margin-bottom:28px; }
+  .brand-text { color:#050D1F; font-size:18px; font-weight:700; }
+  .brand-sub { color:#00C2A8; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+  .invite-badge { display:inline-flex; align-items:center; gap:6px; background:#d1faf4; color:#047857; font-size:11px; font-weight:700; padding:5px 12px; border-radius:999px; margin-bottom:16px; }
+  h1 { font-size:22px; font-weight:700; color:#050D1F; margin-bottom:6px; }
+  .subtitle { color:#6B7280; font-size:14px; margin-bottom:28px; line-height:1.5; }
+  .form-group { margin-bottom:14px; }
+  label { display:block; font-size:11px; font-weight:700; color:#050D1F; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+  input, select { width:100%; padding:12px 14px; border:1.5px solid #E2E8F0; border-radius:10px; font-size:14px; color:#050D1F; background:#F8FAFC; outline:none; font-family:inherit; }
+  input:focus, select:focus { border-color:#00C2A8; background:#fff; }
+  select { cursor:pointer; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .pw-wrap { position:relative; }
+  .pw-wrap input { padding-right:56px; }
+  .pw-eye { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#6B7280; font-size:11px; font-weight:700; font-family:inherit; letter-spacing:0.5px; }
+  .pw-eye:hover { color:#050D1F; }
+  .pw-hint { font-size:11px; color:#9CA3AF; margin-top:4px; }
+  .submit { width:100%; padding:14px; background:#050D1F; color:#00C2A8; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-top:20px; font-family:inherit; transition:opacity 0.15s; }
+  .submit:hover { opacity:0.88; }
+  .submit:disabled { opacity:0.5; cursor:not-allowed; }
+  .error { color:#dc2626; font-size:13px; margin-top:10px; background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; padding:10px 14px; display:none; }
+  .success-state { text-align:center; display:none; }
+  .success-icon { font-size:48px; margin-bottom:16px; }
+  .success-title { font-size:20px; font-weight:700; color:#050D1F; margin-bottom:8px; }
+  .success-sub { font-size:14px; color:#6B7280; line-height:1.5; margin-bottom:24px; }
+  .success-btn { display:inline-block; background:#050D1F; color:#00C2A8; font-size:14px; font-weight:700; padding:13px 28px; border-radius:10px; text-decoration:none; font-family:inherit; }
+  .loading-state { text-align:center; display:none; }
+  .spinner { width:40px; height:40px; border:3px solid #E2E8F0; border-top-color:#00C2A8; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+  .divider { border:none; border-top:1px solid #F0F4F8; margin:20px 0; }
+  .signin-link { text-align:center; color:#6B7280; font-size:13px; margin-top:16px; }
+  .signin-link a { color:#050D1F; font-weight:600; text-decoration:none; }
+  .signin-link a:hover { color:#00C2A8; }
+  @media(max-width:480px){ .card{padding:28px 20px;} .form-row{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<!-- Loading state while we validate token -->
+<div class="card" id="loadingCard">
+  <div class="loading-state" style="display:block">
+    <div class="spinner"></div>
+    <div style="color:#6B7280;font-size:14px">Validating your invite…</div>
+  </div>
+</div>
+
+<!-- Invalid token state -->
+<div class="card" id="invalidCard" style="display:none">
+  <div class="brand">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9IiMwNjBEMUYiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjAuMzQgNjkxLjk1KSBzY2FsZSgwLjUwOTEgLTAuNTA5MSkiPjxwYXRoIGQ9Ik0zODMgNzEyUTUxNSA3MTIgNjA1LjAgNjQxLjVRNjk1IDU3MSA3MjEgNDUwSDUxMFE0OTEgNDkwIDQ1Ny41IDUxMS4wUTQyNCA1MzIgMzgwIDUzMlEzMTIgNTMyIDI3MS41IDQ4My41UTIzMSA0MzUgMjMxIDM1NFEyMzEgMjcyIDI3MS41IDIyMy41UTMxMiAxNzUgMzgwIDE3NVE0MjQgMTc1IDQ1Ny41IDE5Ni4wUTQ5MSAyMTcgNTEwIDI1N0g3MjFRNjk1IDEzNiA2MDUuMCA2NS41UTUxNSAtNSAzODMgLTVRMjc5IC01IDE5OS4wIDQwLjVRMTE5IDg2IDc1LjUgMTY3LjVRMzIgMjQ5IDMyIDM1NFEzMiA0NTggNzUuNSA1MzkuNVExMTkgNjIxIDE5OS4wIDY2Ni41UTI3OSA3MTIgMzgzIDcxMloiIGZpbGw9IiNGRkZGRkYiLz48L2c+PHBhdGggZD0iTSA3NTguMjAgNTU1LjQxIEEgMjUwIDI1MCAwIDEgMSA3NTguMjAgNDY4LjU5IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMEMyQTgiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9Ijc1OC4yMCIgY3k9IjU1NS40MSIgcj0iMTciIGZpbGw9IiNGNUE2MjMiLz48Y2lyY2xlIGN4PSI3NTguMjAiIGN5PSI0NjguNTkiIHI9IjE3IiBmaWxsPSIjRjVBNjIzIi8+PC9zdmc+" width="32" height="32" style="border-radius:7px">
+    <div><div class="brand-text">CareVoy</div><div class="brand-sub">Partner Portal</div></div>
+  </div>
+  <div style="text-align:center;padding:20px 0">
+    <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+    <div style="font-size:18px;font-weight:700;color:#050D1F;margin-bottom:8px">Invalid or Expired Invite</div>
+    <div style="font-size:14px;color:#6B7280;line-height:1.5;margin-bottom:24px">This invite link has expired or already been used. Invite links are valid for 7 days.</div>
+    <a href="https://form.typeform.com/to/suAuYFZ0" style="display:inline-block;background:#050D1F;color:#00C2A8;font-size:14px;font-weight:700;padding:12px 24px;border-radius:10px;text-decoration:none">Request a New Invite</a>
+  </div>
+</div>
+
+<!-- Signup form -->
+<div class="card" id="signupCard" style="display:none">
+  <div class="brand">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9IiMwNjBEMUYiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjAuMzQgNjkxLjk1KSBzY2FsZSgwLjUwOTEgLTAuNTA5MSkiPjxwYXRoIGQ9Ik0zODMgNzEyUTUxNSA3MTIgNjA1LjAgNjQxLjVRNjk1IDU3MSA3MjEgNDUwSDUxMFE0OTEgNDkwIDQ1Ny41IDUxMS4wUTQyNCA1MzIgMzgwIDUzMlEzMTIgNTMyIDI3MS41IDQ4My41UTIzMSA0MzUgMjMxIDM1NFEyMzEgMjcyIDI3MS41IDIyMy41UTMxMiAxNzUgMzgwIDE3NVE0MjQgMTc1IDQ1Ny41IDE5Ni4wUTQ5MSAyMTcgNTEwIDI1N0g3MjFRNjk1IDEzNiA2MDUuMCA2NS41UTUxNSAtNSAzODMgLTVRMjc5IC01IDE5OS4wIDQwLjVRMTE5IDg2IDc1LjUgMTY3LjVRMzIgMjQ5IDMyIDM1NFEzMiA0NTggNzUuNSA1MzkuNVExMTkgNjIxIDE5OS4wIDY2Ni41UTI3OSA3MTIgMzgzIDcxMloiIGZpbGw9IiNGRkZGRkYiLz48L2c+PHBhdGggZD0iTSA3NTguMjAgNTU1LjQxIEEgMjUwIDI1MCAwIDEgMSA3NTguMjAgNDY4LjU5IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMEMyQTgiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9Ijc1OC4yMCIgY3k9IjU1NS40MSIgcj0iMTciIGZpbGw9IiNGNUE2MjMiLz48Y2lyY2xlIGN4PSI3NTguMjAgY3k9IjQ2OC41OSIgcj0iMTciIGZpbGw9IiNGNUE2MjMiLz48L3N2Zz4=" width="32" height="32" style="border-radius:7px">
+    <div><div class="brand-text">CareVoy</div><div class="brand-sub">Partner Portal</div></div>
+  </div>
+
+  <div class="invite-badge" id="inviteBadge">● Partner Invite</div>
+  <h1 id="signupTitle">Create your account</h1>
+  <p class="subtitle" id="signupSub">You've been invited to join the CareVoy partner network.</p>
+
+  <!-- NEMT fields -->
+  <div id="nemtFields">
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" id="nemtFirstName" placeholder="Jane">
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" id="nemtLastName" placeholder="Doe">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Work Email</label>
+      <input type="email" id="nemtEmail" placeholder="jane@transportco.com">
+    </div>
+    <div class="form-group">
+      <label>Company Name</label>
+      <input type="text" id="nemtCompany" placeholder="Columbus Medical Transport">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>City</label>
+        <input type="text" id="nemtCity" placeholder="Columbus">
+      </div>
+      <div class="form-group">
+        <label>State</label>
+        <input type="text" id="nemtState" placeholder="OH" maxlength="2">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="nemtPassword" placeholder="••••••••">
+        <button class="pw-eye" onclick="togglePw('nemtPassword','nemtEye')" type="button" id="nemtEye">SHOW</button>
+      </div>
+      <div class="pw-hint">Minimum 8 characters</div>
+    </div>
+  </div>
+
+  <!-- Coordinator fields -->
+  <div id="coordFields" style="display:none">
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" id="coordFirstName" placeholder="Dr. Jane">
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" id="coordLastName" placeholder="Smith">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Work Email</label>
+      <input type="email" id="coordEmail" placeholder="jsmith@ohiohealth.org">
+    </div>
+    <div class="form-group">
+      <label>Job Title</label>
+      <input type="text" id="coordTitle" placeholder="Discharge Coordinator">
+    </div>
+    <div class="form-group">
+      <label>Facility</label>
+      <input type="text" id="coordFacility" placeholder="OhioHealth Riverside Methodist" readonly style="background:#F0F4F8;color:#6B7280">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="coordPassword" placeholder="••••••••">
+        <button class="pw-eye" onclick="togglePw('coordPassword','coordEye')" type="button" id="coordEye">SHOW</button>
+      </div>
+      <div class="pw-hint">Minimum 8 characters</div>
+    </div>
+  </div>
+
+  <div id="signupError" class="error"></div>
+  <button class="submit" id="signupBtn" onclick="submitSignup()">Create Account & Go to Dashboard →</button>
+
+  <hr class="divider">
+  <div class="signin-link">Already have an account? <a href="/">Sign in</a></div>
+</div>
+
+<!-- Success state -->
+<div class="card" id="successCard" style="display:none">
+  <div class="success-state" style="display:block">
+    <div class="success-icon">✅</div>
+    <div class="success-title" id="successTitle">Account created!</div>
+    <div class="success-sub" id="successSub">Redirecting to your dashboard…</div>
+    <a href="/" class="success-btn" id="successBtn">Go to Dashboard</a>
+  </div>
+</div>
+
+<script>
+var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+var API  = 'https://care-voy-api-server.vercel.app';
+
+var inviteData = null;
+
+// ── Init: read token from URL, validate ────────────────────
+async function init() {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('token');
+
+  if (!token) { showInvalid(); return; }
+
+  try {
+    // Validate token via Supabase
+    var res = await fetch(SUPA + '/rest/v1/invites?token=eq.' + encodeURIComponent(token) + '&select=*', {
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+    });
+    var data = await res.json();
+
+    if (!data || !data[0]) { showInvalid(); return; }
+
+    var invite = data[0];
+
+    // Check expiry (7 days)
+    var created = new Date(invite.created_at);
+    var now = new Date();
+    var diffDays = (now - created) / (1000 * 60 * 60 * 24);
+    if (diffDays > 7 || invite.used) { showInvalid(); return; }
+
+    inviteData = invite;
+    showSignupForm(invite);
+
+  } catch(e) {
+    showInvalid();
+  }
+}
+
+function showInvalid() {
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('invalidCard').style.display = 'block';
+}
+
+function showSignupForm(invite) {
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('signupCard').style.display = 'block';
+
+  if (invite.role === 'nemt') {
+    document.getElementById('inviteBadge').textContent = '● NEMT Partner Invite';
+    document.getElementById('signupTitle').textContent = 'Set up your driver account';
+    document.getElementById('signupSub').textContent = "You've been invited to join CareVoy as an NEMT transport partner.";
+    document.getElementById('nemtFields').style.display = 'block';
+    document.getElementById('coordFields').style.display = 'none';
+    if (invite.company_name) document.getElementById('nemtCompany').value = invite.company_name;
+    if (invite.email) document.getElementById('nemtEmail').value = invite.email;
+  } else {
+    document.getElementById('inviteBadge').textContent = '● Facility Coordinator Invite';
+    document.getElementById('signupTitle').textContent = 'Set up your coordinator account';
+    document.getElementById('signupSub').textContent = "You've been invited to join CareVoy as a facility coordinator.";
+    document.getElementById('nemtFields').style.display = 'none';
+    document.getElementById('coordFields').style.display = 'block';
+    if (invite.facility_name) document.getElementById('coordFacility').value = invite.facility_name;
+    if (invite.email) document.getElementById('coordEmail').value = invite.email;
+  }
+}
+
+// ── Submit signup ──────────────────────────────────────────
+async function submitSignup() {
+  var err = document.getElementById('signupError');
+  var btn = document.getElementById('signupBtn');
+  err.style.display = 'none';
+
+  var email, password, fullName, extraData;
+
+  if (inviteData.role === 'nemt') {
+    var first   = document.getElementById('nemtFirstName').value.trim();
+    var last    = document.getElementById('nemtLastName').value.trim();
+    email       = document.getElementById('nemtEmail').value.trim();
+    password    = document.getElementById('nemtPassword').value;
+    var company = document.getElementById('nemtCompany').value.trim();
+    var city    = document.getElementById('nemtCity').value.trim();
+    var state   = document.getElementById('nemtState').value.trim();
+    if (!first || !last) { showErr('Please enter your name.'); return; }
+    if (!email) { showErr('Please enter your work email.'); return; }
+    if (!company) { showErr('Please enter your company name.'); return; }
+    fullName = first + ' ' + last;
+    extraData = { company_name: company, city: city, state: state };
+  } else {
+    var first2   = document.getElementById('coordFirstName').value.trim();
+    var last2    = document.getElementById('coordLastName').value.trim();
+    email        = document.getElementById('coordEmail').value.trim();
+    password     = document.getElementById('coordPassword').value;
+    var jobTitle = document.getElementById('coordTitle').value.trim();
+    if (!first2 || !last2) { showErr('Please enter your name.'); return; }
+    if (!email) { showErr('Please enter your work email.'); return; }
+    fullName = first2 + ' ' + last2;
+    extraData = { job_title: jobTitle };
+  }
+
+  if (!password || password.length < 8) { showErr('Password must be at least 8 characters.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Creating account…';
+
+  try {
+    // 1. Create Supabase auth account
+    var signupRes = await fetch(SUPA + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+      body: JSON.stringify({ email: email, password: password })
+    });
+    var signupData = await signupRes.json();
+    if (!signupRes.ok) throw new Error(signupData.error_description || signupData.msg || 'Signup failed');
+
+    var uid   = signupData.user ? signupData.user.id : null;
+    var token = signupData.access_token;
+
+    // Email confirmation may be required — handle gracefully
+    if (!uid && signupData.id) uid = signupData.id;
+
+    // 2. Sign in to get a valid session token
+    var loginRes = await fetch(SUPA + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+      body: JSON.stringify({ email: email, password: password })
+    });
+    var loginData = await loginRes.json();
+    if (!loginRes.ok) {
+      // Email confirmation required
+      showSuccess('Check your email', 'We sent you a confirmation link. Click it to activate your account, then sign in here.', '/');
+      return;
+    }
+
+    token = loginData.access_token;
+    uid   = loginData.user.id;
+    var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+
+    // 3. Create role-specific record and mark invite used
+    await fetch(API + '/api/invite/accept', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        invite_token: inviteData.token,
+        role: inviteData.role,
+        uid: uid,
+        full_name: fullName,
+        email: email,
+        hospital_id: inviteData.hospital_id || null,
+        nemt_partner_id: inviteData.nemt_partner_id || null,
+        ...extraData
+      })
+    });
+
+    // 4. Store session and redirect
+    if (inviteData.role === 'nemt') {
+      sessionStorage.setItem('cv_nemt_token', token);
+      sessionStorage.setItem('cv_nemt_uid', uid);
+      showSuccess('Welcome to CareVoy!', 'Your driver account is ready. Taking you to your dashboard…', '/driver.html');
+      setTimeout(function(){ window.location.href = '/driver.html'; }, 2000);
+    } else {
+      sessionStorage.setItem('cv_coord_token', token);
+      sessionStorage.setItem('cv_coord_uid', uid);
+      showSuccess('Welcome to CareVoy!', 'Your coordinator account is ready. Taking you to your dashboard…', '/coordinator.html');
+      setTimeout(function(){ window.location.href = '/coordinator.html'; }, 2000);
+    }
+
+  } catch(e) {
+    showErr(e.message);
+    btn.disabled = false;
+    btn.textContent = 'Create Account & Go to Dashboard →';
+  }
+}
+
+function showSuccess(title, sub, href) {
+  document.getElementById('signupCard').style.display = 'none';
+  document.getElementById('successCard').style.display = 'block';
+  document.getElementById('successTitle').textContent = title;
+  document.getElementById('successSub').textContent = sub;
+  document.getElementById('successBtn').href = href;
+}
+
+function showErr(msg) {
+  var e = document.getElementById('signupError');
+  e.textContent = msg;
+  e.style.display = 'block';
+}
+
+function togglePw(inputId, btnId) {
+  var i = document.getElementById(inputId);
+  var b = document.getElementById(btnId);
+  if (i.type === 'password') { i.type = 'text'; b.textContent = 'HIDE'; }
+  else { i.type = 'password'; b.textContent = 'SHOW'; }
+}
+
+init();
+</script>
+</body>
+</html>
