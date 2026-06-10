@@ -1,16 +1,15 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" }
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
-    { "src": "/api/stripe/(.*)", "dest": "/api/stripe/$1.js" },
-    { "src": "/api/chat", "dest": "/api/chat/index.js" },
-    { "src": "/api/receipts/(.*)", "dest": "/api/receipts/$1.js" },
-    { "src": "/api/invite/create", "dest": "/api/invite/create.js" },
-    { "src": "/api/invite/accept", "dest": "/api/invite/accept.js" },
-    { "src": "/api/invites/send-sms", "dest": "/api/invites/send-sms.js" },
-    { "src": "/api/reminders/send", "dest": "/api/reminders/send.js" },
-    { "src": "/api/rides/assign", "dest": "/api/rides/assign.js" }
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.js"
+    }
   ]
 }
