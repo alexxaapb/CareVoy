@@ -1,9 +1,29 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/admin.html",       "dest": "/admin.html" },
-    { "src": "/driver",           "dest": "/driver.html" },
-    { "src": "/coordinator",      "dest": "/coordinator.html" },
-    { "src": "/(.*)",             "dest": "/index.html" }
+    {
+      "src": "/admin.html",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/driver",
+      "dest": "/driver.html"
+    },
+    {
+      "src": "/coordinator",
+      "dest": "/coordinator.html"
+    },
+    {
+      "src": "/invite",
+      "dest": "/invite.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ]
 }
