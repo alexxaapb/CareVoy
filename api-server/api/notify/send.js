@@ -22,7 +22,7 @@ function emailTemplate(title, body, ctaText, ctaUrl) {
         <div style="font-size:14px;color:#374151;line-height:1.6">${body}</div>
         ${ctaUrl ? `<a href="${ctaUrl}" style="display:inline-block;margin-top:20px;background:#050D1F;color:#00C2A8;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:14px;font-weight:700">${ctaText}</a>` : ''}
         <div style="margin-top:24px;padding-top:18px;border-top:1px solid #F0F4F8;font-size:12px;color:#9CA3AF">
-          Questions? Contact <a href="mailto:partners@carevoy.co" style="color:#00C2A8;text-decoration:none">partners@carevoy.co</a>
+          Account questions: <a href="mailto:partners@carevoy.co" style="color:#00C2A8;text-decoration:none">partners@carevoy.co</a> &nbsp;·&nbsp; Help: <a href="mailto:contact@carevoy.co" style="color:#00C2A8;text-decoration:none">contact@carevoy.co</a>
         </div>
       </div>
     </div>
@@ -64,6 +64,13 @@ module.exports = async function handler(req, res) {
       title = 'A patient has not confirmed their ride';
       body = `<strong>${data.patient_name || 'A patient'}</strong> has not confirmed their upcoming ride. You may want to follow up or send a reminder.`;
       ctaText = 'View Patient'; ctaUrl = portal + '/coordinator.html';
+    } else if (type === 'welcome') {
+      subject = 'Welcome to CareVoy';
+      title = 'Your account is ready';
+      const roleLabel = data.role === 'nemt' ? 'transport partner' : 'facility coordinator';
+      const dashUrl = data.role === 'nemt' ? portal + '/driver.html' : portal + '/coordinator.html';
+      body = `Welcome${data.full_name ? ' ' + data.full_name : ''}! Your CareVoy ${roleLabel} account has been created successfully. You can now sign in anytime at <a href="${portal}" style="color:#00C2A8;text-decoration:none">partners.carevoy.co</a> to manage rides and coordinate transportation.<br><br>Need help getting started? Just reply to this email or reach us at the contacts below.`;
+      ctaText = 'Go to My Dashboard'; ctaUrl = dashUrl;
     } else {
       return res.status(400).json({ error: 'Unknown notification type' });
     }

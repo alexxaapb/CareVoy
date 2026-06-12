@@ -44,6 +44,14 @@ module.exports = async function handler(req, res) {
     await supabase.from('invites').update({ used: true, used_at: new Date().toISOString(), used_by: finalUid }).eq('token', invite_token);
     try { await supabase.from('audit_log').insert({ actor_id: finalUid, actor_role: role, action: 'partner.signup', entity_type: role === 'nemt' ? 'staff' : 'hospital_coordinators', entity_id: finalUid, new_value: { full_name, email, role } }); } catch(_) {}
 
+    // Send welcome email
+    try {
+      await fetch('https://care-voy-api-server.vercel.app/api/notify/send', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'welcome', to: email, data: { full_name, role } })
+      });
+    } catch(_) {}
+
     return res.status(200).json({ success: true, role });
   } catch(e) {
     console.error('Invite accept error:', e);
