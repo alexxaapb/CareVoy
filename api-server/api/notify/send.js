@@ -21,8 +21,13 @@ function emailTemplate(title, body, ctaText, ctaUrl) {
         <h1 style="font-size:19px;color:#050D1F;margin:0 0 12px">${title}</h1>
         <div style="font-size:14px;color:#374151;line-height:1.6">${body}</div>
         ${ctaUrl ? `<a href="${ctaUrl}" style="display:inline-block;margin-top:20px;background:#050D1F;color:#00C2A8;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:14px;font-weight:700">${ctaText}</a>` : ''}
-        <div style="margin-top:24px;padding-top:18px;border-top:1px solid #F0F4F8;font-size:12px;color:#9CA3AF">
+        <div style="margin-top:24px;padding-top:18px;border-top:1px solid #F0F4F8;font-size:12px;color:#9CA3AF;line-height:1.6">
           Account questions: <a href="mailto:partners@carevoy.co" style="color:#00C2A8;text-decoration:none">partners@carevoy.co</a> &nbsp;·&nbsp; Help: <a href="mailto:contact@carevoy.co" style="color:#00C2A8;text-decoration:none">contact@carevoy.co</a>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid #F0F4F8;font-size:11px;color:#B0B7C3;line-height:1.7">
+            This is an automated message from CareVoy. Please do not reply to this email.<br>
+            If you need assistance, contact us at <a href="mailto:contact@carevoy.co" style="color:#9CA3AF;text-decoration:none">contact@carevoy.co</a>.<br>
+            &copy; 2026 CareVoy. All rights reserved.
+          </div>
         </div>
       </div>
     </div>
