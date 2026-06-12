@@ -167,7 +167,7 @@
     <div class="success-icon">✅</div>
     <div class="success-title" id="successTitle">Account created!</div>
     <div class="success-sub" id="successSub">Redirecting to your dashboard…</div>
-    <a href="/" class="success-btn" id="successBtn">Go to Dashboard</a>
+    <a href="/" class="success-btn" id="successBtn">Go to My Dashboard →</a>
   </div>
 </div>
 
@@ -314,12 +314,12 @@ async function submitSignup() {
         sessionStorage.setItem('cv_nemt_token', token);
         sessionStorage.setItem('cv_nemt_uid', uid);
         showSuccess('Welcome to CareVoy!', 'Your driver account is ready. Taking you to your dashboard…', '/driver.html');
-        setTimeout(function(){ window.location.href = '/driver.html'; }, 2000);
+        
       } else {
         sessionStorage.setItem('cv_coord_token', token);
         sessionStorage.setItem('cv_coord_uid', uid);
         showSuccess('Welcome to CareVoy!', 'Your coordinator account is ready. Taking you to your dashboard…', '/coordinator.html');
-        setTimeout(function(){ window.location.href = '/coordinator.html'; }, 2000);
+        
       }
     } catch(e) {
       showErr(e.message);

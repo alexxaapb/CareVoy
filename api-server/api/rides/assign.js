@@ -33,6 +33,39 @@ module.exports = async function handler(req, res) {
 
     await supabase.from('audit_log').insert({ actor_id: user.id, actor_role: 'admin', action: 'ride.nemt_assigned', entity_type: 'rides', entity_id: ride_id, old_value: { status: oldRide && oldRide.status }, new_value: { status: 'confirmed', nemt_partner_id } }).catch(() => {});
 
+    // Send email notification to the facility coordinator
+    try {
+      const { data: rideFull } = await supabase.from('rides').select('patient_name, pickup_time, hospital_id').eq('id', ride_id).single();
+      if (rideFull && rideFull.hospital_id) {
+        const { data: coords } = await supabase.from('hospital_coordinators').select('email').eq('hospital_id', rideFull.hospital_id);
+        const dateStr = rideFull.pickup_time ? new Date(rideFull.pickup_time).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'the scheduled date';
+        if (coords && coords.length) {
+          for (const coord of coords) {
+            if (coord.email) {
+              await fetch('https://care-voy-api-server.vercel.app/api/notify/send', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'ride_confirmed', to: coord.email, data: { patient_name: rideFull.patient_name, date: dateStr } })
+              });
+            }
+          }
+        }
+      }
+      // Notify the NEMT driver(s)
+      const { data: drivers } = await supabase.from('staff').select('email').eq('nemt_partner_id', nemt_partner_id).eq('role', 'nemt');
+      const { data: rideForDriver } = await supabase.from('rides').select('patient_name, pickup_time').eq('id', ride_id).single();
+      const driverDate = rideForDriver && rideForDriver.pickup_time ? new Date(rideForDriver.pickup_time).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'the scheduled date';
+      if (drivers && drivers.length) {
+        for (const drv of drivers) {
+          if (drv.email) {
+            await fetch('https://care-voy-api-server.vercel.app/api/notify/send', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'ride_assigned_driver', to: drv.email, data: { patient_name: rideForDriver.patient_name, date: driverDate } })
+            });
+          }
+        }
+      }
+    } catch(_) {}
+
     return res.status(200).json({ success: true, ride_id, nemt_partner_id, status: 'confirmed' });
   } catch(e) {
     console.error('Ride assign error:', e);
