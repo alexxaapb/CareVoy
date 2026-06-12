@@ -237,20 +237,24 @@
     <div style="font-size:13px;color:#6B7280;margin-bottom:22px">Your driver account</div>
 
     <div class="settings-section">
-      <div class="settings-title">Account</div>
-      <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setName">—</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">
+        <div class="settings-title" style="margin:0;border:none;padding:0">Account</div>
+        <button id="editAcctBtn" onclick="toggleEditAcct()" style="background:#F0F4F8;border:1px solid #E2E8F0;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
+      </div>
+      <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setName">—</span><input class="form-input" id="editName" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">NEMT Company</span><span class="settings-val" id="setCompany">—</span></div>
       <div class="settings-row"><span class="settings-key">Role</span><span class="settings-val">Driver</span></div>
+      <div id="editAcctActions" style="display:none;margin-top:12px;justify-content:flex-end"><button onclick="saveEditAcct()" style="background:#00C2A8;color:#050D1F;border:none;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">Save Changes</button></div>
     </div>
 
     <div class="settings-section">
       <div class="settings-title">Assignment</div>
-      <div style="font-size:13px;color:#6B7280;line-height:1.6">To update your NEMT company assignment or vehicle type, contact your CareVoy admin at <a href="mailto:admin@carevoy.co" style="color:#00C2A8;text-decoration:none">admin@carevoy.co</a>.</div>
+      <div style="font-size:13px;color:#6B7280;line-height:1.6">To update your NEMT company assignment or vehicle type, contact your CareVoy admin at <a href="mailto:partners@carevoy.co" style="color:#00C2A8;text-decoration:none">partners@carevoy.co</a>.</div>
     </div>
 
     <div class="settings-section">
       <div class="settings-title">Notifications</div>
-      <div style="font-size:13px;color:#6B7280;line-height:1.6">You receive push notifications (coming soon) and SMS alerts when a new ride is assigned to you.</div>
+      <div style="font-size:13px;color:#6B7280;line-height:1.6">Email alerts are sent to your registered email when a new ride is assigned to your company.</div>
     </div>
   </div>
 
@@ -467,7 +471,7 @@ function renderHistory() {
 function showNoPartner() {
   document.getElementById('todayRidesSection').innerHTML =
     '<div class="warn-card"><div class="warn-title">Not linked to a transport company</div>' +
-    '<div class="warn-body">Your account isn\'t connected to an NEMT partner yet. Contact your CareVoy admin at admin@carevoy.co to get assigned.</div></div>';
+    '<div class="warn-body">Your account isn\'t connected to an NEMT partner yet. Contact your CareVoy admin at partners@carevoy.co to get assigned.</div></div>';
   ['earnToday','earnWeek','earnMonth','perfComp','perfFare','perfCanc'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.textContent = '—';
   });
@@ -491,6 +495,36 @@ function showToast(msg, type) {
   var t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast show' + (type?' '+type:'');
   clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('show'); }, 3500);
+}
+
+
+function toggleEditAcct() {
+  var editing = document.getElementById('editName').style.display !== 'none';
+  if (editing) { cancelEditAcct(); return; }
+  document.getElementById('setName').style.display = 'none';
+  document.getElementById('editName').style.display = 'block';
+  document.getElementById('editName').value = staffInfo.full_name || '';
+  document.getElementById('editAcctActions').style.display = 'flex';
+  document.getElementById('editAcctBtn').textContent = 'Cancel';
+}
+function cancelEditAcct() {
+  document.getElementById('setName').style.display = '';
+  document.getElementById('editName').style.display = 'none';
+  document.getElementById('editAcctActions').style.display = 'none';
+  document.getElementById('editAcctBtn').textContent = 'Edit';
+}
+async function saveEditAcct() {
+  var newName = document.getElementById('editName').value.trim();
+  if (!newName) { showToast('Name required', 'err'); return; }
+  try {
+    await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid, {
+      method: 'PATCH', headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ full_name: newName })
+    });
+    staffInfo.full_name = newName;
+    document.getElementById('setName').textContent = newName;
+    cancelEditAcct(); showToast('Profile updated', 'ok');
+  } catch(e) { showToast('Update failed', 'err'); }
 }
 
 init();

@@ -270,16 +270,21 @@
     <div class="page-sub">Facility account and preferences</div>
 
     <div class="settings-section">
-      <div class="settings-title">Point of Contact</div>
-      <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setPocName">—</span></div>
-      <div class="settings-row"><span class="settings-key">Email</span><span class="settings-val" id="setPocEmail">—</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">
+        <div class="settings-title" style="margin:0;border:none;padding:0">Point of Contact</div>
+        <button id="editPocBtn" onclick="toggleEditPoc()" style="background:#F0F4F8;border:1px solid #E2E8F0;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
+      </div>
+      <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setPocName">—</span><input class="form-input" id="editPocName" style="display:none;max-width:55%;padding:6px 10px"></div>
+      <div class="settings-row"><span class="settings-key">Email</span><span class="settings-val" id="setPocEmail">—</span><input class="form-input" id="editPocEmail" type="email" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">Facility</span><span class="settings-val" id="setPocFacility">—</span></div>
       <div class="settings-row"><span class="settings-key">City</span><span class="settings-val" id="setPocCity">—</span></div>
+      <div id="editPocActions" style="display:none;margin-top:12px;justify-content:flex-end"><button onclick="saveEditPoc()" style="background:#00C2A8;color:#050D1F;border:none;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">Save Changes</button></div>
+      <div style="font-size:11px;color:#9CA3AF;margin-top:10px">To update facility name or city, contact <a href="mailto:partners@carevoy.co" style="color:#00C2A8;text-decoration:none">partners@carevoy.co</a></div>
     </div>
 
     <div class="settings-section">
       <div class="settings-title">Contract & Billing</div>
-      <div style="font-size:13px;color:#6B7280;line-height:1.6">Your facility agreement and pricing tier are on file with CareVoy. Contact <a href="mailto:admin@carevoy.co" style="color:#00C2A8;text-decoration:none">admin@carevoy.co</a> for a copy or to request changes.</div>
+      <div style="font-size:13px;color:#6B7280;line-height:1.6">Your facility agreement and pricing tier are on file with CareVoy. Contact <a href="mailto:partners@carevoy.co" style="color:#00C2A8;text-decoration:none">partners@carevoy.co</a> for a copy or to request changes.</div>
     </div>
 
     <div class="settings-section">
@@ -394,7 +399,7 @@
 <div class="scrim" id="uploadModal">
   <div class="modal">
     <div class="modal-title">Bulk Upload Patients</div>
-    <div class="modal-sub">Upload a CSV exported from your scheduling system. Required columns: <strong>first_name, last_name, phone, appt_date, appt_type</strong>. Optional: email, caregiver_name, caregiver_phone.</div>
+    <div class="modal-sub">Upload a CSV from your scheduling system. Required: <strong>First Name, Last Name, Phone</strong>. Optional: Email, Appointment Date, Appointment Type, Caregiver Name, Caregiver Phone. You can add patients without appointments and send ride invites later.</div>
     <div class="upload-area" id="csvDropZone" onclick="document.getElementById('csvFile').click()">
       <div style="font-size:24px;margin-bottom:8px">📄</div>
       <div style="font-size:14px;font-weight:600;color:#374151">Drop CSV here or click to browse</div>
@@ -897,6 +902,43 @@ function showToast(msg, type) {
 document.getElementById('addPatientModal').addEventListener('click', function(e){ if(e.target===this) closeAddPatient(); });
 document.getElementById('uploadModal').addEventListener('click', function(e){ if(e.target===this) closeUploadModal(); });
 document.getElementById('calModal').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+
+
+function toggleEditPoc() {
+  var editing = document.getElementById('editPocName').style.display !== 'none';
+  if (editing) { cancelEditPoc(); return; }
+  document.getElementById('setPocName').style.display = 'none';
+  document.getElementById('setPocEmail').style.display = 'none';
+  document.getElementById('editPocName').style.display = 'block';
+  document.getElementById('editPocEmail').style.display = 'block';
+  document.getElementById('editPocName').value = coordInfo.full_name || '';
+  document.getElementById('editPocEmail').value = coordInfo.email || '';
+  document.getElementById('editPocActions').style.display = 'flex';
+  document.getElementById('editPocBtn').textContent = 'Cancel';
+}
+function cancelEditPoc() {
+  document.getElementById('setPocName').style.display = '';
+  document.getElementById('setPocEmail').style.display = '';
+  document.getElementById('editPocName').style.display = 'none';
+  document.getElementById('editPocEmail').style.display = 'none';
+  document.getElementById('editPocActions').style.display = 'none';
+  document.getElementById('editPocBtn').textContent = 'Edit';
+}
+async function saveEditPoc() {
+  var newName = document.getElementById('editPocName').value.trim();
+  var newEmail = document.getElementById('editPocEmail').value.trim();
+  if (!newName || !newEmail) { showToast('Name and email required', 'err'); return; }
+  try {
+    await fetch(SUPA + '/rest/v1/hospital_coordinators?id=eq.' + uid, {
+      method: 'PATCH', headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ full_name: newName, email: newEmail })
+    });
+    coordInfo.full_name = newName; coordInfo.email = newEmail;
+    document.getElementById('setPocName').textContent = newName;
+    document.getElementById('setPocEmail').textContent = newEmail;
+    cancelEditPoc(); showToast('Profile updated', 'ok');
+  } catch(e) { showToast('Update failed', 'err'); }
+}
 
 init();
 setInterval(loadAll, 30000);
