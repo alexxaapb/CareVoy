@@ -164,6 +164,21 @@
     <div class="page-title" id="pageGreeting">Good morning</div>
     <div class="page-sub" id="pageFacility">Loading your facility…</div>
 
+    <!-- Hero metrics: the numbers a facility shows their boss -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="stat-card" style="background:linear-gradient(135deg,#050D1F 0%,#0a1a3a 100%);border:none">
+        <div class="stat-label" style="color:#9CA3AF">Appointments Kept</div>
+        <div class="stat-value" style="color:#00C2A8;font-size:32px" id="statKept">—</div>
+        <div style="color:#6B7280;font-size:11px;margin-top:2px">Completed rides = appointments your patients made</div>
+      </div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#050D1F 0%,#0a1a3a 100%);border:none">
+        <div class="stat-label" style="color:#9CA3AF">Patient HSA/FSA Savings</div>
+        <div class="stat-value" style="color:#F5A623;font-size:32px" id="statSavings">—</div>
+        <div style="color:#6B7280;font-size:11px;margin-top:2px">Est. tax savings via IRS 213(d) receipts</div>
+      </div>
+    </div>
+
+    <!-- Operational metrics -->
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-label">Total Patients</div>
@@ -178,8 +193,8 @@
         <div class="stat-value gold" id="statAction">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">This Month</div>
-        <div class="stat-value" id="statMonth">—</div>
+        <div class="stat-label">Upcoming This Week</div>
+        <div class="stat-value" id="statUpcoming">—</div>
       </div>
     </div>
 
@@ -552,10 +567,23 @@ function updateStats() {
   var action = allRides.filter(function(r){ return ['invited','reminder_sent','no_response','pending'].includes(r.status); });
   var month = allRides.filter(function(r){ return r.pickup_time && new Date(r.pickup_time) >= mStart; });
 
+  // Hero metrics
+  var completed = allRides.filter(function(r){ return r.status === 'completed'; });
+  var SAVINGS_PER_RIDE = 14; // ~30% of avg $46 ride saved via HSA/FSA pre-tax
+  document.getElementById('statKept').textContent = completed.length;
+  document.getElementById('statSavings').textContent = '$' + (completed.length * SAVINGS_PER_RIDE).toLocaleString();
+
+  // Upcoming this week
+  var weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() + 7);
+  var upcoming = allRides.filter(function(r){
+    return r.pickup_time && new Date(r.pickup_time) >= new Date() && new Date(r.pickup_time) <= weekEnd && !['completed','cancelled'].includes(r.status);
+  });
+
+  // Operational metrics
   document.getElementById('statTotal').textContent = allRides.length;
   document.getElementById('statConfirmed').textContent = confirmed.length;
   document.getElementById('statAction').textContent = action.length;
-  document.getElementById('statMonth').textContent = month.length;
+  document.getElementById('statUpcoming').textContent = upcoming.length;
 
   if (action.length > 0) {
     document.getElementById('alertBanner').style.display = 'flex';
