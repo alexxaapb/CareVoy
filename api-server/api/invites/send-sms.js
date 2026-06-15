@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
     if (!phone) return res.status(400).json({ error: 'Missing phone' });
 
     const appLink = 'https://apps.apple.com/us/app/carevoy/id6768714735';
-    const message = (facility || 'Your care team') + ' has arranged a ride for ' + (patient_name || 'you') + ' through CareVoy. Download the app to confirm your pickup and get your HSA receipt: ' + appLink;
+    const message = (facility || 'Your care team') + ' has scheduled an appointment for ' + (patient_name || 'you') + '. Download CareVoy to book your ride and get your HSA/FSA receipt: ' + appLink;
 
     let smsSent = false;
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_FROM) {

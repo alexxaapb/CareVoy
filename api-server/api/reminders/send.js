@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
     const facilityName = (ride.hospitals && ride.hospitals.name) || 'your facility';
     const apptDate     = ride.pickup_time ? new Date(ride.pickup_time).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'your upcoming appointment';
     const appLink = 'https://apps.apple.com/us/app/carevoy/id6768714735';
-    const message = 'Reminder: ' + patientName + ' has a ride scheduled to ' + facilityName + ' on ' + apptDate + '. Download CareVoy to confirm: ' + appLink;
+    const message = 'Reminder: ' + patientName + ' has an appointment scheduled at ' + facilityName + ' on ' + apptDate + '. Download CareVoy to book your ride: ' + appLink;
 
     let smsSent = false;
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_FROM && contactPhone) {
