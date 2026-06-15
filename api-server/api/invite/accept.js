@@ -38,7 +38,21 @@ module.exports = async function handler(req, res) {
       }
       await supabase.from('staff').upsert({ id: finalUid, role: 'nemt', full_name, email, nemt_partner_id: partnerId || null });
     } else {
-      await supabase.from('hospital_coordinators').upsert({ id: finalUid, full_name, email, hospital_id: hospital_id || invite.hospital_id || null, job_title: job_title || null });
+      // Look up or create hospital from facility_name
+      let resolvedHospitalId = hospital_id || invite.hospital_id || null;
+      const facility_name = req.body.facility_name;
+      if (!resolvedHospitalId && facility_name) {
+        // Try fuzzy match on hospitals table
+        const { data: matches } = await supabase.from('hospitals').select('id, name').ilike('name', '%' + facility_name.split(' ').slice(0, 3).join('%') + '%').limit(1);
+        if (matches && matches.length > 0) {
+          resolvedHospitalId = matches[0].id;
+        } else {
+          // Create new hospital record
+          const { data: newHosp } = await supabase.from('hospitals').insert({ name: facility_name, city: city || state || null }).select().single();
+          if (newHosp) resolvedHospitalId = newHosp.id;
+        }
+      }
+      await supabase.from('hospital_coordinators').upsert({ id: finalUid, full_name, email, hospital_id: resolvedHospitalId, job_title: job_title || null });
     }
 
     await supabase.from('invites').update({ used: true, used_at: new Date().toISOString(), used_by: finalUid }).eq('token', invite_token);

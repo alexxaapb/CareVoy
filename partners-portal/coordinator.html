@@ -724,6 +724,14 @@ async function submitAddPatient() {
   if (!apptDate) { showErr('Please select appointment date.'); return; }
   if (!apptType) { showErr('Please select appointment type.'); return; }
 
+  // Auto-format phone to E.164 for Twilio
+  contactPhone = contactPhone.replace(/[^\d+]/g, '');
+  if (!contactPhone.startsWith('+')) {
+    if (contactPhone.startsWith('1') && contactPhone.length === 11) contactPhone = '+' + contactPhone;
+    else if (contactPhone.length === 10) contactPhone = '+1' + contactPhone;
+    else contactPhone = '+1' + contactPhone;
+  }
+
   var pickupISO = new Date(apptDate + 'T' + (apptTime || '08:00')).toISOString();
   var payload = {
     hospital_id: coordInfo.hospital_id,

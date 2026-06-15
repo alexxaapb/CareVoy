@@ -268,7 +268,8 @@ async function submitSignup() {
     if (!first2 || !last2) { showErr('Please enter your name.'); return; }
     if (!email) { showErr('Please enter your work email.'); return; }
     fullName = first2 + ' ' + last2;
-    extraData = { job_title: jobTitle };
+    var facilityName = document.getElementById('coordFacility').value.trim();
+    extraData = { job_title: jobTitle, facility_name: facilityName };
   }
 
   if (!password || password.length < 8) { showErr('Password must be at least 8 characters.'); return; }
