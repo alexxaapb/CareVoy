@@ -442,6 +442,20 @@
 </div>
 </div><!-- /main -->
 
+
+<!-- NEMT Assignment modal -->
+<div class="modal-scrim" id="assignModal">
+  <div class="modal-card" style="max-width:440px">
+    <div class="modal-title">Assign NEMT Partner</div>
+    <div style="margin-bottom:12px;font-size:13px;color:#6B7280" id="assignRideInfo"></div>
+    <div id="assignMatchList" style="margin-bottom:16px"></div>
+    <div class="modal-foot">
+      <button class="modal-btn close" onclick="closeAssignModal()">Cancel</button>
+      <button class="modal-btn copy" id="confirmAssignBtn" onclick="confirmAssign()" disabled>Assign</button>
+    </div>
+  </div>
+</div>
+
 <!-- Invite modal -->
 <div class="modal-scrim" id="inviteModal">
   <div class="modal-card">
@@ -751,9 +765,7 @@
       if (src2 && dst2) dst2.innerHTML = src2.innerHTML;
     }
     if (name === 'rides') {
-      var src3 = document.getElementById('liveRidesBody');
-      var dst3 = document.getElementById('allRidesBody');
-      if (src3 && dst3) dst3.innerHTML = src3.innerHTML;
+      loadAllRides();
     }
   }
 
@@ -775,6 +787,126 @@
   });
 
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+
+  var allNemtPartners = [];
+  var selectedAssignPartnerId = null;
+  var assigningRideId = null;
+
+  async function loadAllRides() {
+    var body = document.getElementById('allRidesBody');
+    try {
+      var res = await fetch(SUPA_URL + '/rest/v1/rides?select=*,hospitals(name,city,state)&order=created_at.desc&limit=50', { headers: h });
+      var rides = await res.json();
+      if (!rides || !rides.length) {
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">No rides yet</div>';
+        return;
+      }
+      body.innerHTML = rides.map(function(r) {
+        var t = r.pickup_time ? new Date(r.pickup_time) : null;
+        var tStr = t ? t.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+        var badge = statusBadge(r.status);
+        var hospName = (r.hospitals && r.hospitals.name) || '—';
+        var actionBtn = '';
+        if (['invited','pending','confirmed'].includes(r.status) && !r.nemt_partner_id) {
+          actionBtn = '<button onclick="openAssignModal(\'' + r.id + '\',\'' + esc(r.patient_name||'Patient') + '\',\'' + esc(hospName) + '\',\'' + ((r.hospitals&&r.hospitals.state)||'') + '\')" style="background:#00C2A8;color:#050D1F;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Assign NEMT</button>';
+        } else if (r.nemt_partner_id) {
+          actionBtn = '<span style="font-size:11px;color:#9CA3AF">Assigned</span>';
+        }
+        return '<div class="rides-row" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">' +
+          '<div class="td">' + esc(r.patient_name || 'Patient') + '</div>' +
+          '<div class="td muted" style="font-size:12px">' + esc(hospName) + '</div>' +
+          '<div class="td muted" style="font-size:12px">—</div>' +
+          '<div class="td">' + badge + '</div>' +
+          '<div class="td muted" style="font-size:12px">' + tStr + '</div>' +
+          '<div class="td">' + actionBtn + '</div></div>';
+      }).join('');
+    } catch(e) { body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Error loading rides</div>'; }
+  }
+
+  async function openAssignModal(rideId, patientName, hospName, hospState) {
+    assigningRideId = rideId;
+    selectedAssignPartnerId = null;
+    document.getElementById('confirmAssignBtn').disabled = true;
+    document.getElementById('assignRideInfo').innerHTML = '<strong>' + patientName + '</strong> at ' + hospName + (hospState ? ' (' + hospState + ')' : '');
+
+    // Fetch NEMT partners and filter by state match
+    var res = await fetch(SUPA_URL + '/rest/v1/nemt_partners?active=eq.true&select=id,company_name,city,service_states,vehicle_types,wheelchair_accessible', { headers: h });
+    var partners = await res.json();
+
+    // Filter: partners whose service_states includes the hospital state
+    var matched = partners;
+    if (hospState) {
+      var stateMatched = partners.filter(function(p) {
+        return p.service_states && p.service_states.includes(hospState);
+      });
+      if (stateMatched.length > 0) matched = stateMatched;
+      // If no state match, show all with a note
+    }
+
+    var listEl = document.getElementById('assignMatchList');
+    if (!matched.length) {
+      listEl.innerHTML = '<div style="padding:16px;text-align:center;color:#9CA3AF;font-size:13px">No NEMT partners available. Invite one first.</div>';
+      document.getElementById('assignModal').classList.add('open');
+      return;
+    }
+
+    listEl.innerHTML = matched.map(function(p) {
+      var tags = '';
+      if (p.vehicle_types && p.vehicle_types.length) tags += p.vehicle_types.map(function(v){return '<span style="background:#E0F7F5;color:#0a9a87;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px">'+v+'</span>';}).join('');
+      if (p.service_states && p.service_states.length) tags += ' <span style="font-size:10px;color:#9CA3AF">(' + p.service_states.join(', ') + ')</span>';
+      var stateMatch = hospState && p.service_states && p.service_states.includes(hospState);
+      return '<div onclick="selectAssignPartner(\'' + p.id + '\',this)" style="padding:12px 14px;border:2px solid #E2E8F0;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" class="assign-option">' +
+        '<div style="font-weight:600;font-size:14px;color:#050D1F">' + esc(p.company_name) + (stateMatch ? ' <span style="color:#00C2A8;font-size:10px;font-weight:700">STATE MATCH</span>' : '') + '</div>' +
+        '<div style="font-size:12px;color:#6B7280">' + esc(p.city || '') + tags + '</div>' +
+        '</div>';
+    }).join('');
+
+    document.getElementById('assignModal').classList.add('open');
+  }
+
+  function selectAssignPartner(partnerId, el) {
+    selectedAssignPartnerId = partnerId;
+    document.querySelectorAll('.assign-option').forEach(function(e) { e.style.borderColor = '#E2E8F0'; });
+    el.style.borderColor = '#00C2A8';
+    document.getElementById('confirmAssignBtn').disabled = false;
+  }
+
+  async function confirmAssign() {
+    if (!assigningRideId || !selectedAssignPartnerId) return;
+    document.getElementById('confirmAssignBtn').textContent = 'Assigning…';
+    document.getElementById('confirmAssignBtn').disabled = true;
+    try {
+      var token = sessionStorage.getItem('cv_admin_token');
+      var res = await fetch(API_URL + '/api/rides/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ ride_id: assigningRideId, nemt_partner_id: selectedAssignPartnerId })
+      });
+      var data = await res.json();
+      if (data.success) {
+        showToast('NEMT partner assigned — emails sent');
+        closeAssignModal();
+        loadAllRides();
+        loadStats();
+      } else {
+        showToast('Error: ' + (data.error || 'Assignment failed'));
+      }
+    } catch(e) { showToast('Assignment failed'); }
+    document.getElementById('confirmAssignBtn').textContent = 'Assign';
+    document.getElementById('confirmAssignBtn').disabled = false;
+  }
+
+  function closeAssignModal() {
+    document.getElementById('assignModal').classList.remove('open');
+    assigningRideId = null;
+    selectedAssignPartnerId = null;
+  }
+
+  document.getElementById('assignModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAssignModal();
+  });
+
 
   loadStats();
   setInterval(loadStats, 30000);

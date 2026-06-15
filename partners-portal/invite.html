@@ -258,7 +258,9 @@ async function submitSignup() {
     if (!email) { showErr('Please enter your work email.'); return; }
     if (!company) { showErr('Please enter your company name.'); return; }
     fullName = first + ' ' + last;
-    extraData = { company_name: company, city: city, state: state };
+    var serviceStates = Array.from(document.querySelectorAll('.svc-state:checked')).map(function(cb){ return cb.value; });
+    var vehicleTypes = Array.from(document.querySelectorAll('.veh-type:checked')).map(function(cb){ return cb.value; });
+    extraData = { company_name: company, city: city, state: state, service_states: serviceStates, vehicle_types: vehicleTypes };
   } else {
     var first2   = document.getElementById('coordFirstName').value.trim();
     var last2    = document.getElementById('coordLastName').value.trim();

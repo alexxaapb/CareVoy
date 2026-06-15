@@ -36,6 +36,15 @@ module.exports = async function handler(req, res) {
         const { data: newPartner } = await supabase.from('nemt_partners').insert({ company_name, city: city || null, active: true }).select().single();
         if (newPartner) partnerId = newPartner.id;
       }
+      // Update NEMT partner with service coverage
+      const service_states = req.body.service_states;
+      const vehicle_types = req.body.vehicle_types;
+      if (partnerId && (service_states || vehicle_types)) {
+        const updates = {};
+        if (service_states && service_states.length) updates.service_states = service_states;
+        if (vehicle_types && vehicle_types.length) updates.vehicle_types = vehicle_types;
+        await supabase.from('nemt_partners').update(updates).eq('id', partnerId);
+      }
       await supabase.from('staff').upsert({ id: finalUid, role: 'nemt', full_name, email, nemt_partner_id: partnerId || null });
     } else {
       // Look up or create hospital from facility_name
