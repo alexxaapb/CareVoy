@@ -796,7 +796,7 @@
   async function loadAllRides() {
     var body = document.getElementById('allRidesBody');
     try {
-      var res = await fetch(SUPA_URL + '/rest/v1/rides?select=*,hospitals(name,city,state)&order=created_at.desc&limit=50', { headers: h });
+      var res = await fetch(SUPA_URL + '/rest/v1/rides?select=*&order=created_at.desc&limit=50', { headers: h });
       var rides = await res.json();
       if (!rides || !rides.length) {
         body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">No rides yet</div>';
@@ -806,10 +806,10 @@
         var t = r.pickup_time ? new Date(r.pickup_time) : null;
         var tStr = t ? t.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
         var badge = statusBadge(r.status);
-        var hospName = (r.hospitals && r.hospitals.name) || '—';
+        var hospName = r.hospital_name || '—';
         var actionBtn = '';
         if (['invited','pending','confirmed'].includes(r.status) && !r.nemt_partner_id) {
-          actionBtn = '<button onclick="openAssignModal(\'' + r.id + '\',\'' + esc(r.patient_name||'Patient') + '\',\'' + esc(hospName) + '\',\'' + ((r.hospitals&&r.hospitals.state)||'') + '\')" style="background:#00C2A8;color:#050D1F;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Assign NEMT</button>';
+          actionBtn = '<button onclick="openAssignModal(\'' + r.id + '\',\'' + esc(r.patient_name||'Patient') + '\',\'' + esc(hospName) + '\',\'' + (r.hospital_state||'') + '\')" style="background:#00C2A8;color:#050D1F;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Assign NEMT</button>';
         } else if (r.nemt_partner_id) {
           actionBtn = '<span style="font-size:11px;color:#9CA3AF">Assigned</span>';
         }
