@@ -822,7 +822,7 @@
           '<div class="td muted" style="font-size:12px">' + tStr + '</div>' +
           '<div class="td">' + actionBtn + '</div></div>';
       }).join('');
-    } catch(e) { body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Error loading rides</div>'; }
+    } catch(e) { body.innerHTML = '<div style="padding:40px;text-align:center;color:red;font-size:13px">Error: ' + e.message + '</div>'; }
   }
 
   async function openAssignModal(rideId, patientName, hospName, hospState) {
