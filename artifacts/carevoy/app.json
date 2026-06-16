@@ -69,6 +69,12 @@
         "projectId": "f70bca6e-82e7-4cea-8455-4d6077dcb765"
       }
     },
-    "owner": "carevoy"
+    "owner": "carevoy",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f70bca6e-82e7-4cea-8455-4d6077dcb765"
+    }
   }
 }
