@@ -305,6 +305,30 @@ export default function SettingsScreen() {
 
         <View style={styles.group}>
           <MenuRow
+            icon="trash-2"
+            label="Delete Account"
+            sub="Permanently remove your data"
+            onPress={() => Alert.alert(
+              'Delete Account',
+              'This will permanently delete your account and all associated data. This action cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: async () => {
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                      await supabase.from('patients').delete().eq('id', session.user.id);
+                      await supabase.auth.signOut();
+                    }
+                    router.replace('/');
+                  } catch { Alert.alert('Error', 'Please contact contact@carevoy.co to delete your account.'); }
+                }}
+              ]
+            )}
+            destructive
+          />
+          <View style={styles.divider} />
+          <MenuRow
             icon="log-out"
             label={signingOut ? "Signing out…" : "Sign Out"}
             onPress={signingOut ? () => {} : handleSignOut}
