@@ -27,7 +27,6 @@
         "NPM_CONFIG_FROZEN_LOCKFILE": "false"
       },
       "channel": "production",
-      "image": "macos-sonoma-14.8-xcode-16.2",
       "ios": {
         "image": "macos-sonoma-14.8-xcode-16.2"
       }
