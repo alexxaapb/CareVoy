@@ -10,18 +10,9 @@ br = os.path.join(APP, 'app', 'book-ride.tsx')
 c = open(br).read()
 
 # 1a. Ride reason dropdown
-old_proc = '''              <Text style={styles.label}>
-                Procedure / visit type<Required />
-              </Text>
-              <TextInput
-                style={[styles.input, styles.textOnly]}
-                placeholder="e.g. Knee replacement, Cataract surgery"
-                placeholderTextColor={MUTED}
-                value={procedureType}
-                onChangeText={setProcedureType}
-              />'''
+old_proc = '              <Text style={styles.label}>\n                Procedure / visit type<Required />\n              </Text>\n              <TextInput\n                style={[styles.input, styles.textOnly]}\n                placeholder="e.g. Knee replacement, Cataract surgery"\n                placeholderTextColor={MUTED}\n                value={procedureType}\n                onChangeText={setProcedureType}\n              />'
 
-new_proc = '''              <Text style={styles.label}>
+new_proc = """              <Text style={styles.label}>
                 Ride reason<Required />
               </Text>
               <View style={{ gap: 6 }}>
@@ -63,7 +54,7 @@ new_proc = '''              <Text style={styles.label}>
                     </Text>
                   </Pressable>
                 ))}
-              </View>'''
+              </View>"""
 
 if old_proc in c:
     c = c.replace(old_proc, new_proc)
@@ -80,7 +71,7 @@ if idx_s > -1 and idx_e > -1:
     c = c[:idx_s] + '\n              {facilityType === "dialysis" && (' + c[idx_e + len(loi_end):]
     print('1b. LOI section removed')
 else:
-    print('1b. LOI NOT found (start:', idx_s, 'end:', idx_e, ')')
+    print('1b. LOI NOT found')
 
 # 1c. Remove DocumentPicker import
 c = c.replace('import * as DocumentPicker from "expo-document-picker";\n', '')
@@ -88,10 +79,7 @@ print('1c. DocumentPicker import removed')
 
 # 1d. Past-date validation
 old_val = '    if (!surgeryDate) return "Please select date";'
-new_val = '''    if (!surgeryDate) return "Please select date";
-    const todayCheck = new Date();
-    todayCheck.setHours(0, 0, 0, 0);
-    if (surgeryDate < todayCheck) return "Please select today or a future date";'''
+new_val = '    if (!surgeryDate) return "Please select date";\n    const todayCheck = new Date();\n    todayCheck.setHours(0, 0, 0, 0);\n    if (surgeryDate < todayCheck) return "Please select today or a future date";'
 if old_val in c:
     c = c.replace(old_val, new_val)
     print('1d. Past-date validation added')
@@ -113,7 +101,7 @@ c = c.replace(
 )
 print('1e. Date defaults to today')
 
-# 1f. Validation + summary text updates
+# 1f. Labels
 c = c.replace('return "Please enter the procedure or visit type"', 'return "Please select a ride reason"')
 c = c.replace('<SummaryRow label="Procedure" value={procedureType} />', '<SummaryRow label="Ride reason" value={procedureType} />')
 print('1f. Labels updated')
@@ -128,77 +116,48 @@ open(br, 'w').write(c)
 print('book-ride.tsx saved')
 
 # ═══════════════════════════════════════════════════════
-# 2. SETTINGS.TSX — fix all items
+# 2. SETTINGS.TSX
 # ═══════════════════════════════════════════════════════
 st = os.path.join(APP, 'app', 'settings.tsx')
 c = open(st).read()
 
-# 2a. Notification preferences — push only
+# 2a0. Add Alert to imports
 c = c.replace(
-    '''            icon="bell"
-            label="Notification preferences"
-            sub="Texts, email, and push"
-            onPress={comingSoon("Notification preferences")}''',
-    '''            icon="bell"
-            label="Notification preferences"
-            sub="Push notifications"
-            onPress={() => Alert.alert("Notifications", "Push notifications are enabled. You'll receive ride updates, pickup reminders, and receipt notifications.")}'''
+    '  ActivityIndicator,\n  Image,',
+    '  ActivityIndicator,\n  Alert,\n  Image,'
 )
-# Fix: add Alert to imports
-c = c.replace(
-    'import {
-  ActivityIndicator,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";',
-    'import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";'
-)
-print('2a0. Alert import added to settings.tsx')
-print('2a. Notification preferences updated to push only')
+print('2a0. Alert import added')
 
-# 2b. Help & Support — fix email to contact@carevoy.co
+# 2a. Notification preferences
+c = c.replace(
+    'sub="Texts, email, and push"',
+    'sub="Push notifications"'
+)
+c = c.replace(
+    'onPress={comingSoon("Notification preferences")}',
+    "onPress={() => Alert.alert('Notifications', 'Push notifications are enabled. You will receive ride updates, pickup reminders, and receipt notifications.')}"
+)
+print('2a. Notification preferences updated')
+
+# 2b. Help email
 c = c.replace('support@carevoy.co', 'contact@carevoy.co')
-print('2b. Help email fixed to contact@carevoy.co')
+print('2b. Help email -> contact@carevoy.co')
 
-# 2c. Chat with coordinator — open email instead of coming soon
+# 2c. Chat with coordinator
 c = c.replace(
-    '''            icon="message-circle"
-            label="Chat with care coordinator"
-            onPress={comingSoon("Chat with care coordinator")}''',
-    '''            icon="message-circle"
-            label="Contact care coordinator"
-            sub="partners@carevoy.co"
-            onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:partners@carevoy.co?subject=CareVoy%20Support%20Request"); }}'''
+    'onPress={comingSoon("Chat with care coordinator")}',
+    'onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:partners@carevoy.co?subject=CareVoy%20Support%20Request"); }}'
 )
-print('2c. Chat → Contact coordinator with email')
-
-# 2d. Add Delete Account before Sign Out (Apple requirement)
 c = c.replace(
-    '''        <View style={styles.group}>
-          <MenuRow
-            icon="log-out"
-            label={signingOut ? "Signing out…" : "Sign Out"}
-            onPress={signingOut ? () => {} : handleSignOut}
-            destructive
-          />
-        </View>''',
-    '''        <View style={styles.group}>
-          <MenuRow
+    'label="Chat with care coordinator"',
+    'label="Contact care coordinator"\n            sub="partners@carevoy.co"'
+)
+print('2c. Chat -> Contact coordinator email')
+
+# 2d. Delete Account before Sign Out
+old_signout = '          <MenuRow\n            icon="log-out"\n            label={signingOut ? "Signing out\\u2026" : "Sign Out"}\n            onPress={signingOut ? () => {} : handleSignOut}\n            destructive\n          />'
+
+delete_plus_signout = """          <MenuRow
             icon="trash-2"
             label="Delete Account"
             sub="Permanently remove your data"
@@ -224,32 +183,34 @@ c = c.replace(
           <View style={styles.divider} />
           <MenuRow
             icon="log-out"
-            label={signingOut ? "Signing out…" : "Sign Out"}
+            label={signingOut ? "Signing out\\u2026" : "Sign Out"}
             onPress={signingOut ? () => {} : handleSignOut}
             destructive
-          />
-        </View>'''
-)
-print('2d. Delete Account added (Apple requirement)')
+          />"""
 
-# 2e. Version text
-c = c.replace('CareVoy · v1.0', 'CareVoy · v1.1.1')
-print('2e. Version updated to v1.1.1')
+if old_signout in c:
+    c = c.replace(old_signout, delete_plus_signout)
+    print('2d. Delete Account added')
+else:
+    print('2d. Sign out pattern NOT found')
+
+# 2e. Version
+c = c.replace('CareVoy \xb7 v1.0', 'CareVoy \xb7 v1.1.1')
+print('2e. Version -> v1.1.1')
 
 open(st, 'w').write(c)
 print('settings.tsx saved')
 
 # ═══════════════════════════════════════════════════════
-# 3. CARE CONTEXT — update ride status on login
+# 3. CARE CONTEXT — ride status on login
 # ═══════════════════════════════════════════════════════
 cc = os.path.join(APP, 'lib', 'careContext.tsx')
 c = open(cc).read()
 
-# After setSelfPatientId(userId), add ride status update
-old_refresh = '    setSelfPatientId(userId);'
-new_refresh = '''    setSelfPatientId(userId);
+old_ref = '    setSelfPatientId(userId);'
+new_ref = """    setSelfPatientId(userId);
 
-    // Update any rides matching this user's phone to "app_downloaded"
+    // Update rides matching this phone to app_downloaded
     try {
       const phone = session?.user?.phone;
       if (phone) {
@@ -259,18 +220,18 @@ new_refresh = '''    setSelfPatientId(userId);
           .eq("contact_phone", phone)
           .eq("status", "invited");
       }
-    } catch {}'''
+    } catch {}"""
 
-if old_refresh in c:
-    c = c.replace(old_refresh, new_refresh)
-    print('3. careContext: ride status updated to app_downloaded on login')
+if old_ref in c and 'app_downloaded' not in c:
+    c = c.replace(old_ref, new_ref)
+    print('3. careContext: app_downloaded on login')
 else:
-    print('3. careContext: setSelfPatientId pattern NOT found')
+    print('3. careContext: already has it or pattern not found')
 
 open(cc, 'w').write(c)
 
 # ═══════════════════════════════════════════════════════
-# 4. APP.JSON — version + updates + push permission
+# 4. APP.JSON
 # ═══════════════════════════════════════════════════════
 aj = os.path.join(APP, 'app.json')
 a = json.load(open(aj))
@@ -280,35 +241,33 @@ a['expo']['updates'] = {
     'url': 'https://u.expo.dev/f70bca6e-82e7-4cea-8455-4d6077dcb765',
     'fallbackToCacheTimeout': 0
 }
-a['expo']['runtimeVersion'] = { 'policy': 'appVersion' }
+a['expo']['runtimeVersion'] = {'policy': 'appVersion'}
 a['expo']['ios']['infoPlist']['NSUserNotificationsUsageDescription'] = 'CareVoy sends you ride updates, pickup reminders, and receipt notifications.'
 json.dump(a, open(aj, 'w'), indent=2)
-print('4. app.json: v1.1.1 build 46, OTA, push permission')
+print('4. app.json updated')
 
 # ═══════════════════════════════════════════════════════
-# 5. EAS.JSON — channel
+# 5. EAS.JSON
 # ═══════════════════════════════════════════════════════
 ej = os.path.join(APP, 'eas.json')
 e = json.load(open(ej))
 e['build']['production']['channel'] = 'production'
 json.dump(e, open(ej, 'w'), indent=2)
-print('5. eas.json: channel "production"')
+print('5. eas.json updated')
 
 # ═══════════════════════════════════════════════════════
 # COMMIT
 # ═══════════════════════════════════════════════════════
 for cmd in [
     'git add artifacts/carevoy/',
-    'git commit -m "feat: Build 46 — ride dropdown, delete account, push notifications, date default, app_downloaded status"',
+    'git commit -m "feat: Build 46 — ride dropdown, delete account, notifications, date default, app_downloaded"',
     'git push origin main'
 ]:
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=REPO)
     print(r.stdout.strip() or r.stderr.strip())
 
 print('')
-print('ALL BUILD 46 CODE CHANGES DONE.')
-print('')
-print('Next steps in Codespaces terminal:')
+print('ALL DONE. Next in Codespaces:')
 print('  cd /workspaces/CareVoy/artifacts/carevoy')
 print('  npx expo install expo-updates expo-notifications')
 print('  eas build --platform ios --profile production')
