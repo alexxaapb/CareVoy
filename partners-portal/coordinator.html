@@ -741,7 +741,9 @@ async function submitAddPatient() {
     await fetch(SUPA + '/rest/v1/rides?id=eq.' + existingId, {
       method: 'PATCH',
       headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ status: 'invited', invited_at: new Date().toISOString(), reminder_sent: false })
+      body: JSON.stringify({ status: 'invited',
+        hospital_state: hospitalInfo ? (hospitalInfo.state || null) : null,
+        hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null, invited_at: new Date().toISOString(), reminder_sent: false })
     });
     try {
       await fetch(API + '/api/invites/send-sms', {
@@ -767,7 +769,9 @@ async function submitAddPatient() {
     await fetch(SUPA + '/rest/v1/rides?id=eq.' + existingId, {
       method: 'PATCH',
       headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ status: 'invited', invited_at: new Date().toISOString(), reminder_sent: false })
+      body: JSON.stringify({ status: 'invited',
+        hospital_state: hospitalInfo ? (hospitalInfo.state || null) : null,
+        hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null, invited_at: new Date().toISOString(), reminder_sent: false })
     });
     try {
       await fetch(API + '/api/invites/send-sms', {
@@ -793,6 +797,8 @@ async function submitAddPatient() {
     procedure_type: apptType,
     pickup_time: pickupISO,
     status: 'invited',
+        hospital_state: hospitalInfo ? (hospitalInfo.state || null) : null,
+        hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null,
     invited_at: new Date().toISOString(),
     reminder_sent: false,
     ride_type: 'pre_op',
@@ -869,6 +875,8 @@ async function submitCSV() {
       procedure_type: row.appt_type || 'Medical appointment',
       pickup_time: pickupISO,
       status: 'invited',
+        hospital_state: hospitalInfo ? (hospitalInfo.state || null) : null,
+        hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null,
       invited_at: new Date().toISOString(),
       reminder_sent: false,
       ride_type: 'pre_op',
