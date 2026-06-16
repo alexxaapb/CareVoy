@@ -24,7 +24,9 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT",
         "EXPO_PUBLIC_DOMAIN": "carevoy.co",
         "EXPO_PUBLIC_API_URL": "https://care-voy-api-server.vercel.app",
-        "NPM_CONFIG_FROZEN_LOCKFILE": "false"
+        "NPM_CONFIG_FROZEN_LOCKFILE": "false",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "SENTRY_ALLOW_FAILURE": "true"
       },
       "channel": "production",
       "ios": {
