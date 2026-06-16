@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -253,8 +254,8 @@ export default function SettingsScreen() {
           <MenuRow
             icon="bell"
             label="Notification preferences"
-            sub="Texts, email, and push"
-            onPress={comingSoon("Notification preferences")}
+            sub="Push notifications"
+            onPress={() => Alert.alert('Notifications', 'Push notifications are enabled. You will receive ride updates, pickup reminders, and receipt notifications.')}
           />
         </View>
 
@@ -290,14 +291,15 @@ export default function SettingsScreen() {
           <MenuRow
             icon="help-circle"
             label="Help & Support"
-            sub="support@carevoy.co"
-            onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:support@carevoy.co"); }}
+            sub="contact@carevoy.co"
+            onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:contact@carevoy.co"); }}
           />
           <View style={styles.divider} />
           <MenuRow
             icon="message-circle"
-            label="Chat with care coordinator"
-            onPress={comingSoon("Chat with care coordinator")}
+            label="Contact care coordinator"
+            sub="partners@carevoy.co"
+            onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:partners@carevoy.co?subject=CareVoy%20Support%20Request"); }}
           />
         </View>
 
@@ -310,7 +312,7 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Text style={styles.versionText}>CareVoy · v1.0</Text>
+        <Text style={styles.versionText}>CareVoy · v1.1.1</Text>
       </ScrollView>
     </SafeAreaView>
   );

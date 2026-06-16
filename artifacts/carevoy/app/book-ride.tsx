@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import * as DocumentPicker from "expo-document-picker";
 import * as Location from "expo-location";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -216,9 +215,9 @@ export default function BookRideScreen() {
   // Step 1
   const [surgeryDate, setSurgeryDate] = useState<Date | null>(null);
   const [surgeryTime, setSurgeryTime] = useState<Date | null>(null);
-  const [dateMonth, setDateMonth] = useState("");
-  const [dateDay, setDateDay] = useState("");
-  const [dateYear, setDateYear] = useState("");
+  const [dateMonth, setDateMonth] = useState(String(new Date().getMonth() + 1));
+  const [dateDay, setDateDay] = useState(String(new Date().getDate()));
+  const [dateYear, setDateYear] = useState(String(new Date().getFullYear()));
   const [timeHour, setTimeHour] = useState("");
   const [timeMinute, setTimeMinute] = useState("");
   const [timeAmPm, setTimeAmPm] = useState<"AM" | "PM">("AM");
@@ -235,9 +234,6 @@ export default function BookRideScreen() {
   const [hospitalCustom, setHospitalCustom] = useState<string>("");
   const [procedureType, setProcedureType] = useState("");
 
-  const [lmnNotes, setLmnNotes] = useState("");
-  const [lmnImageUri, setLmnImageUri] = useState<string | null>(null);
-  const [uploadingLmn, setUploadingLmn] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringWeeks, setRecurringWeeks] = useState(4);
 
@@ -440,6 +436,9 @@ export default function BookRideScreen() {
 
   const validateStep1 = (): string | null => {
     if (!surgeryDate) return "Please select date";
+    const todayCheck = new Date();
+    todayCheck.setHours(0, 0, 0, 0);
+    if (surgeryDate < todayCheck) return "Please select today or a future date";
     if (!surgeryTime) return "Please select time";
     if (rideType === "both" && !returnTime)
       return "Please choose a return pickup time";
@@ -447,7 +446,7 @@ export default function BookRideScreen() {
     if (hospital.startsWith("Other") && !hospitalCustom.trim())
       return "Please type the facility name";
     if (!procedureType.trim())
-      return "Please enter the procedure or visit type";
+      return "Please select a ride reason";
     return null;
   };
 
@@ -1233,96 +1232,49 @@ export default function BookRideScreen() {
               />
 
               <Text style={styles.label}>
-                Procedure / visit type<Required />
+                Ride reason<Required />
               </Text>
-              <TextInput
-                style={[styles.input, styles.textOnly]}
-                placeholder="e.g. Knee replacement, Cataract surgery"
-                placeholderTextColor={MUTED}
-                value={procedureType}
-                onChangeText={setProcedureType}
-              />
+              <View style={{ gap: 6 }}>
+                {[
+                  "Medical appointment",
+                  "Dialysis",
+                  "Physical & Occupational therapy",
+                  "Post-procedure follow-up",
+                  "Other medical visit",
+                ].map((opt) => (
+                  <Pressable
+                    key={opt}
+                    onPress={() => setProcedureType(opt)}
+                    style={[
+                      styles.input,
+                      {
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        borderColor: procedureType === opt ? TEAL : BORDER,
+                        backgroundColor: procedureType === opt ? "#E0F7F5" : WHITE,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={{
+                        width: 20, height: 20, borderRadius: 10,
+                        borderWidth: 2,
+                        borderColor: procedureType === opt ? TEAL : BORDER,
+                        alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      {procedureType === opt && (
+                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: TEAL }} />
+                      )}
+                    </View>
+                    <Text style={{ fontSize: 14, fontFamily: "System", color: procedureType === opt ? NAVY : MUTED, fontWeight: procedureType === opt ? "600" : "400" }}>
+                      {opt}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
 
-              <Text style={styles.label}>Letter of Medical Necessity (optional)</Text>
-              <Pressable
-                onPress={async () => {
-                  const result = await DocumentPicker.getDocumentAsync({
-                    type: ["application/pdf", "image/*"],
-                    copyToCacheDirectory: true,
-                    multiple: false,
-                  });
-                  if (result.canceled) return;
-                  const file = result.assets[0];
-                  const MAX_BYTES = 10 * 1024 * 1024;
-                  if (file.size && file.size > MAX_BYTES) {
-                    Alert.alert("File too large", "Please choose a file under 10 MB.");
-                    return;
-                  }
-                  const { data: { session } } = await supabase.auth.getSession();
-                  const userId = session?.user?.id;
-                  if (!userId) {
-                    Alert.alert("Not signed in", "Please sign in before uploading.");
-                    return;
-                  }
-                  setLmnImageUri(file.uri);
-                  setUploadingLmn(true);
-                  try {
-                    const fname = file.name ?? `lmn_${Date.now()}`;
-                    const ext = fname.includes(".") ? fname.split(".").pop()!.toLowerCase() : "pdf";
-                    const storagePath = `${userId}/lmn_${Date.now()}.${ext}`;
-                    const fetchRes = await fetch(file.uri);
-                    const blob = await fetchRes.blob();
-                    const { error: upErr } = await supabase.storage
-                      .from("loi-documents")
-                      .upload(storagePath, blob, {
-                        upsert: false,
-                        contentType: file.mimeType ?? "application/octet-stream",
-                      });
-                    if (upErr) {
-                      Alert.alert("Upload failed", "Please try again.");
-                      setLmnImageUri(null);
-                    } else {
-                      setLmnNotes(storagePath);
-                    }
-                  } catch {
-                    Alert.alert("Upload failed", "Please try again.");
-                    setLmnImageUri(null);
-                  } finally {
-                    setUploadingLmn(false);
-                  }
-                }}
-                style={({ pressed }) => [
-                  styles.input,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                    minHeight: 52,
-                    opacity: pressed ? 0.8 : 1,
-                  },
-                ]}
-              >
-                {uploadingLmn ? (
-                  <ActivityIndicator color={TEAL} size="small" />
-                ) : lmnImageUri ? (
-                  <>
-                    <Feather name="check-circle" size={18} color={TEAL} />
-                    <Text style={{ color: TEAL, fontSize: 14, fontWeight: "600", fontFamily: "System", flex: 1 }}>
-                      Letter uploaded
-                    </Text>
-                    <Pressable onPress={() => { setLmnImageUri(null); setLmnNotes(""); }}>
-                      <Feather name="x" size={16} color={MUTED} />
-                    </Pressable>
-                  </>
-                ) : (
-                  <>
-                    <Feather name="upload" size={18} color={MUTED} />
-                    <Text style={{ color: MUTED, fontSize: 14, fontFamily: "System" }}>
-                      Tap to upload PDF or image
-                    </Text>
-                  </>
-                )}
-              </Pressable>
 
               {facilityType === "dialysis" && (
                 <>
@@ -1449,7 +1401,7 @@ export default function BookRideScreen() {
                 value={`${formatDate(surgeryDate)} • ${formatTime(surgeryTime)}`}
               />
               <SummaryRow label="Destination" value={finalHospitalName()} />
-              <SummaryRow label="Procedure" value={procedureType} />
+              <SummaryRow label="Ride reason" value={procedureType} />
               <SummaryRow
                 label="Ride"
                 value={

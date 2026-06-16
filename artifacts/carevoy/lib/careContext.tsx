@@ -61,6 +61,18 @@ export function CareProvider({ children }: { children: React.ReactNode }) {
     }
     setSelfPatientId(userId);
 
+    // Update rides matching this phone to app_downloaded
+    try {
+      const phone = session?.user?.phone;
+      if (phone) {
+        await supabase
+          .from("rides")
+          .update({ status: "app_downloaded" })
+          .eq("contact_phone", phone)
+          .eq("status", "invited");
+      }
+    } catch {}
+
     const [selfRes, careRes] = await Promise.all([
       supabase
         .from("patients")

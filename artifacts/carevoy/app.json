@@ -2,7 +2,7 @@
   "expo": {
     "name": "CareVoy",
     "slug": "workspace",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "carevoy",
@@ -16,12 +16,13 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "co.carevoy.app",
-      "buildNumber": "45",
+      "buildNumber": "46",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "CareVoy uses your location to find nearby pickup points and show your ride on the map.",
         "NSCalendarsUsageDescription": "CareVoy adds your ride to your calendar so you never miss an appointment.",
         "NSContactsUsageDescription": "CareVoy can access contacts to help you add emergency contacts quickly.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSUserNotificationsUsageDescription": "CareVoy sends you ride updates, pickup reminders, and receipt notifications."
       }
     },
     "android": {},
@@ -61,6 +62,13 @@
         "projectId": "f70bca6e-82e7-4cea-8455-4d6077dcb765"
       }
     },
-    "owner": "carevoy"
+    "owner": "carevoy",
+    "updates": {
+      "url": "https://u.expo.dev/f70bca6e-82e7-4cea-8455-4d6077dcb765",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

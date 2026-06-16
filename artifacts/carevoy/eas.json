@@ -25,7 +25,8 @@
         "EXPO_PUBLIC_DOMAIN": "carevoy.co",
         "EXPO_PUBLIC_API_URL": "https://care-voy-api-server.vercel.app",
         "NPM_CONFIG_FROZEN_LOCKFILE": "false"
-      }
+      },
+      "channel": "production"
     },
     "development": {
       "developmentClient": true,
