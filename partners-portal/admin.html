@@ -786,7 +786,7 @@
     if (e.target === this) closeModal();
   });
 
-  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 
   var allNemtPartners = [];
@@ -810,7 +810,7 @@
         var hospName = r.hospital_name || '—';
         var actionBtn = '';
         if (['invited','pending','confirmed'].includes(r.status) && !r.nemt_partner_id) {
-          actionBtn = '<button onclick="openAssignModal(\'' + r.id + '\',\'' + esc(r.patient_name||'Patient') + '\',\'' + esc(hospName) + '\',\'' + (r.hospital_state||'') + '\')" style="background:#00C2A8;color:#050D1F;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Assign NEMT</button>';
+          actionBtn = '<button class="assign-nemt-btn" data-ride-id="' + esc(r.id) + '" data-patient="' + esc(r.patient_name||'Patient') + '" data-hosp="' + esc(hospName) + '" data-state="' + esc(r.hospital_state||'') + '" style="background:#00C2A8;color:#050D1F;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Assign NEMT</button>';
         } else if (r.nemt_partner_id) {
           actionBtn = '<span style="font-size:11px;color:#9CA3AF">Assigned</span>';
         }
@@ -865,6 +865,19 @@
 
     document.getElementById('assignModal').classList.add('open');
   }
+
+  // Delegated listener: opens the assign modal regardless of special chars
+  // in patient/hospital names (replaces fragile inline onclick).
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest && e.target.closest('.assign-nemt-btn');
+    if (!btn) return;
+    openAssignModal(
+      btn.getAttribute('data-ride-id'),
+      btn.getAttribute('data-patient') || 'Patient',
+      btn.getAttribute('data-hosp') || '',
+      btn.getAttribute('data-state') || ''
+    );
+  });
 
   function selectAssignPartner(partnerId, el) {
     selectedAssignPartnerId = partnerId;
