@@ -233,6 +233,7 @@ export default function BookRideScreen() {
   const [hospital, setHospital] = useState<string>("");
   const [hospitalCustom, setHospitalCustom] = useState<string>("");
   const [procedureType, setProcedureType] = useState("");
+  const [showReasonDropdown, setShowReasonDropdown] = useState(false);
 
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringWeeks, setRecurringWeeks] = useState(4);
@@ -644,7 +645,6 @@ export default function BookRideScreen() {
           companion_requested: bringingCompanion,
           status: "pending",
           estimated_cost: 55,
-          lmn_notes: lmnNotes.trim() || null,
           ...(recurringSeriesId ? {
             is_recurring: true,
             recurring_weeks: weeksToSchedule,
@@ -1234,46 +1234,40 @@ export default function BookRideScreen() {
               <Text style={styles.label}>
                 Ride reason<Required />
               </Text>
-              <View style={{ gap: 6 }}>
-                {[
-                  "Medical appointment",
-                  "Dialysis",
-                  "Physical & Occupational therapy",
-                  "Post-procedure follow-up",
-                  "Other medical visit",
-                ].map((opt) => (
-                  <Pressable
-                    key={opt}
-                    onPress={() => setProcedureType(opt)}
-                    style={[
-                      styles.input,
-                      {
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                        borderColor: procedureType === opt ? TEAL : BORDER,
-                        backgroundColor: procedureType === opt ? "#E0F7F5" : WHITE,
-                      },
-                    ]}
-                  >
-                    <View
+              <Pressable
+                onPress={() => setShowReasonDropdown(!showReasonDropdown)}
+                style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}
+              >
+                <Text style={{ fontSize: 15, color: procedureType ? NAVY : MUTED }}>
+                  {procedureType || "Select a ride reason"}
+                </Text>
+                <Text style={{ fontSize: 12, color: MUTED }}>{showReasonDropdown ? "\u25B2" : "\u25BC"}</Text>
+              </Pressable>
+              {showReasonDropdown && (
+                <View style={{ borderWidth: 1, borderColor: BORDER, borderRadius: 12, marginTop: 4, overflow: "hidden" }}>
+                  {[
+                    "Medical appointment",
+                    "Dialysis",
+                    "Physical & Occupational therapy",
+                    "Post-procedure follow-up",
+                    "Other medical visit",
+                  ].map((opt, i) => (
+                    <Pressable
+                      key={opt}
+                      onPress={() => { setProcedureType(opt); setShowReasonDropdown(false); }}
                       style={{
-                        width: 20, height: 20, borderRadius: 10,
-                        borderWidth: 2,
-                        borderColor: procedureType === opt ? TEAL : BORDER,
-                        alignItems: "center", justifyContent: "center",
+                        paddingVertical: 14, paddingHorizontal: 16,
+                        backgroundColor: procedureType === opt ? "#E0F7F5" : WHITE,
+                        borderTopWidth: i === 0 ? 0 : 1, borderTopColor: "#F0F0F0",
                       }}
                     >
-                      {procedureType === opt && (
-                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: TEAL }} />
-                      )}
-                    </View>
-                    <Text style={{ fontSize: 14, fontFamily: "System", color: procedureType === opt ? NAVY : MUTED, fontWeight: procedureType === opt ? "600" : "400" }}>
-                      {opt}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+                      <Text style={{ fontSize: 15, color: procedureType === opt ? TEAL : NAVY, fontWeight: procedureType === opt ? "600" : "400" }}>
+                        {opt}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
 
 
               {facilityType === "dialysis" && (
