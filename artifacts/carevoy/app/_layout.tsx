@@ -8,6 +8,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import React, {
   Component,
   createContext,
@@ -335,6 +336,20 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError, demo]);
+
+  // Prompt for push notification permission on first launch (like other apps)
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status === "undetermined") {
+          await Notifications.requestPermissionsAsync();
+        }
+      } catch (e) {
+        // Notifications not critical to app function; ignore errors
+      }
+    })();
+  }, []);
 
   // Demo mode renders immediately so the screenshot tool catches painted UI.
   // While fonts load, paint a navy full-screen view that matches the splash
