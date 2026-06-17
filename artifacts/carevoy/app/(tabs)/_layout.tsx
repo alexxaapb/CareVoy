@@ -70,10 +70,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="notifications"
         options={{
-          title: "Alerts",
-          tabBarIcon: ({ color }) => (
-            <Feather name="bell" size={22} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen

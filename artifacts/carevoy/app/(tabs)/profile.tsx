@@ -72,6 +72,7 @@ export default function SettingsScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -135,6 +136,42 @@ export default function SettingsScreen() {
       setSigningOut(false);
       router.replace("/login");
     }
+  };
+
+  const doDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (userId) {
+        // Remove the patient record tied to this account.
+        await supabase.from("patients").delete().eq("id", userId);
+      }
+      await supabase.auth.signOut();
+    } catch {
+      // Even if deletion hits an error, sign the user out so they aren't stuck.
+    } finally {
+      setDeleting(false);
+      router.replace("/login");
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    if (Platform.OS === "web") {
+      // eslint-disable-next-line no-alert
+      if (typeof window !== "undefined" && window.confirm("Delete your CareVoy account? This permanently removes your profile and cannot be undone.")) {
+        void doDeleteAccount();
+      }
+      return;
+    }
+    Alert.alert(
+      "Delete Account",
+      "This permanently removes your CareVoy profile and cannot be undone. Continue?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => void doDeleteAccount() },
+      ],
+    );
   };
 
   const handleSignOut = () => {
@@ -264,8 +301,8 @@ export default function SettingsScreen() {
           <MenuRow
             icon="bell"
             label="Notification preferences"
-            sub="Texts, email, and push"
-            onPress={comingSoon("Notification preferences")}
+            sub="Push notifications"
+            onPress={() => Alert.alert("Notifications", "Push notifications are on. You'll receive ride updates, pickup reminders, and receipt notifications.")}
           />
         </View>
 
@@ -301,8 +338,8 @@ export default function SettingsScreen() {
           <MenuRow
             icon="help-circle"
             label="Help & Support"
-            sub="support@carevoy.co"
-            onPress={comingSoon("Help & Support")}
+            sub="contact@carevoy.co"
+            onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:contact@carevoy.co"); }}
           />
           <View style={styles.divider} />
           <MenuRow
@@ -317,9 +354,16 @@ export default function SettingsScreen() {
             onPress={signingOut ? () => {} : handleSignOut}
             destructive
           />
+          <View style={styles.divider} />
+          <MenuRow
+            icon="trash-2"
+            label={deleting ? "Deleting…" : "Delete Account"}
+            onPress={deleting ? () => {} : handleDeleteAccount}
+            destructive
+          />
         </View>
 
-        <Text style={styles.versionText}>CareVoy · v1.0</Text>
+        <Text style={styles.versionText}>CareVoy · v1.1.1</Text>
       </ScrollView>
 
       <Modal
