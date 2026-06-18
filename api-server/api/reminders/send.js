@@ -39,7 +39,11 @@ module.exports = async function handler(req, res) {
     }
 
     await supabase.from('rides').update({ status: 'reminder_sent', reminder_sent: true, reminder_sent_at: new Date().toISOString() }).eq('id', ride_id);
-    await supabase.from('audit_log').insert({ actor_role: 'system', action: 'reminder.sent', entity_type: 'rides', entity_id: ride_id, new_value: { sms_sent: smsSent } }).catch(() => {});
+    try {
+      await supabase.from('audit_log').insert({ actor_role: 'system', action: 'reminder.sent', entity_type: 'rides', entity_id: ride_id, new_value: { sms_sent: smsSent } });
+    } catch (auditErr) {
+      console.warn('audit log insert failed (non-fatal):', auditErr.message);
+    }
 
     return res.status(200).json({ success: true, sms_sent: smsSent });
   } catch(e) {

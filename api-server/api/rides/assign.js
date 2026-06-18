@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     const { error: updateErr } = await supabase.from('rides').update({ nemt_partner_id, status: 'confirmed', assigned_by: user.id, assigned_at: new Date().toISOString() }).eq('id', ride_id);
     if (updateErr) throw updateErr;
 
-    await supabase.from('audit_log').insert({ actor_id: user.id, actor_role: 'admin', action: 'ride.nemt_assigned', entity_type: 'rides', entity_id: ride_id, old_value: { status: oldRide && oldRide.status }, new_value: { status: 'confirmed', nemt_partner_id } }).catch(() => {});
+    await supabase.from('audit_log').insert({ actor_id: user.id, actor_role: 'admin', action: 'ride.nemt_assigned', entity_type: 'rides', entity_id: ride_id, old_value: { status: oldRide && oldRide.status }, new_value: { status: 'confirmed', nemt_partner_id } });
 
     // Send email notification to the facility coordinator
     try {

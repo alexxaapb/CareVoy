@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (ride_id) {
-      await supabase.from('audit_log').insert({ actor_role: 'coordinator', action: 'invite.sms_sent', entity_type: 'rides', entity_id: ride_id, new_value: { sms_sent: smsSent, phone } }).catch(() => {});
+      await supabase.from('audit_log').insert({ actor_role: 'coordinator', action: 'invite.sms_sent', entity_type: 'rides', entity_id: ride_id, new_value: { sms_sent: smsSent, phone } });
     }
 
     return res.status(200).json({ success: true, sms_sent: smsSent });
