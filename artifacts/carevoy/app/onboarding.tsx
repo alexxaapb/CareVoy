@@ -122,22 +122,44 @@ export default function OnboardingScreen() {
       if (!fullName.trim()) return setError("Please enter your full name");
       if (!isValidEmail(email))
         return setError("Please enter a valid email address");
-      const dobCheck = parseDob();
-      if (dobCheck.error) return setError(dobCheck.error);
-      if (!address.trim()) return setError("Please enter your home address");
-      setStep(2);
-    } else if (step === 2) {
-      if (!emergencyName.trim())
-        return setError("Please enter an emergency contact name");
-      if (normalizePhone(emergencyPhone).length < 11)
-        return setError("Please enter a valid emergency contact phone");
-      void saveRequiredAndAdvance();
+      // Trimmed onboarding: only name + email required. Save and go
+      // straight to the final "who is this for" step. Address, DOB,
+      // emergency contact, and mobility are collected later (at booking).
+      void saveMinimalAndAdvance();
     }
   };
 
   const goBack = () => {
     setError(null);
     if (step > 1) setStep((s) => (s - 1) as 1 | 2 | 3 | 4);
+  };
+
+  const saveMinimalAndAdvance = async () => {
+    setLoading(true);
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userData.user) {
+      setLoading(false);
+      setError("You're not signed in. Please log in again.");
+      return;
+    }
+    const user = userData.user;
+    const { error: upsertErr } = await supabase.from("patients").upsert(
+      {
+        id: user.id,
+        full_name: fullName.trim(),
+        email: email.trim(),
+        phone: user.phone ? "+" + user.phone.replace(/\D/g, "") : null,
+        onboarding_complete: true,
+      },
+      { onConflict: "id" },
+    );
+    setLoading(false);
+    if (upsertErr) {
+      setError(upsertErr.message);
+      return;
+    }
+    // Skip address/DOB/emergency/mobility/language steps — go to "who for".
+    setStep(4);
   };
 
   const saveRequiredAndAdvance = async () => {

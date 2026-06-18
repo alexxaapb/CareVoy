@@ -24,12 +24,17 @@ type NominatimResult = {
 
 let inflight: AbortController | null = null;
 
-function shortLabel(d: NominatimResult): string {
+function cleanAddress(d: NominatimResult): string {
   const a = d.address ?? {};
   const street = [a.house_number, a.road].filter(Boolean).join(" ");
   const city = a.city || a.town || a.village || a.hamlet || "";
   const region = a.state || "";
-  return [street, city, region].filter(Boolean).join(", ") || d.display_name;
+  const zip = a.postcode || "";
+  // Google-style: "123 Main St, Columbus, Ohio 43215"
+  const cityStateZip = [city, [region, zip].filter(Boolean).join(" ")]
+    .filter(Boolean)
+    .join(", ");
+  return [street, cityStateZip].filter(Boolean).join(", ") || d.display_name;
 }
 
 export async function searchAddresses(
@@ -65,8 +70,8 @@ export async function searchAddresses(
     if (!Array.isArray(data)) return [];
     return data.map((d) => ({
       id: String(d.place_id ?? d.osm_id ?? d.display_name),
-      label: shortLabel(d),
-      fullAddress: d.display_name,
+      label: cleanAddress(d),
+      fullAddress: cleanAddress(d),
     }));
   } catch (e) {
     if ((e as { name?: string })?.name === "AbortError") return [];
