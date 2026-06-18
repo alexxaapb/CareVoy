@@ -126,12 +126,15 @@ export default function SettingsScreen() {
   const doSignOut = async () => {
     setSigningOut(true);
     try {
-      // Race signOut against a short timeout so a stalled token refresh
-      // can't leave the button stuck on "Signing out...".
-      await supabase.auth.signOut();
+      // Actually race signOut against a 3s timeout so a stalled token
+      // refresh can't leave the button stuck on "Signing out...".
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
     } catch {
-      // Ignore sign-out errors — we always want to leave the session and
-      // return to the login screen rather than crash or get stuck.
+      // Ignore sign-out errors — we always leave the session and return
+      // to login rather than get stuck.
     } finally {
       setSigningOut(false);
       router.replace("/login");
@@ -147,13 +150,33 @@ export default function SettingsScreen() {
         // Remove the patient record tied to this account.
         await supabase.from("patients").delete().eq("id", userId);
       }
-      await supabase.auth.signOut();
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
     } catch {
       // Even if deletion hits an error, sign the user out so they aren't stuck.
     } finally {
       setDeleting(false);
       router.replace("/login");
     }
+  };
+
+  const handleHelpSupport = () => {
+    const openEmail = () => { const { Linking } = require("react-native"); Linking.openURL("mailto:contact@carevoy.co"); };
+    if (Platform.OS === "web") {
+      openEmail();
+      return;
+    }
+    Alert.alert(
+      "Help & Support",
+      "How can we help?",
+      [
+        { text: "Email us", onPress: openEmail },
+        { text: "Delete account", style: "destructive", onPress: handleDeleteAccount },
+        { text: "Cancel", style: "cancel" },
+      ],
+    );
   };
 
   const handleDeleteAccount = () => {
@@ -339,7 +362,7 @@ export default function SettingsScreen() {
             icon="help-circle"
             label="Help & Support"
             sub="contact@carevoy.co"
-            onPress={() => { const { Linking } = require("react-native"); Linking.openURL("mailto:contact@carevoy.co"); }}
+            onPress={handleHelpSupport}
           />
           <View style={styles.divider} />
           <MenuRow
@@ -352,13 +375,6 @@ export default function SettingsScreen() {
             icon="log-out"
             label={signingOut ? "Signing out…" : "Sign Out"}
             onPress={signingOut ? () => {} : handleSignOut}
-            destructive
-          />
-          <View style={styles.divider} />
-          <MenuRow
-            icon="trash-2"
-            label={deleting ? "Deleting…" : "Delete Account"}
-            onPress={deleting ? () => {} : handleDeleteAccount}
             destructive
           />
         </View>
