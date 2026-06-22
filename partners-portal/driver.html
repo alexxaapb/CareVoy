@@ -156,6 +156,23 @@
         <div class="earn-sub" id="earnMonthSub">— completed</div>
       </div>
     </div>
+    <div class="earn-grid" style="margin-bottom:20px">
+      <div class="earn-card">
+        <div class="earn-label">Acceptance Rate</div>
+        <div class="earn-value teal" id="metricAcceptRate">—</div>
+        <div class="earn-sub">of offered rides</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-label">Avg Time to Accept</div>
+        <div class="earn-value" id="metricAvgAccept">—</div>
+        <div class="earn-sub">from ride posted</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-label">Available Now</div>
+        <div class="earn-value teal" id="metricAvailable">—</div>
+        <div class="earn-sub">rides in your area</div>
+      </div>
+    </div>
 
     <div class="sec-label">Performance</div>
     <div class="perf-grid">
@@ -459,6 +476,22 @@ function computeStats() {
   document.getElementById('earnWeekSub').textContent  = weekDone + ' completed';
   document.getElementById('earnMonth').textContent    = '$' + monthDone * AVG_FARE;
   document.getElementById('earnMonthSub').textContent = monthDone + ' completed';
+
+  // ── NEMT metrics: acceptance rate + avg time to accept ──
+  var totalOffered = allR.filter(function(r){ return r.invited_at || r.created_at; }).length;
+  var accepted = allR.filter(function(r){ return r.assigned_at && r.nemt_partner_id; }).length;
+  var acceptRate = totalOffered > 0 ? Math.round((accepted / totalOffered) * 100) : null;
+  document.getElementById('metricAcceptRate').textContent = acceptRate !== null ? acceptRate + '%' : '\u2014';
+
+  var acceptTimes = allR.filter(function(r){ return r.assigned_at && r.created_at; }).map(function(r){
+    return (new Date(r.assigned_at) - new Date(r.created_at)) / (1000 * 60);
+  });
+  var avgAccept = acceptTimes.length > 0 ? (acceptTimes.reduce(function(a,b){return a+b;},0) / acceptTimes.length) : null;
+  document.getElementById('metricAvgAccept').textContent = avgAccept !== null ? (avgAccept < 60 ? Math.round(avgAccept)+'m' : (avgAccept/60).toFixed(1)+'h') : '\u2014';
+
+  var available = allR.filter(function(r){ return !r.nemt_partner_id && ['invited','pending','confirmed'].includes(r.status); }).length;
+  document.getElementById('metricAvailable').textContent = available;
+
   document.getElementById('perfComp').textContent     = compRate + '%';
   document.getElementById('perfFare').textContent     = '$' + AVG_FARE;
   document.getElementById('perfCanc').textContent     = monthCanc;

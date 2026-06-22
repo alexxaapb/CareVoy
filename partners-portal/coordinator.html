@@ -193,6 +193,14 @@
         <div class="stat-value gold" id="statAction">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">Avg Time to Confirm</div>
+        <div class="stat-value teal" id="statAvgConfirm">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Self-Complete Rate</div>
+        <div class="stat-value teal" id="statSelfComplete">—</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Upcoming This Week</div>
         <div class="stat-value" id="statUpcoming">—</div>
       </div>
@@ -579,6 +587,22 @@ function updateStats() {
   document.getElementById('statConfirmed').textContent = confirmed.length;
   document.getElementById('statAction').textContent = action.length;
   document.getElementById('statUpcoming').textContent = upcoming.length;
+
+  // ── New metrics: avg time-to-confirm + self-complete rate ──
+  var confirmTimes = allRides.filter(function(r) {
+    return r.invited_at && r.confirmed_at;
+  }).map(function(r) {
+    return (new Date(r.confirmed_at) - new Date(r.invited_at)) / (1000 * 60 * 60);
+  });
+  var avgConfirm = confirmTimes.length > 0 ? (confirmTimes.reduce(function(a,b){return a+b;},0) / confirmTimes.length) : null;
+  document.getElementById('statAvgConfirm').textContent = avgConfirm !== null ? (avgConfirm < 1 ? Math.round(avgConfirm*60)+'m' : avgConfirm.toFixed(1)+'h') : '—';
+
+  // Self-complete: rides that went invited->confirmed/assigned without a 2nd coordinator touch
+  // (rides with confirmed_at but no manual reminder = patient self-booked)
+  var invited = allRides.filter(function(r){ return r.invited_at; });
+  var selfBooked = invited.filter(function(r){ return r.confirmed_at && !r.reminder_sent; });
+  var selfPct = invited.length > 0 ? Math.round((selfBooked.length / invited.length) * 100) : null;
+  document.getElementById('statSelfComplete').textContent = selfPct !== null ? selfPct + '%' : '—';
 
   if (action.length > 0) {
     document.getElementById('alertBanner').style.display = 'flex';
