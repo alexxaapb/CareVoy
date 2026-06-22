@@ -269,6 +269,9 @@
       <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setName">—</span><input class="form-input" id="editName" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">NEMT Company</span><span class="settings-val" id="setCompany">—</span></div>
       <div class="settings-row"><span class="settings-key">Role</span><span class="settings-val">Driver</span></div>
+      <div class="settings-row"><span class="settings-key">City</span><span class="settings-val" id="setCity">—</span></div>
+      <div class="settings-row"><span class="settings-key">Service Area</span><span class="settings-val" id="setStates">—</span></div>
+      <div class="settings-row"><span class="settings-key">Dispatch Phone</span><span class="settings-val" id="setDispatch">—</span></div>
       <div id="editAcctActions" style="display:none;margin-top:12px;justify-content:flex-end"><button onclick="saveEditAcct()" style="background:#00C2A8;color:#050D1F;border:none;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">Save Changes</button></div>
     </div>
 
@@ -392,7 +395,8 @@ async function acceptRide(rideId) {
         nemt_partner_id: staffInfo.nemt_partner_id,
         status: 'assigned',
         assigned_at: new Date().toISOString(),
-        driver_name: staffInfo.full_name || null
+        driver_name: staffInfo.full_name || null,
+        driver_phone: staffInfo.phone || null
       })
     });
     if (res.ok) {
@@ -419,7 +423,7 @@ async function init() {
       return;
     }
 
-    var pr = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name,city,service_states,vehicle_types', { headers: H });
+    var pr = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name,city,service_states,vehicle_types,dispatch_phone', { headers: H });
     var pd = await pr.json();
     partnerInfo = pd[0] || null;
 
@@ -427,6 +431,13 @@ async function init() {
     document.getElementById('topSub').textContent = partnerName + ' · ' + new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
     document.getElementById('sidebarPartner').textContent = partnerName;
     document.getElementById('setName').textContent = staffInfo.full_name || '—';
+    document.getElementById('setCompany').textContent = partnerName;
+    if (partnerInfo) {
+      document.getElementById('setCity').textContent = partnerInfo.city || '—';
+      var states = partnerInfo.service_states || [];
+      document.getElementById('setStates').textContent = states.length > 0 ? states.join(', ') : '—';
+      document.getElementById('setDispatch').textContent = partnerInfo.dispatch_phone || '—';
+    }
     document.getElementById('setCompany').textContent = partnerName;
 
     await loadRides();
