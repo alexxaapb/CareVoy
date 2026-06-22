@@ -496,7 +496,7 @@ export default function HomeScreen() {
             {upcoming.map((r) => (
               <Pressable
                 key={r.id}
-                onPress={() => router.push(`/ride/${r.id}`)}
+                onPress={() => router.push(`/ride-detail?id=${r.id}`)}
                 style={({ pressed }) => [
                   styles.rideCard,
                   pressed && styles.pressed,

@@ -318,6 +318,7 @@ function RootLayoutNav() {
         <Stack.Screen name="admin" options={{ headerShown: false }} />
         <Stack.Screen name="coming-soon" options={{ headerShown: false }} />
         <Stack.Screen name="care/add" options={{ headerShown: false }} />
+        <Stack.Screen name="ride-detail" options={{ headerShown: false }} />
       </Stack>
     </AuthRefreshContext.Provider>
   );
