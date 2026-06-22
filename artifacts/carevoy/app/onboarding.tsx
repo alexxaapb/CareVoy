@@ -158,8 +158,10 @@ export default function OnboardingScreen() {
       setError(upsertErr.message);
       return;
     }
-    // Skip address/DOB/emergency/mobility/language steps — go to "who for".
-    setStep(4);
+    // Onboarding complete with just name + email. Enter the app directly.
+    // (Who-for selection happens at booking time, not signup.)
+    await refresh();
+    router.replace("/(tabs)");
   };
 
   const saveRequiredAndAdvance = async () => {
@@ -281,7 +283,7 @@ export default function OnboardingScreen() {
             <View style={{ width: 40 }} />
           )}
           <Text style={styles.stepLabel}>
-            Step {step} of {TOTAL_STEPS}
+            Create your account
           </Text>
           {step === 3 ? (
             <Pressable
@@ -348,79 +350,6 @@ export default function OnboardingScreen() {
               <Text style={styles.helper}>
                 Required for HSA / FSA receipts.
               </Text>
-
-              <Text style={styles.label}>
-                Date of birth<Required />
-              </Text>
-              <View style={styles.dobRow}>
-                <View style={styles.dobField}>
-                  <Text style={styles.dobFieldLabel}>Month</Text>
-                  <TextInput
-                    style={[styles.input, styles.dobInput]}
-                    placeholder="MM"
-                    placeholderTextColor={MUTED}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    value={dobMonth}
-                    onChangeText={(t) => {
-                      const next = t.replace(/\D/g, "");
-                      setDobMonth(next);
-                      if (next.length === 2) dobDayRef.current?.focus();
-                    }}
-                    editable={!loading}
-                    returnKeyType="next"
-                    onSubmitEditing={() => dobDayRef.current?.focus()}
-                  />
-                </View>
-                <View style={styles.dobField}>
-                  <Text style={styles.dobFieldLabel}>Day</Text>
-                  <TextInput
-                    ref={dobDayRef}
-                    style={[styles.input, styles.dobInput]}
-                    placeholder="DD"
-                    placeholderTextColor={MUTED}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    value={dobDay}
-                    onChangeText={(t) => {
-                      const next = t.replace(/\D/g, "");
-                      setDobDay(next);
-                      if (next.length === 2) dobYearRef.current?.focus();
-                    }}
-                    editable={!loading}
-                    returnKeyType="next"
-                    onSubmitEditing={() => dobYearRef.current?.focus()}
-                  />
-                </View>
-                <View style={[styles.dobField, styles.dobFieldYear]}>
-                  <Text style={styles.dobFieldLabel}>Year</Text>
-                  <TextInput
-                    ref={dobYearRef}
-                    style={[styles.input, styles.dobInput]}
-                    placeholder="YYYY"
-                    placeholderTextColor={MUTED}
-                    keyboardType="number-pad"
-                    maxLength={4}
-                    value={dobYear}
-                    onChangeText={(t) => setDobYear(t.replace(/\D/g, ""))}
-                    editable={!loading}
-                    returnKeyType="done"
-                  />
-                </View>
-              </View>
-
-              <Text style={styles.label}>
-                Home address<Required />
-              </Text>
-              <AddressInput
-                value={address}
-                onChange={setAddress}
-                placeholder="Start typing your address…"
-                multiline
-                editable={!loading}
-                inputStyle={styles.input}
-                zIndex={50}
-              />
             </>
           )}
 
