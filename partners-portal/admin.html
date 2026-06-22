@@ -738,6 +738,7 @@
     body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading...</div>';
     try {
       var h = authHeaders();
+      var h = authHeaders();
       var r = await fetch(SUPA_URL + '/rest/v1/patients?select=id,full_name,phone,email,created_at&order=created_at.desc&limit=200', { headers: h });
       var rows = await r.json();
       if (!rows || rows.length === 0) {
