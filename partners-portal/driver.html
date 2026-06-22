@@ -489,18 +489,18 @@ function computeStats() {
   document.getElementById('earnMonthSub').textContent = monthDone + ' completed';
 
   // ── NEMT metrics: acceptance rate + avg time to accept ──
-  var totalOffered = allR.filter(function(r){ return r.invited_at || r.created_at; }).length;
-  var accepted = allR.filter(function(r){ return r.assigned_at && r.nemt_partner_id; }).length;
+  var totalOffered = allRides.filter(function(r){ return r.invited_at || r.created_at; }).length;
+  var accepted = allRides.filter(function(r){ return r.assigned_at && r.nemt_partner_id; }).length;
   var acceptRate = totalOffered > 0 ? Math.round((accepted / totalOffered) * 100) : null;
   document.getElementById('metricAcceptRate').textContent = acceptRate !== null ? acceptRate + '%' : '\u2014';
 
-  var acceptTimes = allR.filter(function(r){ return r.assigned_at && r.created_at; }).map(function(r){
+  var acceptTimes = allRides.filter(function(r){ return r.assigned_at && r.created_at; }).map(function(r){
     return (new Date(r.assigned_at) - new Date(r.created_at)) / (1000 * 60);
   });
   var avgAccept = acceptTimes.length > 0 ? (acceptTimes.reduce(function(a,b){return a+b;},0) / acceptTimes.length) : null;
   document.getElementById('metricAvgAccept').textContent = avgAccept !== null ? (avgAccept < 60 ? Math.round(avgAccept)+'m' : (avgAccept/60).toFixed(1)+'h') : '\u2014';
 
-  var available = allR.filter(function(r){ return !r.nemt_partner_id && ['invited','pending','confirmed'].includes(r.status); }).length;
+  var available = allRides.filter(function(r){ return !r.nemt_partner_id && ['invited','pending','confirmed'].includes(r.status); }).length;
   document.getElementById('metricAvailable').textContent = available;
 
   document.getElementById('perfComp').textContent     = compRate + '%';
