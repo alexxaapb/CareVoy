@@ -339,8 +339,13 @@
 
 <!-- ── ALL PATIENTS ── -->
 <div id="sec-patients" style="display:none" class="page-overlay">
-  <div class="page-title">All Patients</div>
-  <div class="page-sub">All registered patients across facilities</div>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div class="page-title">All Patients</div>
+      <div class="page-sub">All registered patients across facilities</div>
+    </div>
+    <button onclick="exportCSV('patients')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
+  </div>
   <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
     <div class="rides-table-head" style="grid-template-columns:1.6fr 1.4fr 1fr 0.8fr">
       <div class="th">Name</div>
@@ -356,8 +361,13 @@
 
 <!-- ── ALL RIDES ── -->
 <div id="sec-rides" style="display:none" class="page-overlay">
-  <div class="page-title">All Rides</div>
-  <div class="page-sub">Complete ride history across all facilities</div>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div class="page-title">All Rides</div>
+      <div class="page-sub">Complete ride history across all facilities</div>
+    </div>
+    <button onclick="exportCSV('rides')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
+  </div>
   <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0" id="allRidesPanel">
     <div class="rides-table-head" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">
       <div class="th">Patient</div><div class="th">Hospital</div><div class="th">NEMT Partner</div>
@@ -587,6 +597,62 @@
     }
   }
 
+
+
+  async function exportCSV(type) {
+    var h2 = authHeaders();
+    var url, filename, fields;
+    if (type === 'rides') {
+      url = SUPA_URL + '/rest/v1/rides?select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,procedure_type,created_at&order=created_at.desc&limit=1000';
+      filename = 'carevoy_rides_' + new Date().toISOString().slice(0,10) + '.csv';
+      fields = ['id','patient_name','contact_phone','hospital_name','hospital_state','status','pickup_time','pickup_address','dropoff_address','ride_type','procedure_type','created_at'];
+    } else {
+      url = SUPA_URL + '/rest/v1/patients?select=id,full_name,phone,email,created_at&order=created_at.desc&limit=1000';
+      filename = 'carevoy_patients_' + new Date().toISOString().slice(0,10) + '.csv';
+      fields = ['id','full_name','phone','email','created_at'];
+    }
+    var r = await fetch(url, { headers: h2 });
+    var rows = await r.json();
+    if (!rows || !rows.length) { alert('No data to export'); return; }
+    var csv = fields.join(',') + '\n' + rows.map(function(row) {
+      return fields.map(function(f) {
+        var v = row[f] == null ? '' : String(row[f]);
+        return '"' + v.replace(/"/g,'""') + '"';
+      }).join(',');
+    }).join('\n');
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
+
+  function viewRide(r) {
+    if (typeof r === 'string') { try { r = JSON.parse(r); } catch(e) { return; } }
+    var t = r.pickup_time ? new Date(r.pickup_time).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'TBD';
+    var rows = [
+      ['Patient', r.patient_name || 'Unknown'],
+      ['Contact', r.contact_phone || '—'],
+      ['Status', (r.status||'').replace(/_/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})],
+      ['Facility', r.hospital_name || '—'],
+      ['State', r.hospital_state || '—'],
+      ['NEMT', r.nemt_partner_id ? 'Assigned' : 'Unassigned'],
+      ['Pickup', r.pickup_address || '—'],
+      ['Dropoff', r.dropoff_address || '—'],
+      ['Pickup time', t],
+      ['Ride type', r.ride_type || '—'],
+      ['Procedure', r.procedure_type || '—'],
+    ];
+    document.getElementById('rideDetailBody').innerHTML = rows.map(function(row) {
+      return '<div style="display:flex;padding:8px 0;border-bottom:1px solid #F3F4F6">' +
+        '<div style="width:110px;font-size:12px;color:#6B7280;flex-shrink:0">' + row[0] + '</div>' +
+        '<div style="font-size:13px;color:#111827;font-weight:500">' + esc(String(row[1])) + '</div>' +
+      '</div>';
+    }).join('');
+    var modal = document.getElementById('rideDetailModal');
+    modal.style.display = 'flex';
+  }
+
   function renderLiveRides(rides) {
     var body = document.getElementById('liveRidesBody');
     var countEl = document.getElementById('liveRidesCount');
@@ -609,7 +675,7 @@
         '<div class="td muted" style="font-size:12px">' + esc(r.nemt_partner_name || (r.nemt_partner_id ? 'Assigned' : '—')) + '</div>' +
         '<div class="td">' + badge + '</div>' +
         '<div class="td muted" style="font-size:12px">' + tStr + '</div>' +
-        '<div class="td"><button class="view-btn">View</button></div>' +
+        '<div class="td"><button class="view-btn" onclick="viewRide(' + JSON.stringify(r).replace(/"/g,\'&quot;\') + ')" style="background:#050D1F;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View</button></div>' +
         '</div>';
     }).join('');
   }
@@ -967,5 +1033,17 @@
   loadStats();
   setInterval(loadStats, 30000);
 </script>
+
+  <!-- Ride Detail Modal -->
+  <div id="rideDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:18px;font-weight:700;color:#050D1F">Ride Details</div>
+        <button onclick="document.getElementById('rideDetailModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9CA3AF">&times;</button>
+      </div>
+      <div id="rideDetailBody"></div>
+    </div>
+  </div>
+
 </body>
 </html>
