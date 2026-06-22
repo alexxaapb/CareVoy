@@ -379,8 +379,11 @@
 
 <!-- ── FACILITIES ── -->
 <div id="sec-facilities" style="display:none" class="page-overlay">
-  <div class="page-title">Facilities</div>
-  <div class="page-sub">All onboarded facility partners</div>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div><div class="page-title">Facilities</div>
+    <div class="page-sub">All onboarded facility partners</div></div>
+    <button onclick="exportCSV('facilities')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
+  </div>
   <div id="facilitiesFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
     <div class="tbl-head fac-grid">
       <div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div>
@@ -391,8 +394,11 @@
 
 <!-- ── NEMT PARTNERS ── -->
 <div id="sec-partners" style="display:none" class="page-overlay">
-  <div class="page-title">NEMT Partners</div>
-  <div class="page-sub">All transport partners in your network</div>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div><div class="page-title">NEMT Partners</div>
+    <div class="page-sub">All transport partners in your network</div></div>
+    <button onclick="exportCSV('partners')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
+  </div>
   <div id="nemtFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
     <div class="tbl-head nemt-grid">
       <div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div>
@@ -403,6 +409,9 @@
 
 <!-- ── REVENUE ── -->
 <div id="sec-revenue" style="display:none" class="page-overlay">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button onclick="exportCSV('revenue')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
+  </div>
   <div class="page-title">Revenue</div>
   <div class="page-sub">Payment and revenue tracking</div>
   <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
@@ -601,17 +610,30 @@
 
   async function exportCSV(type) {
     var h2 = authHeaders();
-    var url, filename, fields;
+    var url, filename, fields, isRpc = false;
     if (type === 'rides') {
       url = SUPA_URL + '/rest/v1/rides?select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,procedure_type,created_at&order=created_at.desc&limit=1000';
       filename = 'carevoy_rides_' + new Date().toISOString().slice(0,10) + '.csv';
       fields = ['id','patient_name','contact_phone','hospital_name','hospital_state','status','pickup_time','pickup_address','dropoff_address','ride_type','procedure_type','created_at'];
-    } else {
-      url = SUPA_URL + '/rest/v1/patients?select=id,full_name,phone,email,created_at&order=created_at.desc&limit=1000';
+    } else if (type === 'patients') {
+      url = SUPA_URL + '/rest/v1/rpc/admin_list_patients';
+      isRpc = true;
       filename = 'carevoy_patients_' + new Date().toISOString().slice(0,10) + '.csv';
       fields = ['id','full_name','phone','email','created_at'];
+    } else if (type === 'facilities') {
+      url = SUPA_URL + '/rest/v1/hospitals?select=id,name,city,state,active,facility_type,created_at&order=name.asc&limit=1000';
+      filename = 'carevoy_facilities_' + new Date().toISOString().slice(0,10) + '.csv';
+      fields = ['id','name','city','state','active','facility_type','created_at'];
+    } else if (type === 'partners') {
+      url = SUPA_URL + '/rest/v1/nemt_partners?select=id,company_name,city,service_states,vehicle_types,active,created_at&order=company_name.asc&limit=1000';
+      filename = 'carevoy_nemt_partners_' + new Date().toISOString().slice(0,10) + '.csv';
+      fields = ['id','company_name','city','service_states','vehicle_types','active','created_at'];
+    } else if (type === 'revenue') {
+      url = SUPA_URL + '/rest/v1/payments?select=id,amount,patient_id,ride_id,payment_method,created_at&order=created_at.desc&limit=1000';
+      filename = 'carevoy_revenue_' + new Date().toISOString().slice(0,10) + '.csv';
+      fields = ['id','amount','patient_id','ride_id','payment_method','created_at'];
     }
-    var r = await fetch(url, { headers: h2 });
+    var r = isRpc ? await fetch(url, { method: 'POST', headers: { ...h2, 'Content-Type': 'application/json' }, body: '{}' }) : await fetch(url, { headers: h2 });
     var rows = await r.json();
     if (!rows || !rows.length) { alert('No data to export'); return; }
     var csv = fields.join(',') + '\n' + rows.map(function(row) {
@@ -819,7 +841,7 @@
     try {
       var h = authHeaders();
       var h = authHeaders();
-      var r = await fetch(SUPA_URL + '/rest/v1/patients?select=id,full_name,phone,email,created_at&order=created_at.desc&limit=200', { headers: h });
+      var r = await fetch(SUPA_URL + '/rest/v1/rpc/admin_list_patients', { method: 'POST', headers: { ...h, 'Content-Type': 'application/json' }, body: '{}' });
       var rows = await r.json();
       if (!rows || rows.length === 0) {
         body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">No patients registered yet.</div>';
