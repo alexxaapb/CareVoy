@@ -852,7 +852,7 @@
         var phone = p.phone || '—';
         var email = p.email || '—';
         var bg = i % 2 === 0 ? '#fff' : '#F9FAFB';
-        return '<div class="rides-table-row" style="grid-template-columns:1.6fr 1.4fr 1fr 0.8fr;background:' + bg + '">' +
+        return '<div class="rides-row" style="grid-template-columns:1.6fr 1.4fr 1fr 0.8fr;background:' + bg + '">' +
           '<div class="td"><strong>' + esc(p.full_name || 'Unknown') + '</strong></div>' +
           '<div class="td">' + esc(phone) + '</div>' +
           '<div class="td" style="font-size:11px">' + esc(email) + '</div>' +
