@@ -404,6 +404,15 @@
         <option>Other medical visit</option>
       </select>
     </div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Who pays for the ride?</label>
+      <select class="form-input" id="paymentResp">
+        <option value="self_pay">Patient pays (HSA/FSA or card)</option>
+        <option value="facility">Facility covers this ride</option>
+        <option value="insurance" disabled>Insurance / Medicaid (not available yet)</option>
+      </select>
+      <div style="font-size:11px;color:#9CA3AF;margin-top:4px">Self-pay patients get an automatic HSA/FSA receipt. Facility-covered rides are invoiced to you.</div>
+    </div>
 
     <div id="addPatError" class="form-error"></div>
     <div class="modal-foot">
@@ -711,6 +720,7 @@ function openAddPatientModal() {
   document.getElementById('addPatientModal').classList.add('open');
 }
 function closeAddPatient() {
+  var payResp = document.getElementById('paymentResp'); if (payResp) payResp.value = 'self_pay';
   document.getElementById('addPatientModal').classList.remove('open');
   document.getElementById('addPatError').style.display = 'none';
 }
@@ -774,6 +784,7 @@ async function submitAddPatient() {
         appointment_at: apptDateTime.toISOString(),
         procedure_type: apptType,
         source: 'form',
+        payment_responsibility: document.getElementById('paymentResp').value || 'self_pay',
         created_by: uid
       })
     });
@@ -867,6 +878,7 @@ async function submitAddPatient() {
     invited_at: new Date().toISOString(),
     reminder_sent: false,
     ride_type: 'pre_op',
+    payment_responsibility: document.getElementById('paymentResp').value || 'self_pay',
     pickup_address: null,
     dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null
   };
