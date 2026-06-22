@@ -653,11 +653,25 @@
     modal.style.display = 'flex';
   }
 
+
+  // Delegated listener for View ride buttons - uses index into cached array
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest && e.target.closest('.view-ride-btn');
+    if (!btn) return;
+    var idx = parseInt(btn.getAttribute('data-idx'));
+    if (!isNaN(idx) && _liveRideCache[idx]) {
+      viewRide(_liveRideCache[idx]);
+    }
+  });
+
+  var _liveRideCache = [];
+
   function renderLiveRides(rides) {
     var body = document.getElementById('liveRidesBody');
     var countEl = document.getElementById('liveRidesCount');
 
     var active = rides.filter(function(r){ return ['assigned','en_route','arrived'].includes(r.status); });
+    _liveRideCache = active;
     countEl.textContent = active.length + ' in progress';
 
     if (!active.length) {
@@ -665,7 +679,7 @@
       return;
     }
 
-    body.innerHTML = active.map(function(r) {
+    body.innerHTML = active.map(function(r, _liveRideIdx) {
       var t = r.pickup_time ? new Date(r.pickup_time) : null;
       var tStr = t ? 'Jun ' + t.getDate() + ', ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
       var badge = statusBadge(r.status);
@@ -675,7 +689,7 @@
         '<div class="td muted" style="font-size:12px">' + esc(r.nemt_partner_name || (r.nemt_partner_id ? 'Assigned' : '—')) + '</div>' +
         '<div class="td">' + badge + '</div>' +
         '<div class="td muted" style="font-size:12px">' + tStr + '</div>' +
-        '<div class="td"><button class="view-btn" onclick="viewRide(' + JSON.stringify(r).replace(/"/g,\'&quot;\') + ')" style="background:#050D1F;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View</button></div>' +
+        '<div class="td"><button class="view-ride-btn" data-idx="' + _liveRideIdx + '" style="background:#050D1F;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View</button></div>' +
         '</div>';
     }).join('');
   }
