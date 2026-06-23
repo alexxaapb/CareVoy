@@ -5,7 +5,7 @@ import {
   Linking, Alert, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const NAVY = "#050D1F";
 const TEAL = "#00C2A8";
