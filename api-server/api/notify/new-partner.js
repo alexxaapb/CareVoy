@@ -26,6 +26,28 @@ module.exports = async function handler(req, res) {
         console.error('Resend error:', r.status, errBody);
       }
     }
+    // Confirmation email to the applicant
+    if (process.env.RESEND_API_KEY && email) {
+      const appType = type === 'nemt' ? 'transport partner' : 'facility partner';
+      const confirmHtml = '<div style="font-family:sans-serif;max-width:520px;margin:0 auto">' +
+        '<div style="background:#050D1F;padding:20px;border-radius:12px 12px 0 0">' +
+        '<span style="color:#00C2A8;font-weight:700;font-size:18px">CareVoy</span></div>' +
+        '<div style="background:#fff;border:1px solid #E2E8F0;padding:28px;border-radius:0 0 12px 12px">' +
+        '<h2 style="color:#050D1F;font-size:18px;margin:0 0 12px">Application received!</h2>' +
+        '<p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">Thank you for applying to join CareVoy as a ' + appType + '. We have received your application and will be in touch within 24 hours.</p>' +
+        '<p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 20px">Once approved you can log in at:</p>' +
+        '<a href="https://partners.carevoy.co" style="display:inline-block;background:#050D1F;color:#00C2A8;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">partners.carevoy.co</a>' +
+        '<p style="color:#9CA3AF;font-size:12px;margin-top:24px">Questions? <a href="mailto:partners@carevoy.co" style="color:#00C2A8">partners@carevoy.co</a></p>' +
+        '</div></div>';
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: 'CareVoy <partners@carevoy.co>', to: [email], subject: 'Your CareVoy partner application was received', html: confirmHtml })
+        });
+      } catch(e) { console.warn('applicant confirm failed:', e.message); }
+    }
+
     return res.status(200).json({ success: true, sent, resend_key_set: !!process.env.RESEND_API_KEY });
   } catch(e) {
     return res.status(500).json({ error: e.message });
