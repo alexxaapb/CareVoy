@@ -163,12 +163,16 @@
     </select>
 
     <label class="fl">Do you currently work with brokers? *</label>
-    <select id="brokers">
+    <select id="brokers" onchange="showBrokerFollowup(this)">
       <option value="">Select</option>
-      <option value="yes">Yes (LogistiCare, MTM, Modivcare, etc.)</option>
+      <option value="yes">Yes</option>
       <option value="no">No</option>
       <option value="sometimes">Sometimes</option>
     </select>
+    <div id="brokerFollowup" style="display:none;margin-top:8px">
+      <label class="fl">Which broker(s)?</label>
+      <input type="text" id="brokerNames" placeholder="e.g. LogistiCare, MTM, Modivcare"/>
+    </div>
 
     <label class="fl">Dispatch software currently used *</label>
     <select id="dispatchSoftware" onchange="showOther(this,'dispatchOther')">
@@ -257,13 +261,6 @@
     <p style="font-size:11px;color:#9CA3AF;margin-top:4px">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</p>
 
     <div class="section-label">Insurance</div>
-    <label class="fl">Liability insurance in place? *</label>
-    <select id="hasInsurance">
-      <option value="">Select</option>
-      <option value="yes">Yes</option>
-      <option value="no">No</option>
-    </select>
-
     <label class="fl">Upload Proof of Liability Insurance *</label>
     <div class="upload-area" onclick="document.getElementById('insuranceFile').click()">
       <input type="file" id="insuranceFile" accept=".pdf,.jpg,.jpeg,.png" onchange="showFileName(this,'insuranceName')"/ oninput="clearError('insuranceFile')">
@@ -369,9 +366,9 @@
       var company=val('companyName'),first=val('firstName'),last=val('lastName'),
           email=val('email'),phone=val('phone'),dispatch=val('dispatchPhone'),
           city=val('city'),homeState=val('homeState'),yearsOp=val('yearsOp'),
-          fleet=val('fleetSize'),weeklyR=val('weeklyRides'),brokers=val('brokers'),
+          fleet=val('fleetSize'),weeklyR=val('weeklyRides'),brokers=val('brokers'),brokerNames=val('brokerNames'),
           software=val('dispatchSoftware'),vehicles=val('vehicleTypes'),
-          hasIns=val('hasInsurance'),password=val('password');
+          password=val('password');
       var states=getMultiSelect('serviceStates');
 
       // Resolve "other" fields
@@ -380,7 +377,7 @@
 
       var insFile=document.getElementById('insuranceFile').files[0];
 
-      var reqIds = ['companyName','firstName','lastName','email','phone','dispatchPhone','city','homeState','yearsOp','fleetSize','weeklyRides','brokers','dispatchSoftware','vehicleTypes','hasInsurance','password'];
+      var reqIds = ['companyName','firstName','lastName','email','phone','dispatchPhone','city','homeState','yearsOp','fleetSize','weeklyRides','brokers','dispatchSoftware','vehicleTypes','password'];
       if(!highlightMissing(reqIds) || states.length===0) {
         if(states.length===0) { document.getElementById('serviceStates').style.borderColor='#EF4444'; document.getElementById('serviceStates').style.background='#FEF2F2'; }
         return showError('Please fill in all required fields highlighted in red.');
@@ -408,7 +405,7 @@
           body:JSON.stringify({company_name:company,city,service_states:states,
             vehicle_types:[vehicles],dispatch_phone:dispatch,active:false,pending_review:true,
             intake_data:{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
-              works_with_brokers:brokers,dispatch_software:software,has_insurance:hasIns,
+              works_with_brokers:brokers,broker_names:brokerNames,dispatch_software:software,
               insurance_doc:insPath,contact_phone:phone,home_state:homeState}})
         });
         var pd=await pr.json();
@@ -427,7 +424,7 @@
             body:JSON.stringify({type:'nemt',name:company,email,phone,city,state:homeState,
               details:{contact:first+' '+last,fleet_size:fleet,vehicles,
                 service_states:states.join(', '),weekly_rides:weeklyR,
-                works_with_brokers:brokers,insurance_uploaded:insPath?'Yes':'No'}})
+                works_with_brokers:brokers,broker_names:brokerNames,insurance_uploaded:insPath?'Yes':'No'}})
           });
         }catch(e){}
 
