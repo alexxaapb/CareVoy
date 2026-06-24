@@ -128,6 +128,24 @@ export default function PaymentScreen() {
     })();
   }, []);
 
+  // Check if active ride is facility-covered
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: rides } = await supabase
+        .from("rides")
+        .select("payment_responsibility")
+        .eq("patient_id", user.id)
+        .in("status", ["pending", "confirmed", "assigned", "en_route"])
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (rides && rides[0]?.payment_responsibility === "facility") {
+        setFacilityCovered(true);
+      }
+    })();
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       load();
