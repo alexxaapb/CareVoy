@@ -36,13 +36,7 @@
 <body>
   <div class="card" id="formCard">
     <div class="logo">
-      <div class="logo-icon"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-  <rect width="40" height="40" rx="10" fill="#050D1F"/>
-  <circle cx="20" cy="20" r="13" fill="none" stroke="#00C2A8" stroke-width="2.5" stroke-dasharray="70 12" stroke-dashoffset="-3"/>
-  <text x="20" y="26" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="18" fill="white" text-anchor="middle">C</text>
-  <circle cx="30.5" cy="15" r="2" fill="#F5A623"/>
-  <circle cx="30.5" cy="25" r="2" fill="#F5A623"/>
-</svg></div>
+      <div class="logo-icon"><img src="/carevoy-icon-centered.svg" alt="CareVoy" style="width:40px;height:40px;border-radius:10px"></div>
       <div><div class="brand-text">CareVoy</div><div class="brand-sub">Transport Partner</div></div>
     </div>
     <h1>Join as a Transport Partner</h1>
@@ -169,15 +163,13 @@
     </div>
 
     <label class="fl">Vehicle Types *</label>
-    <select id="vehicleTypes" onchange="showOther(this,'vehicleOther')">
-      <option value="">Select primary vehicle type</option>
+    <select id="vehicleTypes" multiple style="height:160px;padding:6px;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;width:100%">
       <option value="ambulatory">Ambulatory</option>
       <option value="wheelchair">Wheelchair Van</option>
       <option value="stretcher">Stretcher / Gurney</option>
       <option value="sedan">Sedan</option>
       <option value="suv">SUV / Minivan</option>
       <option value="bariatric">Bariatric</option>
-      <option value="mixed">Mixed fleet (multiple types)</option>
       <option value="other">Other</option>
     </select>
     <div class="other-input" id="vehicleOther">
@@ -186,60 +178,60 @@
 
     <div class="section-label">Service Area</div>
     <p style="font-size:12px;color:#6B7280;margin-bottom:6px">Which states do you provide rides in? (Select all that apply) *</p>
-    <select id="serviceStates" size="8" multiple style="height:auto;min-height:120px;padding:8px">
-            <option value="AL">Alabama</option>
-      <option value="AK">Alaska</option>
-      <option value="AZ">Arizona</option>
-      <option value="AR">Arkansas</option>
-      <option value="CA">California</option>
-      <option value="CO">Colorado</option>
-      <option value="CT">Connecticut</option>
-      <option value="DE">Delaware</option>
-      <option value="DC">Washington DC</option>
-      <option value="FL">Florida</option>
-      <option value="GA">Georgia</option>
-      <option value="HI">Hawaii</option>
-      <option value="ID">Idaho</option>
-      <option value="IL">Illinois</option>
-      <option value="IN">Indiana</option>
-      <option value="IA">Iowa</option>
-      <option value="KS">Kansas</option>
-      <option value="KY">Kentucky</option>
-      <option value="LA">Louisiana</option>
-      <option value="ME">Maine</option>
-      <option value="MD">Maryland</option>
-      <option value="MA">Massachusetts</option>
-      <option value="MI">Michigan</option>
-      <option value="MN">Minnesota</option>
-      <option value="MS">Mississippi</option>
-      <option value="MO">Missouri</option>
-      <option value="MT">Montana</option>
-      <option value="NE">Nebraska</option>
-      <option value="NV">Nevada</option>
-      <option value="NH">New Hampshire</option>
-      <option value="NJ">New Jersey</option>
-      <option value="NM">New Mexico</option>
-      <option value="NY">New York</option>
-      <option value="NC">North Carolina</option>
-      <option value="ND">North Dakota</option>
-      <option value="OH">Ohio</option>
-      <option value="OK">Oklahoma</option>
-      <option value="OR">Oregon</option>
-      <option value="PA">Pennsylvania</option>
-      <option value="RI">Rhode Island</option>
-      <option value="SC">South Carolina</option>
-      <option value="SD">South Dakota</option>
-      <option value="TN">Tennessee</option>
-      <option value="TX">Texas</option>
-      <option value="UT">Utah</option>
-      <option value="VT">Vermont</option>
-      <option value="VA">Virginia</option>
-      <option value="WA">Washington</option>
-      <option value="WV">West Virginia</option>
-      <option value="WI">Wisconsin</option>
-      <option value="WY">Wyoming</option>
+    <select id="serviceStates" multiple style="height:160px;padding:6px;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;width:100%">
+      <option value="AL">AL — Alabama</option>
+<option value="AK">AK — Alaska</option>
+<option value="AZ">AZ — Arizona</option>
+<option value="AR">AR — Arkansas</option>
+<option value="CA">CA — California</option>
+<option value="CO">CO — Colorado</option>
+<option value="CT">CT — Connecticut</option>
+<option value="DE">DE — Delaware</option>
+<option value="DC">DC — Washington DC</option>
+<option value="FL">FL — Florida</option>
+<option value="GA">GA — Georgia</option>
+<option value="HI">HI — Hawaii</option>
+<option value="ID">ID — Idaho</option>
+<option value="IL">IL — Illinois</option>
+<option value="IN">IN — Indiana</option>
+<option value="IA">IA — Iowa</option>
+<option value="KS">KS — Kansas</option>
+<option value="KY">KY — Kentucky</option>
+<option value="LA">LA — Louisiana</option>
+<option value="ME">ME — Maine</option>
+<option value="MD">MD — Maryland</option>
+<option value="MA">MA — Massachusetts</option>
+<option value="MI">MI — Michigan</option>
+<option value="MN">MN — Minnesota</option>
+<option value="MS">MS — Mississippi</option>
+<option value="MO">MO — Missouri</option>
+<option value="MT">MT — Montana</option>
+<option value="NE">NE — Nebraska</option>
+<option value="NV">NV — Nevada</option>
+<option value="NH">NH — New Hampshire</option>
+<option value="NJ">NJ — New Jersey</option>
+<option value="NM">NM — New Mexico</option>
+<option value="NY">NY — New York</option>
+<option value="NC">NC — North Carolina</option>
+<option value="ND">ND — North Dakota</option>
+<option value="OH">OH — Ohio</option>
+<option value="OK">OK — Oklahoma</option>
+<option value="OR">OR — Oregon</option>
+<option value="PA">PA — Pennsylvania</option>
+<option value="RI">RI — Rhode Island</option>
+<option value="SC">SC — South Carolina</option>
+<option value="SD">SD — South Dakota</option>
+<option value="TN">TN — Tennessee</option>
+<option value="TX">TX — Texas</option>
+<option value="UT">UT — Utah</option>
+<option value="VT">VT — Vermont</option>
+<option value="VA">VA — Virginia</option>
+<option value="WA">WA — Washington</option>
+<option value="WV">WV — West Virginia</option>
+<option value="WI">WI — Wisconsin</option>
+<option value="WY">WY — Wyoming</option>
     </select>
-    <p style="font-size:11px;color:#9CA3AF;margin-top:4px">Hold Ctrl (Windows) or Cmd (Mac) to select multiple states</p>
+    <p style="font-size:11px;color:#9CA3AF;margin-top:4px">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</p>
 
     <div class="section-label">Insurance</div>
     <label class="fl">Liability insurance in place? *</label>
@@ -352,7 +344,7 @@
         var pr=await fetch(SUPA+'/rest/v1/nemt_partners',{
           method:'POST',headers:{...H,'Prefer':'return=representation'},
           body:JSON.stringify({company_name:company,city,service_states:states,
-            vehicle_types:[vehicles],dispatch_phone:dispatch,active:false,pending_review:true,
+            vehicle_types:vehicles,dispatch_phone:dispatch,active:false,pending_review:true,
             intake_data:{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
               works_with_brokers:brokers,dispatch_software:software,has_insurance:hasIns,
               insurance_doc:insPath,contact_phone:phone,home_state:homeState}})
