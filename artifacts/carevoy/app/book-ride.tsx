@@ -236,6 +236,8 @@ export default function BookRideScreen() {
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
 
   const [isRecurring, setIsRecurring] = useState(false);
+  const [invitedHospital, setInvitedHospital] = useState<string | null>(null);
+  const [invitePaymentResp, setInvitePaymentResp] = useState<string>("self_pay");
   const [recurringWeeks, setRecurringWeeks] = useState(4);
 
   // Step 2

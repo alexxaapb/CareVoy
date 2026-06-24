@@ -65,6 +65,7 @@ export default function PaymentScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [facilityCovered, setFacilityCovered] = useState(false);
 
   const load = useCallback(async () => {
     if (isDemoMode()) {
@@ -107,6 +108,24 @@ export default function PaymentScreen() {
     const list = await listPaymentMethods();
     setMethods(list);
     setLoaded(true);
+  }, []);
+
+  // Check if active ride is facility-covered
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: rides } = await supabase
+        .from("rides")
+        .select("payment_responsibility")
+        .eq("patient_id", user.id)
+        .in("status", ["pending", "confirmed", "assigned", "en_route"])
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (rides && rides[0]?.payment_responsibility === "facility") {
+        setFacilityCovered(true);
+      }
+    })();
   }, []);
 
   useFocusEffect(
@@ -254,7 +273,13 @@ export default function PaymentScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView
+        {facilityCovered && (
+        <View style={{ margin: 20, padding: 16, backgroundColor: "rgba(0,194,168,0.08)", borderRadius: 14, borderWidth: 1, borderColor: "#00C2A8" }}>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: "#050D1F", marginBottom: 4 }}>Ride covered by your facility</Text>
+          <Text style={{ fontSize: 13, color: "#6B7280", lineHeight: 20 }}>Your facility is covering the cost of this ride. No payment needed from you.</Text>
+        </View>
+      )}
+      <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
           refreshControl={
