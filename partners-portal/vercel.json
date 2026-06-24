@@ -2,6 +2,14 @@
   "version": 2,
   "routes": [
     {
+      "src": "/nemt-signup",
+      "dest": "/nemt-signup.html"
+    },
+    {
+      "src": "/facility-signup",
+      "dest": "/facility-signup.html"
+    },
+    {
       "src": "/admin.html",
       "dest": "/admin.html"
     },
