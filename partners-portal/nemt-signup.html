@@ -44,12 +44,8 @@
     }
     .pw-wrap { position: relative; }
     .pw-wrap input { padding-right: 44px; }
-    .pw-toggle {
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer; color: #9CA3AF;
-      font-size: 12px; font-weight: 600; padding: 4px;
-    }
-    .pw-toggle:hover { color: #050D1F; }
+    .pw-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6B7280; font-size: 13px; font-weight: 600; font-family: inherit; padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pw-eye:hover { color: #050D1F; }
     select[multiple] { padding: 6px; }
     option:checked { background: rgba(0,194,168,0.15); color: #050D1F; }
   </style>
@@ -270,7 +266,7 @@
 
     <div class="section-label">Account Setup</div>
     <label class="fl">Password *</label>
-    <div class="pw-wrap"><input type="password" id="password" placeholder="Minimum 8 characters"/ oninput="clearError('password')"><button type="button" class="pw-toggle" onclick="togglePw('password',this)">SHOW</button></div>
+    <div class="pw-wrap"><input type="password" id="password" placeholder="Minimum 8 characters"/ oninput="clearError('password')"><button type="button" class="pw-eye" id="eyeBtn" onclick="togglePw('password',this)">SHOW</button></div>
 
     <div class="error" id="errMsg"></div>
     <button class="submit" id="btn" onclick="submitNemt()">Join CareVoy &rarr;</button>

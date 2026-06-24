@@ -230,7 +230,7 @@
     <div class="section-label">Account Setup</div>
     <p style="font-size:12px;color:#6B7280;margin-bottom:4px">You'll use this to access your coordinator dashboard once approved.</p>
     <label class="field-label">Password *</label>
-    <div class="pw-wrap"><input type="password" id="password" placeholder="Minimum 8 characters" oninput="clearError('password')"><button type="button" class="pw-toggle" onclick="togglePw('password',this)">SHOW</button></div>
+    <div class="pw-wrap"><input type="password" id="password" placeholder="Minimum 8 characters" oninput="clearError('password')"><button type="button" class="pw-eye" id="eyeBtn" onclick="togglePw('password',this)">SHOW</button></div>
 
     <div class="error" id="errMsg"></div>
     <button class="submit" id="btn" onclick="submitFacility()">Submit Application &rarr;</button>
