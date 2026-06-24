@@ -1,0 +1,263 @@
+import os, subprocess
+
+REPO = '/workspaces/CareVoy'
+
+nemt_signup = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join CareVoy as a Transport Partner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: \'Poppins\', -apple-system, sans-serif; background: #F0F4F8; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: white; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 520px; box-shadow: 0 4px 24px rgba(5,13,31,0.08); }
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .logo-icon { width: 36px; height: 36px; background: #050D1F; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #00C2A8; font-size: 16px; font-weight: 700; }
+    .brand-text { color: #050D1F; font-size: 18px; font-weight: 700; }
+    .brand-sub { color: #00C2A8; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+    h1 { font-size: 22px; font-weight: 700; color: #050D1F; margin-bottom: 6px; }
+    .sub { font-size: 13px; color: #6B7280; margin-bottom: 28px; line-height: 1.5; }
+    .section-label { font-size: 10px; font-weight: 700; color: #00C2A8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; margin-top: 24px; padding-bottom: 6px; border-bottom: 1px solid #F0F4F8; }
+    label { display: block; font-size: 11px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; margin-top: 14px; }
+    input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 14px; color: #050D1F; background: #F8FAFC; font-family: inherit; outline: none; transition: border-color 0.15s; }
+    input:focus, select:focus { border-color: #00C2A8; background: white; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .checkbox-group { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .checkbox-item { display: flex; align-items: center; gap: 6px; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.15s; }
+    .checkbox-item:hover { border-color: #00C2A8; }
+    .checkbox-item input[type="checkbox"] { width: auto; padding: 0; background: none; border: none; accent-color: #00C2A8; cursor: pointer; }
+    .checkbox-item.checked { border-color: #00C2A8; background: rgba(0,194,168,0.06); }
+    .checkbox-item span { font-size: 12px; font-weight: 600; color: #050D1F; }
+    .submit { width: 100%; padding: 15px; background: #050D1F; color: #00C2A8; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 28px; font-family: inherit; letter-spacing: 0.2px; transition: opacity 0.15s; }
+    .submit:hover { opacity: 0.88; }
+    .submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error { color: #EF4444; font-size: 12px; margin-top: 12px; display: none; }
+    .success { display: none; text-align: center; padding: 40px 20px; }
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+    .success h2 { font-size: 20px; font-weight: 700; color: #050D1F; margin-bottom: 8px; }
+    .success p { font-size: 13px; color: #6B7280; line-height: 1.6; }
+    .success .login-link { display: inline-block; margin-top: 20px; background: #00C2A8; color: #050D1F; padding: 12px 28px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; }
+    .note { font-size: 11px; color: #9CA3AF; margin-top: 20px; text-align: center; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="card" id="formCard">
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <div>
+        <div class="brand-text">CareVoy</div>
+        <div class="brand-sub">Transport Partner</div>
+      </div>
+    </div>
+
+    <h1>Join as a Transport Partner</h1>
+    <p class="sub">Free to join. Get ride requests from healthcare facilities in your service area. Accept the ones that fit your schedule — you keep 80% of every fare.</p>
+
+    <div class="section-label">Company Info</div>
+
+    <label>Company Name *</label>
+    <input type="text" id="companyName" placeholder="ABC Medical Transport LLC" />
+
+    <div class="row2">
+      <div>
+        <label>Contact First Name *</label>
+        <input type="text" id="firstName" placeholder="Jane" />
+      </div>
+      <div>
+        <label>Contact Last Name *</label>
+        <input type="text" id="lastName" placeholder="Smith" />
+      </div>
+    </div>
+
+    <label>Business Email *</label>
+    <input type="email" id="email" placeholder="jane@abcmedical.com" />
+
+    <label>Contact Phone *</label>
+    <input type="tel" id="phone" placeholder="+1 (614) 555-0000" />
+
+    <label>Dispatch Phone (riders will see this)</label>
+    <input type="tel" id="dispatchPhone" placeholder="+1 (614) 555-0001" />
+
+    <label>City / Base of Operations</label>
+    <input type="text" id="city" placeholder="Columbus, OH" />
+
+    <div class="section-label">Service Area</div>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:8px">Which states do you currently provide rides in?</p>
+    <div class="checkbox-group" id="statesGroup">
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="OH" /><span>Ohio</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="FL" /><span>Florida</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="VA" /><span>Virginia</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MD" /><span>Maryland</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="DC" /><span>DC</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NC" /><span>North Carolina</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="TN" /><span>Tennessee</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="TX" /><span>Texas</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="AZ" /><span>Arizona</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="GA" /><span>Georgia</span></label>
+    </div>
+
+    <div class="section-label">Vehicle Types</div>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:8px">What vehicles do you operate?</p>
+    <div class="checkbox-group" id="vehiclesGroup">
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="ambulatory" /><span>Ambulatory</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="wheelchair" /><span>Wheelchair Van</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="stretcher" /><span>Stretcher</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="sedan" /><span>Sedan</span></label>
+      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="suv" /><span>SUV</span></label>
+    </div>
+
+    <div class="section-label">Account Setup</div>
+    <label>Password *</label>
+    <input type="password" id="password" placeholder="Create a password (min 8 characters)" />
+
+    <div class="error" id="errMsg"></div>
+    <button class="submit" id="btn" onclick="submitForm()">Join CareVoy &rarr;</button>
+    <p class="note">By joining, you agree to CareVoy\'s partner terms. Your application will be reviewed and you\'ll receive dashboard access within 24 hours.</p>
+  </div>
+
+  <div class="success" id="successCard" style="display:none;max-width:520px;background:white;border-radius:20px;padding:48px 36px;box-shadow:0 4px 24px rgba(5,13,31,0.08)">
+    <div class="success-icon">\u2705</div>
+    <h2>You\'re in the CareVoy network!</h2>
+    <p>We\'ve received your application. You\'ll get an email with your login credentials within 24 hours. Once approved, you\'ll have full access to available rides in your service area.</p>
+    <a href="https://partners.carevoy.co" class="login-link">Go to Partner Dashboard</a>
+  </div>
+
+  <script>
+    var SUPA = \'https://byflpckbjjumxxjxoplk.supabase.co\';
+    var SUPA_KEY = \'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT\';
+
+    function toggleCheck(el) {
+      var cb = el.querySelector(\'input[type="checkbox"]\');
+      // toggle (click fires before change, so flip)
+      setTimeout(function() {
+        el.classList.toggle(\'checked\', cb.checked);
+      }, 0);
+    }
+
+    function getChecked(groupId) {
+      var boxes = document.querySelectorAll(\'#\' + groupId + \' input[type="checkbox"]\');
+      return Array.from(boxes).filter(function(b){ return b.checked; }).map(function(b){ return b.value; });
+    }
+
+    function showError(msg) {
+      var el = document.getElementById(\'errMsg\');
+      el.textContent = msg;
+      el.style.display = \'block\';
+    }
+
+    async function submitForm() {
+      var btn = document.getElementById(\'btn\');
+      document.getElementById(\'errMsg\').style.display = \'none\';
+
+      var company = document.getElementById(\'companyName\').value.trim();
+      var first = document.getElementById(\'firstName\').value.trim();
+      var last = document.getElementById(\'lastName\').value.trim();
+      var email = document.getElementById(\'email\').value.trim();
+      var phone = document.getElementById(\'phone\').value.trim();
+      var dispatch = document.getElementById(\'dispatchPhone\').value.trim();
+      var city = document.getElementById(\'city\').value.trim();
+      var password = document.getElementById(\'password\').value;
+      var states = getChecked(\'statesGroup\');
+      var vehicles = getChecked(\'vehiclesGroup\');
+
+      if (!company || !first || !last || !email || !phone || !password) {
+        return showError(\'Please fill in all required fields.\');
+      }
+      if (password.length < 8) return showError(\'Password must be at least 8 characters.\');
+      if (states.length === 0) return showError(\'Please select at least one service state.\');
+      if (vehicles.length === 0) return showError(\'Please select at least one vehicle type.\');
+
+      btn.disabled = true;
+      btn.textContent = \'Submitting\\u2026\';
+
+      try {
+        // 1. Create auth user
+        var signupRes = await fetch(SUPA + \'/auth/v1/signup\', {
+          method: \'POST\',
+          headers: { \'Content-Type\': \'application/json\', \'apikey\': SUPA_KEY },
+          body: JSON.stringify({ email: email, password: password })
+        });
+        var signupData = await signupRes.json();
+        if (!signupRes.ok || !signupData.user) {
+          return showError(signupData.error_description || signupData.msg || \'Signup failed. This email may already be registered.\');
+        }
+        var uid = signupData.user.id;
+        var token = signupData.access_token;
+        var H = { \'Content-Type\': \'application/json\', \'apikey\': SUPA_KEY, \'Authorization\': \'Bearer \' + token };
+
+        // 2. Create nemt_partners record (pending approval)
+        var partnerRes = await fetch(SUPA + \'/rest/v1/nemt_partners\', {
+          method: \'POST\',
+          headers: { ...H, \'Prefer\': \'return=representation\' },
+          body: JSON.stringify({
+            company_name: company,
+            city: city,
+            service_states: states,
+            vehicle_types: vehicles,
+            dispatch_phone: dispatch || phone,
+            active: false,
+            pending_review: true
+          })
+        });
+        var partnerData = await partnerRes.json();
+        var partnerId = Array.isArray(partnerData) ? partnerData[0]?.id : partnerData?.id;
+
+        // 3. Create staff record with nemt role
+        await fetch(SUPA + \'/rest/v1/staff\', {
+          method: \'POST\',
+          headers: H,
+          body: JSON.stringify({ id: uid, role: \'nemt\', partner_id: partnerId })
+        });
+
+        // 4. Create nemt_staff record
+        await fetch(SUPA + \'/rest/v1/nemt_staff\', {
+          method: \'POST\',
+          headers: H,
+          body: JSON.stringify({
+            id: uid,
+            partner_id: partnerId,
+            full_name: first + \' \' + last,
+            email: email,
+            phone: phone,
+            role: \'dispatcher\'
+          })
+        }).catch(function(){});
+
+        // Show success
+        document.getElementById(\'formCard\').style.display = \'none\';
+        document.getElementById(\'successCard\').style.display = \'block\';
+
+      } catch(e) {
+        showError(\'Something went wrong. Please try again or email us at partners@carevoy.co\');
+        btn.disabled = false;
+        btn.textContent = \'Join CareVoy \u2192\';
+      }
+    }
+  </script>
+</body>
+</html>'''
+
+path = os.path.join(REPO, 'partners-portal', 'nemt-signup.html')
+open(path, 'w').write(nemt_signup)
+print("1. Created partners-portal/nemt-signup.html")
+
+# Add pending_review column to nemt_partners if needed (SQL to run separately)
+sql = """-- Add pending_review flag so new signups don't get live access until you approve
+alter table nemt_partners add column if not exists pending_review boolean default false;
+
+-- Admin can approve by running: update nemt_partners set active=true, pending_review=false where id='...';
+"""
+open(os.path.join('/mnt/user-data/outputs', 'nemt_signup_schema.sql'), 'w').write(sql)
+print("2. Created nemt_signup_schema.sql")
+
+cmds = [
+    'rm -f build_nemt_signup.py',
+    'git add partners-portal/nemt-signup.html',
+    'git commit -m "feat: NEMT self-serve onboarding page at /nemt-signup"',
+    'git push origin main',
+]
+for cmd in cmds:
+    r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=REPO)
+    print((r.stdout or r.stderr).strip()[:200])
