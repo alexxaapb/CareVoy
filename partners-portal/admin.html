@@ -548,6 +548,8 @@
     try {
       var h = authHeaders();
       var today = todayStr();
+      var weekEndDate = new Date(); weekEndDate.setDate(weekEndDate.getDate() + 7);
+      var weekEnd = weekEndDate.toISOString().slice(0, 10);
       var mStart = monthStart();
       var lm = lastMonthRange();
 
