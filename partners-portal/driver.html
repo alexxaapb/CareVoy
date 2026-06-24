@@ -202,6 +202,10 @@
 
 
   <div class="page" id="sec-available" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:#050D1F">Available Rides</div>
+      <button onclick="exportNemtCSV('available')" style="background:#050D1F;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
+    </div>
     <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:4px">Available Rides</div>
     <div style="font-size:13px;color:#6B7280;margin-bottom:18px">Rides in your service area ready to accept</div>
     <div id="availableRidesBody"><div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading…</div></div>
@@ -209,6 +213,10 @@
 
   <!-- ── SCHEDULE ── -->
   <div class="page" id="sec-schedule" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:#050D1F">My Schedule</div>
+      <button onclick="exportNemtCSV('schedule')" style="background:#050D1F;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
+    </div>
     <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:4px">My Schedule</div>
     <div style="font-size:13px;color:#6B7280;margin-bottom:22px">Upcoming assigned rides</div>
     <div class="panel">
@@ -239,6 +247,9 @@
 
   <!-- ── EARNINGS ── -->
   <div class="page" id="sec-earnings" style="display:none">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button onclick="exportNemtCSV('history')" style="background:#050D1F;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Export Earnings CSV</button>
+    </div>
     <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:4px">Earnings</div>
     <div style="font-size:13px;color:#6B7280;margin-bottom:22px">Detailed breakdown</div>
     <div class="panel" style="padding:24px">
@@ -326,8 +337,15 @@ function badge(s) {
 
 
 function exportNemtCSV(type) {
-  var status = type === 'history' ? 'completed' : 'assigned,en_route,arrived';
-  var url = SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + partnerId + '&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500';
+  var status;
+  if (type === 'history') status = 'completed';
+  else if (type === 'available') status = 'invited,pending,confirmed';
+  else if (type === 'schedule') status = 'assigned,en_route,arrived';
+  else status = 'assigned,en_route,arrived';
+  var urlBase = type === 'available'
+    ? SUPA + '/rest/v1/rides?nemt_partner_id=is.null&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500'
+    : SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + partnerId + '&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500';
+  var url = urlBase;
   fetch(url, { headers: H })
   .then(function(r){ return r.json(); })
   .then(function(data){

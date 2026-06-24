@@ -212,6 +212,14 @@
         <div class="stat-label">Pending Alerts</div>
         <div class="stat-value gold" id="statAlerts">—</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed Rides</div>
+        <div class="stat-value teal" id="statCompleted">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Upcoming This Week</div>
+        <div class="stat-value" id="statUpcoming">—</div>
+      </div>
     </div>
 
     <!-- Facilities Active stat -->
@@ -543,7 +551,7 @@
       var mStart = monthStart();
       var lm = lastMonthRange();
 
-      var [pRes, aRes, tRes, facRes, nemtRes, revThisRes, revLastRes, revAllRes, liveRidesRes, paymentsAllRes] = await Promise.all([
+      var [pRes, aRes, tRes, facRes, nemtRes, revThisRes, revLastRes, revAllRes, liveRidesRes, paymentsAllRes, completedRes, upcomingRes] = await Promise.all([
         fetch(SUPA_URL + '/rest/v1/patients?select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
         fetch(SUPA_URL + '/rest/v1/rides?status=in.(confirmed,en_route,arrived,assigned)&select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
         fetch(SUPA_URL + '/rest/v1/rides?pickup_time=gte.' + today + 'T00:00:00&pickup_time=lt.' + today + 'T23:59:59&select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
@@ -554,6 +562,8 @@
         fetch(SUPA_URL + '/rest/v1/payments?select=amount', { headers: h }),
         fetch(SUPA_URL + '/rest/v1/rides?status=in.(assigned,en_route,arrived)&select=*&order=pickup_time.asc&limit=10', { headers: h }),
         fetch(SUPA_URL + '/rest/v1/rides?status=in.(pending,confirmed)&select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+        fetch(SUPA_URL + '/rest/v1/rides?status=eq.completed&select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+        fetch(SUPA_URL + '/rest/v1/rides?pickup_time=gte.' + today + '&pickup_time=lt.' + weekEnd + '&status=in.(pending,confirmed,assigned,invited)&select=id', { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
       ]);
 
       var pCount = parseInt(pRes.headers.get('Content-Range')?.split('/')[1] ?? '0');
@@ -582,6 +592,11 @@
       var activeNemt = Array.isArray(nemts) ? nemts.filter(function(n){ return n.active; }).length : 0;
       document.getElementById('statFacilitiesActive').textContent = activeFac;
       document.getElementById('statNemt').textContent = activeNemt;
+
+      var completedCount = parseInt((completedRes && completedRes.headers.get('Content-Range') || '').split('/')[1] || '0');
+      var upcomingCount = parseInt((upcomingRes && upcomingRes.headers.get('Content-Range') || '').split('/')[1] || '0');
+      document.getElementById('statCompleted').textContent = completedCount;
+      document.getElementById('statUpcoming').textContent = upcomingCount;
       document.getElementById('pageSub').textContent = 'Live data · refreshes every 30 seconds';
 
       // Revenue bars
@@ -612,9 +627,9 @@
     var h2 = authHeaders();
     var url, filename, fields, isRpc = false;
     if (type === 'rides') {
-      url = SUPA_URL + '/rest/v1/rides?select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,procedure_type,created_at&order=created_at.desc&limit=1000';
+      url = SUPA_URL + '/rest/v1/rides?select=id,patient_name,contact_phone,hospital_name,hospital_state,status,payment_responsibility,pickup_time,pickup_address,dropoff_address,ride_type,procedure_type,driver_name,assigned_at,completed_at,created_at&order=created_at.desc&limit=1000';
       filename = 'carevoy_rides_' + new Date().toISOString().slice(0,10) + '.csv';
-      fields = ['id','patient_name','contact_phone','hospital_name','hospital_state','status','pickup_time','pickup_address','dropoff_address','ride_type','procedure_type','created_at'];
+      fields = ['id','patient_name','contact_phone','hospital_name','hospital_state','status','payment_responsibility','pickup_time','pickup_address','dropoff_address','ride_type','procedure_type','driver_name','assigned_at','completed_at','created_at'];
     } else if (type === 'patients') {
       url = SUPA_URL + '/rest/v1/rpc/admin_list_patients';
       isRpc = true;
