@@ -441,6 +441,14 @@ export default function BookRideScreen() {
     todayCheck.setHours(0, 0, 0, 0);
     if (surgeryDate < todayCheck) return "Please select today or a future date";
     if (!surgeryTime) return "Please select time";
+    // If today is selected, block past times
+    const nowCheck = new Date();
+    const todayStr = nowCheck.toISOString().slice(0, 10);
+    const selectedDateStr = surgeryDate.toISOString().slice(0, 10);
+    if (selectedDateStr === todayStr) {
+      const combined = combineDateTime(surgeryDate, surgeryTime);
+      if (combined <= nowCheck) return "Please select a future time for today\'s ride";
+    }
     if (rideType === "both" && !returnTime)
       return "Please choose a return pickup time";
     if (!hospital) return "Please select a facility";
