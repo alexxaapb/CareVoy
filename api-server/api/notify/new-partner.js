@@ -19,9 +19,14 @@ module.exports = async function handler(req, res) {
         headers: { 'Authorization': 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ from: 'CareVoy <notifications@carevoy.co>', to: ['partners@carevoy.co'], subject, html })
       });
-      if (r.ok) sent = true;
+      if (r.ok) {
+        sent = true;
+      } else {
+        const errBody = await r.text();
+        console.error('Resend error:', r.status, errBody);
+      }
     }
-    return res.status(200).json({ success: true, sent });
+    return res.status(200).json({ success: true, sent, resend_key_set: !!process.env.RESEND_API_KEY });
   } catch(e) {
     return res.status(500).json({ error: e.message });
   }
