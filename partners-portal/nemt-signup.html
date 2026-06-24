@@ -1,73 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Join CareVoy | Transport Partner Signup</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Poppins', -apple-system, sans-serif; background: #F0F4F8; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 24px; }
-    .card { background: white; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 560px; box-shadow: 0 4px 24px rgba(5,13,31,0.08); }
-    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-    .logo-icon { width: 36px; height: 36px; background: #050D1F; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-    .logo-icon svg { width: 22px; height: 22px; }
-    .brand-text { color: #050D1F; font-size: 18px; font-weight: 700; }
-    .brand-sub { color: #00C2A8; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
-    h1 { font-size: 22px; font-weight: 700; color: #050D1F; margin-bottom: 6px; }
-    .sub { font-size: 13px; color: #6B7280; margin-bottom: 28px; line-height: 1.6; }
-    .section-label { font-size: 10px; font-weight: 700; color: #00C2A8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; margin-top: 28px; padding-bottom: 6px; border-bottom: 1px solid #F0F4F8; }
-    label.field-label { display: block; font-size: 11px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; margin-top: 14px; }
-    input[type=text], input[type=email], input[type=tel], input[type=password], select { width: 100%; padding: 12px 14px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 14px; color: #050D1F; background: #F8FAFC; font-family: inherit; outline: none; transition: border-color 0.15s; }
-    input:focus, select:focus { border-color: #00C2A8; background: white; }
-    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .checkbox-group { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 7px; max-height: 180px; overflow-y: auto; padding: 8px; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px; }
-    .checkbox-item { display: flex; align-items: center; gap: 5px; background: white; border: 1.5px solid #E2E8F0; border-radius: 7px; padding: 6px 10px; cursor: pointer; transition: all 0.15s; }
-    .checkbox-item input[type="checkbox"] { width: auto; padding: 0; background: none; border: none; accent-color: #00C2A8; }
-    .checkbox-item.checked { border-color: #00C2A8; background: rgba(0,194,168,0.06); }
-    .checkbox-item span { font-size: 12px; font-weight: 600; color: #050D1F; }
-    .upload-area { border: 2px dashed #E2E8F0; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.15s; background: #F8FAFC; margin-top: 6px; }
-    .upload-area:hover { border-color: #00C2A8; }
-    .upload-area input { display: none; }
-    .upload-label { font-size: 13px; color: #6B7280; }
-    .upload-label strong { color: #00C2A8; }
-    .upload-name { font-size: 12px; color: #050D1F; font-weight: 600; margin-top: 6px; display: none; }
-    .submit { width: 100%; padding: 15px; background: #050D1F; color: #00C2A8; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 28px; font-family: inherit; transition: opacity 0.15s; }
-    .submit:hover { opacity: 0.88; }
-    .submit:disabled { opacity: 0.5; cursor: not-allowed; }
-    .error { color: #EF4444; font-size: 12px; margin-top: 10px; display: none; background: #FEF2F2; padding: 10px 12px; border-radius: 8px; }
-    .note { font-size: 11px; color: #9CA3AF; margin-top: 16px; text-align: center; line-height: 1.5; }
-</style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Poppins',-apple-system,sans-serif;background:#F0F4F8;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px;}
+    .card{background:white;border-radius:20px;padding:40px 36px;width:100%;max-width:560px;box-shadow:0 4px 24px rgba(5,13,31,0.08);}
+    .logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+    .logo-icon{width:40px;height:40px;flex-shrink:0;}
+    .brand-text{color:#050D1F;font-size:18px;font-weight:700;}
+    .brand-sub{color:#00C2A8;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+    h1{font-size:22px;font-weight:700;color:#050D1F;margin-bottom:6px;}
+    .sub{font-size:13px;color:#6B7280;margin-bottom:28px;line-height:1.6;}
+    .section-label{font-size:10px;font-weight:700;color:#00C2A8;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;margin-top:28px;padding-bottom:6px;border-bottom:1px solid #F0F4F8;}
+    label.fl{display:block;font-size:11px;font-weight:700;color:#050D1F;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;margin-top:14px;}
+    input[type=text],input[type=email],input[type=tel],input[type=password],select,textarea{width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;color:#050D1F;background:#F8FAFC;font-family:inherit;outline:none;transition:border-color 0.15s;}
+    input:focus,select:focus,textarea:focus{border-color:#00C2A8;background:white;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .other-input{margin-top:8px;display:none;}
+    .upload-area{border:2px dashed #E2E8F0;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.15s;background:#F8FAFC;margin-top:6px;}
+    .upload-area:hover{border-color:#00C2A8;}
+    .upload-area input{display:none;}
+    .upload-txt{font-size:13px;color:#6B7280;}
+    .upload-txt strong{color:#00C2A8;}
+    .upload-name{font-size:12px;color:#16A34A;font-weight:600;margin-top:6px;display:none;}
+    .submit{width:100%;padding:15px;background:#050D1F;color:#00C2A8;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:28px;font-family:inherit;transition:opacity 0.15s;}
+    .submit:hover{opacity:0.88;}
+    .submit:disabled{opacity:0.5;cursor:not-allowed;}
+    .error{color:#EF4444;font-size:12px;margin-top:10px;display:none;background:#FEF2F2;padding:10px 12px;border-radius:8px;}
+    .note{font-size:11px;color:#9CA3AF;margin-top:16px;text-align:center;line-height:1.5;}
+  </style>
 </head>
 <body>
   <div class="card" id="formCard">
     <div class="logo">
-      <div class="logo-icon"><svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M16 6.5C14.5 5 12.9 4.2 11 4.2C7.3 4.2 4.2 7.3 4.2 11C4.2 14.7 7.3 17.8 11 17.8C12.9 17.8 14.5 17 16 15.5" stroke="#00C2A8" stroke-width="2.2" stroke-linecap="round"/>
-  <path d="M14 9L16.5 6.5L14 4" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <div class="logo-icon"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="10" fill="#050D1F"/>
+  <circle cx="20" cy="20" r="13" fill="none" stroke="#00C2A8" stroke-width="2.5" stroke-dasharray="70 12" stroke-dashoffset="-3"/>
+  <text x="20" y="26" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="18" fill="white" text-anchor="middle">C</text>
+  <circle cx="30.5" cy="15" r="2" fill="#F5A623"/>
+  <circle cx="30.5" cy="25" r="2" fill="#F5A623"/>
 </svg></div>
       <div><div class="brand-text">CareVoy</div><div class="brand-sub">Transport Partner</div></div>
     </div>
     <h1>Join as a Transport Partner</h1>
-    <p class="sub">Free to join. Receive ride requests from healthcare facilities in your service area. You keep <strong>80% of every fare</strong> — no broker fees, no middlemen.</p>
+    <p class="sub">Free to join. Receive ride requests from healthcare facilities in your service area — no broker fees, no middlemen.</p>
 
     <div class="section-label">Company Information</div>
-    <label class="field-label">Company Name *</label>
-    <input type="text" id="companyName" placeholder="ABC Medical Transport LLC" />
+    <label class="fl">Company Name *</label>
+    <input type="text" id="companyName" placeholder="ABC Medical Transport LLC"/>
     <div class="row2">
-      <div><label class="field-label">Contact First Name *</label><input type="text" id="firstName" placeholder="Jane" /></div>
-      <div><label class="field-label">Contact Last Name *</label><input type="text" id="lastName" placeholder="Smith" /></div>
+      <div><label class="fl">Contact First Name *</label><input type="text" id="firstName" placeholder="Jane"/></div>
+      <div><label class="fl">Contact Last Name *</label><input type="text" id="lastName" placeholder="Smith"/></div>
     </div>
-    <label class="field-label">Business Email *</label>
-    <input type="email" id="email" placeholder="jane@abcmedical.com" />
-    <label class="field-label">Contact Phone *</label>
-    <input type="tel" id="phone" placeholder="+1 (614) 555-0000" />
-    <label class="field-label">Dispatch Phone (shown to patients) *</label>
-    <input type="tel" id="dispatchPhone" placeholder="+1 (614) 555-0001" />
-    <label class="field-label">City / Base of Operations *</label>
-    <input type="text" id="city" placeholder="Columbus" />
+    <label class="fl">Business Email *</label>
+    <input type="email" id="email" placeholder="jane@abcmedical.com"/>
+    <label class="fl">Contact Phone *</label>
+    <input type="tel" id="phone" placeholder="+1 (614) 555-0000"/>
+    <label class="fl">Dispatch Phone (shown to patients) *</label>
+    <input type="tel" id="dispatchPhone" placeholder="+1 (614) 555-0001"/>
+    <label class="fl">City / Base of Operations *</label>
+    <input type="text" id="city" placeholder="Columbus"/>
+    <label class="fl">State *</label>
+    <select id="homeState">
+      <option value="">Select state</option>
+            <option value="AL">Alabama</option>
+      <option value="AK">Alaska</option>
+      <option value="AZ">Arizona</option>
+      <option value="AR">Arkansas</option>
+      <option value="CA">California</option>
+      <option value="CO">Colorado</option>
+      <option value="CT">Connecticut</option>
+      <option value="DE">Delaware</option>
+      <option value="DC">Washington DC</option>
+      <option value="FL">Florida</option>
+      <option value="GA">Georgia</option>
+      <option value="HI">Hawaii</option>
+      <option value="ID">Idaho</option>
+      <option value="IL">Illinois</option>
+      <option value="IN">Indiana</option>
+      <option value="IA">Iowa</option>
+      <option value="KS">Kansas</option>
+      <option value="KY">Kentucky</option>
+      <option value="LA">Louisiana</option>
+      <option value="ME">Maine</option>
+      <option value="MD">Maryland</option>
+      <option value="MA">Massachusetts</option>
+      <option value="MI">Michigan</option>
+      <option value="MN">Minnesota</option>
+      <option value="MS">Mississippi</option>
+      <option value="MO">Missouri</option>
+      <option value="MT">Montana</option>
+      <option value="NE">Nebraska</option>
+      <option value="NV">Nevada</option>
+      <option value="NH">New Hampshire</option>
+      <option value="NJ">New Jersey</option>
+      <option value="NM">New Mexico</option>
+      <option value="NY">New York</option>
+      <option value="NC">North Carolina</option>
+      <option value="ND">North Dakota</option>
+      <option value="OH">Ohio</option>
+      <option value="OK">Oklahoma</option>
+      <option value="OR">Oregon</option>
+      <option value="PA">Pennsylvania</option>
+      <option value="RI">Rhode Island</option>
+      <option value="SC">South Carolina</option>
+      <option value="SD">South Dakota</option>
+      <option value="TN">Tennessee</option>
+      <option value="TX">Texas</option>
+      <option value="UT">Utah</option>
+      <option value="VT">Vermont</option>
+      <option value="VA">Virginia</option>
+      <option value="WA">Washington</option>
+      <option value="WV">West Virginia</option>
+      <option value="WI">Wisconsin</option>
+      <option value="WY">Wyoming</option>
+    </select>
 
     <div class="section-label">Operations</div>
-    <label class="field-label">Years in Operation *</label>
+    <label class="fl">Years in Operation *</label>
     <select id="yearsOp">
       <option value="">Select</option>
       <option value="less_1">Less than 1 year</option>
@@ -75,7 +128,8 @@
       <option value="3_5">3-5 years</option>
       <option value="5_plus">5+ years</option>
     </select>
-    <label class="field-label">Fleet Size *</label>
+
+    <label class="fl">Fleet Size *</label>
     <select id="fleetSize">
       <option value="">Select</option>
       <option value="1_5">1-5 vehicles</option>
@@ -83,7 +137,8 @@
       <option value="16_50">16-50 vehicles</option>
       <option value="50_plus">50+ vehicles</option>
     </select>
-    <label class="field-label">Average rides per week *</label>
+
+    <label class="fl">Average rides per week *</label>
     <select id="weeklyRides">
       <option value="">Select</option>
       <option value="under_25">Under 25</option>
@@ -91,15 +146,17 @@
       <option value="100_250">100-250</option>
       <option value="250_plus">250+</option>
     </select>
-    <label class="field-label">Do you currently work with brokers? *</label>
+
+    <label class="fl">Do you currently work with brokers? *</label>
     <select id="brokers">
       <option value="">Select</option>
       <option value="yes">Yes (LogistiCare, MTM, Modivcare, etc.)</option>
       <option value="no">No</option>
       <option value="sometimes">Sometimes</option>
     </select>
-    <label class="field-label">Dispatch software currently used *</label>
-    <select id="dispatchSoftware">
+
+    <label class="fl">Dispatch software currently used *</label>
+    <select id="dispatchSoftware" onchange="showOther(this,'dispatchOther')">
       <option value="">Select</option>
       <option value="trip_master">TripMaster</option>
       <option value="route_genie">RouteGenie</option>
@@ -107,218 +164,224 @@
       <option value="none">None / manual</option>
       <option value="other">Other</option>
     </select>
-    <label class="field-label">Liability insurance in place? *</label>
+    <div class="other-input" id="dispatchOther">
+      <input type="text" id="dispatchOtherVal" placeholder="Please specify your dispatch software"/>
+    </div>
+
+    <label class="fl">Vehicle Types *</label>
+    <select id="vehicleTypes" onchange="showOther(this,'vehicleOther')">
+      <option value="">Select primary vehicle type</option>
+      <option value="ambulatory">Ambulatory</option>
+      <option value="wheelchair">Wheelchair Van</option>
+      <option value="stretcher">Stretcher / Gurney</option>
+      <option value="sedan">Sedan</option>
+      <option value="suv">SUV / Minivan</option>
+      <option value="bariatric">Bariatric</option>
+      <option value="mixed">Mixed fleet (multiple types)</option>
+      <option value="other">Other</option>
+    </select>
+    <div class="other-input" id="vehicleOther">
+      <input type="text" id="vehicleOtherVal" placeholder="Please describe your vehicle types"/>
+    </div>
+
+    <div class="section-label">Service Area</div>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:6px">Which states do you provide rides in? (Select all that apply) *</p>
+    <select id="serviceStates" size="8" multiple style="height:auto;min-height:120px;padding:8px">
+            <option value="AL">Alabama</option>
+      <option value="AK">Alaska</option>
+      <option value="AZ">Arizona</option>
+      <option value="AR">Arkansas</option>
+      <option value="CA">California</option>
+      <option value="CO">Colorado</option>
+      <option value="CT">Connecticut</option>
+      <option value="DE">Delaware</option>
+      <option value="DC">Washington DC</option>
+      <option value="FL">Florida</option>
+      <option value="GA">Georgia</option>
+      <option value="HI">Hawaii</option>
+      <option value="ID">Idaho</option>
+      <option value="IL">Illinois</option>
+      <option value="IN">Indiana</option>
+      <option value="IA">Iowa</option>
+      <option value="KS">Kansas</option>
+      <option value="KY">Kentucky</option>
+      <option value="LA">Louisiana</option>
+      <option value="ME">Maine</option>
+      <option value="MD">Maryland</option>
+      <option value="MA">Massachusetts</option>
+      <option value="MI">Michigan</option>
+      <option value="MN">Minnesota</option>
+      <option value="MS">Mississippi</option>
+      <option value="MO">Missouri</option>
+      <option value="MT">Montana</option>
+      <option value="NE">Nebraska</option>
+      <option value="NV">Nevada</option>
+      <option value="NH">New Hampshire</option>
+      <option value="NJ">New Jersey</option>
+      <option value="NM">New Mexico</option>
+      <option value="NY">New York</option>
+      <option value="NC">North Carolina</option>
+      <option value="ND">North Dakota</option>
+      <option value="OH">Ohio</option>
+      <option value="OK">Oklahoma</option>
+      <option value="OR">Oregon</option>
+      <option value="PA">Pennsylvania</option>
+      <option value="RI">Rhode Island</option>
+      <option value="SC">South Carolina</option>
+      <option value="SD">South Dakota</option>
+      <option value="TN">Tennessee</option>
+      <option value="TX">Texas</option>
+      <option value="UT">Utah</option>
+      <option value="VT">Vermont</option>
+      <option value="VA">Virginia</option>
+      <option value="WA">Washington</option>
+      <option value="WV">West Virginia</option>
+      <option value="WI">Wisconsin</option>
+      <option value="WY">Wyoming</option>
+    </select>
+    <p style="font-size:11px;color:#9CA3AF;margin-top:4px">Hold Ctrl (Windows) or Cmd (Mac) to select multiple states</p>
+
+    <div class="section-label">Insurance</div>
+    <label class="fl">Liability insurance in place? *</label>
     <select id="hasInsurance">
       <option value="">Select</option>
       <option value="yes">Yes</option>
       <option value="no">No</option>
     </select>
 
-    <div class="section-label">Service Area</div>
-    <p style="font-size:12px;color:#6B7280;margin-bottom:6px">Select all states where you provide rides *</p>
-    <div class="checkbox-group" id="statesGroup">
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="AL" /><span>AL</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="AK" /><span>AK</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="AZ" /><span>AZ</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="AR" /><span>AR</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="CA" /><span>CA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="CO" /><span>CO</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="CT" /><span>CT</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="DE" /><span>DE</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="DC" /><span>DC</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="FL" /><span>FL</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="GA" /><span>GA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="HI" /><span>HI</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="ID" /><span>ID</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="IL" /><span>IL</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="IN" /><span>IN</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="IA" /><span>IA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="KS" /><span>KS</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="KY" /><span>KY</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="LA" /><span>LA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="ME" /><span>ME</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MD" /><span>MD</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MA" /><span>MA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MI" /><span>MI</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MN" /><span>MN</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MS" /><span>MS</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MO" /><span>MO</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="MT" /><span>MT</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NE" /><span>NE</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NV" /><span>NV</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NH" /><span>NH</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NJ" /><span>NJ</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NM" /><span>NM</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NY" /><span>NY</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="NC" /><span>NC</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="ND" /><span>ND</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="OH" /><span>OH</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="OK" /><span>OK</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="OR" /><span>OR</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="PA" /><span>PA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="RI" /><span>RI</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="SC" /><span>SC</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="SD" /><span>SD</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="TN" /><span>TN</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="TX" /><span>TX</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="UT" /><span>UT</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="VT" /><span>VT</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="VA" /><span>VA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="WA" /><span>WA</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="WV" /><span>WV</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="WI" /><span>WI</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="WY" /><span>WY</span></label>
-    </div>
-
-    <div class="section-label">Vehicle Types *</div>
-    <p style="font-size:12px;color:#6B7280;margin-bottom:6px">Select all vehicle types you operate (required) *</p>
-    <div class="checkbox-group" id="vehiclesGroup" style="max-height:none">
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="ambulatory" /><span>Ambulatory</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="wheelchair" /><span>Wheelchair Van</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="stretcher" /><span>Stretcher / Gurney</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="sedan" /><span>Sedan</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="suv" /><span>SUV / Minivan</span></label>
-      <label class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="bariatric" /><span>Bariatric</span></label>
-    </div>
-
-    <div class="section-label">Insurance Document</div>
-    <label class="field-label">Upload Proof of Liability Insurance *</label>
+    <label class="fl">Upload Proof of Liability Insurance *</label>
     <div class="upload-area" onclick="document.getElementById('insuranceFile').click()">
-      <input type="file" id="insuranceFile" accept=".pdf,.jpg,.jpeg,.png" onchange="showFileName(this,'insuranceName')" />
-      <div class="upload-label">&#128206; <strong>Click to upload</strong> or drag and drop<br><span style="font-size:11px">PDF, JPG or PNG — max 5MB</span></div>
+      <input type="file" id="insuranceFile" accept=".pdf,.jpg,.jpeg,.png" onchange="showFileName(this,'insuranceName')"/>
+      <div class="upload-txt">&#128206; <strong>Click to upload</strong> or drag and drop<br><span style="font-size:11px">PDF, JPG or PNG &mdash; max 5MB</span></div>
       <div class="upload-name" id="insuranceName"></div>
     </div>
 
     <div class="section-label">Account Setup</div>
-    <label class="field-label">Password *</label>
-    <input type="password" id="password" placeholder="Minimum 8 characters" />
+    <label class="fl">Password *</label>
+    <input type="password" id="password" placeholder="Minimum 8 characters"/>
 
     <div class="error" id="errMsg"></div>
     <button class="submit" id="btn" onclick="submitNemt()">Join CareVoy &rarr;</button>
-    <p class="note">By submitting, you agree to CareVoy's partner terms. We'll review your application and notify you within 24 hours.</p>
+    <p class="note">By submitting, you agree to CareVoy&rsquo;s partner terms. We&rsquo;ll review your application and notify you within 24 hours.</p>
   </div>
 
   <div id="successCard" style="display:none;max-width:560px;width:100%;background:white;border-radius:20px;padding:48px 36px;box-shadow:0 4px 24px rgba(5,13,31,0.08);text-align:center">
     <div style="font-size:48px;margin-bottom:16px">&#9989;</div>
     <h2 style="font-size:20px;font-weight:700;color:#050D1F;margin-bottom:10px">Application received!</h2>
-    <p style="font-size:13px;color:#6B7280;line-height:1.7">Thank you for applying to join the CareVoy network. We'll review your application and reach out within 24 hours.<br><br>Once approved, sign in at <a href="https://partners.carevoy.co" style="color:#00C2A8;font-weight:600">partners.carevoy.co</a></p>
+    <p style="font-size:13px;color:#6B7280;line-height:1.7">Thank you for applying to join the CareVoy network. We&rsquo;ll review your application and reach out within 24 hours.<br><br>Once approved, sign in at <a href="https://partners.carevoy.co" style="color:#00C2A8;font-weight:600">partners.carevoy.co</a></p>
   </div>
 
   <script>
+    var SUPA='https://byflpckbjjumxxjxoplk.supabase.co';
+    var SUPA_KEY='sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+    var API='https://care-voy-api-server.vercel.app';
 
-    var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
-    var SUPA_KEY = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
-    var API = 'https://care-voy-api-server.vercel.app';
+    function val(id){return (document.getElementById(id)||{}).value?.trim()||'';}
 
-    function val(id) { return (document.getElementById(id)||{}).value?.trim()||''; }
-
-    function toggleCheck(el) {
-      var cb = el.querySelector('input[type="checkbox"]');
-      setTimeout(function() { el.classList.toggle('checked', cb.checked); }, 0);
+    function showOther(sel,divId){
+      document.getElementById(divId).style.display = sel.value==='other'?'block':'none';
     }
 
-    function getChecked(groupId) {
-      return Array.from(document.querySelectorAll('#'+groupId+' input[type="checkbox"]'))
-        .filter(function(b){return b.checked;}).map(function(b){return b.value;});
+    function showFileName(input,nameId){
+      var el=document.getElementById(nameId);
+      if(input.files[0]){el.textContent='&#10003; '+input.files[0].name;el.style.display='block';}
     }
 
-    function showError(msg) {
-      var el = document.getElementById('errMsg');
-      el.textContent = msg; el.style.display = 'block';
-      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 20);
+    function getMultiSelect(id){
+      var opts=document.getElementById(id).options;
+      return Array.from(opts).filter(function(o){return o.selected;}).map(function(o){return o.value;});
     }
 
-    async function uploadInsurance(uid, token, file) {
-      if (!file) return null;
-      var ext = file.name.split('.').pop();
-      var path = 'insurance/' + uid + '.' + ext;
-      var r = await fetch(SUPA + '/storage/v1/object/partner-docs/' + path, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'apikey': SUPA_KEY, 'Content-Type': file.type },
-        body: file
+    function showError(msg){
+      var el=document.getElementById('errMsg');
+      el.textContent=msg;el.style.display='block';
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+    }
+
+    async function uploadInsurance(uid,token,file){
+      if(!file) return null;
+      var ext=file.name.split('.').pop();
+      var path='insurance/'+uid+'.'+ext;
+      var r=await fetch(SUPA+'/storage/v1/object/partner-docs/'+path,{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+token,'apikey':SUPA_KEY,'Content-Type':file.type},
+        body:file
       });
-      return r.ok ? path : null;
+      return r.ok?path:null;
     }
 
-    async function notifyTeam(type, name, email, phone, city, state, details) {
-      try {
-        await fetch(API + '/api/notify/new-partner', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type, name, email, phone, city, state, details })
-        });
-      } catch(e) { console.warn('notify failed (non-fatal):', e.message); }
-    }
+    async function submitNemt(){
+      var btn=document.getElementById('btn');
+      document.getElementById('errMsg').style.display='none';
 
-    function showFileName(input, nameId) {
-      var el = document.getElementById(nameId);
-      if (input.files[0]) { el.textContent = '&#10003; ' + input.files[0].name; el.style.display = 'block'; }
-    }
+      var company=val('companyName'),first=val('firstName'),last=val('lastName'),
+          email=val('email'),phone=val('phone'),dispatch=val('dispatchPhone'),
+          city=val('city'),homeState=val('homeState'),yearsOp=val('yearsOp'),
+          fleet=val('fleetSize'),weeklyR=val('weeklyRides'),brokers=val('brokers'),
+          software=val('dispatchSoftware'),vehicles=val('vehicleTypes'),
+          hasIns=val('hasInsurance'),password=val('password');
+      var states=getMultiSelect('serviceStates');
 
-    async function submitNemt() {
-      var btn = document.getElementById('btn');
-      document.getElementById('errMsg').style.display = 'none';
+      // Resolve "other" fields
+      if(software==='other') software=val('dispatchOtherVal')||'other';
+      if(vehicles==='other') vehicles=val('vehicleOtherVal')||'other';
 
-      var company = val('companyName'), first = val('firstName'), last = val('lastName'),
-          email = val('email'), phone = val('phone'), dispatch = val('dispatchPhone'),
-          city = val('city'), yearsOp = val('yearsOp'), fleet = val('fleetSize'),
-          weeklyR = val('weeklyRides'), brokers = val('brokers'), software = val('dispatchSoftware'),
-          hasIns = val('hasInsurance'), password = val('password');
-      var states = getChecked('statesGroup');
-      var vehicles = getChecked('vehiclesGroup');
-      var insFile = document.getElementById('insuranceFile').files[0];
+      var insFile=document.getElementById('insuranceFile').files[0];
 
-      if (!company||!first||!last||!email||!phone||!dispatch||!city||!yearsOp||!fleet||!weeklyR||!brokers||!software||!hasIns||!password)
+      if(!company||!first||!last||!email||!phone||!dispatch||!city||!homeState||!yearsOp||!fleet||!weeklyR||!brokers||!software||!vehicles||!hasIns||!password)
         return showError('Please fill in all required fields.');
-      if (states.length === 0) return showError('Please select at least one service state.');
-      if (vehicles.length === 0) return showError('Please select at least one vehicle type.');
-      if (!insFile) return showError('Please upload your proof of liability insurance.');
-      if (password.length < 8) return showError('Password must be at least 8 characters.');
+      if(states.length===0) return showError('Please select at least one service state.');
+      if(!insFile) return showError('Please upload your proof of liability insurance.');
+      if(password.length<8) return showError('Password must be at least 8 characters.');
 
-      btn.disabled = true; btn.textContent = 'Submitting…';
+      btn.disabled=true;btn.textContent='Submitting…';
 
-      try {
-        var signupRes = await fetch(SUPA + '/auth/v1/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
-          body: JSON.stringify({ email, password })
+      try{
+        var sr=await fetch(SUPA+'/auth/v1/signup',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':SUPA_KEY},
+          body:JSON.stringify({email,password})
         });
-        var sd = await signupRes.json();
-        if (!signupRes.ok || !sd.user) throw new Error(sd.error_description || sd.msg || 'Signup failed. Email may already be registered.');
-        var uid = sd.user.id, token = sd.access_token;
-        var H = { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token };
+        var sd=await sr.json();
+        if(!sr.ok||!sd.user) throw new Error(sd.error_description||sd.msg||'Signup failed. Email may already be registered.');
+        var uid=sd.user.id,token=sd.access_token;
+        var H={'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+token};
 
-        var insPath = await uploadInsurance(uid, token, insFile);
+        var insPath=await uploadInsurance(uid,token,insFile);
 
-        var pRes = await fetch(SUPA + '/rest/v1/nemt_partners', {
-          method: 'POST', headers: { ...H, 'Prefer': 'return=representation' },
-          body: JSON.stringify({ company_name: company, city, service_states: states, vehicle_types: vehicles,
-            dispatch_phone: dispatch, active: false, pending_review: true,
-            intake_data: { years_operation: yearsOp, fleet_size: fleet, weekly_rides: weeklyR,
-              works_with_brokers: brokers, dispatch_software: software, has_insurance: hasIns,
-              insurance_doc: insPath, contact_phone: phone } })
+        var pr=await fetch(SUPA+'/rest/v1/nemt_partners',{
+          method:'POST',headers:{...H,'Prefer':'return=representation'},
+          body:JSON.stringify({company_name:company,city,service_states:states,
+            vehicle_types:[vehicles],dispatch_phone:dispatch,active:false,pending_review:true,
+            intake_data:{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
+              works_with_brokers:brokers,dispatch_software:software,has_insurance:hasIns,
+              insurance_doc:insPath,contact_phone:phone,home_state:homeState}})
         });
-        var pd = await pRes.json();
-        var partnerId = Array.isArray(pd) ? pd[0]?.id : pd?.id;
+        var pd=await pr.json();
+        var partnerId=Array.isArray(pd)?pd[0]?.id:pd?.id;
 
-        await fetch(SUPA + '/rest/v1/staff', { method: 'POST', headers: H,
-          body: JSON.stringify({ id: uid, role: 'nemt', partner_id: partnerId }) });
+        await fetch(SUPA+'/rest/v1/staff',{method:'POST',headers:H,
+          body:JSON.stringify({id:uid,role:'nemt',partner_id:partnerId})});
 
-        await fetch(SUPA + '/rest/v1/nemt_staff', { method: 'POST', headers: H,
-          body: JSON.stringify({ id: uid, partner_id: partnerId, full_name: first+' '+last,
-            email, phone, role: 'dispatcher' }) }).catch(function(){});
+        await fetch(SUPA+'/rest/v1/nemt_staff',{method:'POST',headers:H,
+          body:JSON.stringify({id:uid,partner_id:partnerId,full_name:first+' '+last,
+            email,phone,role:'dispatcher'})}).catch(function(){});
 
-        await notifyTeam('nemt', company, email, phone, city, states.join(', '), {
-          contact: first+' '+last, fleet_size: fleet, vehicles: vehicles.join(', '),
-          service_states: states.join(', '), weekly_rides: weeklyR,
-          works_with_brokers: brokers, insurance_uploaded: insPath ? 'Yes' : 'No'
-        });
+        try{
+          await fetch(API+'/api/notify/new-partner',{method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({type:'nemt',name:company,email,phone,city,state:homeState,
+              details:{contact:first+' '+last,fleet_size:fleet,vehicles,
+                service_states:states.join(', '),weekly_rides:weeklyR,
+                works_with_brokers:brokers,insurance_uploaded:insPath?'Yes':'No'}})
+          });
+        }catch(e){}
 
-        document.getElementById('formCard').style.display = 'none';
-        document.getElementById('successCard').style.display = 'block';
-      } catch(e) {
-        showError(e.message || 'Something went wrong. Email partners@carevoy.co');
-        btn.disabled = false; btn.textContent = 'Join CareVoy →';
+        document.getElementById('formCard').style.display='none';
+        document.getElementById('successCard').style.display='block';
+      }catch(e){
+        showError(e.message||'Something went wrong. Email partners@carevoy.co');
+        btn.disabled=false;btn.textContent='Join CareVoy →';
       }
     }
   </script>
