@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Partner with CareVoy | Facility Application</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -10,44 +9,52 @@
     body { font-family: 'Poppins', -apple-system, sans-serif; background: #F0F4F8; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 24px; }
     .card { background: white; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 560px; box-shadow: 0 4px 24px rgba(5,13,31,0.08); }
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-    .logo-icon { width: 36px; height: 36px; background: #050D1F; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #00C2A8; font-size: 16px; font-weight: 700; }
+    .logo-icon { width: 36px; height: 36px; background: #050D1F; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 22px; height: 22px; }
     .brand-text { color: #050D1F; font-size: 18px; font-weight: 700; }
     .brand-sub { color: #00C2A8; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
     h1 { font-size: 22px; font-weight: 700; color: #050D1F; margin-bottom: 6px; }
     .sub { font-size: 13px; color: #6B7280; margin-bottom: 28px; line-height: 1.6; }
     .section-label { font-size: 10px; font-weight: 700; color: #00C2A8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; margin-top: 28px; padding-bottom: 6px; border-bottom: 1px solid #F0F4F8; }
-    label { display: block; font-size: 11px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; margin-top: 14px; }
-    input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 14px; color: #050D1F; background: #F8FAFC; font-family: inherit; outline: none; transition: border-color 0.15s; }
+    label.field-label { display: block; font-size: 11px; font-weight: 700; color: #050D1F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; margin-top: 14px; }
+    input[type=text], input[type=email], input[type=tel], input[type=password], select { width: 100%; padding: 12px 14px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 14px; color: #050D1F; background: #F8FAFC; font-family: inherit; outline: none; transition: border-color 0.15s; }
     input:focus, select:focus { border-color: #00C2A8; background: white; }
     .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .checkbox-group { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 7px; max-height: 180px; overflow-y: auto; padding: 8px; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px; }
+    .checkbox-item { display: flex; align-items: center; gap: 5px; background: white; border: 1.5px solid #E2E8F0; border-radius: 7px; padding: 6px 10px; cursor: pointer; transition: all 0.15s; }
+    .checkbox-item input[type="checkbox"] { width: auto; padding: 0; background: none; border: none; accent-color: #00C2A8; }
+    .checkbox-item.checked { border-color: #00C2A8; background: rgba(0,194,168,0.06); }
+    .checkbox-item span { font-size: 12px; font-weight: 600; color: #050D1F; }
+    .upload-area { border: 2px dashed #E2E8F0; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.15s; background: #F8FAFC; margin-top: 6px; }
+    .upload-area:hover { border-color: #00C2A8; }
+    .upload-area input { display: none; }
+    .upload-label { font-size: 13px; color: #6B7280; }
+    .upload-label strong { color: #00C2A8; }
+    .upload-name { font-size: 12px; color: #050D1F; font-weight: 600; margin-top: 6px; display: none; }
     .submit { width: 100%; padding: 15px; background: #050D1F; color: #00C2A8; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 28px; font-family: inherit; transition: opacity 0.15s; }
     .submit:hover { opacity: 0.88; }
     .submit:disabled { opacity: 0.5; cursor: not-allowed; }
-    .error { color: #EF4444; font-size: 12px; margin-top: 10px; display: none; }
+    .error { color: #EF4444; font-size: 12px; margin-top: 10px; display: none; background: #FEF2F2; padding: 10px 12px; border-radius: 8px; }
     .note { font-size: 11px; color: #9CA3AF; margin-top: 16px; text-align: center; line-height: 1.5; }
-    .success { display: none; text-align: center; padding: 48px 20px; }
-    .success-icon { font-size: 48px; margin-bottom: 16px; }
-    .success h2 { font-size: 20px; font-weight: 700; color: #050D1F; margin-bottom: 10px; }
-    .success p { font-size: 13px; color: #6B7280; line-height: 1.7; }
-  </style>
+</style>
 </head>
 <body>
   <div class="card" id="formCard">
     <div class="logo">
-      <div class="logo-icon">C</div>
+      <div class="logo-icon"><svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M16 6.5C14.5 5 12.9 4.2 11 4.2C7.3 4.2 4.2 7.3 4.2 11C4.2 14.7 7.3 17.8 11 17.8C12.9 17.8 14.5 17 16 15.5" stroke="#00C2A8" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M14 9L16.5 6.5L14 4" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div>
       <div><div class="brand-text">CareVoy</div><div class="brand-sub">Facility Partner</div></div>
     </div>
-
     <h1>Partner with CareVoy</h1>
-    <p class="sub">Tell us about your facility. We'll review your application and reach out within 24 hours with a custom plan and pricing — no commitment required.</p>
+    <p class="sub">Tell us about your facility. We'll review your application and follow up within 24 hours with a custom plan — no commitment required.</p>
 
     <div class="section-label">Facility Information</div>
-
-    <label>Facility Name *</label>
-    <input type="text" id="facilityName" placeholder="Columbus Family Medicine" required />
-
-    <label>Facility Type *</label>
-    <select id="facilityType" required>
+    <label class="field-label">Facility Name *</label>
+    <input type="text" id="facilityName" placeholder="Columbus Family Medicine" />
+    <label class="field-label">Facility Type *</label>
+    <select id="facilityType">
       <option value="">Select facility type</option>
       <optgroup label="Clinics & Offices">
         <option value="independent_clinic">Independent Clinic</option>
@@ -77,37 +84,72 @@
       </optgroup>
       <option value="other">Other</option>
     </select>
-
     <div class="row2">
-      <div>
-        <label>City *</label>
-        <input type="text" id="city" placeholder="Columbus" required />
-      </div>
-      <div>
-        <label>State *</label>
-        <select id="state" required>
-          <option value="">State</option>
-          <option>OH</option><option>FL</option><option>VA</option>
-          <option>MD</option><option>DC</option><option>NC</option>
-          <option>TN</option><option>TX</option><option>AZ</option>
-          <option>GA</option><option>NY</option><option>NJ</option>
-          <option>PA</option><option>IL</option><option>CA</option>
-          <option>Other</option>
-        </select>
+      <div><label class="field-label">City *</label><input type="text" id="city" placeholder="Columbus" /></div>
+      <div><label class="field-label">State *</label>
+        <select id="state"><option value="">State</option>      <option value="AL">Alabama</option>
+      <option value="AK">Alaska</option>
+      <option value="AZ">Arizona</option>
+      <option value="AR">Arkansas</option>
+      <option value="CA">California</option>
+      <option value="CO">Colorado</option>
+      <option value="CT">Connecticut</option>
+      <option value="DE">Delaware</option>
+      <option value="DC">Washington DC</option>
+      <option value="FL">Florida</option>
+      <option value="GA">Georgia</option>
+      <option value="HI">Hawaii</option>
+      <option value="ID">Idaho</option>
+      <option value="IL">Illinois</option>
+      <option value="IN">Indiana</option>
+      <option value="IA">Iowa</option>
+      <option value="KS">Kansas</option>
+      <option value="KY">Kentucky</option>
+      <option value="LA">Louisiana</option>
+      <option value="ME">Maine</option>
+      <option value="MD">Maryland</option>
+      <option value="MA">Massachusetts</option>
+      <option value="MI">Michigan</option>
+      <option value="MN">Minnesota</option>
+      <option value="MS">Mississippi</option>
+      <option value="MO">Missouri</option>
+      <option value="MT">Montana</option>
+      <option value="NE">Nebraska</option>
+      <option value="NV">Nevada</option>
+      <option value="NH">New Hampshire</option>
+      <option value="NJ">New Jersey</option>
+      <option value="NM">New Mexico</option>
+      <option value="NY">New York</option>
+      <option value="NC">North Carolina</option>
+      <option value="ND">North Dakota</option>
+      <option value="OH">Ohio</option>
+      <option value="OK">Oklahoma</option>
+      <option value="OR">Oregon</option>
+      <option value="PA">Pennsylvania</option>
+      <option value="RI">Rhode Island</option>
+      <option value="SC">South Carolina</option>
+      <option value="SD">South Dakota</option>
+      <option value="TN">Tennessee</option>
+      <option value="TX">Texas</option>
+      <option value="UT">Utah</option>
+      <option value="VT">Vermont</option>
+      <option value="VA">Virginia</option>
+      <option value="WA">Washington</option>
+      <option value="WV">West Virginia</option>
+      <option value="WI">Wisconsin</option>
+      <option value="WY">Wyoming</option></select>
       </div>
     </div>
-
-    <label>Number of Locations *</label>
-    <select id="locations" required>
+    <label class="field-label">Number of Locations *</label>
+    <select id="locations">
       <option value="">Select</option>
       <option value="1">1 location</option>
-      <option value="2-5">2-5 locations</option>
-      <option value="6-20">6-20 locations</option>
-      <option value="20+">20+ locations</option>
+      <option value="2_5">2-5 locations</option>
+      <option value="6_20">6-20 locations</option>
+      <option value="20_plus">20+ locations</option>
     </select>
-
-    <label>EHR / Practice Management System *</label>
-    <select id="ehr" required>
+    <label class="field-label">EHR / Practice Management System *</label>
+    <select id="ehr">
       <option value="">Select your system</option>
       <option value="athenahealth">athenahealth</option>
       <option value="epic">Epic</option>
@@ -124,201 +166,191 @@
     </select>
 
     <div class="section-label">Patient Transport Volume</div>
-
-    <label>Estimated patients needing transport per month *</label>
-    <select id="patientVolume" required>
+    <label class="field-label">Estimated patients needing transport per month *</label>
+    <select id="patientVolume">
       <option value="">Select range</option>
       <option value="under_25">Under 25 patients</option>
-      <option value="25_50">25 – 50 patients</option>
-      <option value="50_100">50 – 100 patients</option>
-      <option value="100_250">100 – 250 patients</option>
+      <option value="25_50">25-50 patients</option>
+      <option value="50_100">50-100 patients</option>
+      <option value="100_250">100-250 patients</option>
       <option value="250_plus">250+ patients</option>
     </select>
-
-    <label>How often do patients need rides? *</label>
-    <select id="rideFrequency" required>
+    <label class="field-label">How often do patients need rides? *</label>
+    <select id="rideFrequency">
       <option value="">Select</option>
       <option value="one_time">Mostly one-time appointments</option>
       <option value="recurring">Mostly recurring (dialysis, therapy, etc.)</option>
       <option value="mix">Mix of both</option>
     </select>
-
-    <label>Who typically pays for patient rides? *</label>
-    <select id="paymentType" required>
+    <label class="field-label">Who typically pays for patient rides? *</label>
+    <select id="paymentType">
       <option value="">Select</option>
       <option value="patient_self_pay">Patient self-pay (out of pocket / HSA/FSA)</option>
       <option value="facility_covers">Facility covers ride costs</option>
       <option value="insurance_medicaid">Insurance / Medicaid</option>
-      <option value="mix">Mix of all three</option>
+      <option value="mix">Mix</option>
     </select>
-
-    <label>How do you currently coordinate transport? *</label>
-    <select id="currentProcess" required>
+    <label class="field-label">How do you currently coordinate transport? *</label>
+    <select id="currentProcess">
       <option value="">Select</option>
       <option value="phone_calls">Phone calls to NEMT companies</option>
       <option value="broker">Through a broker (LogistiCare, MTM, etc.)</option>
       <option value="patient_arranges">Patient arranges their own</option>
-      <option value="we_dont">We don't coordinate — patients often miss appointments</option>
+      <option value="we_dont">We don't — patients often miss appointments</option>
       <option value="other">Other</option>
     </select>
-
-    <label>Biggest transport challenge *</label>
-    <select id="painPoint" required>
+    <label class="field-label">Biggest transport challenge *</label>
+    <select id="painPoint">
       <option value="">Select</option>
       <option value="no_shows">High no-show rate</option>
       <option value="coordinator_time">Too much coordinator time on logistics</option>
-      <option value="patient_confusion">Patients confused about how to arrange rides</option>
+      <option value="patient_confusion">Patients confused about arranging rides</option>
       <option value="no_hsa">No HSA/FSA receipt system for patients</option>
       <option value="all">All of the above</option>
     </select>
 
     <div class="section-label">Primary Contact</div>
-
     <div class="row2">
-      <div>
-        <label>First Name *</label>
-        <input type="text" id="firstName" placeholder="Jane" required />
-      </div>
-      <div>
-        <label>Last Name *</label>
-        <input type="text" id="lastName" placeholder="Smith" required />
-      </div>
+      <div><label class="field-label">First Name *</label><input type="text" id="firstName" placeholder="Jane" /></div>
+      <div><label class="field-label">Last Name *</label><input type="text" id="lastName" placeholder="Smith" /></div>
     </div>
-
-    <label>Title / Role *</label>
-    <select id="title" required>
+    <label class="field-label">Title / Role *</label>
+    <select id="title">
       <option value="">Select</option>
       <option value="physician_owner">Physician / Owner</option>
       <option value="practice_manager">Practice Manager</option>
-      <option value="administrator">Administrator</option>
+      <option value="administrator">Administrator / Executive Director</option>
       <option value="coordinator">Care Coordinator</option>
       <option value="operations">Operations Director</option>
       <option value="other">Other</option>
     </select>
+    <label class="field-label">Work Email *</label>
+    <input type="email" id="email" placeholder="jane@yourpractice.com" />
+    <label class="field-label">Phone *</label>
+    <input type="tel" id="phone" placeholder="+1 (614) 555-0000" />
 
-    <label>Work Email *</label>
-    <input type="email" id="email" placeholder="jane@yourpractice.com" required />
-
-    <label>Phone *</label>
-    <input type="tel" id="phone" placeholder="+1 (614) 555-0000" required />
-
-    <div class="section-label">Create Your Account</div>
-    <p style="font-size:12px;color:#6B7280;margin-bottom:4px">You'll use this to log in once your account is approved.</p>
-
-    <label>Password *</label>
-    <input type="password" id="password" placeholder="Minimum 8 characters" required />
+    <div class="section-label">Account Setup</div>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:4px">You'll use this to access your coordinator dashboard once approved.</p>
+    <label class="field-label">Password *</label>
+    <input type="password" id="password" placeholder="Minimum 8 characters" />
 
     <div class="error" id="errMsg"></div>
-    <button class="submit" id="btn" onclick="submitForm()">Submit Application &rarr;</button>
-    <p class="note">No commitment required. We'll review your application and reach out within 24 hours with a custom pricing plan tailored to your facility.</p>
+    <button class="submit" id="btn" onclick="submitFacility()">Submit Application &rarr;</button>
+    <p class="note">No commitment required. We'll review your application and reach out within 24 hours with a custom pricing plan tailored to your facility size and volume.</p>
   </div>
 
   <div id="successCard" style="display:none;max-width:560px;width:100%;background:white;border-radius:20px;padding:48px 36px;box-shadow:0 4px 24px rgba(5,13,31,0.08);text-align:center">
     <div style="font-size:48px;margin-bottom:16px">&#127973;</div>
     <h2 style="font-size:20px;font-weight:700;color:#050D1F;margin-bottom:10px">Application received!</h2>
-    <p style="font-size:13px;color:#6B7280;line-height:1.7">Thank you for applying to partner with CareVoy. Our team will review your application and reach out within 24 hours with a custom plan and next steps.<br><br>In the meantime, feel free to email us at <a href="mailto:partners@carevoy.co" style="color:#00C2A8;font-weight:600">partners@carevoy.co</a> with any questions.</p>
+    <p style="font-size:13px;color:#6B7280;line-height:1.7">Thank you for applying to partner with CareVoy. We'll review your information and reach out within 24 hours with a custom plan and next steps.<br><br>Questions? Email us at <a href="mailto:partners@carevoy.co" style="color:#00C2A8;font-weight:600">partners@carevoy.co</a></p>
   </div>
 
   <script>
+
     var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
     var SUPA_KEY = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+    var API = 'https://care-voy-api-server.vercel.app';
 
-    function val(id) { return document.getElementById(id).value.trim(); }
+    function val(id) { return (document.getElementById(id)||{}).value?.trim()||''; }
 
-    async function submitForm() {
+    function toggleCheck(el) {
+      var cb = el.querySelector('input[type="checkbox"]');
+      setTimeout(function() { el.classList.toggle('checked', cb.checked); }, 0);
+    }
+
+    function getChecked(groupId) {
+      return Array.from(document.querySelectorAll('#'+groupId+' input[type="checkbox"]'))
+        .filter(function(b){return b.checked;}).map(function(b){return b.value;});
+    }
+
+    function showError(msg) {
+      var el = document.getElementById('errMsg');
+      el.textContent = msg; el.style.display = 'block';
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 20);
+    }
+
+    async function uploadInsurance(uid, token, file) {
+      if (!file) return null;
+      var ext = file.name.split('.').pop();
+      var path = 'insurance/' + uid + '.' + ext;
+      var r = await fetch(SUPA + '/storage/v1/object/partner-docs/' + path, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'apikey': SUPA_KEY, 'Content-Type': file.type },
+        body: file
+      });
+      return r.ok ? path : null;
+    }
+
+    async function notifyTeam(type, name, email, phone, city, state, details) {
+      try {
+        await fetch(API + '/api/notify/new-partner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, name, email, phone, city, state, details })
+        });
+      } catch(e) { console.warn('notify failed (non-fatal):', e.message); }
+    }
+
+    async function submitFacility() {
       var btn = document.getElementById('btn');
       document.getElementById('errMsg').style.display = 'none';
 
       var required = ['facilityName','facilityType','city','state','locations','ehr',
         'patientVolume','rideFrequency','paymentType','currentProcess','painPoint',
         'firstName','lastName','title','email','phone','password'];
-      for (var i = 0; i < required.length; i++) {
-        if (!val(required[i])) {
-          document.getElementById('errMsg').textContent = 'Please fill in all required fields.';
-          document.getElementById('errMsg').style.display = 'block';
-          return;
-        }
+      for (var i=0;i<required.length;i++) {
+        if (!val(required[i])) return showError('Please fill in all required fields.');
       }
-      if (val('password').length < 8) {
-        document.getElementById('errMsg').textContent = 'Password must be at least 8 characters.';
-        document.getElementById('errMsg').style.display = 'block';
-        return;
-      }
+      if (val('password').length < 8) return showError('Password must be at least 8 characters.');
 
-      btn.disabled = true;
-      btn.textContent = 'Submitting…';
+      btn.disabled = true; btn.textContent = 'Submitting…';
 
       try {
-        // Create auth user
         var signupRes = await fetch(SUPA + '/auth/v1/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
           body: JSON.stringify({ email: val('email'), password: val('password') })
         });
-        var signupData = await signupRes.json();
-        if (!signupRes.ok || !signupData.user) {
-          throw new Error(signupData.error_description || signupData.msg || 'Signup failed. This email may already be registered.');
-        }
-        var uid = signupData.user.id;
-        var token = signupData.access_token;
+        var sd = await signupRes.json();
+        if (!signupRes.ok || !sd.user) throw new Error(sd.error_description || sd.msg || 'Signup failed. Email may already be registered.');
+        var uid = sd.user.id, token = sd.access_token;
         var H = { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token };
 
-        // Create hospital record (pending review)
-        var hospRes = await fetch(SUPA + '/rest/v1/hospitals', {
-          method: 'POST',
-          headers: { ...H, 'Prefer': 'return=representation' },
-          body: JSON.stringify({
-            name: val('facilityName'),
-            facility_type: val('facilityType'),
-            city: val('city'),
-            state: val('state'),
-            active: false,
-            pending_review: true,
-            intake_data: {
-              locations: val('locations'),
-              ehr: val('ehr'),
-              patient_volume: val('patientVolume'),
-              ride_frequency: val('rideFrequency'),
-              payment_type: val('paymentType'),
-              current_process: val('currentProcess'),
-              pain_point: val('painPoint'),
-              contact_title: val('title'),
-              contact_phone: val('phone')
-            }
-          })
+        var hRes = await fetch(SUPA + '/rest/v1/hospitals', {
+          method: 'POST', headers: { ...H, 'Prefer': 'return=representation' },
+          body: JSON.stringify({ name: val('facilityName'), facility_type: val('facilityType'),
+            city: val('city'), state: val('state'), active: false, pending_review: true,
+            intake_data: { locations: val('locations'), ehr: val('ehr'),
+              patient_volume: val('patientVolume'), ride_frequency: val('rideFrequency'),
+              payment_type: val('paymentType'), current_process: val('currentProcess'),
+              pain_point: val('painPoint'), contact_title: val('title'), contact_phone: val('phone') } })
         });
-        var hospData = await hospRes.json();
-        var hospitalId = Array.isArray(hospData) ? hospData[0]?.id : hospData?.id;
+        var hd = await hRes.json();
+        var hospitalId = Array.isArray(hd) ? hd[0]?.id : hd?.id;
 
-        // Create coordinator record
         if (hospitalId) {
           await fetch(SUPA + '/rest/v1/hospital_coordinators', {
-            method: 'POST',
-            headers: H,
-            body: JSON.stringify({
-              id: uid,
-              full_name: val('firstName') + ' ' + val('lastName'),
-              email: val('email'),
-              hospital_id: hospitalId
-            })
+            method: 'POST', headers: H,
+            body: JSON.stringify({ id: uid, full_name: val('firstName')+' '+val('lastName'),
+              email: val('email'), hospital_id: hospitalId })
           });
         }
+        await fetch(SUPA + '/rest/v1/staff', { method: 'POST', headers: H,
+          body: JSON.stringify({ id: uid, role: 'coordinator' }) });
 
-        // Create staff record
-        await fetch(SUPA + '/rest/v1/staff', {
-          method: 'POST',
-          headers: H,
-          body: JSON.stringify({ id: uid, role: 'coordinator' })
-        });
+        await notifyTeam('facility', val('facilityName'), val('email'), val('phone'),
+          val('city'), val('state'), {
+            facility_type: val('facilityType'), locations: val('locations'),
+            ehr: val('ehr'), patient_volume: val('patientVolume'),
+            payment_type: val('paymentType'), pain_point: val('painPoint'),
+            contact: val('firstName')+' '+val('lastName'), title: val('title')
+          });
 
         document.getElementById('formCard').style.display = 'none';
         document.getElementById('successCard').style.display = 'block';
-
       } catch(e) {
-        document.getElementById('errMsg').textContent = e.message || 'Something went wrong. Please try again or email partners@carevoy.co';
-        document.getElementById('errMsg').style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Submit Application →';
+        showError(e.message || 'Something went wrong. Email partners@carevoy.co');
+        btn.disabled = false; btn.textContent = 'Submit Application →';
       }
     }
   </script>
