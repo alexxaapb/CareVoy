@@ -36,7 +36,7 @@
 <body>
   <div class="card" id="formCard">
     <div class="logo">
-      <div class="logo-icon"><img src="/carevoy-icon-centered.svg" alt="CareVoy" style="width:40px;height:40px;border-radius:10px"></div>
+      <div class="logo-icon"><img src="https://partners.carevoy.co/carevoy-icon-centered.svg" alt="CareVoy" style="width:40px;height:40px;border-radius:10px"></div>
       <div><div class="brand-text">CareVoy</div><div class="brand-sub">Transport Partner</div></div>
     </div>
     <h1>Join as a Transport Partner</h1>
@@ -163,13 +163,15 @@
     </div>
 
     <label class="fl">Vehicle Types *</label>
-    <select id="vehicleTypes" multiple style="height:160px;padding:6px;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;width:100%">
+    <select id="vehicleTypes" onchange="showOther(this,'vehicleOther')">
+      <option value="">Select primary vehicle type</option>
       <option value="ambulatory">Ambulatory</option>
       <option value="wheelchair">Wheelchair Van</option>
       <option value="stretcher">Stretcher / Gurney</option>
       <option value="sedan">Sedan</option>
       <option value="suv">SUV / Minivan</option>
       <option value="bariatric">Bariatric</option>
+      <option value="mixed">Mixed fleet (multiple types)</option>
       <option value="other">Other</option>
     </select>
     <div class="other-input" id="vehicleOther">
@@ -344,7 +346,7 @@
         var pr=await fetch(SUPA+'/rest/v1/nemt_partners',{
           method:'POST',headers:{...H,'Prefer':'return=representation'},
           body:JSON.stringify({company_name:company,city,service_states:states,
-            vehicle_types:vehicles,dispatch_phone:dispatch,active:false,pending_review:true,
+            vehicle_types:[vehicles],dispatch_phone:dispatch,active:false,pending_review:true,
             intake_data:{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
               works_with_brokers:brokers,dispatch_software:software,has_insurance:hasIns,
               insurance_doc:insPath,contact_phone:phone,home_state:homeState}})
