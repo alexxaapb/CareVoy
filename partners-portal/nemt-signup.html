@@ -290,6 +290,10 @@
 
     function val(id){return (document.getElementById(id)||{}).value?.trim()||'';}
 
+    function showBrokerFollowup(sel) {
+      document.getElementById('brokerFollowup').style.display =
+        (sel.value === 'yes' || sel.value === 'sometimes') ? 'block' : 'none';
+    }
     function showOther(sel,divId){
       document.getElementById(divId).style.display = sel.value==='other'?'block':'none';
     }
