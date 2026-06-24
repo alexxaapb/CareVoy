@@ -1,0 +1,341 @@
+import os, subprocess
+
+REPO = '/workspaces/CareVoy'
+PP = os.path.join(REPO, 'partners-portal')
+
+# The real CareVoy logo as SVG matching the uploaded icon
+# Navy background circle, white C, teal arc, gold dots
+REAL_LOGO_SVG = '''<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="10" fill="#050D1F"/>
+  <circle cx="20" cy="20" r="13" fill="none" stroke="#00C2A8" stroke-width="2.5" stroke-dasharray="70 12" stroke-dashoffset="-3"/>
+  <text x="20" y="26" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="18" fill="white" text-anchor="middle">C</text>
+  <circle cx="30.5" cy="15" r="2" fill="#F5A623"/>
+  <circle cx="30.5" cy="25" r="2" fill="#F5A623"/>
+</svg>'''
+
+ALL_STATES = [
+    ('AL','Alabama'),('AK','Alaska'),('AZ','Arizona'),('AR','Arkansas'),
+    ('CA','California'),('CO','Colorado'),('CT','Connecticut'),('DE','Delaware'),
+    ('DC','Washington DC'),('FL','Florida'),('GA','Georgia'),('HI','Hawaii'),
+    ('ID','Idaho'),('IL','Illinois'),('IN','Indiana'),('IA','Iowa'),
+    ('KS','Kansas'),('KY','Kentucky'),('LA','Louisiana'),('ME','Maine'),
+    ('MD','Maryland'),('MA','Massachusetts'),('MI','Michigan'),('MN','Minnesota'),
+    ('MS','Mississippi'),('MO','Missouri'),('MT','Montana'),('NE','Nebraska'),
+    ('NV','Nevada'),('NH','New Hampshire'),('NJ','New Jersey'),('NM','New Mexico'),
+    ('NY','New York'),('NC','North Carolina'),('ND','North Dakota'),('OH','Ohio'),
+    ('OK','Oklahoma'),('OR','Oregon'),('PA','Pennsylvania'),('RI','Rhode Island'),
+    ('SC','South Carolina'),('SD','South Dakota'),('TN','Tennessee'),('TX','Texas'),
+    ('UT','Utah'),('VT','Vermont'),('VA','Virginia'),('WA','Washington'),
+    ('WV','West Virginia'),('WI','Wisconsin'),('WY','Wyoming')
+]
+STATE_OPTIONS = '\n'.join([f'      <option value="{a}">{n}</option>' for a,n in ALL_STATES])
+
+nemt_html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Join CareVoy | Transport Partner Signup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{{box-sizing:border-box;margin:0;padding:0;}}
+    body{{font-family:'Poppins',-apple-system,sans-serif;background:#F0F4F8;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px;}}
+    .card{{background:white;border-radius:20px;padding:40px 36px;width:100%;max-width:560px;box-shadow:0 4px 24px rgba(5,13,31,0.08);}}
+    .logo{{display:flex;align-items:center;gap:10px;margin-bottom:28px;}}
+    .logo-icon{{width:40px;height:40px;flex-shrink:0;}}
+    .brand-text{{color:#050D1F;font-size:18px;font-weight:700;}}
+    .brand-sub{{color:#00C2A8;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}}
+    h1{{font-size:22px;font-weight:700;color:#050D1F;margin-bottom:6px;}}
+    .sub{{font-size:13px;color:#6B7280;margin-bottom:28px;line-height:1.6;}}
+    .section-label{{font-size:10px;font-weight:700;color:#00C2A8;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;margin-top:28px;padding-bottom:6px;border-bottom:1px solid #F0F4F8;}}
+    label.fl{{display:block;font-size:11px;font-weight:700;color:#050D1F;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;margin-top:14px;}}
+    input[type=text],input[type=email],input[type=tel],input[type=password],select,textarea{{width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;color:#050D1F;background:#F8FAFC;font-family:inherit;outline:none;transition:border-color 0.15s;}}
+    input:focus,select:focus,textarea:focus{{border-color:#00C2A8;background:white;}}
+    .row2{{display:grid;grid-template-columns:1fr 1fr;gap:12px;}}
+    .other-input{{margin-top:8px;display:none;}}
+    .upload-area{{border:2px dashed #E2E8F0;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.15s;background:#F8FAFC;margin-top:6px;}}
+    .upload-area:hover{{border-color:#00C2A8;}}
+    .upload-area input{{display:none;}}
+    .upload-txt{{font-size:13px;color:#6B7280;}}
+    .upload-txt strong{{color:#00C2A8;}}
+    .upload-name{{font-size:12px;color:#16A34A;font-weight:600;margin-top:6px;display:none;}}
+    .submit{{width:100%;padding:15px;background:#050D1F;color:#00C2A8;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:28px;font-family:inherit;transition:opacity 0.15s;}}
+    .submit:hover{{opacity:0.88;}}
+    .submit:disabled{{opacity:0.5;cursor:not-allowed;}}
+    .error{{color:#EF4444;font-size:12px;margin-top:10px;display:none;background:#FEF2F2;padding:10px 12px;border-radius:8px;}}
+    .note{{font-size:11px;color:#9CA3AF;margin-top:16px;text-align:center;line-height:1.5;}}
+  </style>
+</head>
+<body>
+  <div class="card" id="formCard">
+    <div class="logo">
+      <div class="logo-icon">{REAL_LOGO_SVG}</div>
+      <div><div class="brand-text">CareVoy</div><div class="brand-sub">Transport Partner</div></div>
+    </div>
+    <h1>Join as a Transport Partner</h1>
+    <p class="sub">Free to join. Receive ride requests from healthcare facilities in your service area — no broker fees, no middlemen.</p>
+
+    <div class="section-label">Company Information</div>
+    <label class="fl">Company Name *</label>
+    <input type="text" id="companyName" placeholder="ABC Medical Transport LLC"/>
+    <div class="row2">
+      <div><label class="fl">Contact First Name *</label><input type="text" id="firstName" placeholder="Jane"/></div>
+      <div><label class="fl">Contact Last Name *</label><input type="text" id="lastName" placeholder="Smith"/></div>
+    </div>
+    <label class="fl">Business Email *</label>
+    <input type="email" id="email" placeholder="jane@abcmedical.com"/>
+    <label class="fl">Contact Phone *</label>
+    <input type="tel" id="phone" placeholder="+1 (614) 555-0000"/>
+    <label class="fl">Dispatch Phone (shown to patients) *</label>
+    <input type="tel" id="dispatchPhone" placeholder="+1 (614) 555-0001"/>
+    <label class="fl">City / Base of Operations *</label>
+    <input type="text" id="city" placeholder="Columbus"/>
+    <label class="fl">State *</label>
+    <select id="homeState">
+      <option value="">Select state</option>
+      {STATE_OPTIONS}
+    </select>
+
+    <div class="section-label">Operations</div>
+    <label class="fl">Years in Operation *</label>
+    <select id="yearsOp">
+      <option value="">Select</option>
+      <option value="less_1">Less than 1 year</option>
+      <option value="1_3">1-3 years</option>
+      <option value="3_5">3-5 years</option>
+      <option value="5_plus">5+ years</option>
+    </select>
+
+    <label class="fl">Fleet Size *</label>
+    <select id="fleetSize">
+      <option value="">Select</option>
+      <option value="1_5">1-5 vehicles</option>
+      <option value="6_15">6-15 vehicles</option>
+      <option value="16_50">16-50 vehicles</option>
+      <option value="50_plus">50+ vehicles</option>
+    </select>
+
+    <label class="fl">Average rides per week *</label>
+    <select id="weeklyRides">
+      <option value="">Select</option>
+      <option value="under_25">Under 25</option>
+      <option value="25_100">25-100</option>
+      <option value="100_250">100-250</option>
+      <option value="250_plus">250+</option>
+    </select>
+
+    <label class="fl">Do you currently work with brokers? *</label>
+    <select id="brokers">
+      <option value="">Select</option>
+      <option value="yes">Yes (LogistiCare, MTM, Modivcare, etc.)</option>
+      <option value="no">No</option>
+      <option value="sometimes">Sometimes</option>
+    </select>
+
+    <label class="fl">Dispatch software currently used *</label>
+    <select id="dispatchSoftware" onchange="showOther(this,'dispatchOther')">
+      <option value="">Select</option>
+      <option value="trip_master">TripMaster</option>
+      <option value="route_genie">RouteGenie</option>
+      <option value="trapeze">Trapeze</option>
+      <option value="none">None / manual</option>
+      <option value="other">Other</option>
+    </select>
+    <div class="other-input" id="dispatchOther">
+      <input type="text" id="dispatchOtherVal" placeholder="Please specify your dispatch software"/>
+    </div>
+
+    <label class="fl">Vehicle Types *</label>
+    <select id="vehicleTypes" onchange="showOther(this,'vehicleOther')">
+      <option value="">Select primary vehicle type</option>
+      <option value="ambulatory">Ambulatory</option>
+      <option value="wheelchair">Wheelchair Van</option>
+      <option value="stretcher">Stretcher / Gurney</option>
+      <option value="sedan">Sedan</option>
+      <option value="suv">SUV / Minivan</option>
+      <option value="bariatric">Bariatric</option>
+      <option value="mixed">Mixed fleet (multiple types)</option>
+      <option value="other">Other</option>
+    </select>
+    <div class="other-input" id="vehicleOther">
+      <input type="text" id="vehicleOtherVal" placeholder="Please describe your vehicle types"/>
+    </div>
+
+    <div class="section-label">Service Area</div>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:6px">Which states do you provide rides in? (Select all that apply) *</p>
+    <select id="serviceStates" size="8" multiple style="height:auto;min-height:120px;padding:8px">
+      {STATE_OPTIONS}
+    </select>
+    <p style="font-size:11px;color:#9CA3AF;margin-top:4px">Hold Ctrl (Windows) or Cmd (Mac) to select multiple states</p>
+
+    <div class="section-label">Insurance</div>
+    <label class="fl">Liability insurance in place? *</label>
+    <select id="hasInsurance">
+      <option value="">Select</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+
+    <label class="fl">Upload Proof of Liability Insurance *</label>
+    <div class="upload-area" onclick="document.getElementById('insuranceFile').click()">
+      <input type="file" id="insuranceFile" accept=".pdf,.jpg,.jpeg,.png" onchange="showFileName(this,'insuranceName')"/>
+      <div class="upload-txt">&#128206; <strong>Click to upload</strong> or drag and drop<br><span style="font-size:11px">PDF, JPG or PNG &mdash; max 5MB</span></div>
+      <div class="upload-name" id="insuranceName"></div>
+    </div>
+
+    <div class="section-label">Account Setup</div>
+    <label class="fl">Password *</label>
+    <input type="password" id="password" placeholder="Minimum 8 characters"/>
+
+    <div class="error" id="errMsg"></div>
+    <button class="submit" id="btn" onclick="submitNemt()">Join CareVoy &rarr;</button>
+    <p class="note">By submitting, you agree to CareVoy&rsquo;s partner terms. We&rsquo;ll review your application and notify you within 24 hours.</p>
+  </div>
+
+  <div id="successCard" style="display:none;max-width:560px;width:100%;background:white;border-radius:20px;padding:48px 36px;box-shadow:0 4px 24px rgba(5,13,31,0.08);text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">&#9989;</div>
+    <h2 style="font-size:20px;font-weight:700;color:#050D1F;margin-bottom:10px">Application received!</h2>
+    <p style="font-size:13px;color:#6B7280;line-height:1.7">Thank you for applying to join the CareVoy network. We&rsquo;ll review your application and reach out within 24 hours.<br><br>Once approved, sign in at <a href="https://partners.carevoy.co" style="color:#00C2A8;font-weight:600">partners.carevoy.co</a></p>
+  </div>
+
+  <script>
+    var SUPA='https://byflpckbjjumxxjxoplk.supabase.co';
+    var SUPA_KEY='sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+    var API='https://care-voy-api-server.vercel.app';
+
+    function val(id){{return (document.getElementById(id)||{{}}).value?.trim()||'';}}
+
+    function showOther(sel,divId){{
+      document.getElementById(divId).style.display = sel.value==='other'?'block':'none';
+    }}
+
+    function showFileName(input,nameId){{
+      var el=document.getElementById(nameId);
+      if(input.files[0]){{el.textContent='&#10003; '+input.files[0].name;el.style.display='block';}}
+    }}
+
+    function getMultiSelect(id){{
+      var opts=document.getElementById(id).options;
+      return Array.from(opts).filter(function(o){{return o.selected;}}).map(function(o){{return o.value;}});
+    }}
+
+    function showError(msg){{
+      var el=document.getElementById('errMsg');
+      el.textContent=msg;el.style.display='block';
+      el.scrollIntoView({{behavior:'smooth',block:'center'}});
+    }}
+
+    async function uploadInsurance(uid,token,file){{
+      if(!file) return null;
+      var ext=file.name.split('.').pop();
+      var path='insurance/'+uid+'.'+ext;
+      var r=await fetch(SUPA+'/storage/v1/object/partner-docs/'+path,{{
+        method:'POST',
+        headers:{{'Authorization':'Bearer '+token,'apikey':SUPA_KEY,'Content-Type':file.type}},
+        body:file
+      }});
+      return r.ok?path:null;
+    }}
+
+    async function submitNemt(){{
+      var btn=document.getElementById('btn');
+      document.getElementById('errMsg').style.display='none';
+
+      var company=val('companyName'),first=val('firstName'),last=val('lastName'),
+          email=val('email'),phone=val('phone'),dispatch=val('dispatchPhone'),
+          city=val('city'),homeState=val('homeState'),yearsOp=val('yearsOp'),
+          fleet=val('fleetSize'),weeklyR=val('weeklyRides'),brokers=val('brokers'),
+          software=val('dispatchSoftware'),vehicles=val('vehicleTypes'),
+          hasIns=val('hasInsurance'),password=val('password');
+      var states=getMultiSelect('serviceStates');
+
+      // Resolve "other" fields
+      if(software==='other') software=val('dispatchOtherVal')||'other';
+      if(vehicles==='other') vehicles=val('vehicleOtherVal')||'other';
+
+      var insFile=document.getElementById('insuranceFile').files[0];
+
+      if(!company||!first||!last||!email||!phone||!dispatch||!city||!homeState||!yearsOp||!fleet||!weeklyR||!brokers||!software||!vehicles||!hasIns||!password)
+        return showError('Please fill in all required fields.');
+      if(states.length===0) return showError('Please select at least one service state.');
+      if(!insFile) return showError('Please upload your proof of liability insurance.');
+      if(password.length<8) return showError('Password must be at least 8 characters.');
+
+      btn.disabled=true;btn.textContent='Submitting\u2026';
+
+      try{{
+        var sr=await fetch(SUPA+'/auth/v1/signup',{{
+          method:'POST',
+          headers:{{'Content-Type':'application/json','apikey':SUPA_KEY}},
+          body:JSON.stringify({{email,password}})
+        }});
+        var sd=await sr.json();
+        if(!sr.ok||!sd.user) throw new Error(sd.error_description||sd.msg||'Signup failed. Email may already be registered.');
+        var uid=sd.user.id,token=sd.access_token;
+        var H={{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+token}};
+
+        var insPath=await uploadInsurance(uid,token,insFile);
+
+        var pr=await fetch(SUPA+'/rest/v1/nemt_partners',{{
+          method:'POST',headers:{{...H,'Prefer':'return=representation'}},
+          body:JSON.stringify({{company_name:company,city,service_states:states,
+            vehicle_types:[vehicles],dispatch_phone:dispatch,active:false,pending_review:true,
+            intake_data:{{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
+              works_with_brokers:brokers,dispatch_software:software,has_insurance:hasIns,
+              insurance_doc:insPath,contact_phone:phone,home_state:homeState}}}})
+        }});
+        var pd=await pr.json();
+        var partnerId=Array.isArray(pd)?pd[0]?.id:pd?.id;
+
+        await fetch(SUPA+'/rest/v1/staff',{{method:'POST',headers:H,
+          body:JSON.stringify({{id:uid,role:'nemt',partner_id:partnerId}})}});
+
+        await fetch(SUPA+'/rest/v1/nemt_staff',{{method:'POST',headers:H,
+          body:JSON.stringify({{id:uid,partner_id:partnerId,full_name:first+' '+last,
+            email,phone,role:'dispatcher'}})}}).catch(function(){{}});
+
+        try{{
+          await fetch(API+'/api/notify/new-partner',{{method:'POST',
+            headers:{{'Content-Type':'application/json'}},
+            body:JSON.stringify({{type:'nemt',name:company,email,phone,city,state:homeState,
+              details:{{contact:first+' '+last,fleet_size:fleet,vehicles,
+                service_states:states.join(', '),weekly_rides:weeklyR,
+                works_with_brokers:brokers,insurance_uploaded:insPath?'Yes':'No'}}}})
+          }});
+        }}catch(e){{}}
+
+        document.getElementById('formCard').style.display='none';
+        document.getElementById('successCard').style.display='block';
+      }}catch(e){{
+        showError(e.message||'Something went wrong. Email partners@carevoy.co');
+        btn.disabled=false;btn.textContent='Join CareVoy \u2192';
+      }}
+    }}
+  </script>
+</body>
+</html>'''
+
+open(os.path.join(PP, 'nemt-signup.html'), 'w').write(nemt_html)
+print("1. nemt-signup.html rebuilt with all 5 fixes")
+
+# Also update facility-signup.html logo to match
+fs = os.path.join(PP, 'facility-signup.html')
+fc = open(fs).read()
+old_logo = '<div class="logo-icon">'
+# Replace the old logo-icon div content with the real SVG
+import re
+fc2 = re.sub(r'<div class="logo-icon">.*?</div>', f'<div class="logo-icon">{REAL_LOGO_SVG}</div>', fc, count=1, flags=re.DOTALL)
+if fc2 != fc:
+    open(fs, 'w').write(fc2)
+    print("2. facility-signup.html logo updated to match")
+else:
+    print("2. facility logo already correct or pattern not found")
+
+cmds = [
+    'rm -f fix_nemt_form.py',
+    'git add partners-portal/nemt-signup.html partners-portal/facility-signup.html',
+    'git commit -m "fix: NEMT form - correct logo, remove 80%, dropdowns, insurance last, other prompts text input"',
+    'git push origin main',
+]
+for cmd in cmds:
+    r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=REPO)
+    print((r.stdout or r.stderr).strip()[:200])
