@@ -644,6 +644,7 @@ export default function BookRideScreen() {
           mobility_needs: mobility,
           companion_requested: bringingCompanion,
           status: "pending",
+          payment_responsibility: "self_pay",
           estimated_cost: 55,
           ...(recurringSeriesId ? {
             is_recurring: true,

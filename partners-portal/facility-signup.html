@@ -49,7 +49,7 @@
 
     <div class="section-label">Facility Information</div>
     <label class="field-label">Facility Name *</label>
-    <input type="text" id="facilityName" placeholder="Columbus Family Medicine" />
+    <input type="text" id="facilityName" placeholder="Columbus Family Medicine" / oninput="clearError('facilityName')">
     <label class="field-label">Facility Type *</label>
     <select id="facilityType">
       <option value="">Select facility type</option>
@@ -82,7 +82,7 @@
       <option value="other">Other</option>
     </select>
     <div class="row2">
-      <div><label class="field-label">City *</label><input type="text" id="city" placeholder="Columbus" /></div>
+      <div><label class="field-label">City *</label><input type="text" id="city" placeholder="Columbus" / oninput="clearError('city')"></div>
       <div><label class="field-label">State *</label>
         <select id="state"><option value="">State</option>      <option value="AL">Alabama</option>
       <option value="AK">Alaska</option>
@@ -209,8 +209,8 @@
 
     <div class="section-label">Primary Contact</div>
     <div class="row2">
-      <div><label class="field-label">First Name *</label><input type="text" id="firstName" placeholder="Jane" /></div>
-      <div><label class="field-label">Last Name *</label><input type="text" id="lastName" placeholder="Smith" /></div>
+      <div><label class="field-label">First Name *</label><input type="text" id="firstName" placeholder="Jane" / oninput="clearError('firstName')"></div>
+      <div><label class="field-label">Last Name *</label><input type="text" id="lastName" placeholder="Smith" / oninput="clearError('lastName')"></div>
     </div>
     <label class="field-label">Title / Role *</label>
     <select id="title">
@@ -223,14 +223,14 @@
       <option value="other">Other</option>
     </select>
     <label class="field-label">Work Email *</label>
-    <input type="email" id="email" placeholder="jane@yourpractice.com" />
+    <input type="email" id="email" placeholder="jane@yourpractice.com" / oninput="clearError('email')">
     <label class="field-label">Phone *</label>
-    <input type="tel" id="phone" placeholder="+1 (614) 555-0000" />
+    <input type="tel" id="phone" placeholder="+1 (614) 555-0000" / oninput="clearError('phone')">
 
     <div class="section-label">Account Setup</div>
     <p style="font-size:12px;color:#6B7280;margin-bottom:4px">You'll use this to access your coordinator dashboard once approved.</p>
     <label class="field-label">Password *</label>
-    <input type="password" id="password" placeholder="Minimum 8 characters" />
+    <input type="password" id="password" placeholder="Minimum 8 characters" / oninput="clearError('password')">
 
     <div class="error" id="errMsg"></div>
     <button class="submit" id="btn" onclick="submitFacility()">Submit Application &rarr;</button>
@@ -350,6 +350,31 @@
         showError(e.message || 'Something went wrong. Email partners@carevoy.co');
         btn.disabled = false; btn.textContent = 'Submit Application →';
       }
+    }
+
+    function markRequired(ids) {
+      var allOk = true;
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var wrap = el.closest('.field-wrap') || el.parentElement;
+        if (!el.value || el.value.trim() === '') {
+          wrap.classList.add('field-error');
+          allOk = false;
+        } else {
+          wrap.classList.remove('field-error');
+        }
+      });
+      return allOk;
+    }
+    function clearError(id) {
+      var el = document.getElementById(id);
+      if (el) { var w = el.closest('.field-wrap') || el.parentElement; w.classList.remove('field-error'); }
+    }
+    function togglePw(inputId, btn) {
+      var inp = document.getElementById(inputId);
+      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'HIDE'; }
+      else { inp.type = 'password'; btn.textContent = 'SHOW'; }
     }
   </script>
 </body>

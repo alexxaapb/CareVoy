@@ -569,7 +569,7 @@ async function loadAll() {
 
 async function loadRides() {
   if (!coordInfo || !coordInfo.hospital_id) return;
-  var r = await fetch(SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id + '&select=*&order=pickup_time.desc', { headers: H });
+  var r = await fetch(SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id + '&hospital_id=not.is.null&select=*&order=pickup_time.desc', { headers: H });
   allRides = await r.json();
   if (!Array.isArray(allRides)) allRides = [];
   updateStats();

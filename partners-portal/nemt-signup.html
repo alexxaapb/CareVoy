@@ -31,6 +31,27 @@
     .submit:disabled{opacity:0.5;cursor:not-allowed;}
     .error{color:#EF4444;font-size:12px;margin-top:10px;display:none;background:#FEF2F2;padding:10px 12px;border-radius:8px;}
     .note{font-size:11px;color:#9CA3AF;margin-top:16px;text-align:center;line-height:1.5;}
+
+    .field-error input, .field-error select, .field-error textarea {
+      border-color: #EF4444 !important;
+      background: #FEF2F2 !important;
+    }
+    .field-error .error-msg {
+      color: #EF4444;
+      font-size: 11px;
+      margin-top: 3px;
+      display: block;
+    }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 44px; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: #9CA3AF;
+      font-size: 12px; font-weight: 600; padding: 4px;
+    }
+    .pw-toggle:hover { color: #050D1F; }
+    select[multiple] { padding: 6px; }
+    option:checked { background: rgba(0,194,168,0.15); color: #050D1F; }
   </style>
 </head>
 <body>
@@ -44,19 +65,19 @@
 
     <div class="section-label">Company Information</div>
     <label class="fl">Company Name *</label>
-    <input type="text" id="companyName" placeholder="ABC Medical Transport LLC"/>
+    <input type="text" id="companyName" placeholder="ABC Medical Transport LLC"/ oninput="clearError('companyName')">
     <div class="row2">
-      <div><label class="fl">Contact First Name *</label><input type="text" id="firstName" placeholder="Jane"/></div>
-      <div><label class="fl">Contact Last Name *</label><input type="text" id="lastName" placeholder="Smith"/></div>
+      <div><label class="fl">Contact First Name *</label><input type="text" id="firstName" placeholder="Jane"/ oninput="clearError('firstName')"></div>
+      <div><label class="fl">Contact Last Name *</label><input type="text" id="lastName" placeholder="Smith"/ oninput="clearError('lastName')"></div>
     </div>
     <label class="fl">Business Email *</label>
-    <input type="email" id="email" placeholder="jane@abcmedical.com"/>
+    <input type="email" id="email" placeholder="jane@abcmedical.com"/ oninput="clearError('email')">
     <label class="fl">Contact Phone *</label>
-    <input type="tel" id="phone" placeholder="+1 (614) 555-0000"/>
+    <input type="tel" id="phone" placeholder="+1 (614) 555-0000"/ oninput="clearError('phone')">
     <label class="fl">Dispatch Phone (shown to patients) *</label>
-    <input type="tel" id="dispatchPhone" placeholder="+1 (614) 555-0001"/>
+    <input type="tel" id="dispatchPhone" placeholder="+1 (614) 555-0001"/ oninput="clearError('dispatchPhone')">
     <label class="fl">City / Base of Operations *</label>
-    <input type="text" id="city" placeholder="Columbus"/>
+    <input type="text" id="city" placeholder="Columbus"/ oninput="clearError('city')">
     <label class="fl">State *</label>
     <select id="homeState">
       <option value="">Select state</option>
@@ -159,7 +180,7 @@
       <option value="other">Other</option>
     </select>
     <div class="other-input" id="dispatchOther">
-      <input type="text" id="dispatchOtherVal" placeholder="Please specify your dispatch software"/>
+      <input type="text" id="dispatchOtherVal" placeholder="Please specify your dispatch software"/ oninput="clearError('dispatchOtherVal')">
     </div>
 
     <label class="fl">Vehicle Types *</label>
@@ -175,7 +196,7 @@
       <option value="other">Other</option>
     </select>
     <div class="other-input" id="vehicleOther">
-      <input type="text" id="vehicleOtherVal" placeholder="Please describe your vehicle types"/>
+      <input type="text" id="vehicleOtherVal" placeholder="Please describe your vehicle types"/ oninput="clearError('vehicleOtherVal')">
     </div>
 
     <div class="section-label">Service Area</div>
@@ -245,14 +266,14 @@
 
     <label class="fl">Upload Proof of Liability Insurance *</label>
     <div class="upload-area" onclick="document.getElementById('insuranceFile').click()">
-      <input type="file" id="insuranceFile" accept=".pdf,.jpg,.jpeg,.png" onchange="showFileName(this,'insuranceName')"/>
+      <input type="file" id="insuranceFile" accept=".pdf,.jpg,.jpeg,.png" onchange="showFileName(this,'insuranceName')"/ oninput="clearError('insuranceFile')">
       <div class="upload-txt">&#128206; <strong>Click to upload</strong> or drag and drop<br><span style="font-size:11px">PDF, JPG or PNG &mdash; max 5MB</span></div>
       <div class="upload-name" id="insuranceName"></div>
     </div>
 
     <div class="section-label">Account Setup</div>
     <label class="fl">Password *</label>
-    <input type="password" id="password" placeholder="Minimum 8 characters"/>
+    <div class="pw-wrap"><input type="password" id="password" placeholder="Minimum 8 characters"/ oninput="clearError('password')"><button type="button" class="pw-toggle" onclick="togglePw('password',this)">SHOW</button></div>
 
     <div class="error" id="errMsg"></div>
     <button class="submit" id="btn" onclick="submitNemt()">Join CareVoy &rarr;</button>
@@ -377,6 +398,31 @@
         showError(e.message||'Something went wrong. Email partners@carevoy.co');
         btn.disabled=false;btn.textContent='Join CareVoy →';
       }
+    }
+
+    function markRequired(ids) {
+      var allOk = true;
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var wrap = el.closest('.field-wrap') || el.parentElement;
+        if (!el.value || el.value.trim() === '') {
+          wrap.classList.add('field-error');
+          allOk = false;
+        } else {
+          wrap.classList.remove('field-error');
+        }
+      });
+      return allOk;
+    }
+    function clearError(id) {
+      var el = document.getElementById(id);
+      if (el) { var w = el.closest('.field-wrap') || el.parentElement; w.classList.remove('field-error'); }
+    }
+    function togglePw(inputId, btn) {
+      var inp = document.getElementById(inputId);
+      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'HIDE'; }
+      else { inp.type = 'password'; btn.textContent = 'SHOW'; }
     }
   </script>
 </body>

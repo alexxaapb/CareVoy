@@ -109,6 +109,17 @@ function formatDateTime(iso: string | null): string {
   });
 }
 
+
+const RIDE_STATUS_LABELS: Record<string, string> = {
+  pending: "Finding your driver",
+  confirmed: "Confirmed",
+  assigned: "Driver assigned",
+  en_route: "Driver on the way",
+  arrived: "Driver arrived",
+  completed: "Ride completed",
+  cancelled: "Cancelled",
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const {
@@ -509,7 +520,7 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                   <Text style={styles.rideStatus}>
-                    {r.status?.toUpperCase()}
+                    {RIDE_STATUS_LABELS[r.status ?? ""] ?? r.status?.toUpperCase()}
                   </Text>
                 </View>
                 <Text style={styles.rideTitle}>
