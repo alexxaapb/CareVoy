@@ -307,6 +307,43 @@
       return Array.from(opts).filter(function(o){return o.selected;}).map(function(o){return o.value;});
     }
 
+
+    function highlightMissing(ids) {
+      // Reset all
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.borderColor = '';
+      });
+      var missing = [];
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var empty = false;
+        if (el.tagName === 'SELECT' && el.multiple) {
+          var sel = Array.from(el.options).some(function(o){return o.selected;});
+          if (!sel) empty = true;
+        } else if (!el.value || !el.value.trim()) {
+          empty = true;
+        }
+        if (empty) {
+          el.style.borderColor = '#EF4444';
+          el.style.background = '#FEF2F2';
+          missing.push(id);
+        }
+      });
+      // Clear red on input
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          var evType = el.tagName === 'SELECT' ? 'change' : 'input';
+          el.addEventListener(evType, function() {
+            el.style.borderColor = '';
+            el.style.background = '';
+          }, {once: false});
+        }
+      });
+      return missing.length === 0;
+    }
     function showError(msg){
       var el=document.getElementById('errMsg');
       el.textContent=msg;el.style.display='block';
@@ -343,9 +380,11 @@
 
       var insFile=document.getElementById('insuranceFile').files[0];
 
-      if(!company||!first||!last||!email||!phone||!dispatch||!city||!homeState||!yearsOp||!fleet||!weeklyR||!brokers||!software||!vehicles||!hasIns||!password)
-        return showError('Please fill in all required fields.');
-      if(states.length===0) return showError('Please select at least one service state.');
+      var reqIds = ['companyName','firstName','lastName','email','phone','dispatchPhone','city','homeState','yearsOp','fleetSize','weeklyRides','brokers','dispatchSoftware','vehicleTypes','hasInsurance','password'];
+      if(!highlightMissing(reqIds) || states.length===0) {
+        if(states.length===0) { document.getElementById('serviceStates').style.borderColor='#EF4444'; document.getElementById('serviceStates').style.background='#FEF2F2'; }
+        return showError('Please fill in all required fields highlighted in red.');
+      }
       if(!insFile) return showError('Please upload your proof of liability insurance.');
       if(password.length<8) return showError('Password must be at least 8 characters.');
 
