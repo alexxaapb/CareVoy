@@ -904,7 +904,7 @@
     // Populate revenue section with same data as overview
     // Load data when switching to the patients tab
     if (name === 'patients') { loadPatients(); }
-    if (name === 'partners' || name === 'facilities') { try { loadPendingApplicants(); } catch(e) { console.warn(e); } }
+    if (name === 'partners' || name === 'facilities') { loadPendingApplicants(); }
     if (name === 'revenue') {
       var t1 = document.getElementById('revThisMonth');
       var t2 = document.getElementById('revThisMonth2');
@@ -1107,90 +1107,99 @@
   </div>
 
 
-<script>
-  async function approvePartner(type, id, email, name) {
-    if (!confirm('Approve ' + name + '?')) return;
-    var h2 = authHeaders();
-    var table = type === 'nemt' ? 'nemt_partners' : 'hospitals';
-    var r = await fetch(SUPA_URL + '/rest/v1/' + table + '?id=eq.' + id, {
-      method: 'PATCH', headers: { ...h2, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active: true, pending_review: false })
-    });
-    try {
-      await fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, name: name, type: type })
-      });
-    } catch(e) {}
-    alert(name + ' approved and notified.');
-    location.reload();
-  }
-  async function declinePartner(type, id, name) {
-    if (!confirm('Decline ' + name + '?')) return;
-    var h2 = authHeaders();
-    var table = type === 'nemt' ? 'nemt_partners' : 'hospitals';
-    await fetch(SUPA_URL + '/rest/v1/' + table + '?id=eq.' + id, {
-      method: 'PATCH', headers: { ...h2, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active: false, pending_review: false })
-    });
-    alert(name + ' declined.');
-    location.reload();
-  }
-  async function loadPendingApplicants() {
-    var h2 = authHeaders();
-    try {
-      var nr = await fetch(SUPA_URL + '/rest/v1/nemt_partners?pending_review=eq.true&select=id,company_name,city,service_states,created_at,intake_data', { headers: h2 });
-      var nemt = await nr.json();
-      var nemtSec = document.getElementById('nemtPendingSection');
-      var nemtBody = document.getElementById('nemtPendingBody');
-      if (nemt && nemt.length > 0 && nemtSec) {
-        nemtSec.style.display = 'block';
-        nemtBody.innerHTML = nemt.map(function(p) {
-          var intake = p.intake_data || {};
-          return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
-            '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + esc(p.company_name||'') + '</div>' +
-            '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + esc(p.city||'') + ' | ' + (p.service_states||[]).join(', ') + '</div>' +
-            '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Applied ' + new Date(p.created_at).toLocaleDateString() + '</div></div>' +
-            '<div style="display:flex;gap:8px;flex-shrink:0">' +
-            '<button class="approve-btn" data-type="nemt" data-id="' + p.id + '" data-email="' + esc(intake.contact_phone||'') + '" data-name="' + esc(p.company_name||'') + '" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
-            '<button class="decline-btn" data-type="nemt" data-id="' + p.id + '" data-name="' + esc(p.company_name||'') + '" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
-            '</div></div>';
-        }).join('');
-      }
-    } catch(e) {}
-    try {
-      var fr = await fetch(SUPA_URL + '/rest/v1/hospitals?pending_review=eq.true&select=id,name,city,state,facility_type,created_at,intake_data', { headers: h2 });
-      var facs = await fr.json();
-      var facSec = document.getElementById('facPendingSection');
-      var facBody = document.getElementById('facPendingBody');
-      if (facs && facs.length > 0 && facSec) {
-        facSec.style.display = 'block';
-        facBody.innerHTML = facs.map(function(f) {
-          var intake = f.intake_data || {};
-          return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
-            '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + esc(f.name||'') + '</div>' +
-            '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + esc(f.city||'') + ', ' + esc(f.state||'') + ' | ' + esc((f.facility_type||'').replace(/_/g,' ')) + '</div>' +
-            '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Vol: ' + esc(intake.patient_volume||'-') + ' | EHR: ' + esc(intake.ehr||'-') + '</div></div>' +
-            '<div style="display:flex;gap:8px;flex-shrink:0">' +
-            '<button class="approve-btn" data-type="facility" data-id="' + f.id + '" data-email="' + esc(intake.contact_phone||'') + '" data-name="' + esc(f.name||'') + '" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
-            '<button class="decline-btn" data-type="facility" data-id="' + f.id + '" data-name="' + esc(f.name||'') + '" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
-            '</div></div>';
-        }).join('');
-      }
-    } catch(e) {}
-  }
-
-  // Delegated listeners for approve/decline buttons
-  document.addEventListener('click', function(e) {
-    var btn = e.target.closest && e.target.closest('.approve-btn');
-    if (btn) {
-      approvePartner(btn.getAttribute('data-type'), btn.getAttribute('data-id'), btn.getAttribute('data-email'), btn.getAttribute('data-name'));
-    }
-    var dec = e.target.closest && e.target.closest('.decline-btn');
-    if (dec) {
-      declinePartner(dec.getAttribute('data-type'), dec.getAttribute('data-id'), dec.getAttribute('data-name'));
-    }
-  });
-</script>
 </body>
 </html>
+
+<script>
+(function(){
+  var SU = 'https://byflpckbjjumxxjxoplk.supabase.co';
+  var SK = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+  var tk = sessionStorage.getItem('cv_admin_token');
+  if (!tk) return;
+  var hdr = { 'apikey': SK, 'Authorization': 'Bearer ' + tk };
+  function e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function renderPending() {
+    fetch(SU + '/rest/v1/nemt_partners?pending_review=eq.true&select=id,company_name,city,service_states,created_at', { headers: hdr })
+    .then(function(r){ return r.json(); })
+    .then(function(nemt){
+      var sec = document.getElementById('nemtPendingSection');
+      var body = document.getElementById('nemtPendingBody');
+      if (!sec || !body) return;
+      if (!nemt || !nemt.length) { sec.style.display = 'none'; return; }
+      sec.style.display = 'block';
+      body.innerHTML = nemt.map(function(p){
+        return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
+          '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + e(p.company_name) + '</div>' +
+          '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(p.city||'') + ' | ' + (p.service_states||[]).join(', ') + '</div>' +
+          '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Applied ' + new Date(p.created_at).toLocaleDateString() + '</div></div>' +
+          '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="cv-approve" data-type="nemt" data-id="' + p.id + '" data-name="' + e(p.company_name) + '" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
+          '<button class="cv-decline" data-type="nemt" data-id="' + p.id + '" data-name="' + e(p.company_name) + '" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
+          '</div></div>';
+      }).join('');
+    }).catch(function(){});
+
+    fetch(SU + '/rest/v1/hospitals?pending_review=eq.true&select=id,name,city,state,facility_type,created_at,intake_data', { headers: hdr })
+    .then(function(r){ return r.json(); })
+    .then(function(facs){
+      var sec = document.getElementById('facPendingSection');
+      var body = document.getElementById('facPendingBody');
+      if (!sec || !body) return;
+      if (!facs || !facs.length) { sec.style.display = 'none'; return; }
+      sec.style.display = 'block';
+      body.innerHTML = facs.map(function(f){
+        var intake = f.intake_data || {};
+        return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
+          '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + e(f.name) + '</div>' +
+          '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(f.city||'') + ', ' + e(f.state||'') + ' | ' + e((f.facility_type||'').replace(/_/g,' ')) + '</div>' +
+          '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Vol: ' + e(intake.patient_volume||'-') + ' | EHR: ' + e(intake.ehr||'-') + '</div></div>' +
+          '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="cv-approve" data-type="facility" data-id="' + f.id + '" data-name="' + e(f.name) + '" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
+          '<button class="cv-decline" data-type="facility" data-id="' + f.id + '" data-name="' + e(f.name) + '" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
+          '</div></div>';
+      }).join('');
+    }).catch(function(){});
+  }
+
+  document.addEventListener('click', function(ev) {
+    var ab = ev.target.closest && ev.target.closest('.cv-approve');
+    if (ab) {
+      var t = ab.getAttribute('data-type');
+      var id = ab.getAttribute('data-id');
+      var nm = ab.getAttribute('data-name');
+      if (!confirm('Approve ' + nm + '?')) return;
+      var tbl = t === 'nemt' ? 'nemt_partners' : 'hospitals';
+      fetch(SU + '/rest/v1/' + tbl + '?id=eq.' + id, {
+        method: 'PATCH', headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
+        body: JSON.stringify({active:true,pending_review:false})
+      }).then(function(){
+        fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({email:'',name:nm,type:t})
+        }).catch(function(){});
+        alert(nm + ' approved.');
+        location.reload();
+      });
+    }
+    var db = ev.target.closest && ev.target.closest('.cv-decline');
+    if (db) {
+      var t2 = db.getAttribute('data-type');
+      var id2 = db.getAttribute('data-id');
+      var nm2 = db.getAttribute('data-name');
+      if (!confirm('Decline ' + nm2 + '?')) return;
+      var tbl2 = t2 === 'nemt' ? 'nemt_partners' : 'hospitals';
+      fetch(SU + '/rest/v1/' + tbl2 + '?id=eq.' + id2, {
+        method: 'PATCH', headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
+        body: JSON.stringify({active:false,pending_review:false})
+      }).then(function(){
+        alert(nm2 + ' declined.');
+        location.reload();
+      });
+    }
+  });
+
+  renderPending();
+  setInterval(renderPending, 30000);
+})();
+</script>
