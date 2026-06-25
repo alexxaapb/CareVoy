@@ -1160,7 +1160,7 @@
     document.getElementById("rideDetailBody").innerHTML = rows +
       '<div style="display:flex;gap:10px;margin-top:20px">' +
       '<button class="cv-approve" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" data-email="' + partnerEmail + '" style="flex:1;background:#050D1F;color:#00C2A8;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
-      '<button class="cv-decline" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" style="flex:1;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button></div>';
+      '<button class="cv-decline" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" data-email="' + partnerEmail + '" style="flex:1;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button></div>';
     var modal = document.getElementById("rideDetailModal");
     var titleEl = modal.querySelector('div[style*="font-size:18px"]');
     if (titleEl) titleEl.textContent = "Application Details";
