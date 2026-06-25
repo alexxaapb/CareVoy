@@ -1120,83 +1120,94 @@
   var hdr = { 'apikey': SK, 'Authorization': 'Bearer ' + tk };
   function e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+  var _pendingNemt = [];
+  var _pendingFac = [];
+
+  function showAppDetail(type, idx) {
+    var data = type === "nemt" ? _pendingNemt[idx] : _pendingFac[idx];
+    if (!data) return;
+    var intake = data.intake_data || {};
+    var fields = [];
+    if (type === "nemt") {
+      fields = [
+        ["Company", data.company_name], ["City", data.city],
+        ["Service States", (data.service_states||[]).join(", ")],
+        ["Years in Operation", intake.years_operation], ["Fleet Size", intake.fleet_size],
+        ["Weekly Rides", intake.weekly_rides], ["Works with Brokers", intake.works_with_brokers],
+        ["Broker Names", intake.broker_names], ["Dispatch Software", intake.dispatch_software],
+        ["Contact Phone", intake.contact_phone], ["Home State", intake.home_state],
+      ];
+      if (intake.insurance_doc) {
+        fields.push(["Insurance Doc", '<a href="https://byflpckbjjumxxjxoplk.supabase.co/storage/v1/object/public/partner-docs/' + intake.insurance_doc + '" target="_blank" style="color:#00C2A8;font-weight:600">View Document</a>']);
+      }
+    } else {
+      fields = [
+        ["Facility", data.name], ["Type", (data.facility_type||"").replace(/_/g," ")],
+        ["City", data.city], ["State", data.state], ["Locations", intake.locations],
+        ["EHR System", intake.ehr], ["Patient Volume", intake.patient_volume],
+        ["Ride Frequency", intake.ride_frequency], ["Payment Type", intake.payment_type],
+        ["Current Process", intake.current_process], ["Pain Point", intake.pain_point],
+        ["Contact Title", intake.contact_title], ["Contact Phone", intake.contact_phone],
+      ];
+    }
+    var rows = fields.filter(function(f){return f[1];}).map(function(f) {
+      return '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6">' +
+        '<div style="width:140px;font-size:12px;color:#6B7280;flex-shrink:0">' + f[0] + '</div>' +
+        '<div style="font-size:13px;color:#050D1F;font-weight:500">' + (f[1]||"-") + '</div></div>';
+    }).join("");
+    var nm = type === "nemt" ? e(data.company_name||"") : e(data.name||"");
+    document.getElementById("rideDetailBody").innerHTML = rows +
+      '<div style="display:flex;gap:10px;margin-top:20px">' +
+      '<button class="cv-approve" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" style="flex:1;background:#050D1F;color:#00C2A8;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
+      '<button class="cv-decline" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" style="flex:1;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button></div>';
+    var modal = document.getElementById("rideDetailModal");
+    var titleEl = modal.querySelector('div[style*="font-size:18px"]');
+    if (titleEl) titleEl.textContent = "Application Details";
+    modal.style.display = "flex";
+  }
+
   function renderPending() {
-    fetch(SU + '/rest/v1/nemt_partners?pending_review=eq.true&select=id,company_name,city,service_states,created_at', { headers: hdr })
+    fetch(SU + "/rest/v1/nemt_partners?pending_review=eq.true&select=id,company_name,city,service_states,created_at,intake_data", { headers: hdr })
     .then(function(r){ return r.json(); })
     .then(function(nemt){
-      var sec = document.getElementById('nemtPendingSection');
-      var body = document.getElementById('nemtPendingBody');
+      _pendingNemt = nemt || [];
+      var sec = document.getElementById("nemtPendingSection");
+      var body = document.getElementById("nemtPendingBody");
       if (!sec || !body) return;
-      if (!nemt || !nemt.length) { sec.style.display = 'none'; return; }
-      sec.style.display = 'block';
-      body.innerHTML = nemt.map(function(p){
-        return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
+      if (!_pendingNemt.length) { sec.style.display = "none"; return; }
+      sec.style.display = "block";
+      body.innerHTML = _pendingNemt.map(function(p, i){
+        return '<div class="cv-pending-card" data-type="nemt" data-idx="' + i + '" style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer">' +
           '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + e(p.company_name) + '</div>' +
-          '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(p.city||'') + ' | ' + (p.service_states||[]).join(', ') + '</div>' +
+          '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(p.city||"") + ' | ' + (p.service_states||[]).join(", ") + '</div>' +
           '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Applied ' + new Date(p.created_at).toLocaleDateString() + '</div></div>' +
-          '<div style="display:flex;gap:8px;flex-shrink:0">' +
-          '<button class="cv-approve" data-type="nemt" data-id="' + p.id + '" data-name="' + e(p.company_name) + '" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
-          '<button class="cv-decline" data-type="nemt" data-id="' + p.id + '" data-name="' + e(p.company_name) + '" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
-          '</div></div>';
-      }).join('');
+          '<div style="font-size:11px;color:#00C2A8;font-weight:700">View &#8594;</div></div>';
+      }).join("");
     }).catch(function(){});
 
-    fetch(SU + '/rest/v1/hospitals?pending_review=eq.true&select=id,name,city,state,facility_type,created_at,intake_data', { headers: hdr })
+    fetch(SU + "/rest/v1/hospitals?pending_review=eq.true&select=id,name,city,state,facility_type,created_at,intake_data", { headers: hdr })
     .then(function(r){ return r.json(); })
     .then(function(facs){
-      var sec = document.getElementById('facPendingSection');
-      var body = document.getElementById('facPendingBody');
+      _pendingFac = facs || [];
+      var sec = document.getElementById("facPendingSection");
+      var body = document.getElementById("facPendingBody");
       if (!sec || !body) return;
-      if (!facs || !facs.length) { sec.style.display = 'none'; return; }
-      sec.style.display = 'block';
-      body.innerHTML = facs.map(function(f){
-        var intake = f.intake_data || {};
-        return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
+      if (!_pendingFac.length) { sec.style.display = "none"; return; }
+      sec.style.display = "block";
+      body.innerHTML = _pendingFac.map(function(f, i){
+        return '<div class="cv-pending-card" data-type="facility" data-idx="' + i + '" style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer">' +
           '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + e(f.name) + '</div>' +
-          '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(f.city||'') + ', ' + e(f.state||'') + ' | ' + e((f.facility_type||'').replace(/_/g,' ')) + '</div>' +
-          '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Vol: ' + e(intake.patient_volume||'-') + ' | EHR: ' + e(intake.ehr||'-') + '</div></div>' +
-          '<div style="display:flex;gap:8px;flex-shrink:0">' +
-          '<button class="cv-approve" data-type="facility" data-id="' + f.id + '" data-name="' + e(f.name) + '" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
-          '<button class="cv-decline" data-type="facility" data-id="' + f.id + '" data-name="' + e(f.name) + '" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
-          '</div></div>';
-      }).join('');
+          '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(f.city||"") + ', ' + e(f.state||"") + ' | ' + e((f.facility_type||"").replace(/_/g," ")) + '</div>' +
+          '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Applied ' + new Date(f.created_at).toLocaleDateString() + '</div></div>' +
+          '<div style="font-size:11px;color:#00C2A8;font-weight:700">View &#8594;</div></div>';
+      }).join("");
     }).catch(function(){});
   }
 
-  document.addEventListener('click', function(ev) {
-    var ab = ev.target.closest && ev.target.closest('.cv-approve');
-    if (ab) {
-      var t = ab.getAttribute('data-type');
-      var id = ab.getAttribute('data-id');
-      var nm = ab.getAttribute('data-name');
-      if (!confirm('Approve ' + nm + '?')) return;
-      var tbl = t === 'nemt' ? 'nemt_partners' : 'hospitals';
-      fetch(SU + '/rest/v1/' + tbl + '?id=eq.' + id, {
-        method: 'PATCH', headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
-        body: JSON.stringify({active:true,pending_review:false})
-      }).then(function(){
-        fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({email:'',name:nm,type:t})
-        }).catch(function(){});
-        alert(nm + ' approved.');
-        location.reload();
-      });
-    }
-    var db = ev.target.closest && ev.target.closest('.cv-decline');
-    if (db) {
-      var t2 = db.getAttribute('data-type');
-      var id2 = db.getAttribute('data-id');
-      var nm2 = db.getAttribute('data-name');
-      if (!confirm('Decline ' + nm2 + '?')) return;
-      var tbl2 = t2 === 'nemt' ? 'nemt_partners' : 'hospitals';
-      fetch(SU + '/rest/v1/' + tbl2 + '?id=eq.' + id2, {
-        method: 'PATCH', headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
-        body: JSON.stringify({active:false,pending_review:false})
-      }).then(function(){
-        alert(nm2 + ' declined.');
-        location.reload();
-      });
+  document.addEventListener("click", function(ev) {
+    var card = ev.target.closest && ev.target.closest(".cv-pending-card");
+    if (card) {
+      showAppDetail(card.getAttribute("data-type"), parseInt(card.getAttribute("data-idx")));
     }
   });
 
