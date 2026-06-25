@@ -406,7 +406,7 @@
         var partnerId=Array.isArray(pd)?pd[0]?.id:pd?.id;
 
         await fetch(SUPA+'/rest/v1/staff',{method:'POST',headers:H,
-          body:JSON.stringify({id:uid,role:'nemt',partner_id:partnerId})});
+          body:JSON.stringify({id:uid,role:'nemt',nemt_partner_id:partnerId,email:email,full_name:first+' '+last})});
 
         await fetch(SUPA+'/rest/v1/nemt_staff',{method:'POST',headers:H,
           body:JSON.stringify({id:uid,partner_id:partnerId,full_name:first+' '+last,
