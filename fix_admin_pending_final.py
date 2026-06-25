@@ -1,52 +1,27 @@
 import os, subprocess
 
 REPO = '/workspaces/CareVoy'
-PP = os.path.join(REPO, 'partners-portal')
+af = os.path.join(REPO, 'partners-portal', 'admin.html')
 
-# ════════════════════════════════════════════════════════════════
-# 1. FACILITY: Insert pw-wrap CSS before </style> (line 39)
-# ════════════════════════════════════════════════════════════════
-ff = os.path.join(PP, 'facility-signup.html')
-lines = open(ff).readlines()
+lines = open(af).readlines()
 
-pw_css_lines = [
-    '    .pw-wrap { position: relative; }\n',
-    '    .pw-wrap input { padding-right: 44px; }\n',
-    '    .pw-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6B7280; font-size: 13px; font-weight: 600; font-family: inherit; padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px; }\n',
-    '    .pw-eye:hover { color: #050D1F; }\n',
-]
-
-# Find </style> and insert before it
-inserted = False
+# Find the FIRST </script> tag
+script_end_line = None
 for i, line in enumerate(lines):
-    if '</style>' in line and not inserted:
-        for j, css_line in enumerate(pw_css_lines):
-            lines.insert(i + j, css_line)
-        inserted = True
+    if '</script>' in line:
+        script_end_line = i
         break
 
-if inserted:
-    open(ff, 'w').writelines(lines)
-    print("1. Facility: pw-wrap + pw-eye CSS inserted before </style>")
-else:
-    print("1. FAILED - </style> not found in facility")
+if script_end_line is None:
+    print("FAILED: no </script> found")
+    exit()
 
-# Verify it worked
-verify = open(ff).read()
-count = verify.count('.pw-wrap')
-print(f"   Verification: {count} pw-wrap rules found")
+print(f"Found first </script> at line {script_end_line + 1}")
 
-# ════════════════════════════════════════════════════════════════
-# 2. ADMIN: Insert functions before </script> (line 1096)
-# ════════════════════════════════════════════════════════════════
-af = os.path.join(PP, 'admin.html')
-ac = open(af).read()
-
-# Only add if not already there
-if 'function loadPendingApplicants' not in ac:
-    admin_js = '''
+# Insert functions right before that line
+fns = '''
   async function approvePartner(type, id, email, name) {
-    if (!confirm('Approve ' + name + '? They will receive a login email.')) return;
+    if (!confirm('Approve ' + name + '?')) return;
     var h2 = authHeaders();
     var table = type === 'nemt' ? 'nemt_partners' : 'hospitals';
     await fetch(SUPA_URL + '/rest/v1/' + table + '?id=eq.' + id, {
@@ -86,13 +61,12 @@ if 'function loadPendingApplicants' not in ac:
         nemtSec.style.display = 'block';
         nemtBody.innerHTML = nemt.map(function(p) {
           var intake = p.intake_data || {};
-          var cemail = intake.contact_phone || '';
           return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
             '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + esc(p.company_name||'') + '</div>' +
             '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + esc(p.city||'') + ' | ' + (p.service_states||[]).join(', ') + '</div>' +
             '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Applied ' + new Date(p.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '</div></div>' +
             '<div style="display:flex;gap:8px;flex-shrink:0">' +
-            '<button onclick="approvePartner(\'nemt\',\'' + p.id + '\',\'' + esc(cemail) + '\',\'' + esc(p.company_name||'') + '\')" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
+            '<button onclick="approvePartner(\'nemt\',\'' + p.id + '\',\'' + esc(intake.contact_phone||'') + '\',\'' + esc(p.company_name||'') + '\')" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
             '<button onclick="declinePartner(\'nemt\',\'' + p.id + '\',\'' + esc(p.company_name||'') + '\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
             '</div></div>';
         }).join('');
@@ -107,45 +81,47 @@ if 'function loadPendingApplicants' not in ac:
         facSec.style.display = 'block';
         facBody.innerHTML = facs.map(function(f) {
           var intake = f.intake_data || {};
-          var cemail = intake.contact_phone || '';
           return '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
             '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + esc(f.name||'') + '</div>' +
             '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + esc(f.city||'') + ', ' + esc(f.state||'') + ' | ' + esc((f.facility_type||'').replace(/_/g,' ')) + '</div>' +
             '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Vol: ' + esc(intake.patient_volume||'-') + ' | EHR: ' + esc(intake.ehr||'-') + ' | Applied ' + new Date(f.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '</div></div>' +
             '<div style="display:flex;gap:8px;flex-shrink:0">' +
-            '<button onclick="approvePartner(\'facility\',\'' + f.id + '\',\'' + esc(cemail) + '\',\'' + esc(f.name||'') + '\')" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
+            '<button onclick="approvePartner(\'facility\',\'' + f.id + '\',\'' + esc(intake.contact_phone||'') + '\',\'' + esc(f.name||'') + '\')" style="background:#050D1F;color:#00C2A8;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
             '<button onclick="declinePartner(\'facility\',\'' + f.id + '\',\'' + esc(f.name||'') + '\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>' +
             '</div></div>';
         }).join('');
       } else if (facSec) { facSec.style.display = 'none'; }
-    } catch(e) { console.warn('Facility pending err:', e); }
+    } catch(e) { console.warn('Fac pending err:', e); }
   }
 
 '''
-    ac = ac.replace('</script>\n</body>', admin_js + '</script>\n</body>', 1)
-    print("2a. All admin functions inserted before </script>")
 
-    # Wire to tab switches
-    old_wire = "    if (name === 'patients') { loadPatients(); }"
-    new_wire = "    if (name === 'patients') { loadPatients(); }\n    if (name === 'partners' || name === 'facilities') { loadPendingApplicants(); }"
-    if "name === 'partners'" not in ac:
-        ac = ac.replace(old_wire, new_wire)
-        print("2b. loadPendingApplicants wired to tab switches")
+# Insert function lines before the </script> line
+fn_lines = fns.split('\n')
+for j, fn_line in enumerate(fn_lines):
+    lines.insert(script_end_line + j, fn_line + '\n')
 
-    open(af, 'w').write(ac)
-    print("   admin.html written")
+# Now find and wire the tab switch
+# Re-read since line numbers shifted
+content = ''.join(lines)
+old_wire = "    if (name === 'patients') { loadPatients(); }"
+new_wire = "    if (name === 'patients') { loadPatients(); }\n    if (name === 'partners' || name === 'facilities') { loadPendingApplicants(); }"
+if "loadPendingApplicants" in content and "name === 'partners' || name === 'facilities'" not in content:
+    content = content.replace(old_wire, new_wire)
+    print("Tab switch wired")
 
-    # Verify
-    verify2 = open(af).read()
-    print(f"   Verify: loadPendingApplicants count = {verify2.count('loadPendingApplicants')}")
-    print(f"   Verify: approvePartner count = {verify2.count('approvePartner')}")
-else:
-    print("2. loadPendingApplicants already exists")
+open(af, 'w').write(content)
+
+# Verify
+v = open(af).read()
+print(f"Verify: loadPendingApplicants = {v.count('loadPendingApplicants')}")
+print(f"Verify: approvePartner = {v.count('approvePartner')}")
+print(f"Verify: facPendingSection = {v.count('facPendingSection')}")
 
 cmds = [
-    'rm -f fix_final_for_real.py',
-    'git add partners-portal/facility-signup.html partners-portal/admin.html',
-    'git commit -m "fix: facility pw CSS actually inserted, admin pending JS actually added"',
+    'rm -f fix_admin_pending_final.py',
+    'git add partners-portal/admin.html',
+    'git commit -m "fix: admin approve/decline functions inserted at correct position"',
     'git push origin main',
 ]
 for cmd in cmds:
