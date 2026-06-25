@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
         <span style="color:#00C2A8;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-left:8px">Partner Portal</span>
       </div>
       <div style="background:#fff;border-radius:0 0 14px 14px;padding:28px;border:1px solid #E2E8F0;border-top:none">
-        <h1 style="font-size:19px;color:#050D1F;margin:0 0 12px">Your account is ready</h1>
+        <h1 style="font-size:19px;color:#050D1F;margin:0 0 12px">Your account is ready!</h1>
         <div style="font-size:14px;color:#374151;line-height:1.6">${body}</div>
         <a href="${dashUrl}" style="display:inline-block;margin-top:20px;background:#050D1F;color:#00C2A8;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:14px;font-weight:700">Go to My Dashboard</a>
         <div style="margin-top:24px;padding-top:18px;border-top:1px solid #F0F4F8;font-size:12px;color:#9CA3AF;line-height:1.6">
@@ -44,9 +44,9 @@ module.exports = async function handler(req, res) {
   </body></html>`;
 
     const { error } = await resend.emails.send({
-      from: 'CareVoy <notifications@carevoy.co>',
+      from: 'CareVoy <partners@carevoy.co>',
       to: [email],
-      subject: 'Welcome to CareVoy - Your account is ready',
+      subject: 'Welcome to CareVoy - Your account is ready!',
       html
     });
 

@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
       const r = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Authorization": "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: "CareVoy <notifications@carevoy.co>", to: ["partners@carevoy.co"], subject: "New " + appType + " Application: " + (name||"Unknown"), html: adminHtml })
+        body: JSON.stringify({ from: "CareVoy <partners@carevoy.co>", to: ["partners@carevoy.co"], subject: "New " + appType + " Application: " + (name||"Unknown"), html: adminHtml })
       });
       if (r.ok) sent = true;
       if (email) {
