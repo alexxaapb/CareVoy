@@ -1234,7 +1234,7 @@
     location.reload();
   }
 
-  async function doDecline(type, id, name) {
+  async function doDecline(type, id, name, email) {
     if (!confirm('Decline ' + name + '? This cannot be undone.')) return;
     var tbl = type === 'nemt' ? 'nemt_partners' : 'hospitals';
     await fetch(SU + '/rest/v1/' + tbl + '?id=eq.' + id, {
@@ -1243,6 +1243,7 @@
       body: JSON.stringify({active: false, pending_review: false})
     });
     alert(name + ' declined.');
+    if (email) { fetch('https://care-voy-api-server.vercel.app/api/notify/partner-declined', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,name:name,type:type})}).catch(function(){}); }
     document.getElementById('rideDetailModal').style.display = 'none';
     location.reload();
   }
@@ -1260,7 +1261,7 @@
     }
     var db = ev.target.closest && ev.target.closest('.cv-decline');
     if (db) {
-      doDecline(db.getAttribute('data-type'), db.getAttribute('data-id'), db.getAttribute('data-name'));
+      doDecline(db.getAttribute('data-type'), db.getAttribute('data-id'), db.getAttribute('data-name'), db.getAttribute('data-email'));
       return;
     }
   });
