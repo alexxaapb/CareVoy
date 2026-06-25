@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           from: 'CareVoy <partners@carevoy.co>',
           to: [email],
-          subject: 'You're approved — welcome to CareVoy!',
+          subject: 'You're approved - welcome to CareVoy!',
           html
         })
       });
