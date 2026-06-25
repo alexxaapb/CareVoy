@@ -1158,7 +1158,7 @@
     var nm = type === "nemt" ? e(data.company_name||"") : e(data.name||"");
     document.getElementById("rideDetailBody").innerHTML = rows +
       '<div style="display:flex;gap:10px;margin-top:20px">' +
-      '<button class="cv-approve" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" style="flex:1;background:#050D1F;color:#00C2A8;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
+      '<button class="cv-approve" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" data-email="' + partnerEmail + '" style="flex:1;background:#050D1F;color:#00C2A8;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>' +
       '<button class="cv-decline" data-type="' + type + '" data-id="' + data.id + '" data-name="' + nm + '" style="flex:1;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button></div>';
     var modal = document.getElementById("rideDetailModal");
     var titleEl = modal.querySelector('div[style*="font-size:18px"]');
@@ -1211,7 +1211,7 @@
     }
   });
 
-  async function doApprove(type, id, name) {
+  async function doApprove(type, id, name, email) {
     if (!confirm('Approve ' + name + '?')) return;
     var tbl = type === 'nemt' ? 'nemt_partners' : 'hospitals';
     await fetch(SU + '/rest/v1/' + tbl + '?id=eq.' + id, {
@@ -1219,15 +1219,16 @@
       headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
       body: JSON.stringify({active: true, pending_review: false})
     });
-    // Send approval email using partner-approved endpoint
-    try {
-      await fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email: id, name: name, type: type})
-      });
-    } catch(e) {}
-    alert(name + ' approved. Login email sent.');
+    if (email) {
+      try {
+        await fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email: email, name: name, type: type})
+        });
+      } catch(e) {}
+    }
+    alert(name + ' approved. Login email sent to ' + (email||'partner') + '.');
     document.getElementById('rideDetailModal').style.display = 'none';
     location.reload();
   }
@@ -1253,7 +1254,7 @@
     }
     var ab = ev.target.closest && ev.target.closest('.cv-approve');
     if (ab) {
-      doApprove(ab.getAttribute('data-type'), ab.getAttribute('data-id'), ab.getAttribute('data-name'));
+      doApprove(ab.getAttribute('data-type'), ab.getAttribute('data-id'), ab.getAttribute('data-name'), ab.getAttribute('data-email'));
       return;
     }
     var db = ev.target.closest && ev.target.closest('.cv-decline');
