@@ -1211,6 +1211,58 @@
     }
   });
 
+  async function doApprove(type, id, name) {
+    if (!confirm('Approve ' + name + '?')) return;
+    var tbl = type === 'nemt' ? 'nemt_partners' : 'hospitals';
+    await fetch(SU + '/rest/v1/' + tbl + '?id=eq.' + id, {
+      method: 'PATCH',
+      headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
+      body: JSON.stringify({active: true, pending_review: false})
+    });
+    // Send approval email using partner-approved endpoint
+    try {
+      await fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email: id, name: name, type: type})
+      });
+    } catch(e) {}
+    alert(name + ' approved. Login email sent.');
+    document.getElementById('rideDetailModal').style.display = 'none';
+    location.reload();
+  }
+
+  async function doDecline(type, id, name) {
+    if (!confirm('Decline ' + name + '? This cannot be undone.')) return;
+    var tbl = type === 'nemt' ? 'nemt_partners' : 'hospitals';
+    await fetch(SU + '/rest/v1/' + tbl + '?id=eq.' + id, {
+      method: 'PATCH',
+      headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
+      body: JSON.stringify({active: false, pending_review: false})
+    });
+    alert(name + ' declined.');
+    document.getElementById('rideDetailModal').style.display = 'none';
+    location.reload();
+  }
+
+  document.addEventListener('click', function(ev) {
+    var card = ev.target.closest && ev.target.closest('.cv-pending-card');
+    if (card) {
+      showAppDetail(card.getAttribute('data-type'), parseInt(card.getAttribute('data-idx')));
+      return;
+    }
+    var ab = ev.target.closest && ev.target.closest('.cv-approve');
+    if (ab) {
+      doApprove(ab.getAttribute('data-type'), ab.getAttribute('data-id'), ab.getAttribute('data-name'));
+      return;
+    }
+    var db = ev.target.closest && ev.target.closest('.cv-decline');
+    if (db) {
+      doDecline(db.getAttribute('data-type'), db.getAttribute('data-id'), db.getAttribute('data-name'));
+      return;
+    }
+  });
+
   renderPending();
   setInterval(renderPending, 30000);
 })();
