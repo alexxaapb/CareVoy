@@ -901,6 +901,7 @@
     ['patients','rides','facilities','partners','revenue','settings'].forEach(function(s) {
       var el = document.getElementById('sec-' + s);
       if (el) el.style.display = s === name ? 'block' : 'none';
+    });
     // Populate revenue section with same data as overview
     // Load data when switching to the patients tab
     if (name === 'patients') { loadPatients(); }
