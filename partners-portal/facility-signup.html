@@ -361,7 +361,7 @@
         var hRes = await fetch(SUPA + '/rest/v1/hospitals', {
           method: 'POST', headers: { ...H, 'Prefer': 'return=representation' },
           body: JSON.stringify({ name: val('facilityName'), facility_type: val('facilityType'),
-            city: val('city'), state: val('state'), active: false, pending_review: true,
+            city: val('city'), state: val('state'), contact_email: val('email'), active: false, pending_review: true,
             intake_data: { locations: val('locations'), ehr: val('ehr'),
               patient_volume: val('patientVolume'), ride_frequency: val('rideFrequency'),
               payment_type: val('paymentType'), current_process: val('currentProcess'),
