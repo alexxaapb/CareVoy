@@ -23,8 +23,8 @@ module.exports = async function handler(req, res) {
       '</div></div>';
 
     let sent = false;
-    if (process.env.RESEND_API_KEY || process.env.RESEND_API) {
-      const key = process.env.RESEND_API_KEY || process.env.RESEND_API;
+    if (process.env.RESEND_API_KEY) {
+      const key = process.env.RESEND_API_KEY;
       const r = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
