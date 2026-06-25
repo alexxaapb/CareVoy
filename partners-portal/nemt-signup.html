@@ -183,21 +183,15 @@
       <input type="text" id="dispatchOtherVal" placeholder="Please specify your dispatch software"/ oninput="clearError('dispatchOtherVal')">
     </div>
 
-    <label class="fl">Vehicle Types *</label>
-    <select id="vehicleTypes" onchange="showOther(this,'vehicleOther')">
-      <option value="">Select primary vehicle type</option>
+        <label class="fl">Vehicle Types * <span style="font-size:10px;color:#9CA3AF;font-weight:400;text-transform:none">(Hold Ctrl/Cmd to select multiple)</span></label>
+    <select id="vehicleTypes" multiple style="height:160px;padding:6px;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;width:100%">
       <option value="ambulatory">Ambulatory</option>
       <option value="wheelchair">Wheelchair Van</option>
       <option value="stretcher">Stretcher / Gurney</option>
       <option value="sedan">Sedan</option>
       <option value="suv">SUV / Minivan</option>
       <option value="bariatric">Bariatric</option>
-      <option value="mixed">Mixed fleet (multiple types)</option>
-      <option value="other">Other</option>
     </select>
-    <div class="other-input" id="vehicleOther">
-      <input type="text" id="vehicleOtherVal" placeholder="Please describe your vehicle types"/ oninput="clearError('vehicleOtherVal')">
-    </div>
 
     <div class="section-label">Service Area</div>
     <p style="font-size:12px;color:#6B7280;margin-bottom:6px">Which states do you provide rides in? (Select all that apply) *</p>
@@ -367,7 +361,7 @@
           email=val('email'),phone=val('phone'),dispatch=val('dispatchPhone'),
           city=val('city'),homeState=val('homeState'),yearsOp=val('yearsOp'),
           fleet=val('fleetSize'),weeklyR=val('weeklyRides'),brokers=val('brokers'),brokerNames=val('brokerNames'),
-          software=val('dispatchSoftware'),vehicles=val('vehicleTypes'),
+          software=val('dispatchSoftware'),vehicles=getMultiSelect('vehicleTypes'),
           password=val('password');
       var states=getMultiSelect('serviceStates');
 
@@ -403,7 +397,7 @@
         var pr=await fetch(SUPA+'/rest/v1/nemt_partners',{
           method:'POST',headers:{...H,'Prefer':'return=representation'},
           body:JSON.stringify({company_name:company,city,service_states:states,
-            vehicle_types:[vehicles],dispatch_phone:dispatch,active:false,pending_review:true,
+            vehicle_types:vehicles,dispatch_phone:dispatch,active:false,pending_review:true,
             intake_data:{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
               works_with_brokers:brokers,broker_names:brokerNames,dispatch_software:software,
               insurance_doc:insPath,contact_phone:phone,home_state:homeState}})
