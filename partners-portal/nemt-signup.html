@@ -397,7 +397,7 @@
         var pr=await fetch(SUPA+'/rest/v1/nemt_partners',{
           method:'POST',headers:{...H,'Prefer':'return=representation'},
           body:JSON.stringify({company_name:company,city,service_states:states,
-            vehicle_types:vehicles,dispatch_phone:dispatch,active:false,pending_review:true,
+            vehicle_types:vehicles,dispatch_phone:dispatch,contact_email:email,active:false,pending_review:true,
             intake_data:{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
               works_with_brokers:brokers,broker_names:brokerNames,dispatch_software:software,
               insurance_doc:insPath,contact_phone:phone,home_state:homeState}})
