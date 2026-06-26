@@ -194,6 +194,34 @@ export default function OnboardingScreen() {
       setError(upsertErr.message);
       return;
     }
+    // Claim any invited rides that match this patient's verified phone.
+    // Coordinator-created invites have contact_phone set but patient_id null.
+    try {
+      const verifiedPhone = user.phone ? "+" + user.phone.replace(/\\D/g, "") : null;
+      const digits10 = verifiedPhone ? verifiedPhone.replace(/\\D/g, "").slice(-10) : null;
+      if (digits10) {
+        // Match on the last 10 digits regardless of stored format
+        const { data: invited } = await supabase
+          .from("rides")
+          .select("id, contact_phone, patient_id")
+          .is("patient_id", null)
+          .in("status", ["invited", "reminder_sent", "no_response"]);
+        if (Array.isArray(invited) && invited.length) {
+          const mine = invited.filter((rd) => {
+            const rdDigits = String(rd.contact_phone || "").replace(/\\D/g, "").slice(-10);
+            return rdDigits && rdDigits === digits10;
+          });
+          for (const rd of mine) {
+            await supabase
+              .from("rides")
+              .update({ patient_id: user.id })
+              .eq("id", rd.id);
+          }
+        }
+      }
+    } catch (e) {
+      // Non-fatal: patient can still book manually if claim fails
+    }
     setStep(3);
   };
 
