@@ -203,6 +203,7 @@ export default function RideDetail() {
             onPress={() => router.push(`/book-ride?rideId=${ride.id}&prefill=${encodeURIComponent(JSON.stringify({
               hospital_name: ride.hospital_name || ride.dropoff_address || "",
               procedure_type: ride.procedure_type || "",
+              payment_responsibility: ride.payment_responsibility || "self_pay",
             }))}`)}
             style={styles.scheduleBtn}
           >

@@ -422,11 +422,18 @@ export default function BookRideScreen() {
       if (p.needs_wheelchair) setNeedsWheelchair(true);
       if (p.needs_companion) setBringingCompanion(true);
       if (p.special_instructions) {
-        // surface as needing extra time if relevant; otherwise ignored quietly
         if (/extra time|slow|mobility|assist/i.test(p.special_instructions))
           setNeedsExtraTime(true);
       }
-      setStep(3);
+      if ((p as any).payment_responsibility) {
+        setInvitePaymentResp((p as any).payment_responsibility);
+      }
+      if (params.rideId) {
+        setWhoChosen(true);
+        setStep(1);
+      } else {
+        setStep(3);
+      }
     } catch {
       // ignore malformed prefill
     }
@@ -654,7 +661,7 @@ export default function BookRideScreen() {
           mobility_needs: mobility,
           companion_requested: bringingCompanion,
           status: "pending",
-          payment_responsibility: "self_pay",
+          payment_responsibility: invitePaymentResp || "self_pay",
           estimated_cost: 55,
           ...(recurringSeriesId ? {
             is_recurring: true,
@@ -1462,6 +1469,15 @@ export default function BookRideScreen() {
                 <Text style={styles.estimateValue}>Quoted by provider</Text>
               </View>
 
+              {invitePaymentResp === "facility" ? (
+                <View style={styles.facilityCoveredBox}>
+                  <Feather name="check-circle" size={18} color={TEAL} />
+                  <Text style={styles.facilityCoveredText}>
+                    Your facility covers this ride. No payment needed.
+                  </Text>
+                </View>
+              ) : (
+                <View>
               <Text style={styles.label}>Payment method</Text>
               <PaymentOption
                 active={paymentMethod === "hsa_fsa"}
@@ -1500,6 +1516,8 @@ export default function BookRideScreen() {
                   </Text>
                   <Feather name="chevron-right" size={18} color={TEAL} />
                 </Pressable>
+              )}
+                </View>
               )}
             </View>
           )}
@@ -2325,6 +2343,17 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
   },
+  facilityCoveredBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#ECFDF5",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  facilityCoveredText: { flex: 1, fontSize: 14, color: "#050D1F", fontWeight: "600" },
   estimateCard: {
     flexDirection: "row",
     justifyContent: "space-between",
