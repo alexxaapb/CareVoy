@@ -364,7 +364,11 @@ function exportNemtCSV(type) {
 
 async function loadAvailableRides() {
   var body = document.getElementById('availableRidesBody');
-  if (!body || !staffInfo || !staffInfo.nemt_partner_id) return;
+  if (!body) return;
+  if (!staffInfo || !staffInfo.nemt_partner_id) {
+    body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">No available rides yet</div>';
+    return;
+  }
   try {
     var r = await fetch(
       SUPA + '/rest/v1/rides?nemt_partner_id=is.null&status=in.(invited,pending,confirmed)&select=*&order=pickup_time.asc',

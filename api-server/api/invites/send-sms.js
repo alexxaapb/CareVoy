@@ -15,6 +15,9 @@ module.exports = async function handler(req, res) {
   try {
     const { phone, patient_name, facility, ride_id } = req.body;
     if (!phone) return res.status(400).json({ error: 'Missing phone' });
+    var digits = String(phone).replace(/\D/g, '');
+    if (digits.length === 10) digits = '1' + digits;
+    var normalizedPhone = '+' + digits;
 
     const appLink = 'https://apps.apple.com/us/app/carevoy/id6768714735';
     const message = (facility || 'Your care team') + ' has scheduled an appointment for ' + (patient_name || 'you') + '. Download CareVoy to book your ride and get your HSA/FSA receipt: ' + appLink;
@@ -25,7 +28,7 @@ module.exports = async function handler(req, res) {
         const twilioRes = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + process.env.TWILIO_ACCOUNT_SID + '/Messages.json', {
           method: 'POST',
           headers: { 'Authorization': 'Basic ' + Buffer.from(process.env.TWILIO_ACCOUNT_SID + ':' + process.env.TWILIO_AUTH_TOKEN).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ To: phone, From: process.env.TWILIO_PHONE_FROM, Body: message }).toString()
+          body: new URLSearchParams({ To: normalizedPhone, From: process.env.TWILIO_PHONE_FROM, Body: message }).toString()
         });
         if (twilioRes.ok) smsSent = true;
       } catch(e) { console.warn('Twilio SMS failed:', e.message); }
