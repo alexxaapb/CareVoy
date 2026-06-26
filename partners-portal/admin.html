@@ -518,7 +518,7 @@
   const SUPA_KEY = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
   const API = 'https://care-voy-api-server.vercel.app';
 
-  const token = sessionStorage.getItem('cv_admin_token');
+  const token = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
   if (!token) { window.location.href = '/'; }
 
   var currentInviteUrl = '';
@@ -1115,7 +1115,7 @@
 (function(){
   var SU = 'https://byflpckbjjumxxjxoplk.supabase.co';
   var SK = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
-  var tk = sessionStorage.getItem('cv_admin_token');
+  var tk = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
   if (!tk) return;
   var hdr = { 'apikey': SK, 'Authorization': 'Bearer ' + tk };
   function e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

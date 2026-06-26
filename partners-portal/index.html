@@ -113,6 +113,8 @@
           // Admin: save token and go to admin dashboard
           sessionStorage.setItem('cv_admin_token', token);
           sessionStorage.setItem('cv_admin_uid',   uid);
+          localStorage.setItem('cv_admin_token', token);
+          localStorage.setItem('cv_admin_uid',   uid);
           window.location.href = '/admin.html';
           return;
         }
