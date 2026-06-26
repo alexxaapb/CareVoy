@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<string, string> = {
   arrived: "Driver Arrived",
   completed: "Completed",
   cancelled: "Cancelled",
-  invited: "Invited",
+  invited: "Pending invite",
 };
 
 type Ride = {
@@ -197,6 +197,20 @@ export default function RideDetail() {
           <DetailRow label="Payment" value={paymentLabel} />
         </View>
 
+        {/* Schedule button for invited rides not yet booked */}
+        {["invited", "app_downloaded", "reminder_sent", "no_response"].includes(ride.status) ? (
+          <Pressable
+            onPress={() => router.push(`/book-ride?rideId=${ride.id}&prefill=${encodeURIComponent(JSON.stringify({
+              hospital_name: ride.hospital_name || ride.dropoff_address || "",
+              procedure_type: ride.procedure_type || "",
+            }))}`)}
+            style={styles.scheduleBtn}
+          >
+            <Feather name="calendar" size={16} color="#fff" />
+            <Text style={styles.scheduleText}>Schedule this ride</Text>
+          </Pressable>
+        ) : null}
+
         {/* Safety button */}
         {["assigned", "en_route", "arrived"].includes(ride.status) ? (
           <Pressable onPress={call911} style={styles.safetyBtn}>
@@ -246,6 +260,18 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
   detailLabel: { fontSize: 13, color: MUTED },
   detailValue: { fontSize: 13, color: NAVY, fontWeight: "600", textAlign: "right", flex: 1, marginLeft: 16 },
+  scheduleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#050D1F",
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  scheduleText: { color: "#fff", fontSize: 16, fontWeight: "700" },
   safetyBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", borderRadius: 12, padding: 14, marginTop: 8, gap: 8 },
   safetyText: { fontSize: 14, fontWeight: "700", color: "#EF4444" },
 });

@@ -176,7 +176,7 @@ function formatTime(d: Date | null): string {
 
 export default function BookRideScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ prefill?: string }>();
+  const params = useLocalSearchParams<{ prefill?: string; rideId?: string }>();
   const {
     activePerson,
     careRecipients,
@@ -665,7 +665,28 @@ export default function BookRideScreen() {
       });
     }
 
-    const { error: insertErr } = await supabase.from("rides").insert(rows);
+    let insertErr = null;
+    if (params.rideId) {
+      // Booking an existing invited ride: update it in place (claim + schedule)
+      const first = rows[0] as any;
+      const { error } = await supabase
+        .from("rides")
+        .update({
+          pickup_time: first.pickup_time,
+          pickup_address: first.pickup_address,
+          dropoff_address: first.dropoff_address,
+          ride_type: first.ride_type,
+          procedure_type: first.procedure_type,
+          wheelchair_required: first.wheelchair_required,
+          companion_requested: first.companion_requested,
+          status: "confirmed",
+        })
+        .eq("id", params.rideId);
+      insertErr = error;
+    } else {
+      const { error } = await supabase.from("rides").insert(rows);
+      insertErr = error;
+    }
     setSubmitting(false);
     if (insertErr) {
       setError(insertErr.message);
