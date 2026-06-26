@@ -8,7 +8,7 @@
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "eas-build-pre-install": "corepack enable && corepack prepare pnpm@10.32.1 --activate && cd ../.. && pnpm install --no-frozen-lockfile && cd artifacts/carevoy && touch yarn.lock && echo '[stripe-fix] patching enum...' && find ../.. -path '*stripe-react-native/ios/StripeSwiftInterop.h' -type f -exec sed -i 's/NS_ENUM(NSUInteger, STPPaymentStatus)/NS_ENUM(NSInteger, STPPaymentStatus)/g' {} + && echo '[stripe-fix] done'"
+    "eas-build-pre-install": "corepack enable && corepack prepare pnpm@10.32.1 --activate && cd ../.. && pnpm install --no-frozen-lockfile && cd artifacts/carevoy && touch yarn.lock && echo '[stripe-fix] patching enum' && find ../.. -path '*stripe-react-native/ios/StripeSwiftInterop.h' -type f -exec perl -pi -e 's/NSUInteger, STPPaymentStatus/NSInteger, STPPaymentStatus/g' {} + && echo '[stripe-fix] done'"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
