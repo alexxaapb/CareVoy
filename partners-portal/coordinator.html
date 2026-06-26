@@ -353,7 +353,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Patient Phone (receives SMS invite)</label>
-        <input class="form-input" id="patPhone" type="tel" placeholder="+1 (555) 000-0000">
+        <input class="form-input" id="patPhone" type="tel" placeholder="(555) 000-0000">
       </div>
       <div class="form-group">
         <label class="form-label">Patient Email (optional)</label>
@@ -382,7 +382,7 @@
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Caregiver Phone</label>
-            <input class="form-input" id="cgPhone" type="tel" placeholder="+1 (555) 000-0000">
+            <input class="form-input" id="cgPhone" type="tel" placeholder="(555) 000-0000">
           </div>
         </div>
       </div>
@@ -636,7 +636,7 @@ function rideRow(r, cols) {
   var dateStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : '—';
   var isPending = ['invited','reminder_sent','no_response','pending'].includes(r.status);
   var actionBtn = isPending
-    ? '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Remind</button>'
+    ? '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Remind</button> <button class="btn btn-ghost" style="color:#EF4444;border:1px solid #FECACA" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>'
     : '<button class="btn btn-ghost" onclick="openDrawer(\'' + r.id + '\')">View</button>';
   return '<div class="tbl-row" style="grid-template-columns:' + cols + '" onclick="openDrawer(\'' + r.id + '\')">' +
     '<div class="td bold">' + esc(r.patient_name || 'Patient') + (r.caregiver_name ? '<br><span style="font-size:11px;color:#9CA3AF;font-weight:400">Caregiver: ' + esc(r.caregiver_name) + '</span>' : '') + '</div>' +
@@ -670,7 +670,7 @@ function renderAlerts() {
       '<div><div style="font-size:13px;font-weight:600;color:#050D1F">' + esc(r.patient_name||'Patient') + '</div>' +
       '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(r.procedure_type||'Appointment') + ' · ' + apptStr + '</div>' +
       '<div style="margin-top:6px">' + statusBadge(r.status) + '</div></div>' +
-      '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder</button>' +
+      '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#EF4444;border:1px solid #FECACA" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>' +
       '</div>';
   }).join('');
 }
@@ -710,6 +710,21 @@ async function sendReminder(evt, rideId) {
   } catch(e) {}
   showToast('Reminder sent', 'ok');
   await loadRides();
+}
+
+async function cancelRide(evt, rideId) {
+  evt.stopPropagation();
+  if (!confirm('Cancel this ride? This will remove the invite.')) return;
+  try {
+    await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status: 'cancelled' })
+    });
+    showToast('Ride cancelled', 'ok');
+  } catch(e) { showToast('Could not cancel', 'err'); }
+  await loadRides();
+  renderPatientTable();
 }
 
 // ── Add patient ────────────────────────────────────────────

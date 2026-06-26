@@ -19,7 +19,10 @@ module.exports = async function handler(req, res) {
     const { data: ride } = await supabase.from('rides').select('*, hospitals(name)').eq('id', ride_id).single();
     if (!ride) return res.status(404).json({ error: 'Ride not found' });
 
-    const contactPhone = ride.contact_phone;
+    var rawPhone = ride.contact_phone || '';
+    var digits = String(rawPhone).replace(/\D/g, '');
+    if (digits.length === 10) digits = '1' + digits;
+    const contactPhone = digits ? '+' + digits : '';
     const patientName  = ride.patient_name || 'your patient';
     const facilityName = (ride.hospitals && ride.hospitals.name) || 'your facility';
     const apptDate     = ride.pickup_time ? new Date(ride.pickup_time).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'your upcoming appointment';
