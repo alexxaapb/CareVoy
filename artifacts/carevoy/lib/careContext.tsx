@@ -61,15 +61,28 @@ export function CareProvider({ children }: { children: React.ReactNode }) {
     }
     setSelfPatientId(userId);
 
-    // Update rides matching this phone to app_downloaded
+    // Claim invited rides matching this phone (last 10 digits, format-agnostic)
+    // and attach this user's patient_id so they appear in the app.
     try {
       const phone = session?.user?.phone;
-      if (phone) {
-        await supabase
+      const digits10 = phone ? String(phone).replace(/\\D/g, "").slice(-10) : null;
+      if (digits10) {
+        const { data: invitedRides } = await supabase
           .from("rides")
-          .update({ status: "app_downloaded" })
-          .eq("contact_phone", phone)
-          .eq("status", "invited");
+          .select("id, contact_phone")
+          .is("patient_id", null)
+          .in("status", ["invited", "reminder_sent", "no_response", "app_downloaded"]);
+        if (Array.isArray(invitedRides)) {
+          for (const rd of invitedRides) {
+            const rdDigits = String(rd.contact_phone || "").replace(/\\D/g, "").slice(-10);
+            if (rdDigits && rdDigits === digits10) {
+              await supabase
+                .from("rides")
+                .update({ patient_id: userId, status: "app_downloaded" })
+                .eq("id", rd.id);
+            }
+          }
+        }
       }
     } catch {}
 

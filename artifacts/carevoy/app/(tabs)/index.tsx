@@ -160,7 +160,7 @@ export default function HomeScreen() {
           "id, ride_type, pickup_address, dropoff_address, pickup_time, surgery_date, status, actual_cost, estimated_cost, hospitals(name)",
         )
         .eq("patient_id", activePatientId)
-        .in("status", ["pending", "confirmed", "assigned", "en_route", "arrived"])
+        .in("status", ["invited", "app_downloaded", "reminder_sent", "no_response", "pending", "confirmed", "assigned", "en_route", "arrived"])
         .order("pickup_time", { ascending: true }),
       supabase
         .from("rides")
