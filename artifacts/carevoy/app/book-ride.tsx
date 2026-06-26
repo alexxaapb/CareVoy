@@ -573,13 +573,11 @@ export default function BookRideScreen() {
   const submit = async () => {
     setError(null);
     const needsCard =
-      paymentMethod === "hsa_fsa" ? !hsaCardOnFile : !stdCardOnFile;
+      invitePaymentResp === "facility"
+        ? false
+        : paymentMethod === "hsa_fsa" ? !hsaCardOnFile : !stdCardOnFile;
     if (needsCard) {
-      setError(
-        paymentMethod === "hsa_fsa"
-          ? "Please add an HSA/FSA card from the Payment tab to continue."
-          : "Please add a card from the Payment tab to continue.",
-      );
+      setError("Please add a payment method from the Payment tab to continue.");
       return;
     }
     setSubmitting(true);

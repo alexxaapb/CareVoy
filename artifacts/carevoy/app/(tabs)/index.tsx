@@ -111,6 +111,10 @@ function formatDateTime(iso: string | null): string {
 
 
 const RIDE_STATUS_LABELS: Record<string, string> = {
+  invited: "Pending invite",
+  app_downloaded: "Pending invite",
+  reminder_sent: "Pending invite",
+  no_response: "Pending invite",
   pending: "Finding your driver",
   confirmed: "Confirmed",
   assigned: "Driver assigned",
