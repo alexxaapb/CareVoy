@@ -352,11 +352,11 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Patient Phone (receives SMS invite)</label>
+        <label class="form-label">Patient Phone <span style="color:#9CA3AF;font-weight:400">(optional)</span></label>
         <input class="form-input" id="patPhone" type="tel" placeholder="(555) 000-0000">
       </div>
       <div class="form-group">
-        <label class="form-label">Patient Email (optional)</label>
+        <label class="form-label">Patient Email <span style="color:#EF4444">*</span></label>
         <input class="form-input" id="patEmail" type="email" placeholder="jane@email.com">
       </div>
     </div>
@@ -800,7 +800,7 @@ async function submitAddPatient() {
         patient_name: patientName,
         caregiver_name: caregiverName || null,
         contact_phone: contactPhone,
-        contact_email: (document.getElementById('patEmail') ? document.getElementById('patEmail').value.trim() : null) || null,
+        contact_email: patEmail,
         appointment_at: apptDateTime.toISOString(),
         procedure_type: apptType,
         source: 'form',
@@ -829,7 +829,7 @@ async function submitAddPatient() {
   }
 
   // Check for an existing active ride with this phone — avoid duplicates on resend
-  var dupCheck = await fetch(SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id + '&contact_phone=eq.' + encodeURIComponent(contactPhone) + '&status=in.(invited,reminder_sent,no_response,pending,confirmed,assigned,en_route,arrived)&select=id,status', { headers: H });
+  var dupCheck = await fetch(SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id + '&contact_email=eq.' + encodeURIComponent(patEmail) + '&status=in.(invited,reminder_sent,no_response,pending,confirmed,assigned,en_route,arrived)&select=id,status', { headers: H });
   var dupRides = await dupCheck.json();
   if (Array.isArray(dupRides) && dupRides.length > 0) {
     btn.disabled = true; btn.textContent = 'Resending\u2026';
@@ -857,7 +857,7 @@ async function submitAddPatient() {
   }
 
   // Check for an existing active ride with this phone — avoid duplicates on resend
-  var dupCheck = await fetch(SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id + '&contact_phone=eq.' + encodeURIComponent(contactPhone) + '&status=in.(invited,reminder_sent,no_response,pending,confirmed,assigned,en_route,arrived)&select=id,status', { headers: H });
+  var dupCheck = await fetch(SUPA + '/rest/v1/rides?hospital_id=eq.' + coordInfo.hospital_id + '&contact_email=eq.' + encodeURIComponent(patEmail) + '&status=in.(invited,reminder_sent,no_response,pending,confirmed,assigned,en_route,arrived)&select=id,status', { headers: H });
   var dupRides = await dupCheck.json();
   if (Array.isArray(dupRides) && dupRides.length > 0) {
     btn.disabled = true; btn.textContent = 'Resending\u2026';
