@@ -73,3 +73,59 @@ print("  invited label in map:", '"invited": "Pending invite"' in hc2 or 'invite
 print("  facility gate bypass:", 'invitePaymentResp === "facility"\n        ? false' in bc2)
 print("  generic payment msg:", 'add a payment method from the Payment tab' in bc2)
 print("  JSX balance book-ride: ( =",bc2.count('('),") =",bc2.count(')'),"| { =",bc2.count('{'),"} =",bc2.count('}'))
+
+# ===== FIX 5: Gate "Book a medical ride" button - invite-only model =====
+# Patients can only be in the app via a facility invite. Remove the self-book
+# button and replace with a "waiting for invite" message when no rides exist.
+hf = os.path.join(APP,'app','(tabs)','index.tsx')
+hc = open(hf).read()
+
+old_book_btn = '''        {/* Book button */}
+        <Pressable
+          onPress={() => router.push("/book-ride")}
+          style={({ pressed }) => [
+            styles.bookBtn,
+            pressed && styles.pressed,
+          ]}
+          accessibilityLabel="Book a medical ride"
+        >
+          <Text style={styles.bookBtnText}>Book a medical ride</Text>
+          <View style={styles.bookBtnArrow}>
+            <Feather name="arrow-right" size={18} color={NAVY} />
+          </View>
+        </Pressable>'''
+
+new_book_btn = '''        {/* Invite-only model: no self-booking. Show waiting state when no invites. */}
+        {!loading && upcoming.length === 0 && (
+          <View style={styles.inviteWaitBox}>
+            <Feather name="mail" size={20} color={TEAL} />
+            <Text style={styles.inviteWaitText}>
+              Your healthcare facility will send you a ride invitation via text message.
+            </Text>
+          </View>
+        )}'''
+
+if old_book_btn in hc:
+    hc = hc.replace(old_book_btn, new_book_btn)
+    # Add styles for inviteWaitBox
+    if 'inviteWaitBox:' not in hc and 'bookBtn:' in hc:
+        hc = hc.replace('  bookBtn:', '''  inviteWaitBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "#F0FDFA",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+  },
+  inviteWaitText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#050D1F",
+    lineHeight: 20,
+  },
+  bookBtn:''', 1)
+    open(hf,'w').write(hc)
+    results.append("5. Book button removed - invite-only model (waiting state shown when no rides)")
+else:
+    results.append("5. FAIL: book button block not matched")

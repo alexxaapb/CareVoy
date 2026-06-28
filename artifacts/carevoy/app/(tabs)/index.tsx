@@ -385,20 +385,15 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* Book button */}
-        <Pressable
-          onPress={() => router.push("/book-ride")}
-          style={({ pressed }) => [
-            styles.bookBtn,
-            pressed && styles.pressed,
-          ]}
-          accessibilityLabel="Book a medical ride"
-        >
-          <Text style={styles.bookBtnText}>Book a medical ride</Text>
-          <View style={styles.bookBtnArrow}>
-            <Feather name="arrow-right" size={18} color={NAVY} />
+        {/* Invite-only model: no self-booking. Show waiting state when no invites. */}
+        {!loading && upcoming.length === 0 && (
+          <View style={styles.inviteWaitBox}>
+            <Feather name="mail" size={20} color={TEAL} />
+            <Text style={styles.inviteWaitText}>
+              Your healthcare facility will send you a ride invitation via text message.
+            </Text>
           </View>
-        </Pressable>
+        )}
 
         {/* HSA / FSA pill */}
         <View style={styles.hsaPill}>
@@ -664,6 +659,21 @@ const styles = StyleSheet.create({
   },
 
   // Book button
+  inviteWaitBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "#F0FDFA",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+  },
+  inviteWaitText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#050D1F",
+    lineHeight: 20,
+  },
   bookBtn: {
     backgroundColor: NAVY,
     borderRadius: 18,
