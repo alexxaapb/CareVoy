@@ -759,8 +759,9 @@ async function submitAddPatient() {
     var first = document.getElementById('patFirstName').value.trim();
     var last  = document.getElementById('patLastName').value.trim();
     var phone = document.getElementById('patPhone').value.trim();
+    var patEmail = document.getElementById('patEmail').value.trim();
     if (!first || !last) { showErr('Please enter patient name.'); return; }
-    if (!phone) { showErr('Please enter patient phone number.'); return; }
+    if (!patEmail || !patEmail.includes('@')) { showErr('Please enter patient email address.'); return; }
     patientName = first + ' ' + last;
     contactPhone = phone;
   } else {
