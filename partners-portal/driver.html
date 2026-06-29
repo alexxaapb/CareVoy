@@ -85,8 +85,6 @@
     .settings-row:last-child { border-bottom:none; }
     .settings-key { font-size:11px; font-weight:700; color:#6B7280; text-transform:uppercase; }
     .settings-val { font-size:13px; color:#050D1F; text-align:right; }
-    /* MVP banner */
-    .mvp-banner { background:#fef3c7; border:1px solid #f59e0b; border-radius:9px; padding:10px 14px; margin-bottom:16px; font-size:12px; color:#92400e; }
     /* Toast */
     .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#050D1F; color:#fff; padding:13px 22px; border-radius:12px; font-size:13px; font-weight:600; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; max-width:400px; text-align:center; }
     .toast.show { opacity:1; }
@@ -312,9 +310,9 @@ var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 var AVG_FARE = null;
 
-var token = sessionStorage.getItem('cv_nemt_token');
-var uid   = sessionStorage.getItem('cv_nemt_uid');
-if (!token || !uid) { window.location.href = '/'; }
+var token = sessionStorage.getItem('cv_nemt_token') || localStorage.getItem('cv_admin_token');
+var uid   = sessionStorage.getItem('cv_nemt_uid') || localStorage.getItem('cv_admin_uid');
+if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_nemt')) { window.location.href = '/'; } }
 
 var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
 var staffInfo = null;

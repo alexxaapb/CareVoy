@@ -402,7 +402,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">Appointment Type</label>
+      <label class="form-label">Appointment Type <span style="color:#EF4444">*</span></label>
       <select class="form-input" id="apptType">
         <option value="">Select type…</option>
         <option>Medical appointment</option>
@@ -413,7 +413,7 @@
       </select>
     </div>
     <div style="margin-bottom:14px">
-      <label class="form-label">Who pays for the ride?</label>
+      <label class="form-label">Who pays for the ride? <span style="color:#EF4444">*</span></label>
       <select class="form-input" id="paymentResp">
         <option value="self_pay">Patient pays (HSA/FSA or card)</option>
         <option value="facility">Facility covers this ride</option>
@@ -433,7 +433,7 @@
 <div class="scrim" id="uploadModal">
   <div class="modal">
     <div class="modal-title">Bulk Upload Patients</div>
-    <div class="modal-sub">Upload a CSV from your scheduling system. Required: <strong>First Name, Last Name, Phone</strong>. Optional: Email, Appointment Date, Appointment Type, Caregiver Name, Caregiver Phone. You can add patients without appointments and send ride invites later.</div>
+    <div class="modal-sub">Upload a CSV from your scheduling system. Required: <strong>First Name, Last Name, Email</strong>. Optional: Phone, Appointment Date, Appointment Type, Caregiver Name, Caregiver Email, Caregiver Phone. You can add patients without appointments and send ride invites later.</div>
     <div class="upload-area" id="csvDropZone" onclick="document.getElementById('csvFile').click()">
       <div style="font-size:24px;margin-bottom:8px">📄</div>
       <div style="font-size:14px;font-weight:600;color:#374151">Drop CSV here or click to browse</div>
@@ -485,9 +485,9 @@ var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 var API  = 'https://care-voy-api-server.vercel.app';
 
-var token = sessionStorage.getItem('cv_coord_token');
-var uid   = sessionStorage.getItem('cv_coord_uid');
-if (!token || !uid) { window.location.href = '/'; }
+var token = sessionStorage.getItem('cv_coord_token') || localStorage.getItem('cv_admin_token');
+var uid   = sessionStorage.getItem('cv_coord_uid') || localStorage.getItem('cv_admin_uid');
+if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_hospital')) { window.location.href = '/'; } }
 
 var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
 var coordInfo = null;

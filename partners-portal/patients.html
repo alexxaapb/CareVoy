@@ -150,8 +150,8 @@
     .bottom-nav-item.active .nav-dot{opacity:1}
 
     /* ── AI chat ── */
-    .chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 60px - 56px);max-height:700px}
-    .chat-messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:12px}
+    .chat-wrap{display:flex;flex-direction:column;min-height:0;flex:1}
+    .chat-messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:12px;min-height:200px;max-height:calc(100vh - 260px)}
     .chat-msg{max-width:82%;padding:12px 15px;border-radius:16px;font-size:13px;line-height:1.6}
     .chat-msg.user{background:var(--navy);color:#fff;align-self:flex-end;border-radius:16px 16px 4px 16px}
     .chat-msg.ai{background:var(--white);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-radius:16px 16px 16px 4px}
@@ -218,7 +218,7 @@
 <div class="auth-wrap" id="signupScreen" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">
-      <svg viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#050D1F"/><circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/><path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+      <svg width="32" height="32" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="border-radius:7px;flex-shrink:0"><rect width="1024" height="1024" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
       <span class="auth-logo-text">CareVoy</span>
     </div>
     <div class="auth-title">Create your account</div>
@@ -241,7 +241,7 @@
 <div class="auth-wrap" id="forgotScreen" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">
-      <svg viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#050D1F"/><circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/><path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+      <svg width="32" height="32" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="border-radius:7px;flex-shrink:0"><rect width="1024" height="1024" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
       <span class="auth-logo-text">CareVoy</span>
     </div>
     <div class="auth-title">Reset your password</div>
@@ -296,7 +296,7 @@
     </div>
 
     <!-- AI tab -->
-    <div class="tab-section" id="tabAI">
+    <div class="tab-section" id="tabAI" style="display:none;flex-direction:column;flex:1;min-height:0">
       <div class="section-title">Care Assistant</div>
       <div class="section-sub">Get answers about your rides, receipts, and HSA/FSA coverage</div>
 
@@ -761,6 +761,7 @@ function switchTab(name, el) {
   document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab'+name).classList.add('active');
+  if(name==='AI'){document.getElementById('tabAI').style.display='flex';}
   el.classList.add('active');
   if (name === 'Receipts') loadReceipts();
 }

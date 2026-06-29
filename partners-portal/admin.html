@@ -796,11 +796,12 @@
     el.innerHTML = '<div class="table-head nemt-grid"><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div>' + rows;
     // delegated click -> open read-only partner detail
     Array.prototype.forEach.call(el.querySelectorAll('.cv-nemt-row'), function(row){
-      row.addEventListener('click', function(){ showNemtProfile(parseInt(row.getAttribute('data-idx'),10)); });
+      row.addEventListener('click', function(e){ showNemtProfile(parseInt(row.getAttribute('data-idx'),10), e); });
     });
   }
 
-  function showNemtProfile(idx) {
+  function showNemtProfile(idx, evt) {
+    if (evt) evt.stopPropagation();
     var data = window._allNemt[idx];
     if (!data) return;
     var intake = data.intake_data || {};
@@ -822,11 +823,28 @@
         '<div style="width:140px;font-size:12px;color:#6B7280;flex-shrink:0">' + f[0] + '</div>' +
         '<div style="font-size:13px;color:#050D1F;font-weight:500">' + (f[1]||"-") + '</div></div>';
     }).join("");
-    document.getElementById("rideDetailBody").innerHTML = rows;
+    var toggleBtn = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
+      + '<span style="font-size:12px;color:#6B7280">Status: <strong>' + (data.active ? 'Active' : 'Inactive') + '</strong></span>'
+      + '<button onclick="toggleNemtActive('' + data.id + '',' + (!data.active) + ')" style="padding:8px 18px;border-radius:8px;background:' + (data.active ? '#FEF2F2' : '#ECFDF5') + ';color:' + (data.active ? '#EF4444' : '#059669') + ';border:1px solid ' + (data.active ? '#FECACA' : '#A7F3D0') + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'
+      + (data.active ? 'Set Inactive' : 'Set Active') + '</button></div>';
+    document.getElementById("rideDetailBody").innerHTML = rows + toggleBtn;
     var modal = document.getElementById("rideDetailModal");
     var titleEl = modal.querySelector('div[style*="font-size:18px"]');
     if (titleEl) titleEl.textContent = "Partner Profile";
     modal.style.display = "flex";
+  }
+
+  async function toggleNemtActive(partnerId, newActive) {
+    try {
+      await fetch(SUPA_URL + '/rest/v1/nemt_partners?id=eq.' + partnerId, {
+        method: 'PATCH',
+        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ active: newActive })
+      });
+      document.getElementById("rideDetailModal").style.display = "none";
+      showToast(newActive ? 'Partner set to Active' : 'Partner set to Inactive', 'ok');
+      loadDashboard();
+    } catch(e) { showToast('Could not update status', 'err'); }
   }
 
   function statusBadge(s) {
@@ -1300,7 +1318,7 @@
 
   function setViewMode(mode) {
     if (mode === 'admin') return;
-    if (mode === 'patient') { window.open('/patients', '_blank'); return; }
+    if (mode === 'patient') { window.location.href = '/patients'; return; }
     if (mode === 'coordinator') {
       // Pick a facility to preview as
       var opts = '<option value="">-- Select Facility --</option>';
@@ -1325,7 +1343,7 @@
       var openBtn = document.createElement('button');
       openBtn.textContent = 'Open';
       openBtn.style.cssText = 'padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-      openBtn.onclick = function(){ var v = sel2.value; if(v){ window.open('/coordinator?preview_hospital='+v,'_blank'); } d.remove(); };
+      openBtn.onclick = function(){ var v = sel2.value; if(v){ window.location.href = '/coordinator?preview_hospital='+v; } d.remove(); };
       d.appendChild(openBtn);
       var cancelBtn = document.createElement('button');
       cancelBtn.textContent = 'Cancel';
@@ -1355,7 +1373,7 @@
       var openBtn2 = document.createElement('button');
       openBtn2.textContent = 'Open';
       openBtn2.style.cssText = 'padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-      openBtn2.onclick = function(){ var v = sel3.value; if(v){ window.open('/driver?preview_nemt='+v,'_blank'); } d.remove(); };
+      openBtn2.onclick = function(){ var v = sel3.value; if(v){ window.location.href = '/driver?preview_nemt='+v; } d.remove(); };
       d.appendChild(openBtn2);
       var cancelBtn2 = document.createElement('button');
       cancelBtn2.textContent = 'Cancel';
