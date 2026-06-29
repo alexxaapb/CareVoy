@@ -319,16 +319,17 @@
       <div class="chat-wrap">
         <div class="chat-messages" id="chatMessages">
           <div class="chat-msg ai">Hello. I can answer questions about your rides, receipts, and HSA/FSA reimbursement. Select a topic below or type your question.</div>
-          <div id="chatChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:0 4px">
-            <button onclick="askTopic(this)" data-q="How do I schedule my ride?" class="chat-chip">Schedule a ride</button>
-            <button onclick="askTopic(this)" data-q="How does HSA/FSA reimbursement work?" class="chat-chip">HSA/FSA reimbursement</button>
-            <button onclick="askTopic(this)" data-q="Where is my receipt?" class="chat-chip">My receipt</button>
-            <button onclick="askTopic(this)" data-q="How do I update my pickup address?" class="chat-chip">Update pickup address</button>
-            <button onclick="askTopic(this)" data-q="What does facility-covered payment mean?" class="chat-chip">Facility-covered rides</button>
-            <button onclick="askTopic(this)" data-q="How do I cancel or reschedule my ride?" class="chat-chip">Cancel or reschedule</button>
-            <button onclick="askTopic(this)" data-q="What is the status of my driver?" class="chat-chip">Driver status</button>
-            <button onclick="askTopic(this)" data-q="What is CareVoy and how does it work?" class="chat-chip">About CareVoy</button>
-          </div>
+
+        </div>
+        <div id="chatChips" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 0 4px">
+          <button onclick="askTopic(this)" data-q="How do I schedule my ride?" class="chat-chip">Schedule a ride</button>
+          <button onclick="askTopic(this)" data-q="How does HSA/FSA reimbursement work?" class="chat-chip">HSA/FSA reimbursement</button>
+          <button onclick="askTopic(this)" data-q="Where is my receipt?" class="chat-chip">My receipt</button>
+          <button onclick="askTopic(this)" data-q="How do I update my pickup address?" class="chat-chip">Update pickup address</button>
+          <button onclick="askTopic(this)" data-q="What does facility-covered payment mean?" class="chat-chip">Facility-covered rides</button>
+          <button onclick="askTopic(this)" data-q="How do I cancel or reschedule my ride?" class="chat-chip">Cancel or reschedule</button>
+          <button onclick="askTopic(this)" data-q="What is the status of my driver?" class="chat-chip">Driver status</button>
+          <button onclick="askTopic(this)" data-q="What is CareVoy and how does it work?" class="chat-chip">About CareVoy</button>
         </div>
         <div class="chat-input-row">
           <input class="chat-input" id="chatInput" placeholder="Type your question…" onkeydown="if(event.key==='Enter')sendChat()">
