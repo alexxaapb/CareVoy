@@ -1,0 +1,868 @@
+import os, subprocess
+
+REPO = '/workspaces/CareVoy'
+PP = os.path.join(REPO, 'partners-portal')
+
+# ============================================================
+# 1. PATIENT PORTAL - patients.html
+# ============================================================
+patient_html = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CareVoy — Patient Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --navy:#050D1F;--teal:#00C2A8;--gold:#F5A623;--bg:#F7F8FA;
+      --white:#fff;--border:#E8ECF2;--muted:#6B7280;--text:#111827;
+      --red:#EF4444;--green:#10B981;
+    }
+    body{font-family:'Poppins',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── Auth screens ── */
+    .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .auth-card{background:var(--white);border-radius:20px;border:1px solid var(--border);padding:40px 36px;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(5,13,31,.06)}
+    .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+    .auth-logo svg{width:36px;height:36px}
+    .auth-logo-text{font-size:20px;font-weight:700;color:var(--navy)}
+    .auth-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .auth-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
+    .form-label{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px;display:block}
+    .form-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--navy);background:#fff;transition:border .15s;outline:none;margin-bottom:16px}
+    .form-input:focus{border-color:var(--teal)}
+    .form-input::placeholder{color:#CBD5E1}
+    .btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:all .15s}
+    .btn-navy{background:var(--navy);color:#fff}
+    .btn-navy:hover{background:#0a1628}
+    .btn-navy:disabled{opacity:.5;cursor:not-allowed}
+    .btn-ghost{background:var(--bg);color:var(--navy);border:1.5px solid var(--border);margin-top:10px}
+    .btn-ghost:hover{background:#eef1f6}
+    .auth-toggle{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
+    .auth-toggle a{color:var(--teal);font-weight:600;text-decoration:none;cursor:pointer}
+    .auth-err{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:14px;display:none}
+    .remember-row{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+    .remember-row input{width:16px;height:16px;accent-color:var(--teal)}
+    .remember-row label{font-size:13px;color:var(--muted);cursor:pointer}
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0}
+    .divider-line{flex:1;height:1px;background:var(--border)}
+    .divider-text{font-size:11px;color:var(--muted);font-weight:500}
+
+    /* ── Welcome screen ── */
+    .welcome-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .welcome-card{background:var(--white);border-radius:20px;border:1px solid var(--border);padding:48px 36px;width:100%;max-width:420px;text-align:center;box-shadow:0 4px 24px rgba(5,13,31,.06)}
+    .welcome-icon{width:64px;height:64px;border-radius:50%;background:rgba(0,194,168,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+    .welcome-icon svg{width:28px;height:28px;stroke:var(--teal)}
+    .welcome-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:8px}
+    .welcome-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:32px}
+
+    /* ── App shell ── */
+    .app-shell{display:none;min-height:100vh;flex-direction:column}
+    .topbar{background:var(--navy);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+    .topbar-left{display:flex;align-items:center;gap:10px}
+    .topbar-logo{color:#fff;font-size:16px;font-weight:700;letter-spacing:.3px}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-name{color:#9CA3AF;font-size:13px}
+    .topbar-signout{background:rgba(255,255,255,.08);border:none;color:#9CA3AF;font-size:12px;font-family:inherit;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:500}
+    .topbar-signout:hover{background:rgba(255,255,255,.14);color:#fff}
+    .content{flex:1;max-width:680px;margin:0 auto;padding:28px 20px 80px;width:100%}
+
+    /* ── Sections ── */
+    .section-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .section-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+
+    /* ── Ride cards ── */
+    .ride-card{background:var(--white);border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:14px;cursor:pointer;transition:all .15s;position:relative}
+    .ride-card:hover{border-color:var(--teal);box-shadow:0 2px 12px rgba(0,194,168,.1)}
+    .ride-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;margin-bottom:10px}
+    .badge-pending{background:rgba(245,166,35,.12);color:#B45309}
+    .badge-confirmed{background:rgba(16,185,129,.12);color:#059669}
+    .badge-assigned{background:rgba(0,194,168,.12);color:#00A38C}
+    .badge-enroute{background:rgba(0,122,255,.1);color:#0066CC}
+    .badge-arrived{background:rgba(139,92,246,.12);color:#7C3AED}
+    .badge-completed{background:rgba(107,114,128,.1);color:#4B5563}
+    .badge-cancelled{background:rgba(239,68,68,.08);color:#DC2626}
+    .ride-facility{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .ride-meta{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .ride-meta-dot{width:3px;height:3px;border-radius:50%;background:var(--border)}
+    .ride-action{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+    .ride-action .btn{width:auto;padding:10px 22px;font-size:13px}
+    .schedule-btn{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px}
+    .schedule-btn:hover{background:#0a1628}
+
+    /* ── Empty states ── */
+    .empty-box{background:var(--white);border-radius:16px;border:2px dashed var(--border);padding:40px 24px;text-align:center}
+    .empty-icon{font-size:32px;margin-bottom:12px}
+    .empty-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px}
+    .empty-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:280px;margin:0 auto}
+    .invite-wait{background:rgba(0,194,168,.06);border:1.5px solid rgba(0,194,168,.2);border-radius:14px;padding:20px;display:flex;align-items:flex-start;gap:12px;margin-bottom:20px}
+    .invite-wait-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+    .invite-wait-text{font-size:13px;color:var(--navy);line-height:1.6;font-weight:500}
+
+    /* ── Booking modal ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(5,13,31,.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal-sheet{background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:540px;padding:28px 24px 40px;max-height:90vh;overflow-y:auto}
+    .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 24px}
+    .modal-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+    .info-row{display:flex;padding:10px 0;border-bottom:1px solid var(--border)}
+    .info-row:last-child{border-bottom:none}
+    .info-label{font-size:12px;color:var(--muted);width:120px;flex-shrink:0;padding-top:1px}
+    .info-value{font-size:13px;color:var(--navy);font-weight:600;flex:1}
+    .modal-footer{margin-top:24px;display:flex;gap:10px;justify-content:flex-end}
+    .modal-footer .btn{width:auto;padding:11px 24px;font-size:13px}
+
+    /* ── Payment section ── */
+    .payment-box{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px}
+    .payment-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+    .payment-option{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;margin-bottom:8px;transition:border .15s}
+    .payment-option.active{border-color:var(--teal);background:rgba(0,194,168,.04)}
+    .payment-option-icon{font-size:20px}
+    .payment-option-text{flex:1}
+    .payment-option-name{font-size:13px;font-weight:600;color:var(--navy)}
+    .payment-option-sub{font-size:11px;color:var(--muted)}
+    .payment-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .payment-option.active .payment-check{background:var(--teal);border-color:var(--teal)}
+    .payment-option.active .payment-check::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff}
+    .facility-covered-box{background:rgba(16,185,129,.06);border:1.5px solid rgba(16,185,129,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .facility-covered-text{font-size:13px;color:#065F46;font-weight:600}
+    #stripe-element{padding:14px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:12px;background:#fff}
+
+    /* ── Profile tab ── */
+    .profile-card{background:var(--white);border-radius:16px;border:1px solid var(--border);padding:24px;margin-bottom:16px}
+    .profile-avatar{width:60px;height:60px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;margin-bottom:16px}
+    .profile-name{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:2px}
+    .profile-email{font-size:13px;color:var(--muted)}
+    .profile-field{margin-bottom:14px}
+
+    /* ── Receipts ── */
+    .receipt-card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+    .receipt-card:hover{border-color:var(--teal);background:rgba(0,194,168,.02)}
+    .receipt-icon{width:38px;height:38px;border-radius:10px;background:rgba(0,194,168,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .receipt-info{flex:1}
+    .receipt-name{font-size:13px;font-weight:600;color:var(--navy)}
+    .receipt-meta{font-size:11px;color:var(--muted);margin-top:1px}
+    .receipt-amount{font-size:14px;font-weight:700;color:var(--navy)}
+
+    /* ── Bottom nav ── */
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+    .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0;cursor:pointer;border:none;background:none;font-family:inherit;gap:3px;color:var(--muted);font-size:10px;font-weight:500;transition:color .15s}
+    .bottom-nav-item.active{color:var(--navy)}
+    .bottom-nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+    .nav-dot{width:4px;height:4px;border-radius:50%;background:var(--teal);margin-top:1px;opacity:0}
+    .bottom-nav-item.active .nav-dot{opacity:1}
+
+    /* ── AI chat ── */
+    .chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 60px - 56px);max-height:700px}
+    .chat-messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:12px}
+    .chat-msg{max-width:82%;padding:12px 15px;border-radius:16px;font-size:13px;line-height:1.6}
+    .chat-msg.user{background:var(--navy);color:#fff;align-self:flex-end;border-radius:16px 16px 4px 16px}
+    .chat-msg.ai{background:var(--white);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-radius:16px 16px 16px 4px}
+    .chat-msg.typing{color:var(--muted);font-style:italic}
+    .chat-input-row{display:flex;gap:10px;padding:12px 0;border-top:1px solid var(--border);margin-top:auto}
+    .chat-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:24px;font-size:14px;font-family:inherit;outline:none;transition:border .15s}
+    .chat-input:focus{border-color:var(--teal)}
+    .chat-send{width:42px;height:42px;border-radius:50%;background:var(--navy);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .chat-send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.5}
+    .chat-send:hover{background:#0a1628}
+
+    /* ── Tabs ── */
+    .tabs-hidden{display:none!important}
+    .tab-section{display:none}
+    .tab-section.active{display:block}
+
+    /* ── Toast ── */
+    .toast{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1}
+
+    /* ── Date/Time picker ── */
+    .date-time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .field-group{margin-bottom:16px}
+    .hsa-pill{background:rgba(0,194,168,.06);border:1px solid rgba(0,194,168,.2);border-radius:10px;padding:10px 14px;font-size:11px;color:#00836F;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:16px}
+
+    @media(max-width:600px){
+      .date-time-row{grid-template-columns:1fr}
+      .auth-card,.welcome-card{padding:28px 20px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── Auth: Login ── -->
+<div class="auth-wrap" id="loginScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="22" fill="#050D1F"/>
+        <circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/>
+        <path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+      <span class="auth-logo-text">CareVoy</span>
+    </div>
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to view your rides and receipts</div>
+    <div class="auth-err" id="loginErr"></div>
+    <label class="form-label">Email address</label>
+    <input class="form-input" id="loginEmail" type="email" placeholder="you@email.com" autocomplete="email">
+    <label class="form-label">Password</label>
+    <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <div class="remember-row">
+      <input type="checkbox" id="rememberMe" checked>
+      <label for="rememberMe">Keep me signed in</label>
+    </div>
+    <button class="btn btn-navy" id="loginBtn" onclick="doLogin()">Sign in</button>
+    <div class="auth-toggle">New to CareVoy? <a onclick="showScreen('signup')">Create account</a></div>
+    <div class="auth-toggle" style="margin-top:8px"><a onclick="showScreen('forgot')" style="color:var(--muted)">Forgot password?</a></div>
+  </div>
+</div>
+
+<!-- ── Auth: Sign Up ── -->
+<div class="auth-wrap" id="signupScreen" style="display:none">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#050D1F"/><circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/><path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+      <span class="auth-logo-text">CareVoy</span>
+    </div>
+    <div class="auth-title">Create your account</div>
+    <div class="auth-sub">Your facility has arranged a ride for you. Create an account to get started.</div>
+    <div class="auth-err" id="signupErr"></div>
+    <label class="form-label">Full name</label>
+    <input class="form-input" id="signupName" type="text" placeholder="Jane Doe" autocomplete="name">
+    <label class="form-label">Email address</label>
+    <input class="form-input" id="signupEmail" type="email" placeholder="you@email.com" autocomplete="email">
+    <label class="form-label">Phone number <span style="color:#9CA3AF;font-weight:400">(optional — for driver contact)</span></label>
+    <input class="form-input" id="signupPhone" type="tel" placeholder="(555) 000-0000">
+    <label class="form-label">Password</label>
+    <input class="form-input" id="signupPass" type="password" placeholder="Min 8 characters" autocomplete="new-password">
+    <button class="btn btn-navy" id="signupBtn" onclick="doSignup()">Create account</button>
+    <div class="auth-toggle">Already have an account? <a onclick="showScreen('login')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- ── Forgot password ── -->
+<div class="auth-wrap" id="forgotScreen" style="display:none">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#050D1F"/><circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/><path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+      <span class="auth-logo-text">CareVoy</span>
+    </div>
+    <div class="auth-title">Reset your password</div>
+    <div class="auth-sub">Enter your email and we'll send you a reset link.</div>
+    <div class="auth-err" id="forgotErr" style="background:#ECFDF5;border-color:#A7F3D0;color:#065F46;display:none"></div>
+    <label class="form-label">Email address</label>
+    <input class="form-input" id="forgotEmail" type="email" placeholder="you@email.com">
+    <button class="btn btn-navy" onclick="doForgot()">Send reset link</button>
+    <div class="auth-toggle"><a onclick="showScreen('login')">Back to sign in</a></div>
+  </div>
+</div>
+
+<!-- ── Welcome / No invite ── -->
+<div class="welcome-wrap" id="welcomeScreen" style="display:none">
+  <div class="welcome-card">
+    <div class="welcome-icon">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <div class="welcome-title">You're all set!</div>
+    <div class="welcome-sub" id="welcomeMsg">Your account is ready. When your healthcare facility arranges a ride for you, it will appear here automatically.</div>
+    <button class="btn btn-navy" onclick="initApp()" style="margin-top:8px">Go to my rides</button>
+  </div>
+</div>
+
+<!-- ── Main app ── -->
+<div class="app-shell" id="appShell">
+  <div class="topbar">
+    <div class="topbar-left">
+      <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#050D1F"/><circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/><path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+      <span class="topbar-logo">CareVoy</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-name" id="topbarName"></span>
+      <button class="topbar-signout" onclick="doSignout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Rides tab -->
+    <div class="tab-section active" id="tabRides">
+      <div class="section-title">My Rides</div>
+      <div class="section-sub" id="ridesSubtitle">Your upcoming and past rides</div>
+      <div id="ridesLoading" style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading your rides…</div>
+      <div id="ridesList" style="display:none"></div>
+    </div>
+
+    <!-- Receipts tab -->
+    <div class="tab-section" id="tabReceipts">
+      <div class="section-title">Receipts</div>
+      <div class="section-sub">IRS Section 213(d) compliant medical transport receipts</div>
+      <div id="receiptsList"></div>
+    </div>
+
+    <!-- AI tab -->
+    <div class="tab-section" id="tabAI">
+      <div class="section-title">Care Coordinator</div>
+      <div class="section-sub">Ask anything about your rides, receipts, or HSA/FSA</div>
+      <div class="chat-wrap">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg ai">Hi! I'm your CareVoy care coordinator. I can help you with your rides, receipts, or any questions about your HSA/FSA reimbursement. How can I help?</div>
+        </div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" placeholder="Ask me anything…" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="chat-send" onclick="sendChat()">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile tab -->
+    <div class="tab-section" id="tabProfile">
+      <div class="section-title">Profile</div>
+      <div class="section-sub">Manage your account and payment methods</div>
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileInitial">?</div>
+        <div class="profile-name" id="profileName">—</div>
+        <div class="profile-email" id="profileEmail">—</div>
+      </div>
+      <div class="profile-card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:16px">Personal info</div>
+        <div class="field-group">
+          <label class="form-label">Full name</label>
+          <input class="form-input" id="editName" placeholder="Jane Doe">
+        </div>
+        <div class="field-group">
+          <label class="form-label">Phone <span style="color:#9CA3AF;font-weight:400">(optional — for driver contact)</span></label>
+          <input class="form-input" id="editPhone" placeholder="(555) 000-0000" type="tel">
+        </div>
+        <button class="btn btn-navy" style="width:auto;padding:10px 24px;font-size:13px" onclick="saveProfile()">Save changes</button>
+      </div>
+      <div class="profile-card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px">Password</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">A reset link will be sent to your email</div>
+        <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px" onclick="sendPasswordReset()">Send reset link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="bottom-nav-item active" onclick="switchTab('Rides',this)" id="navRides">
+      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+      Rides
+      <div class="nav-dot"></div>
+    </button>
+    <button class="bottom-nav-item" onclick="switchTab('Receipts',this)">
+      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Receipts
+      <div class="nav-dot"></div>
+    </button>
+    <button class="bottom-nav-item" onclick="switchTab('AI',this)">
+      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Assistant
+      <div class="nav-dot"></div>
+    </button>
+    <button class="bottom-nav-item" onclick="switchTab('Profile',this)">
+      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      Profile
+      <div class="nav-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- ── Booking modal ── -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="bookModalTitle">Schedule your ride</div>
+    <div class="modal-sub" id="bookModalSub">Confirm your pickup details</div>
+    <div id="bookModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="padding:11px 20px;font-size:13px" onclick="closeBookModal()">Cancel</button>
+      <button class="btn btn-navy" style="padding:11px 24px;font-size:13px" id="bookConfirmBtn" onclick="confirmBooking()">Confirm ride</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+const KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiampdifQ.placeholder';
+const API  = 'https://care-voy-api-server.vercel.app';
+const { createClient } = supabase;
+const sb = createClient(SUPA, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiamptdXh4anF4b3BsayIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzM2NDQ1MDc5LCJleHAiOjIwNTIwMjEwNzl9.P-XF-fO8ERnQjKR4bdyEXBKNLSXc_z9-vD6c90X3vXY');
+
+let currentUser = null, currentRide = null, allRides = [], stripe = null;
+
+// ── Screens ──
+function showScreen(s) {
+  ['loginScreen','signupScreen','forgotScreen','welcomeScreen'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('appShell').style.display = 'none';
+  if(s === 'app') { document.getElementById('appShell').style.display = 'flex'; return; }
+  document.getElementById(s+'Screen').style.display = 'flex';
+}
+
+// ── Toast ──
+function toast(msg, duration=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── Auth ──
+async function doLogin() {
+  const btn = document.getElementById('loginBtn');
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+  err.style.display = 'none';
+  if (!email || !pass) { err.textContent = 'Please enter your email and password.'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { err.textContent = error.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Sign in'; return; }
+  currentUser = data.user;
+  await initApp();
+}
+
+async function doSignup() {
+  const btn   = document.getElementById('signupBtn');
+  const name  = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const phone = document.getElementById('signupPhone').value.trim();
+  const pass  = document.getElementById('signupPass').value;
+  const err   = document.getElementById('signupErr');
+  err.style.display = 'none';
+  if (!name || !email || !pass) { err.textContent = 'Name, email and password are required.'; err.style.display = 'block'; return; }
+  if (pass.length < 8) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name, phone } } });
+  if (error) { err.textContent = error.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Create account'; return; }
+  currentUser = data.user;
+  // Save patient record
+  await sb.from('patients').upsert({ id: currentUser.id, full_name: name, email: email, phone: phone || null, onboarding_complete: true }, { onConflict: 'id' });
+  // Claim invited rides by email
+  await claimInvitedRides(email, currentUser.id);
+  // Send welcome email
+  try { await fetch(API + '/api/notify/patient-welcome', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email }) }); } catch(e) {}
+  // Show welcome
+  const claimed = await getRides(email, currentUser.id);
+  document.getElementById('welcomeMsg').textContent = claimed.length > 0
+    ? `Welcome, ${name.split(' ')[0]}! You have ${claimed.length} ride${claimed.length>1?'s':''} waiting for you.`
+    : `Welcome, ${name.split(' ')[0]}! When your healthcare facility arranges a ride for you, it will appear here automatically.`;
+  showScreen('welcome');
+}
+
+async function doForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const err   = document.getElementById('forgotErr');
+  err.style.display = 'none';
+  if (!email) { err.textContent = 'Enter your email address.'; err.style.display = 'block'; return; }
+  await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/patients' });
+  err.textContent = 'Reset link sent! Check your inbox.';
+  err.style.display = 'block';
+}
+
+async function doSignout() {
+  await sb.auth.signOut();
+  currentUser = null; allRides = [];
+  showScreen('login');
+}
+
+// ── Claim rides ──
+async function claimInvitedRides(email, userId) {
+  try {
+    const { data: rides } = await sb.from('rides').select('id').is('patient_id', null).in('status', ['invited','reminder_sent','no_response','app_downloaded']).eq('contact_email', email);
+    if (rides && rides.length) {
+      for (const r of rides) {
+        await sb.from('rides').update({ patient_id: userId, status: 'app_downloaded' }).eq('id', r.id);
+      }
+    }
+  } catch(e) {}
+}
+
+// ── Get rides ──
+async function getRides(email, userId) {
+  try {
+    const { data } = await sb.from('rides').select('*,hospitals(name)').or('patient_id.eq.' + userId + ',contact_email.eq.' + email).order('created_at', { ascending: false });
+    return data || [];
+  } catch(e) { return []; }
+}
+
+// ── Init app ──
+async function initApp() {
+  if (!currentUser) {
+    const { data } = await sb.auth.getUser();
+    if (!data.user) { showScreen('login'); return; }
+    currentUser = data.user;
+  }
+  showScreen('app');
+  document.getElementById('topbarName').textContent = currentUser.user_metadata?.full_name?.split(' ')[0] || '';
+  // Profile tab
+  document.getElementById('profileInitial').textContent = (currentUser.user_metadata?.full_name || currentUser.email || '?')[0].toUpperCase();
+  document.getElementById('profileName').textContent = currentUser.user_metadata?.full_name || '—';
+  document.getElementById('profileEmail').textContent = currentUser.email || '';
+  document.getElementById('editName').value = currentUser.user_metadata?.full_name || '';
+  document.getElementById('editPhone').value = currentUser.user_metadata?.phone || '';
+  await loadRides();
+}
+
+// ── Load rides ──
+async function loadRides() {
+  document.getElementById('ridesLoading').style.display = 'block';
+  document.getElementById('ridesList').style.display = 'none';
+  allRides = await getRides(currentUser.email, currentUser.id);
+  document.getElementById('ridesLoading').style.display = 'none';
+  document.getElementById('ridesList').style.display = 'block';
+  renderRides();
+}
+
+const STATUS_LABEL = {
+  invited:'Pending invite', app_downloaded:'Pending invite', reminder_sent:'Pending invite', no_response:'Pending invite',
+  pending:'Finding your driver', confirmed:'Confirmed', assigned:'Driver assigned',
+  en_route:'Driver on the way', arrived:'Driver arrived', completed:'Completed', cancelled:'Cancelled'
+};
+const STATUS_BADGE = {
+  invited:'badge-pending', app_downloaded:'badge-pending', reminder_sent:'badge-pending', no_response:'badge-pending',
+  pending:'badge-pending', confirmed:'badge-confirmed', assigned:'badge-assigned',
+  en_route:'badge-enroute', arrived:'badge-arrived', completed:'badge-completed', cancelled:'badge-cancelled'
+};
+
+function renderRides() {
+  const list = document.getElementById('ridesList');
+  const upcoming = allRides.filter(r => !['completed','cancelled'].includes(r.status));
+  const past = allRides.filter(r => ['completed','cancelled'].includes(r.status));
+
+  if (!allRides.length) {
+    list.innerHTML = `<div class="invite-wait"><span class="invite-wait-icon">✉️</span><div class="invite-wait-text">Your healthcare facility will send you a ride invitation. It will appear here automatically — no action needed until then.</div></div><div class="empty-box"><div class="empty-icon">🚗</div><div class="empty-title">No rides yet</div><div class="empty-sub">Once your facility coordinates a ride, you'll see it here.</div></div>`;
+    return;
+  }
+
+  let html = '';
+  if (upcoming.length) {
+    upcoming.forEach(r => { html += buildRideCard(r, false); });
+  }
+  if (past.length) {
+    html += `<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:20px 0 12px">Past rides</div>`;
+    past.forEach(r => { html += buildRideCard(r, true); });
+  }
+  list.innerHTML = html;
+}
+
+function buildRideCard(r, isPast) {
+  const isPending = ['invited','app_downloaded','reminder_sent','no_response'].includes(r.status);
+  const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Your Facility';
+  const pickupDate = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'TBD';
+  const pickupTime = r.pickup_time ? new Date(r.pickup_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
+  const label = STATUS_LABEL[r.status] || r.status;
+  const badge = STATUS_BADGE[r.status] || 'badge-pending';
+  const payLabel = r.payment_responsibility === 'facility' ? '🏥 Facility covers this ride' : r.payment_responsibility === 'self_pay' ? '💳 Self-pay' : '';
+  let action = '';
+  if (isPending) action = `<div class="ride-action"><button class="schedule-btn" onclick="openBookModal('${r.id}')"><span>📅</span> Schedule this ride</button></div>`;
+  else if (r.status === 'completed' && r.actual_cost) action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare paid: <strong style="color:var(--navy)">$${r.actual_cost}</strong></span><button class="view-btn" onclick="viewReceipt('${r.id}')">View receipt</button></div>`;
+  return `<div class="ride-card" onclick="openRideDetail('${r.id}')">
+    <span class="ride-badge ${badge}">${label}</span>
+    <div class="ride-facility">${facility}</div>
+    <div class="ride-meta">
+      <span>${pickupDate}${pickupTime ? ' · ' + pickupTime : ''}</span>
+      ${r.ride_type ? `<span class="ride-meta-dot"></span><span>${r.ride_type}</span>` : ''}
+      ${payLabel ? `<span class="ride-meta-dot"></span><span>${payLabel}</span>` : ''}
+    </div>
+    ${action}
+  </div>`;
+}
+
+// ── Ride detail ──
+function openRideDetail(rideId) {
+  const r = allRides.find(x => x.id === rideId);
+  if (!r) return;
+  currentRide = r;
+  const isPending = ['invited','app_downloaded','reminder_sent','no_response'].includes(r.status);
+  if (isPending) { openBookModal(rideId); return; }
+  // Show read-only detail in modal
+  const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || '—';
+  const pickupDate = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}) : 'TBD';
+  const pickupTime = r.pickup_time ? new Date(r.pickup_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
+  document.getElementById('bookModalTitle').textContent = facility;
+  document.getElementById('bookModalSub').textContent = STATUS_LABEL[r.status] || r.status;
+  document.getElementById('bookModalBody').innerHTML = `
+    <div class="info-row"><div class="info-label">Date</div><div class="info-value">${pickupDate}</div></div>
+    <div class="info-row"><div class="info-label">Time</div><div class="info-value">${pickupTime || 'TBD'}</div></div>
+    <div class="info-row"><div class="info-label">Pickup</div><div class="info-value">${r.pickup_address || 'TBD'}</div></div>
+    <div class="info-row"><div class="info-label">Dropoff</div><div class="info-value">${r.dropoff_address || facility}</div></div>
+    <div class="info-row"><div class="info-label">Type</div><div class="info-value">${r.ride_type || '—'}</div></div>
+    <div class="info-row"><div class="info-label">Payment</div><div class="info-value">${r.payment_responsibility === 'facility' ? 'Facility covers this ride' : 'Self-pay'}</div></div>
+  `;
+  document.getElementById('bookConfirmBtn').style.display = 'none';
+  document.getElementById('bookModal').classList.add('open');
+}
+
+// ── Book modal ──
+function openBookModal(rideId) {
+  const r = allRides.find(x => x.id === rideId);
+  if (!r) return;
+  currentRide = r;
+  const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Your appointment';
+  const isFacilityCovered = r.payment_responsibility === 'facility';
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
+  document.getElementById('bookModalTitle').textContent = 'Schedule your ride';
+  document.getElementById('bookModalSub').textContent = `to ${facility}`;
+  document.getElementById('bookConfirmBtn').style.display = 'inline-block';
+  document.getElementById('bookConfirmBtn').textContent = 'Confirm ride';
+  document.getElementById('bookModalBody').innerHTML = `
+    <div class="date-time-row">
+      <div>
+        <label class="form-label">Pickup date</label>
+        <input class="form-input" id="bookDate" type="date" min="${minDate}" style="margin:0">
+      </div>
+      <div>
+        <label class="form-label">Pickup time</label>
+        <input class="form-input" id="bookTime" type="time" style="margin:0">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="form-label">Pickup address</label>
+      <input class="form-input" id="bookPickup" placeholder="Your home or care location" style="margin:0" value="${r.pickup_address || ''}">
+    </div>
+    ${isFacilityCovered
+      ? `<div class="facility-covered-box"><span style="font-size:18px">🏥</span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
+      : `<div class="hsa-pill">💳 HSA/FSA eligible — IRS 213(d) receipt emailed automatically</div>
+         <div class="payment-label">Payment method</div>
+         <div id="stripe-element"></div>
+         <div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>`
+    }
+  `;
+  if (!isFacilityCovered) initStripeElement();
+  document.getElementById('bookModal').classList.add('open');
+}
+
+function closeBookModal() {
+  document.getElementById('bookModal').classList.remove('open');
+  currentRide = null;
+}
+
+// ── Stripe ──
+function initStripeElement() {
+  if (!stripe) stripe = Stripe('pk_live_51RjK8uP5wxb0rHMZXvh9ZHSuFB9KAeqNvp8O7GiZDiRHkX07dFIYPXFjf3f9Z7T8s9d5dW7Q4xqJ3vp8d6bPxIz00uKkQsb3u');
+  const elements = stripe.elements();
+  const card = elements.create('card', { style: { base: { fontSize:'14px', color:'#111827', fontFamily:"'Poppins',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
+  card.mount('#stripe-element');
+  window._stripeCard = card;
+}
+
+// ── Confirm booking ──
+async function confirmBooking() {
+  if (!currentRide) return;
+  const date    = document.getElementById('bookDate')?.value;
+  const time    = document.getElementById('bookTime')?.value;
+  const pickup  = document.getElementById('bookPickup')?.value?.trim();
+  const isFacility = currentRide.payment_responsibility === 'facility';
+  if (!date || !time) { toast('Please select a pickup date and time'); return; }
+  if (!pickup) { toast('Please enter your pickup address'); return; }
+  const pickupDt = new Date(date + 'T' + time);
+  if (pickupDt < new Date()) { toast('Please select a future date and time'); return; }
+  const btn = document.getElementById('bookConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Confirming…';
+  try {
+    await sb.from('rides').update({
+      pickup_time: pickupDt.toISOString(),
+      pickup_address: pickup,
+      patient_id: currentUser.id,
+      status: 'confirmed',
+      payment_responsibility: currentRide.payment_responsibility
+    }).eq('id', currentRide.id);
+    closeBookModal();
+    toast('Ride confirmed! 🎉');
+    await loadRides();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Confirm ride';
+    toast('Something went wrong, please try again');
+  }
+}
+
+// ── View receipt ──
+function viewReceipt(rideId) {
+  toast('Receipt emailed to ' + currentUser.email);
+}
+
+// ── Load receipts ──
+async function loadReceipts() {
+  const completed = allRides.filter(r => r.status === 'completed' && r.actual_cost);
+  const list = document.getElementById('receiptsList');
+  if (!completed.length) {
+    list.innerHTML = '<div class="empty-box"><div class="empty-icon">🧾</div><div class="empty-title">No receipts yet</div><div class="empty-sub">IRS 213(d) compliant receipts will appear here after your rides are completed.</div></div>';
+    return;
+  }
+  list.innerHTML = completed.map(r => {
+    const d = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    const fac = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Facility';
+    return `<div class="receipt-card" onclick="toast('Receipt emailed to ${currentUser.email}')">
+      <div class="receipt-icon">🧾</div>
+      <div class="receipt-info"><div class="receipt-name">${fac}</div><div class="receipt-meta">IRS 213(d) · ${d}</div></div>
+      <div class="receipt-amount">$${r.actual_cost}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── AI chat ──
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+  msgs.innerHTML += `<div class="chat-msg ai typing" id="typingMsg">Thinking…</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  try {
+    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': '', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:600,
+        system:'You are CareVoy\'s AI care coordinator. Help patients with their medical rides, HSA/FSA reimbursement, and receipts. Keep answers brief and friendly. If asked about rides, remind patients to check the Rides tab.',
+        messages:[{role:'user',content:msg}] })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'I\'m sorry, I couldn\'t get a response. Please try again.';
+    document.getElementById('typingMsg').remove();
+    msgs.innerHTML += `<div class="chat-msg ai">${reply}</div>`;
+  } catch(e) {
+    document.getElementById('typingMsg').textContent = 'Sorry, I\'m unavailable right now. Please try again.';
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── Profile save ──
+async function saveProfile() {
+  const name  = document.getElementById('editName').value.trim();
+  const phone = document.getElementById('editPhone').value.trim();
+  if (!name) { toast('Name is required'); return; }
+  await sb.auth.updateUser({ data: { full_name: name, phone } });
+  await sb.from('patients').upsert({ id: currentUser.id, full_name: name, phone: phone || null }, { onConflict: 'id' });
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('profileInitial').textContent = name[0].toUpperCase();
+  toast('Profile updated');
+}
+
+async function sendPasswordReset() {
+  await sb.auth.resetPasswordForEmail(currentUser.email, { redirectTo: window.location.origin + '/patients' });
+  toast('Reset link sent to ' + currentUser.email);
+}
+
+// ── Tab switching ──
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab'+name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'Receipts') loadReceipts();
+}
+
+// ── Init ──
+async function onLoad() {
+  const { data } = await sb.auth.getUser();
+  if (data.user) { currentUser = data.user; await initApp(); }
+  else showScreen('login');
+}
+onLoad();
+</script>
+</body>
+</html>"""
+
+# Write patient portal
+patient_path = os.path.join(PP, 'patients.html')
+open(patient_path,'w').write(patient_html)
+print("1. patients.html created")
+
+# ============================================================
+# 2. UPDATE vercel.json - add /patients route
+# ============================================================
+import json as jsonlib
+vj = os.path.join(PP,'vercel.json')
+v = jsonlib.load(open(vj))
+routes = v['routes']
+# Insert before catch-all
+catch = next((i for i,r in enumerate(routes) if r.get('src')=='/(.*)'  ),len(routes))
+routes.insert(catch,{"src":"/patients","dest":"/patients.html"})
+jsonlib.dump(v,open(vj,'w'),indent=2)
+print("2. vercel.json: /patients route added")
+
+# ============================================================
+# 3. ADD admin "view as" mode switcher
+# ============================================================
+af = os.path.join(PP,'admin.html')
+ac = open(af).read()
+
+# Add mode switcher to topbar (after .live-label)
+old_topbar = '    <div class="topbar-left">\n        <div class="live-dot"></div>\n        <div class="live-label">LIVE</div>'
+new_topbar = '''    <div class="topbar-left">
+        <div class="live-dot"></div>
+        <div class="live-label">LIVE</div>
+        <div style="margin-left:16px;display:flex;align-items:center;gap:6px">
+          <span style="color:#6B7280;font-size:11px;font-weight:600">VIEW AS</span>
+          <div style="display:flex;gap:4px">
+            <button onclick="setViewMode('admin')" id="modeAdmin" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(0,194,168,.2);color:#00C2A8">Admin</button>
+            <button onclick="setViewMode('coordinator')" id="modeCoordinator" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.08);color:#9CA3AF">Coordinator</button>
+            <button onclick="setViewMode('driver')" id="modeDriver" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.08);color:#9CA3AF">Driver</button>
+            <button onclick="setViewMode('patient')" id="modePatient" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.08);color:#9CA3AF">Patient</button>
+          </div>
+        </div>'''
+
+if old_topbar in ac:
+    ac = ac.replace(old_topbar, new_topbar)
+    print("3. Admin mode switcher buttons added")
+else:
+    print("3. FAIL: topbar pattern not matched")
+
+# Add the setViewMode JS (before closing </script>)
+mode_js = """
+  function setViewMode(mode) {
+    var modes = ['admin','coordinator','driver','patient'];
+    modes.forEach(function(m) {
+      var btn = document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1));
+      if (btn) { btn.style.background = 'rgba(255,255,255,.08)'; btn.style.color = '#9CA3AF'; }
+    });
+    var active = document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1));
+    if (active) { active.style.background = 'rgba(0,194,168,.2)'; active.style.color = '#00C2A8'; }
+    if (mode === 'coordinator') { window.open('/coordinator', '_blank'); }
+    else if (mode === 'driver') { window.open('/driver', '_blank'); }
+    else if (mode === 'patient') { window.open('/patients', '_blank'); }
+    // admin = stay here
+    setTimeout(function(){ 
+      var adminBtn = document.getElementById('modeAdmin');
+      if(adminBtn){ adminBtn.style.background='rgba(0,194,168,.2)'; adminBtn.style.color='#00C2A8'; }
+    }, 100);
+  }
+"""
+
+# Find the last </script> in the main script block and add before it
+if 'function setViewMode' not in ac:
+    # Insert before the last </script> tag
+    last_script = ac.rfind('</script>')
+    if last_script > -1:
+        ac = ac[:last_script] + mode_js + ac[last_script:]
+        print("4. setViewMode JS added to admin")
+    else:
+        print("4. FAIL: no </script> found")
+
+open(af,'w').write(ac)
+
+# ============================================================
+# 4. Git commit + push
+# ============================================================
+print()
+cmds = [
+    ['git','-C',REPO,'add','partners-portal/patients.html','partners-portal/vercel.json','partners-portal/admin.html'],
+    ['git','-C',REPO,'commit','-m','feat: patient web portal (patients.html) + admin view-as mode switcher'],
+    ['git','-C',REPO,'push','origin','main'],
+]
+for cmd in cmds:
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    print((r.stdout+r.stderr).strip()[:200] or "(ok)")
