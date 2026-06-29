@@ -10,7 +10,7 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --navy:#050D1F;--teal:#00C2A8;--gold:#F5A623;--bg:#F5F2EB;
+      --navy:#050D1F;--teal:#00C2A8;--gold:#F5A623;--bg:#FFFFFF;
       --white:#fff;--border:#E8ECF2;--muted:#6B7280;--text:#111827;
       --red:#EF4444;--green:#10B981;
     }
@@ -192,11 +192,7 @@
 <div class="auth-wrap" id="loginScreen">
   <div class="auth-card">
     <div class="auth-logo">
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100" height="100" rx="22" fill="#050D1F"/>
-        <circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/>
-        <path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
-      </svg>
+<svg width="32" height="32" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="border-radius:7px;flex-shrink:0"><rect width="1024" height="1024" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
       <span class="auth-logo-text">CareVoy</span>
     </div>
     <div class="auth-title">Welcome back</div>
@@ -532,7 +528,7 @@ function renderRides() {
   const past = allRides.filter(r => ['completed','cancelled'].includes(r.status));
 
   if (!allRides.length) {
-    list.innerHTML = `<div class="invite-wait"><span class="invite-wait-icon">✉️</span><div class="invite-wait-text">Your healthcare facility will send you a ride invitation. It will appear here automatically — no action needed until then.</div></div><div class="empty-box"><div class="empty-icon">🚗</div><div class="empty-title">No rides yet</div><div class="empty-sub">Once your facility coordinates a ride, you'll see it here.</div></div>`;
+    list.innerHTML = `<div class="invite-wait"><span class="invite-wait-icon"></span><div class="invite-wait-text">Your healthcare facility will send you a ride invitation. It will appear here automatically — no action needed until then.</div></div><div class="empty-box"><div class="empty-icon"></div><div class="empty-title">No rides yet</div><div class="empty-sub">Once your facility coordinates a ride, you'll see it here.</div></div>`;
     return;
   }
 
@@ -554,9 +550,9 @@ function buildRideCard(r, isPast) {
   const pickupTime = r.pickup_time ? new Date(r.pickup_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
   const label = STATUS_LABEL[r.status] || r.status;
   const badge = STATUS_BADGE[r.status] || 'badge-pending';
-  const payLabel = r.payment_responsibility === 'facility' ? '🏥 Facility covers this ride' : r.payment_responsibility === 'self_pay' ? '💳 Self-pay' : '';
+  const payLabel = r.payment_responsibility === 'facility' ? 'Facility covers this ride' : r.payment_responsibility === 'self_pay' ? 'Self-pay' : '';
   let action = '';
-  if (isPending) action = `<div class="ride-action"><button class="schedule-btn" onclick="openBookModal('${r.id}')"><span>📅</span> Schedule this ride</button></div>`;
+  if (isPending) action = `<div class="ride-action"><button class="schedule-btn" onclick="openBookModal('${r.id}')"><span></span> Schedule this ride</button></div>`;
   else if (r.status === 'completed' && r.actual_cost) action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare paid: <strong style="color:var(--navy)">$${r.actual_cost}</strong></span><button class="view-btn" onclick="viewReceipt('${r.id}')">View receipt</button></div>`;
   return `<div class="ride-card" onclick="openRideDetail('${r.id}')">
     <span class="ride-badge ${badge}">${label}</span>
@@ -624,8 +620,8 @@ function openBookModal(rideId) {
       <input class="form-input" id="bookPickup" placeholder="Your home or care location" style="margin:0" value="${r.pickup_address || ''}">
     </div>
     ${isFacilityCovered
-      ? `<div class="facility-covered-box"><span style="font-size:18px">🏥</span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
-      : `<div class="hsa-pill">💳 HSA/FSA eligible — IRS 213(d) receipt emailed automatically</div>
+      ? `<div class="facility-covered-box"><span style="font-size:18px"></span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
+      : `<div class="hsa-pill">HSA/FSA eligible — IRS 213(d) receipt emailed automatically</div>
          <div class="payment-label">Payment method</div>
          <div id="stripe-element"></div>
          <div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>`
@@ -671,7 +667,7 @@ async function confirmBooking() {
       payment_responsibility: currentRide.payment_responsibility
     }).eq('id', currentRide.id);
     closeBookModal();
-    toast('Ride confirmed! 🎉');
+    toast('Ride confirmed! ');
     await loadRides();
   } catch(e) {
     btn.disabled = false; btn.textContent = 'Confirm ride';
@@ -689,14 +685,14 @@ async function loadReceipts() {
   const completed = allRides.filter(r => r.status === 'completed' && r.actual_cost);
   const list = document.getElementById('receiptsList');
   if (!completed.length) {
-    list.innerHTML = '<div class="empty-box"><div class="empty-icon">🧾</div><div class="empty-title">No receipts yet</div><div class="empty-sub">IRS 213(d) compliant receipts will appear here after your rides are completed.</div></div>';
+    list.innerHTML = '<div class="empty-box"><div class="empty-icon"></div><div class="empty-title">No receipts yet</div><div class="empty-sub">IRS 213(d) compliant receipts will appear here after your rides are completed.</div></div>';
     return;
   }
   list.innerHTML = completed.map(r => {
     const d = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     const fac = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Facility';
     return `<div class="receipt-card" onclick="toast('Receipt emailed to ${currentUser.email}')">
-      <div class="receipt-icon">🧾</div>
+      <div class="receipt-icon"></div>
       <div class="receipt-info"><div class="receipt-name">${fac}</div><div class="receipt-meta">IRS 213(d) · ${d}</div></div>
       <div class="receipt-amount">$${r.actual_cost}</div>
     </div>`;

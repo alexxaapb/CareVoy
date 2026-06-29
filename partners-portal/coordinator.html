@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Inter',-apple-system,sans-serif; background:#F5F2EB; min-height:100vh; display:flex; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:#FFFFFF; min-height:100vh; display:flex; }
     .sidebar { width:200px; min-height:100vh; background:#050D1F; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:20; }
     .sidebar-brand { padding:18px 16px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.07); }
     .brand-name { color:#fff; font-size:15px; font-weight:700; }
@@ -44,13 +44,13 @@
     .filter-btn.on { background:#050D1F; color:#00C2A8; border-color:#050D1F; }
     /* Table */
     .panel { background:#fff; border-radius:14px; border:1px solid #E8E4DC; overflow:hidden; margin-bottom:20px; }
-    .panel-hd { padding:14px 18px; border-bottom:1px solid #F5F2EB; display:flex; align-items:center; justify-content:space-between; }
+    .panel-hd { padding:14px 18px; border-bottom:1px solid #FFFFFF; display:flex; align-items:center; justify-content:space-between; }
     .panel-title { color:#050D1F; font-size:14px; font-weight:700; }
-    .tbl-head { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; padding:9px 18px; background:#F5F2EB; border-bottom:1px solid #E8E4DC; }
+    .tbl-head { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; padding:9px 18px; background:#FFFFFF; border-bottom:1px solid #E8E4DC; }
     .th { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.5px; }
-    .tbl-row { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; align-items:center; padding:13px 18px; border-bottom:1px solid #F5F2EB; cursor:pointer; transition:background 0.1s; }
+    .tbl-row { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; align-items:center; padding:13px 18px; border-bottom:1px solid #FFFFFF; cursor:pointer; transition:background 0.1s; }
     .tbl-row:last-child { border-bottom:none; }
-    .tbl-row:hover { background:#F5F2EB; }
+    .tbl-row:hover { background:#FFFFFF; }
     .td { font-size:13px; color:#050D1F; }
     .td.muted { color:#6B7280; font-size:12px; }
     .td.bold { font-weight:600; }
@@ -60,7 +60,7 @@
     .b-teal { background:#d1faf4; color:#047857; }
     .b-gold { background:#fef3c7; color:#b45309; }
     .b-green { background:#dcfce7; color:#16a34a; }
-    .b-gray { background:#F5F2EB; color:#6B7280; }
+    .b-gray { background:#FFFFFF; color:#6B7280; }
     .b-blue { background:#dbeafe; color:#1d4ed8; }
     .b-red { background:#fee2e2; color:#dc2626; }
     .b-orange { background:#ffedd5; color:#c2410c; }
@@ -70,7 +70,7 @@
     .btn:disabled { opacity:0.4; cursor:not-allowed; }
     .btn-teal { background:#00C2A8; color:#050D1F; }
     .btn-navy { background:#050D1F; color:#00C2A8; }
-    .btn-ghost { background:#F5F2EB; color:#374151; border:1px solid #E8E4DC; }
+    .btn-ghost { background:#FFFFFF; color:#374151; border:1px solid #E8E4DC; }
     .btn-lg { padding:10px 20px; font-size:13px; border-radius:10px; }
     /* Alert */
     .alert { border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -83,7 +83,7 @@
     .modal-sub { font-size:13px; color:#6B7280; margin-bottom:22px; }
     .form-group { margin-bottom:14px; }
     .form-label { display:block; font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
-    .form-input { width:100%; padding:10px 12px; border:1.5px solid #E8E4DC; border-radius:9px; font-size:13px; font-family:inherit; color:#050D1F; background:#F5F2EB; outline:none; }
+    .form-input { width:100%; padding:10px 12px; border:1.5px solid #E8E4DC; border-radius:9px; font-size:13px; font-family:inherit; color:#050D1F; background:#FFFFFF; outline:none; }
     .form-input:focus { border-color:#00C2A8; background:#fff; }
     select.form-input { cursor:pointer; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -94,7 +94,7 @@
     .tog { flex:1; padding:9px; border:1.5px solid #E8E4DC; border-radius:9px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; background:#fff; color:#6B7280; text-align:center; transition:all 0.15s; }
     .tog.on { border-color:#00C2A8; background:#d1faf4; color:#065f46; }
     /* Upload area */
-    .upload-area { border:2px dashed #E8E4DC; border-radius:12px; padding:28px; text-align:center; cursor:pointer; transition:all 0.15s; background:#F5F2EB; }
+    .upload-area { border:2px dashed #E8E4DC; border-radius:12px; padding:28px; text-align:center; cursor:pointer; transition:all 0.15s; background:#FFFFFF; }
     .upload-area:hover { border-color:#00C2A8; background:#f0fdf9; }
     .upload-area.drag { border-color:#00C2A8; background:#d1faf4; }
     /* Drawer */
@@ -104,8 +104,8 @@
     .drawer.open { transform:translateX(0); }
     /* Settings */
     .settings-section { background:#fff; border-radius:14px; border:1px solid #E8E4DC; padding:22px; margin-bottom:16px; }
-    .settings-title { font-size:14px; font-weight:700; color:#050D1F; margin-bottom:14px; border-bottom:1px solid #F5F2EB; padding-bottom:10px; }
-    .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F5F2EB; gap:12px; }
+    .settings-title { font-size:14px; font-weight:700; color:#050D1F; margin-bottom:14px; border-bottom:1px solid #FFFFFF; padding-bottom:10px; }
+    .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #FFFFFF; gap:12px; }
     .settings-row:last-child { border-bottom:none; }
     .settings-key { font-size:11px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:0.4px; flex-shrink:0; }
     .settings-val { font-size:13px; color:#050D1F; text-align:right; }
@@ -114,7 +114,7 @@
     .toast.show { opacity:1; }
     .toast.ok { background:#065f46; }
     .toast.err { background:#991b1b; }
-    #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F5F2EB; z-index:100; }
+    #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#FFFFFF; z-index:100; }
     .spinner { width:36px; height:36px; border:3px solid #E8E4DC; border-top-color:#00C2A8; border-radius:50%; animation:spin 0.8s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg);} }
     @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:repeat(2,1fr)}}
@@ -299,9 +299,9 @@
     <div class="page-sub">Facility account and preferences</div>
 
     <div class="settings-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F5F2EB;padding-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #FFFFFF;padding-bottom:10px">
         <div class="settings-title" style="margin:0;border:none;padding:0">Point of Contact</div>
-        <button id="editPocBtn" onclick="toggleEditPoc()" style="background:#F5F2EB;border:1px solid #E8E4DC;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
+        <button id="editPocBtn" onclick="toggleEditPoc()" style="background:#FFFFFF;border:1px solid #E8E4DC;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
       </div>
       <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setPocName">—</span><input class="form-input" id="editPocName" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">Email</span><span class="settings-val" id="setPocEmail">—</span><input class="form-input" id="editPocEmail" type="email" style="display:none;max-width:55%;padding:6px 10px"></div>
@@ -352,12 +352,12 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Patient Phone <span style="color:#9CA3AF;font-weight:400">(optional)</span></label>
-        <input class="form-input" id="patPhone" type="tel" placeholder="(555) 000-0000">
+        <label class="form-label">Patient Email <span style="color:#EF4444">*</span></label>
+        <input class="form-input" id="patEmail" type="email" placeholder="jane@email.com" required>
       </div>
       <div class="form-group">
-        <label class="form-label">Patient Email <span style="color:#EF4444">*</span></label>
-        <input class="form-input" id="patEmail" type="email" placeholder="jane@email.com">
+        <label class="form-label">Patient Phone <span style="color:#EF4444">*</span></label>
+        <input class="form-input" id="patPhone" type="tel" placeholder="(555) 000-0000" required>
       </div>
     </div>
 
@@ -373,7 +373,7 @@
           <input class="form-input" id="cgPatLast" placeholder="Doe">
         </div>
       </div>
-      <div style="background:#F5F2EB;border:1px solid #E8E4DC;border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="background:#FFFFFF;border:1px solid #E8E4DC;border-radius:10px;padding:14px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Caregiver Info</div>
         <div class="form-group" style="margin-bottom:10px">
           <label class="form-label">Caregiver Name <span style="color:#EF4444">*</span></label>
@@ -442,7 +442,7 @@
     </div>
     <div id="csvPreview" style="display:none;margin-top:14px">
       <div style="font-size:13px;font-weight:600;color:#050D1F;margin-bottom:8px" id="csvPreviewLabel"></div>
-      <div style="max-height:160px;overflow-y:auto;border:1px solid #E8E4DC;border-radius:9px;font-size:12px;color:#374151;padding:10px;background:#F5F2EB" id="csvPreviewContent"></div>
+      <div style="max-height:160px;overflow-y:auto;border:1px solid #E8E4DC;border-radius:9px;font-size:12px;color:#374151;padding:10px;background:#FFFFFF" id="csvPreviewContent"></div>
     </div>
     <div id="csvError" class="form-error"></div>
     <div class="modal-foot">
@@ -463,7 +463,7 @@
       <div style="font-size:12px;color:#9CA3AF;margin-top:4px">Exports from Epic, Cerner, Google Calendar, Outlook</div>
       <input type="file" id="icsFile" accept=".ics" style="display:none" onchange="handleICS(event)">
     </div>
-    <div id="icsPreview" style="display:none;margin-top:14px;font-size:13px;color:#374151;padding:12px;background:#F5F2EB;border-radius:9px;border:1px solid #E8E4DC" id="icsPreviewText"></div>
+    <div id="icsPreview" style="display:none;margin-top:14px;font-size:13px;color:#374151;padding:12px;background:#FFFFFF;border-radius:9px;border:1px solid #E8E4DC" id="icsPreviewText"></div>
     <div class="modal-foot">
       <button class="btn btn-ghost btn-lg" style="padding:10px 18px" onclick="document.getElementById('calModal').classList.remove('open')">Cancel</button>
       <button class="btn btn-navy btn-lg" style="flex:1" id="icsSubmit" onclick="submitICS()" disabled>Import Appointments →</button>
@@ -918,16 +918,21 @@ async function submitAddPatient() {
       body: JSON.stringify(payload)
     });
     if (!r.ok) { var d = await r.json().catch(function(){return{};}); throw new Error(d.message || 'Failed'); }
-    // Trigger SMS invite via API
+    // Send patient invite email (portal-based, no app required)
     try {
-      await fetch(API + '/api/invites/send-sms', {
+      await fetch(API + '/api/invites/send-patient-email', {
         method: 'POST',
-        headers: { ...H, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: contactPhone, patient_name: patientName, facility: hospitalInfo ? hospitalInfo.name : 'your facility' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: patEmail,
+          patient_name: patientName,
+          facility: hospitalInfo ? hospitalInfo.name : 'your facility',
+          city: hospitalInfo ? (hospitalInfo.city || '') : ''
+        })
       });
-    } catch(e2) { /* SMS endpoint may not exist yet — ride still created */ }
+    } catch(e2) { /* email send failed silently — ride still created */ }
     closeAddPatient();
-    showToast('Invite sent to ' + contactPhone, 'ok');
+    showToast('Invite sent to ' + patEmail, 'ok');
     await loadRides();
     renderPatientTable();
   } catch(e) { showErr(e.message); } finally { btn.disabled = false; btn.textContent = 'Send Invite →'; }
@@ -1057,7 +1062,7 @@ function openDrawer(rideId) {
     '<div style="font-size:17px;font-weight:700;color:#050D1F;margin-bottom:4px">' + esc(r.patient_name || 'Patient') + '</div>' +
     '<div style="margin-bottom:16px">' + statusBadge(r.status) + '</div>' +
     rows.map(function(row){
-      return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #F5F2EB;gap:12px">' +
+      return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #FFFFFF;gap:12px">' +
         '<span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0">' + row[0] + '</span>' +
         '<span style="font-size:13px;color:#050D1F;text-align:right">' + esc(String(row[1])) + '</span>' +
         '</div>';
