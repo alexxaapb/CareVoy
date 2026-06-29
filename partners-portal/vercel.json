@@ -30,6 +30,10 @@
       "dest": "/invite.html"
     },
     {
+      "src": "/patients",
+      "dest": "/patients.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

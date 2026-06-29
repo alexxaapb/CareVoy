@@ -1288,4 +1288,22 @@
   renderPending();
   setInterval(renderPending, 30000);
 })();
+
+  function setViewMode(mode) {
+    var modes = ['admin','coordinator','driver','patient'];
+    modes.forEach(function(m) {
+      var btn = document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1));
+      if (btn) { btn.style.background = 'rgba(255,255,255,.08)'; btn.style.color = '#9CA3AF'; }
+    });
+    var active = document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1));
+    if (active) { active.style.background = 'rgba(0,194,168,.2)'; active.style.color = '#00C2A8'; }
+    if (mode === 'coordinator') { window.open('/coordinator', '_blank'); }
+    else if (mode === 'driver') { window.open('/driver', '_blank'); }
+    else if (mode === 'patient') { window.open('/patients', '_blank'); }
+    // admin = stay here
+    setTimeout(function(){ 
+      var adminBtn = document.getElementById('modeAdmin');
+      if(adminBtn){ adminBtn.style.background='rgba(0,194,168,.2)'; adminBtn.style.color='#00C2A8'; }
+    }, 100);
+  }
 </script>
