@@ -269,6 +269,7 @@
   <div class="topbar">
     <div class="topbar-left">
       <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#050D1F"/><circle cx="72" cy="50" r="22" stroke="#00C2A8" stroke-width="5" fill="none" stroke-dasharray="80 30"/><path d="M28 65 Q38 20 52 50 Q60 65 72 50" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+      <svg width="28" height="28" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px;flex-shrink:0"><rect width="1024" height="1024" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
       <span class="topbar-logo">CareVoy</span>
     </div>
     <div class="topbar-right">
@@ -295,14 +296,27 @@
 
     <!-- AI tab -->
     <div class="tab-section" id="tabAI">
-      <div class="section-title">Care Coordinator</div>
-      <div class="section-sub">Ask anything about your rides, receipts, or HSA/FSA</div>
+      <div class="section-title">Care Assistant</div>
+      <div class="section-sub">Get answers about your rides, receipts, and HSA/FSA coverage</div>
+
+      <!-- Quick topic buttons -->
+      <div id="chatTopics" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+        <button onclick="askTopic(this)" data-q="How do I schedule my ride?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">Schedule a ride</button>
+        <button onclick="askTopic(this)" data-q="How does HSA/FSA reimbursement work?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">HSA/FSA reimbursement</button>
+        <button onclick="askTopic(this)" data-q="Where is my receipt?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">My receipt</button>
+        <button onclick="askTopic(this)" data-q="How do I update my pickup address?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">Update pickup address</button>
+        <button onclick="askTopic(this)" data-q="What is facility-covered payment?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">Facility-covered rides</button>
+        <button onclick="askTopic(this)" data-q="How do I cancel or reschedule my ride?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">Cancel or reschedule</button>
+        <button onclick="askTopic(this)" data-q="Who is my driver and when do they arrive?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">Driver status</button>
+        <button onclick="askTopic(this)" data-q="Why do I need CareVoy?" style="padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s">About CareVoy</button>
+      </div>
+
       <div class="chat-wrap">
         <div class="chat-messages" id="chatMessages">
-          <div class="chat-msg ai">Hi! I'm your CareVoy care coordinator. I can help you with your rides, receipts, or any questions about your HSA/FSA reimbursement. How can I help?</div>
+          <div class="chat-msg ai">Hello. I can answer questions about your rides, receipts, and HSA/FSA reimbursement. Select a topic above or type your question below.</div>
         </div>
         <div class="chat-input-row">
-          <input class="chat-input" id="chatInput" placeholder="Ask me anything…" onkeydown="if(event.key==='Enter')sendChat()">
+          <input class="chat-input" id="chatInput" placeholder="Type your question…" onkeydown="if(event.key==='Enter')sendChat()">
           <button class="chat-send" onclick="sendChat()">
             <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
           </button>

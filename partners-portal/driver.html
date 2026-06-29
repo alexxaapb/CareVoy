@@ -434,7 +434,14 @@ async function acceptRide(rideId) {
 
 async function init() {
   try {
-    var sr = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=*', { headers: H });
+    // Admin keyfob: preview_nemt param lets admin view any NEMT's dashboard
+    var previewNemt = new URLSearchParams(window.location.search).get('preview_nemt');
+    var sr;
+    if (previewNemt) {
+      sr = await fetch(SUPA + '/rest/v1/staff?nemt_partner_id=eq.' + previewNemt + '&role=eq.nemt&select=*&limit=1', { headers: H });
+    } else {
+      sr = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=*', { headers: H });
+    }
     var sd = await sr.json();
     staffInfo = sd[0] || null;
 

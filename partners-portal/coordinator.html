@@ -526,7 +526,14 @@ function statusBadge(s) {
 // ── Init ───────────────────────────────────────────────────
 async function init() {
   try {
-    var r = await fetch(SUPA + '/rest/v1/hospital_coordinators?id=eq.' + uid + '&select=*', { headers: H });
+    // Admin keyfob: if preview_hospital param, load that facility's coordinator instead
+    var previewHospital = new URLSearchParams(window.location.search).get('preview_hospital');
+    var r;
+    if (previewHospital) {
+      r = await fetch(SUPA + '/rest/v1/hospital_coordinators?hospital_id=eq.' + previewHospital + '&select=*&limit=1', { headers: H });
+    } else {
+      r = await fetch(SUPA + '/rest/v1/hospital_coordinators?id=eq.' + uid + '&select=*', { headers: H });
+    }
     var d = await r.json();
     coordInfo = Array.isArray(d) ? d[0] : null;
     if (!coordInfo) { window.location.href = '/'; return; }
