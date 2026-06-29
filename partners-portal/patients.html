@@ -384,10 +384,10 @@
 
 <script>
 const SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
-const KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiampdifQ.placeholder';
+const KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 const API  = 'https://care-voy-api-server.vercel.app';
 const { createClient } = supabase;
-const sb = createClient(SUPA, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZmxwY2tiamptdXh4anF4b3BsayIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzM2NDQ1MDc5LCJleHAiOjIwNTIwMjEwNzl9.P-XF-fO8ERnQjKR4bdyEXBKNLSXc_z9-vD6c90X3vXY');
+const sb = createClient(SUPA, KEY);
 
 let currentUser = null, currentRide = null, allRides = [], stripe = null;
 
@@ -714,15 +714,13 @@ async function sendChat() {
   msgs.innerHTML += `<div class="chat-msg ai typing" id="typingMsg">Thinking…</div>`;
   msgs.scrollTop = msgs.scrollHeight;
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+    const res  = await fetch(API + '/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': '', 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:600,
-        system:'You are CareVoy\'s AI care coordinator. Help patients with their medical rides, HSA/FSA reimbursement, and receipts. Keep answers brief and friendly. If asked about rides, remind patients to check the Rides tab.',
-        messages:[{role:'user',content:msg}] })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, context: 'patient' })
     });
     const data = await res.json();
-    const reply = data.content?.[0]?.text || 'I\'m sorry, I couldn\'t get a response. Please try again.';
+    const reply = data.reply || 'I\'m sorry, I couldn\'t get a response right now. Please try again.';
     document.getElementById('typingMsg').remove();
     msgs.innerHTML += `<div class="chat-msg ai">${reply}</div>`;
   } catch(e) {
