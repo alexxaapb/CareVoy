@@ -823,11 +823,18 @@
         '<div style="width:140px;font-size:12px;color:#6B7280;flex-shrink:0">' + f[0] + '</div>' +
         '<div style="font-size:13px;color:#050D1F;font-weight:500">' + (f[1]||"-") + '</div></div>';
     }).join("");
+    var _btnBg  = data.active ? '#FEF2F2' : '#ECFDF5';
+    var _btnCl  = data.active ? '#EF4444' : '#059669';
+    var _btnBrd = data.active ? '#FECACA' : '#A7F3D0';
+    var _btnTxt = data.active ? 'Set Inactive' : 'Set Active';
+    var _newVal = !data.active;
+    var _nemtId = data.id;
     var toggleBtn = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
       + '<span style="font-size:12px;color:#6B7280">Status: <strong>' + (data.active ? 'Active' : 'Inactive') + '</strong></span>'
-      + '<button onclick="toggleNemtActive('' + data.id + '',' + (!data.active) + ')" style="padding:8px 18px;border-radius:8px;background:' + (data.active ? '#FEF2F2' : '#ECFDF5') + ';color:' + (data.active ? '#EF4444' : '#059669') + ';border:1px solid ' + (data.active ? '#FECACA' : '#A7F3D0') + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'
-      + (data.active ? 'Set Inactive' : 'Set Active') + '</button></div>';
+      + '<button id="nemtToggleBtn" style="padding:8px 18px;border-radius:8px;background:' + _btnBg + ';color:' + _btnCl + ';border:1px solid ' + _btnBrd + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + _btnTxt + '</button></div>';
     document.getElementById("rideDetailBody").innerHTML = rows + toggleBtn;
+    var _tb = document.getElementById("nemtToggleBtn");
+    if (_tb) _tb.addEventListener("click", function(){ toggleNemtActive(_nemtId, _newVal); });
     var modal = document.getElementById("rideDetailModal");
     var titleEl = modal.querySelector('div[style*="font-size:18px"]');
     if (titleEl) titleEl.textContent = "Partner Profile";
@@ -835,10 +842,14 @@
   }
 
   async function toggleNemtActive(partnerId, newActive) {
+    var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var _KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+    var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+    var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
-      await fetch(SUPA_URL + '/rest/v1/nemt_partners?id=eq.' + partnerId, {
+      await fetch(_SUPA + '/rest/v1/nemt_partners?id=eq.' + partnerId, {
         method: 'PATCH',
-        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        headers: _H,
         body: JSON.stringify({ active: newActive })
       });
       document.getElementById("rideDetailModal").style.display = "none";
