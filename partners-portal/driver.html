@@ -194,7 +194,7 @@
     </div>
 
     <div class="sec-label">Today's Rides</div>
-    <div class="mvp-banner">ℹ MVP — simulating ride status before full NEMT dispatch API integration.</div>
+
     <div id="todayRidesSection">
       <div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">Loading today's rides…</div>
     </div>
@@ -310,7 +310,7 @@
 <script>
 var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
-var AVG_FARE = 46;
+var AVG_FARE = null;
 
 var token = sessionStorage.getItem('cv_nemt_token');
 var uid   = sessionStorage.getItem('cv_nemt_uid');
@@ -405,6 +405,19 @@ async function loadAvailableRides() {
   } catch(e) {
     body.innerHTML = '<div style="padding:20px;text-align:center;color:red;font-size:13px">Error: ' + e.message + '</div>';
   }
+}
+
+async function declineRide(rideId) {
+  if (!confirm('Decline this ride?')) return;
+  try {
+    await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status: 'invited', nemt_partner_id: null })
+    });
+    showToast('Ride declined', 'ok');
+    await loadAvailableRides();
+  } catch(e) { showToast('Could not decline', 'err'); }
 }
 
 async function acceptRide(rideId) {
@@ -533,7 +546,7 @@ function computeStats() {
   document.getElementById('metricAvailable').textContent = available;
 
   document.getElementById('perfComp').textContent     = compRate + '%';
-  document.getElementById('perfFare').textContent     = '$' + AVG_FARE;
+  document.getElementById('perfFare').textContent     = '—';
   document.getElementById('perfCanc').textContent     = monthCanc;
   document.getElementById('earningsMonthBig').textContent = '$' + monthDone * AVG_FARE;
   document.getElementById('earningsAllTime').textContent  = '$' + allRides.filter(function(r){return r.status==='completed';}).length * AVG_FARE;
@@ -636,7 +649,7 @@ function renderHistory() {
       '<div class="td">' + esc(r.patient_name||'Patient') + '</div>' +
       '<div class="td muted">' + dt + '</div>' +
       '<div class="td muted">' + esc(r.dropoff_address||'—') + '</div>' +
-      '<div class="td" style="font-weight:700;color:#050D1F">$' + AVG_FARE + '</div>' +
+      '<div class="td" style="font-weight:700;color:#050D1F">$—</div>' +
       '</div>';
   }).join('');
 }

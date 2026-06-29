@@ -318,7 +318,7 @@
 
     <div class="settings-section">
       <div class="settings-title">Notifications</div>
-      <div style="font-size:13px;color:#374151;line-height:1.6">Email alerts are sent to your registered email when rides are confirmed, drivers are assigned, and rides are completed. CareVoy also automatically sends an SMS reminder to patients who haven't confirmed within <strong>48 hours</strong> — no action needed from you. Technical issue? Contact <a href="mailto:contact@carevoy.co" style="color:#00C2A8;text-decoration:none">contact@carevoy.co</a>.</div>
+      <div style="font-size:13px;color:#374151;line-height:1.6">Email alerts are sent to your registered email when rides are confirmed, drivers are assigned, and rides are completed. CareVoy automatically sends a reminder to patients who have not confirmed within 48 hours. Technical issue? Contact <a href="mailto:contact@carevoy.co" style="color:#00C2A8;text-decoration:none">contact@carevoy.co</a>.</div>
     </div>
   </div>
 
@@ -329,7 +329,7 @@
 <div class="scrim" id="addPatientModal">
   <div class="modal">
     <div class="modal-title">Send Ride Invite</div>
-    <div class="modal-sub">Enter the appointment. If it is more than 7 days out, CareVoy automatically invites the patient about 7 days before, no action needed from you. Sooner than that, the invite sends now.</div>
+    <div class="modal-sub">Enter the appointment information below.</div>
 
     <div class="form-group">
       <div class="form-label">Who will use the app?</div>
@@ -343,11 +343,11 @@
     <div id="patientFields">
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Patient First Name</label>
+          <label class="form-label">Patient First Name <span style="color:#EF4444">*</span></label>
           <input class="form-input" id="patFirstName" placeholder="Jane">
         </div>
         <div class="form-group">
-          <label class="form-label">Patient Last Name</label>
+          <label class="form-label">Patient Last Name <span style="color:#EF4444">*</span></label>
           <input class="form-input" id="patLastName" placeholder="Doe">
         </div>
       </div>
@@ -365,11 +365,11 @@
     <div id="caregiverFields" style="display:none">
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Patient First Name</label>
+          <label class="form-label">Patient First Name <span style="color:#EF4444">*</span></label>
           <input class="form-input" id="cgPatFirst" placeholder="Jane">
         </div>
         <div class="form-group">
-          <label class="form-label">Patient Last Name</label>
+          <label class="form-label">Patient Last Name <span style="color:#EF4444">*</span></label>
           <input class="form-input" id="cgPatLast" placeholder="Doe">
         </div>
       </div>
@@ -392,11 +392,11 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Appointment Date</label>
+        <label class="form-label">Appointment Date <span style="color:#EF4444">*</span></label>
         <input class="form-input" id="apptDate" type="date">
       </div>
       <div class="form-group">
-        <label class="form-label">Appointment Time</label>
+        <label class="form-label">Appointment Time <span style="color:#EF4444">*</span></label>
         <input class="form-input" id="apptTime" type="time">
       </div>
     </div>
@@ -546,7 +546,7 @@ async function init() {
 
     var hour = new Date().getHours();
     var greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-    document.getElementById('pageGreeting').textContent = greet + (coordInfo.full_name ? ', ' + coordInfo.full_name.split(' ')[0] : '') + '.';
+    document.getElementById('pageGreeting').textContent = greet + (coordInfo.full_name ? ', ' + coordInfo.full_name.split(' ')[0].charAt(0).toUpperCase() + coordInfo.full_name.split(' ')[0].slice(1) : '') + '.';
     document.getElementById('pageFacility').textContent = (hospitalInfo ? hospitalInfo.name : 'Not linked to a facility') + ' · ' + new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
     document.getElementById('topSub').textContent = hospitalInfo ? hospitalInfo.name : '';
     document.getElementById('sidebarFacility').textContent = hospitalInfo ? hospitalInfo.name : '';
@@ -719,6 +719,17 @@ async function sendReminder(evt, rideId) {
   } catch(e) {}
   showToast('Reminder sent', 'ok');
   await loadRides();
+}
+
+async function deleteRide(evt, rideId) {
+  evt.stopPropagation();
+  if (!confirm('Remove this ride permanently?')) return;
+  try {
+    await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, { method: 'DELETE', headers: H });
+    showToast('Ride removed', 'ok');
+  } catch(e) { showToast('Could not remove', 'err'); }
+  await loadRides();
+  renderPatientTable();
 }
 
 async function cancelRide(evt, rideId) {

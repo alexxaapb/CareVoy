@@ -179,10 +179,12 @@
       <span class="live-label">Live</span>
       <div style="margin-left:20px;display:flex;align-items:center;gap:6px">
         <span style="color:#6B7280;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase">View as</span>
-        <button id="modeAdmin" onclick="setViewMode('admin')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(0,194,168,.2);color:#00C2A8">Admin</button>
-        <button id="modeCoordinator" onclick="setViewMode('coordinator')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.07);color:#9CA3AF">Coordinator</button>
-        <button id="modeDriver" onclick="setViewMode('driver')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.07);color:#9CA3AF">Driver</button>
-        <button id="modePatient" onclick="setViewMode('patient')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.07);color:#9CA3AF">Patient</button>
+        <select onchange="setViewMode(this.value);this.value=''" style="padding:5px 10px;border-radius:7px;font-size:12px;font-weight:600;font-family:inherit;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;cursor:pointer;outline:none">
+          <option value="" style="background:#050D1F">— Select —</option>
+          <option value="coordinator" style="background:#050D1F">Coordinator</option>
+          <option value="driver" style="background:#050D1F">Driver</option>
+          <option value="patient" style="background:#050D1F">Patient</option>
+        </select>
       </div>
       <span class="date-label" id="dateLabel"></span>
     </div>
@@ -778,9 +780,9 @@
     el.innerHTML = '<div class="table-head fac-grid"><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div>' + rows;
   }
 
-  var _allNemt = [];
+  window._allNemt = [];
   function renderNemt(list) {
-    _allNemt = list || [];
+    window._allNemt = list || [];
     var el = document.getElementById('nemtTable');
     document.getElementById('nemtSub').textContent = list.length + ' total';
     if (!list.length) {
@@ -799,7 +801,7 @@
   }
 
   function showNemtProfile(idx) {
-    var data = _allNemt[idx];
+    var data = window._allNemt[idx];
     if (!data) return;
     var intake = data.intake_data || {};
     var fields = [
@@ -1307,12 +1309,29 @@
           opts += '<option value="' + h.id + '">' + esc(h.name||h.id) + '</option>';
         });
       }
-      var sel = '<div style="padding:16px"><div style="font-size:13px;font-weight:700;color:#050D1F;margin-bottom:10px">View as Coordinator — select a facility:</div><select id="previewFacSel" style="width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:12px">' + opts + '</select><button onclick="var v=document.getElementById('previewFacSel').value;if(v)window.open('/coordinator?preview_hospital='+v,'_blank');document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Open</button> <button onclick="document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#F3F4F6;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px">Cancel</button></div>';
       var d = document.createElement('div');
       d.id = 'previewPicker';
-      d.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:999;min-width:340px;';
-      d.innerHTML = sel;
+      d.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:999;min-width:340px;padding:16px';
       document.body.appendChild(d);
+      var lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:13px;font-weight:700;color:#050D1F;margin-bottom:10px';
+      lbl.textContent = 'View as Coordinator — select a facility:';
+      d.appendChild(lbl);
+      var sel2 = document.createElement('select');
+      sel2.id = 'previewFacSel';
+      sel2.style.cssText = 'width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:12px;display:block';
+      sel2.innerHTML = opts;
+      d.appendChild(sel2);
+      var openBtn = document.createElement('button');
+      openBtn.textContent = 'Open';
+      openBtn.style.cssText = 'padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+      openBtn.onclick = function(){ var v = sel2.value; if(v){ window.open('/coordinator?preview_hospital='+v,'_blank'); } d.remove(); };
+      d.appendChild(openBtn);
+      var cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.style.cssText = 'padding:10px 20px;background:#F3F4F6;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px';
+      cancelBtn.onclick = function(){ d.remove(); };
+      d.appendChild(cancelBtn);
     }
     if (mode === 'driver') {
       var opts = '<option value="">-- Select NEMT Partner --</option>';
@@ -1321,12 +1340,28 @@
           opts += '<option value="' + n.id + '">' + esc(n.company_name||n.id) + '</option>';
         });
       }
-      var sel = '<div style="padding:16px"><div style="font-size:13px;font-weight:700;color:#050D1F;margin-bottom:10px">View as Driver — select a NEMT partner:</div><select id="previewNemtSel" style="width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:12px">' + opts + '</select><button onclick="var v=document.getElementById('previewNemtSel').value;if(v)window.open('/driver?preview_nemt='+v,'_blank');document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Open</button> <button onclick="document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#F3F4F6;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px">Cancel</button></div>';
       var d = document.createElement('div');
       d.id = 'previewPicker';
-      d.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:999;min-width:340px;';
-      d.innerHTML = sel;
+      d.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:999;min-width:340px;padding:16px';
       document.body.appendChild(d);
+      var lbl2 = document.createElement('div');
+      lbl2.style.cssText = 'font-size:13px;font-weight:700;color:#050D1F;margin-bottom:10px';
+      lbl2.textContent = 'View as Driver — select a NEMT partner:';
+      d.appendChild(lbl2);
+      var sel3 = document.createElement('select');
+      sel3.style.cssText = 'width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:12px;display:block';
+      sel3.innerHTML = opts;
+      d.appendChild(sel3);
+      var openBtn2 = document.createElement('button');
+      openBtn2.textContent = 'Open';
+      openBtn2.style.cssText = 'padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+      openBtn2.onclick = function(){ var v = sel3.value; if(v){ window.open('/driver?preview_nemt='+v,'_blank'); } d.remove(); };
+      d.appendChild(openBtn2);
+      var cancelBtn2 = document.createElement('button');
+      cancelBtn2.textContent = 'Cancel';
+      cancelBtn2.style.cssText = 'padding:10px 20px;background:#F3F4F6;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px';
+      cancelBtn2.onclick = function(){ d.remove(); };
+      d.appendChild(cancelBtn2);
     }
   }
 </script>
