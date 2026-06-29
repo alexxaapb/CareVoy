@@ -5,10 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CareVoy Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Poppins', -apple-system, sans-serif; background: #F0F4F8; min-height: 100vh; display: flex; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #F5F2EB; min-height: 100vh; display: flex; }
 
     /* ── Sidebar ── */
     .sidebar { width: 200px; min-height: 100vh; background: #050D1F; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 20; }
@@ -40,7 +40,7 @@
 
     /* ── Stats ── */
     .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
-    .stat-card { background: white; border-radius: 14px; padding: 18px 20px; border: 1px solid #E2E8F0; }
+    .stat-card { background: white; border-radius: 14px; padding: 18px 20px; border: 1px solid #E8E4DC; }
     .stat-label { color: #6B7280; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
     .stat-icon { font-size: 14px; opacity: 0.6; }
     .stat-value { font-size: 30px; font-weight: 700; color: #050D1F; }
@@ -51,23 +51,23 @@
     .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 20px; margin-bottom: 28px; }
 
     /* ── Live rides ── */
-    .panel { background: white; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; }
-    .panel-header { padding: 16px 20px; border-bottom: 1px solid #F0F4F8; display: flex; align-items: center; justify-content: space-between; }
+    .panel { background: white; border-radius: 14px; border: 1px solid #E8E4DC; overflow: hidden; }
+    .panel-header { padding: 16px 20px; border-bottom: 1px solid #F5F2EB; display: flex; align-items: center; justify-content: space-between; }
     .panel-title { color: #050D1F; font-size: 15px; font-weight: 700; }
     .panel-sub { color: #6B7280; font-size: 12px; }
-    .rides-table-head { display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr; padding: 10px 16px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+    .rides-table-head { display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr; padding: 10px 16px; background: #F5F2EB; border-bottom: 1px solid #E8E4DC; }
     .th { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.6px; }
-    .rides-row { display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr; padding: 12px 16px; border-bottom: 1px solid #F0F4F8; align-items: center; transition: background 0.1s; }
+    .rides-row { display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr; padding: 12px 16px; border-bottom: 1px solid #F5F2EB; align-items: center; transition: background 0.1s; }
     .rides-row:last-child { border-bottom: none; }
-    .rides-row:hover { background: #F8FAFC; }
+    .rides-row:hover { background: #F5F2EB; }
     .td { font-size: 13px; color: #050D1F; }
     .td.muted { color: #6B7280; }
-    .view-btn { background: #F0F4F8; border: none; border-radius: 7px; padding: 5px 10px; font-size: 11px; font-weight: 600; color: #374151; cursor: pointer; font-family: inherit; }
-    .view-btn:hover { background: #E2E8F0; }
+    .view-btn { background: #F5F2EB; border: none; border-radius: 7px; padding: 5px 10px; font-size: 11px; font-weight: 600; color: #374151; cursor: pointer; font-family: inherit; }
+    .view-btn:hover { background: #E8E4DC; }
 
     /* ── Recent activity ── */
     .activity-list { padding: 8px 0; }
-    .activity-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #F0F4F8; }
+    .activity-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #F5F2EB; }
     .activity-item:last-child { border-bottom: none; }
     .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: #00C2A8; flex-shrink: 0; margin-top: 4px; }
     .activity-dot.gold { background: #F5A623; }
@@ -89,9 +89,9 @@
     .invite-btn.navy { background: #050D1F; color: #00C2A8; }
 
     /* ── Tables ── */
-    .table-card { background: white; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; margin-bottom: 24px; }
-    .table-head { display: grid; padding: 10px 18px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
-    .table-row { display: grid; align-items: center; padding: 13px 18px; border-bottom: 1px solid #F0F4F8; }
+    .table-card { background: white; border-radius: 14px; border: 1px solid #E8E4DC; overflow: hidden; margin-bottom: 24px; }
+    .table-head { display: grid; padding: 10px 18px; background: #F5F2EB; border-bottom: 1px solid #E8E4DC; }
+    .table-row { display: grid; align-items: center; padding: 13px 18px; border-bottom: 1px solid #F5F2EB; }
     .table-row:last-child { border-bottom: none; }
     .fac-grid { grid-template-columns: 2fr 1fr 1fr 0.8fr; }
     .nemt-grid { grid-template-columns: 2fr 1fr 1fr 0.7fr 1.2fr; }
@@ -99,7 +99,7 @@
     .badge.green { background: #dcfce7; color: #16a34a; }
     .badge.red    { background: #fee2e2; color: #dc2626; }
     .badge.blue   { background: #dbeafe; color: #1d4ed8; }
-    .badge.gray { background: #F0F4F8; color: #6B7280; }
+    .badge.gray { background: #F5F2EB; color: #6B7280; }
     .badge.teal { background: #d1faf4; color: #047857; }
     .badge.gold { background: #fef3c7; color: #b45309; }
     .empty-row { padding: 40px 18px; text-align: center; color: #9CA3AF; font-size: 14px; }
@@ -112,10 +112,10 @@
     .rev-bar-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .rev-bar-name { font-size: 13px; font-weight: 500; color: #374151; }
     .rev-bar-amt { font-size: 13px; font-weight: 700; color: #050D1F; }
-    .rev-bar-track { background: #E2E8F0; border-radius: 6px; height: 10px; overflow: hidden; }
+    .rev-bar-track { background: #E8E4DC; border-radius: 6px; height: 10px; overflow: hidden; }
     .rev-bar-fill { height: 100%; border-radius: 6px; background: #00C2A8; transition: width 1s ease; }
     .rev-bar-fill.last { background: #D1D5DB; }
-    .rev-total { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid #E2E8F0; margin-top: 14px; }
+    .rev-total { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid #E8E4DC; margin-top: 14px; }
     .rev-total-label { font-size: 13px; color: #6B7280; }
     .rev-total-val { font-size: 18px; font-weight: 700; color: #050D1F; }
 
@@ -124,11 +124,11 @@
     .modal-scrim.open { display: flex; }
     .modal-card { background: white; border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; margin: 16px; }
     .modal-title { color: #050D1F; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .modal-body { color: #374151; font-size: 14px; line-height: 1.6; margin-bottom: 20px; word-break: break-all; background: #F8FAFC; padding: 14px; border-radius: 10px; border: 1px solid #E2E8F0; }
+    .modal-body { color: #374151; font-size: 14px; line-height: 1.6; margin-bottom: 20px; word-break: break-all; background: #F5F2EB; padding: 14px; border-radius: 10px; border: 1px solid #E8E4DC; }
     .modal-foot { display: flex; gap: 10px; }
     .modal-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; font-family: inherit; }
     .modal-btn.copy { background: #00C2A8; color: #050D1F; }
-    .modal-btn.close { background: #F0F4F8; color: #374151; }
+    .modal-btn.close { background: #F5F2EB; color: #374151; }
     .modal-btn:hover { opacity: 0.88; }
 
     /* ── Toast ── */
@@ -157,7 +157,7 @@
 <!-- Sidebar -->
 <div class="sidebar">
   <div class="sidebar-brand">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9IiMwNjBEMUYiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjAuMzQgNjkxLjk1KSBzY2FsZSgwLjUwOTEgLTAuNTA5MSkiPjxwYXRoIGQ9Ik0zODMgNzEyUTUxNSA3MTIgNjA1LjAgNjQxLjVRNjk1IDU3MSA3MjEgNDUwSDUxMFE0OTEgNDkwIDQ1Ny41IDUxMS4wUTQyNCA1MzIgMzgwIDUzMlEzMTIgNTMyIDI3MS41IDQ4My41UTIzMSA0MzUgMjMxIDM1NFEyMzEgMjcyIDI3MS41IDIyMy41UTMxMiAxNzUgMzgwIDE3NVE0MjQgMTc1IDQ1Ny41IDE5Ni4wUTQ5MSAyMTcgNTEwIDI1N0g3MjFRNjk1IDEzNiA2MDUuMCA2NS41UTUxNSAtNSAzODMgLTVRMjc5IC01IDE5OS4wIDQwLjVRMTE5IDg2IDc1LjUgMTY3LjVRMzIgMjQ5IDMyIDM1NFEzMiA0NTggNzUuNSA1MzkuNVExMTkgNjIxIDE5OS4wIDY2Ni41UTI3OSA3MTIgMzgzIDcxMloiIGZpbGw9IiNGRkZGRkYiLz48L2c+PHBhdGggZD0iTSA3NTguMjAgNTU1LjQxIEEgMjUwIDI1MCAwIDEgMSA3NTguMjAgNDY4LjU5IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMEMyQTgiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9Ijc1OC4yMCIgY3k9IjU1NS40MSIgcj0iMTciIGZpbGw9IiNGNUE2MjMiLz48Y2lyY2xlIGN4PSI3NTguMjAiIGN5PSI0NjguNTkiIHI9IjE3IiBmaWxsPSIjRjVBNjIzIi8+PC9zdmc+" width="32" height="32" style="border-radius:7px;flex-shrink:0">
+    <svg width="32" height="32" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px;flex-shrink:0"><rect width="1024" height="1024" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
     <span class="sidebar-brand-text">CareVoy</span>
   </div>
   <nav class="sidebar-nav">
@@ -177,6 +177,13 @@
     <div class="topbar-left">
       <div class="live-dot"></div>
       <span class="live-label">Live</span>
+      <div style="margin-left:20px;display:flex;align-items:center;gap:6px">
+        <span style="color:#6B7280;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase">View as</span>
+        <button id="modeAdmin" onclick="setViewMode('admin')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(0,194,168,.2);color:#00C2A8">Admin</button>
+        <button id="modeCoordinator" onclick="setViewMode('coordinator')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.07);color:#9CA3AF">Coordinator</button>
+        <button id="modeDriver" onclick="setViewMode('driver')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.07);color:#9CA3AF">Driver</button>
+        <button id="modePatient" onclick="setViewMode('patient')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.07);color:#9CA3AF">Patient</button>
+      </div>
       <span class="date-label" id="dateLabel"></span>
     </div>
     <div class="topbar-right">
@@ -338,7 +345,7 @@
     </div>
     <button onclick="exportCSV('patients')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
   </div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">
     <div class="rides-table-head" style="grid-template-columns:1.6fr 1.4fr 1fr 0.8fr">
       <div class="th">Name</div>
       <div class="th">Phone</div>
@@ -360,7 +367,7 @@
     </div>
     <button onclick="exportCSV('rides')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
   </div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0" id="allRidesPanel">
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC" id="allRidesPanel">
     <div class="rides-table-head" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">
       <div class="th">Patient</div><div class="th">Hospital</div><div class="th">NEMT Partner</div>
       <div class="th">Status</div><div class="th">Date</div><div class="th">Action</div>
@@ -380,7 +387,7 @@
     <div style="font-size:11px;font-weight:700;color:#F5A623;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">&#9679; Pending Review</div>
     <div id="facPendingBody"></div>
   </div>
-  <div id="facilitiesFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
+  <div id="facilitiesFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">
     <div class="tbl-head fac-grid">
       <div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div>
     </div>
@@ -399,7 +406,7 @@
     <div style="font-size:11px;font-weight:700;color:#F5A623;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">&#9679; Pending Review</div>
     <div id="nemtPendingBody"></div>
   </div>
-  <div id="nemtFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">
+  <div id="nemtFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">
     <div class="tbl-head nemt-grid">
       <div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div>
     </div>
@@ -414,22 +421,22 @@
   </div>
   <div class="page-title">Revenue</div>
   <div class="page-sub">Payment and revenue tracking</div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;padding:24px;margin-bottom:16px">
     <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:16px">Monthly Summary</div>
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500;color:#374151">This Month</span><span style="font-size:13px;font-weight:700;color:#050D1F" id="revThisMonth2">—</span></div>
-      <div style="background:#E2E8F0;border-radius:6px;height:10px;overflow:hidden"><div class="rev-bar-fill" id="revThisBar2" style="width:0%"></div></div>
+      <div style="background:#E8E4DC;border-radius:6px;height:10px;overflow:hidden"><div class="rev-bar-fill" id="revThisBar2" style="width:0%"></div></div>
     </div>
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500;color:#374151">Last Month</span><span style="font-size:13px;font-weight:700;color:#050D1F" id="revLastMonth2">—</span></div>
-      <div style="background:#E2E8F0;border-radius:6px;height:10px;overflow:hidden"><div class="rev-bar-fill last" id="revLastBar2" style="width:0%"></div></div>
+      <div style="background:#E8E4DC;border-radius:6px;height:10px;overflow:hidden"><div class="rev-bar-fill last" id="revLastBar2" style="width:0%"></div></div>
     </div>
-    <div style="display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #E2E8F0">
+    <div style="display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #E8E4DC">
       <span style="font-size:13px;color:#6B7280">Total all time</span>
       <span style="font-size:18px;font-weight:700;color:#050D1F" id="revAllTime2">—</span>
     </div>
   </div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px">
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;padding:24px">
     <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px">Payment Methods</div>
     <div style="font-size:13px;color:#6B7280">HSA / FSA / Card breakdowns will appear here once rides complete with payment.</div>
   </div>
@@ -439,13 +446,13 @@
 <div id="sec-settings" style="display:none" class="page-overlay">
   <div class="page-title">Settings</div>
   <div class="page-sub">Portal configuration and account management</div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
-    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:16px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Project Connections</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F0F4F8">
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;padding:24px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:16px;border-bottom:1px solid #F5F2EB;padding-bottom:10px">Project Connections</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F5F2EB">
       <div><div style="font-size:13px;font-weight:600;color:#050D1F">Supabase Database</div><div style="font-size:12px;color:#9CA3AF">byflpckbjjumxxjxoplk.supabase.co</div></div>
       <span style="background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">● Connected</span>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F0F4F8">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F5F2EB">
       <div><div style="font-size:13px;font-weight:600;color:#050D1F">API Server</div><div style="font-size:12px;color:#9CA3AF">care-voy-api-server.vercel.app</div></div>
       <span style="background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">● Connected</span>
     </div>
@@ -454,16 +461,16 @@
       <span style="background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700">● Live</span>
     </div>
   </div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
-    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Automatic Reminders</div>
-    <div style="font-size:13px;color:#374151;line-height:1.6">CareVoy automatically sends a reminder SMS to patients or caregivers who have not confirmed their ride within <strong>48 hours</strong> of receiving their invite. Configured via <code style="background:#F0F4F8;padding:2px 6px;border-radius:4px">pg_cron</code> in Supabase.</div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;padding:24px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F5F2EB;padding-bottom:10px">Automatic Reminders</div>
+    <div style="font-size:13px;color:#374151;line-height:1.6">CareVoy automatically sends a reminder SMS to patients or caregivers who have not confirmed their ride within <strong>48 hours</strong> of receiving their invite. Configured via <code style="background:#F5F2EB;padding:2px 6px;border-radius:4px">pg_cron</code> in Supabase.</div>
   </div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px;margin-bottom:16px">
-    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Admin Accounts</div>
-    <div style="font-size:13px;color:#6B7280;line-height:1.6">Additional admin accounts are added via the Supabase <code style="background:#F0F4F8;padding:2px 6px;border-radius:4px">staff</code> table with <code style="background:#F0F4F8;padding:2px 6px;border-radius:4px">role = admin</code>. Contact your developer to add new admins.</div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;padding:24px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F5F2EB;padding-bottom:10px">Admin Accounts</div>
+    <div style="font-size:13px;color:#6B7280;line-height:1.6">Additional admin accounts are added via the Supabase <code style="background:#F5F2EB;padding:2px 6px;border-radius:4px">staff</code> table with <code style="background:#F5F2EB;padding:2px 6px;border-radius:4px">role = admin</code>. Contact your developer to add new admins.</div>
   </div>
-  <div style="background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:24px">
-    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">Notifications & Webhooks</div>
+  <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;padding:24px">
+    <div style="font-size:14px;font-weight:700;color:#050D1F;margin-bottom:12px;border-bottom:1px solid #F5F2EB;padding-bottom:10px">Notifications & Webhooks</div>
     <div style="font-size:13px;color:#6B7280;line-height:1.6">Email alerts for new ride bookings, partner signups, and payment events. Configure in Supabase → Database → Webhooks.</div>
   </div>
 </div>
@@ -675,7 +682,7 @@
       ['Procedure', r.procedure_type || '—'],
     ];
     document.getElementById('rideDetailBody').innerHTML = rows.map(function(row) {
-      return '<div style="display:flex;padding:8px 0;border-bottom:1px solid #F3F4F6">' +
+      return '<div style="display:flex;padding:8px 0;border-bottom:1px solid #F5F2EB">' +
         '<div style="width:110px;font-size:12px;color:#6B7280;flex-shrink:0">' + row[0] + '</div>' +
         '<div style="font-size:13px;color:#111827;font-weight:500">' + esc(String(row[1])) + '</div>' +
       '</div>';
@@ -809,7 +816,7 @@
       fields.push(["Insurance Doc", '<a href="https://byflpckbjjumxxjxoplk.supabase.co/storage/v1/object/public/partner-docs/' + intake.insurance_doc + '" target="_blank" style="color:#00C2A8;font-weight:600">View Document</a>']);
     }
     var rows = fields.filter(function(f){return f[1];}).map(function(f) {
-      return '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6">' +
+      return '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F5F2EB">' +
         '<div style="width:140px;font-size:12px;color:#6B7280;flex-shrink:0">' + f[0] + '</div>' +
         '<div style="font-size:13px;color:#050D1F;font-weight:500">' + (f[1]||"-") + '</div></div>';
     }).join("");
@@ -1046,7 +1053,7 @@
       if (p.vehicle_types && p.vehicle_types.length) tags += p.vehicle_types.map(function(v){return '<span style="background:#E0F7F5;color:#0a9a87;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px">'+v+'</span>';}).join('');
       if (p.service_states && p.service_states.length) tags += ' <span style="font-size:10px;color:#9CA3AF">(' + p.service_states.join(', ') + ')</span>';
       var stateMatch = hospState && p.service_states && p.service_states.includes(hospState);
-      return '<div onclick="selectAssignPartner(\'' + p.id + '\',this)" style="padding:12px 14px;border:2px solid #E2E8F0;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" class="assign-option">' +
+      return '<div onclick="selectAssignPartner(\'' + p.id + '\',this)" style="padding:12px 14px;border:2px solid #E8E4DC;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" class="assign-option">' +
         '<div style="font-weight:600;font-size:14px;color:#050D1F">' + esc(p.company_name) + (stateMatch ? ' <span style="color:#00C2A8;font-size:10px;font-weight:700">STATE MATCH</span>' : '') + '</div>' +
         '<div style="font-size:12px;color:#6B7280">' + esc(p.city || '') + tags + '</div>' +
         '</div>';
@@ -1070,7 +1077,7 @@
 
   function selectAssignPartner(partnerId, el) {
     selectedAssignPartnerId = partnerId;
-    document.querySelectorAll('.assign-option').forEach(function(e) { e.style.borderColor = '#E2E8F0'; });
+    document.querySelectorAll('.assign-option').forEach(function(e) { e.style.borderColor = '#E8E4DC'; });
     el.style.borderColor = '#00C2A8';
     document.getElementById('confirmAssignBtn').disabled = false;
   }
@@ -1170,7 +1177,7 @@
       ];
     }
     var rows = fields.filter(function(f){return f[1];}).map(function(f) {
-      return '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6">' +
+      return '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F5F2EB">' +
         '<div style="width:140px;font-size:12px;color:#6B7280;flex-shrink:0">' + f[0] + '</div>' +
         '<div style="font-size:13px;color:#050D1F;font-weight:500">' + (f[1]||"-") + '</div></div>';
     }).join("");
@@ -1197,7 +1204,7 @@
       if (!_pendingNemt.length) { sec.style.display = "none"; return; }
       sec.style.display = "block";
       body.innerHTML = _pendingNemt.map(function(p, i){
-        return '<div class="cv-pending-card" data-type="nemt" data-idx="' + i + '" style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer">' +
+        return '<div class="cv-pending-card" data-type="nemt" data-idx="' + i + '" style="background:#fff;border:1px solid #E8E4DC;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer">' +
           '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + e(p.company_name) + '</div>' +
           '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(p.city||"") + ' | ' + (p.service_states||[]).join(", ") + '</div>' +
           '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Applied ' + new Date(p.created_at).toLocaleDateString() + '</div></div>' +
@@ -1215,7 +1222,7 @@
       if (!_pendingFac.length) { sec.style.display = "none"; return; }
       sec.style.display = "block";
       body.innerHTML = _pendingFac.map(function(f, i){
-        return '<div class="cv-pending-card" data-type="facility" data-idx="' + i + '" style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer">' +
+        return '<div class="cv-pending-card" data-type="facility" data-idx="' + i + '" style="background:#fff;border:1px solid #E8E4DC;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer">' +
           '<div><div style="font-weight:700;color:#050D1F;font-size:14px">' + e(f.name) + '</div>' +
           '<div style="font-size:12px;color:#6B7280;margin-top:3px">' + e(f.city||"") + ', ' + e(f.state||"") + ' | ' + e((f.facility_type||"").replace(/_/g," ")) + '</div>' +
           '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">Applied ' + new Date(f.created_at).toLocaleDateString() + '</div></div>' +

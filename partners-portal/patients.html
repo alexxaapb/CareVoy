@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CareVoy — Patient Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --navy:#050D1F;--teal:#00C2A8;--gold:#F5A623;--bg:#F7F8FA;
+      --navy:#050D1F;--teal:#00C2A8;--gold:#F5A623;--bg:#F5F2EB;
       --white:#fff;--border:#E8ECF2;--muted:#6B7280;--text:#111827;
       --red:#EF4444;--green:#10B981;
     }
-    body{font-family:'Poppins',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
     /* ── Auth screens ── */
     .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
@@ -644,7 +644,7 @@ function closeBookModal() {
 function initStripeElement() {
   if (!stripe) stripe = Stripe('pk_live_51RjK8uP5wxb0rHMZXvh9ZHSuFB9KAeqNvp8O7GiZDiRHkX07dFIYPXFjf3f9Z7T8s9d5dW7Q4xqJ3vp8d6bPxIz00uKkQsb3u');
   const elements = stripe.elements();
-  const card = elements.create('card', { style: { base: { fontSize:'14px', color:'#111827', fontFamily:"'Poppins',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
+  const card = elements.create('card', { style: { base: { fontSize:'14px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
   card.mount('#stripe-element');
   window._stripeCard = card;
 }

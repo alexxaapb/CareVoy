@@ -5,10 +5,10 @@
   <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CareVoy — Coordinator</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Poppins',-apple-system,sans-serif; background:#F0F4F8; min-height:100vh; display:flex; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:#F5F2EB; min-height:100vh; display:flex; }
     .sidebar { width:200px; min-height:100vh; background:#050D1F; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:20; }
     .sidebar-brand { padding:18px 16px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.07); }
     .brand-name { color:#fff; font-size:15px; font-weight:700; }
@@ -28,7 +28,7 @@
     .page-sub { color:#6B7280; font-size:13px; margin-bottom:24px; }
     /* Stats */
     .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
-    .stat-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E2E8F0; }
+    .stat-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E8E4DC; }
     .stat-label { color:#6B7280; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
     .stat-value { font-size:28px; font-weight:700; color:#050D1F; }
     .stat-value.teal { color:#00C2A8; }
@@ -38,19 +38,19 @@
     .toolbar-left { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .search-wrap { position:relative; }
     .search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:#9CA3AF; font-size:13px; }
-    .search-input { padding:8px 12px 8px 32px; border:1.5px solid #E2E8F0; border-radius:9px; font-size:13px; font-family:inherit; background:#fff; outline:none; width:220px; }
+    .search-input { padding:8px 12px 8px 32px; border:1.5px solid #E8E4DC; border-radius:9px; font-size:13px; font-family:inherit; background:#fff; outline:none; width:220px; }
     .search-input:focus { border-color:#00C2A8; }
-    .filter-btn { padding:7px 13px; border-radius:7px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1.5px solid #E2E8F0; background:#fff; color:#6B7280; transition:all 0.15s; }
+    .filter-btn { padding:7px 13px; border-radius:7px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1.5px solid #E8E4DC; background:#fff; color:#6B7280; transition:all 0.15s; }
     .filter-btn.on { background:#050D1F; color:#00C2A8; border-color:#050D1F; }
     /* Table */
-    .panel { background:#fff; border-radius:14px; border:1px solid #E2E8F0; overflow:hidden; margin-bottom:20px; }
-    .panel-hd { padding:14px 18px; border-bottom:1px solid #F0F4F8; display:flex; align-items:center; justify-content:space-between; }
+    .panel { background:#fff; border-radius:14px; border:1px solid #E8E4DC; overflow:hidden; margin-bottom:20px; }
+    .panel-hd { padding:14px 18px; border-bottom:1px solid #F5F2EB; display:flex; align-items:center; justify-content:space-between; }
     .panel-title { color:#050D1F; font-size:14px; font-weight:700; }
-    .tbl-head { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; padding:9px 18px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; }
+    .tbl-head { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; padding:9px 18px; background:#F5F2EB; border-bottom:1px solid #E8E4DC; }
     .th { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.5px; }
-    .tbl-row { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; align-items:center; padding:13px 18px; border-bottom:1px solid #F0F4F8; cursor:pointer; transition:background 0.1s; }
+    .tbl-row { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; align-items:center; padding:13px 18px; border-bottom:1px solid #F5F2EB; cursor:pointer; transition:background 0.1s; }
     .tbl-row:last-child { border-bottom:none; }
-    .tbl-row:hover { background:#F8FAFC; }
+    .tbl-row:hover { background:#F5F2EB; }
     .td { font-size:13px; color:#050D1F; }
     .td.muted { color:#6B7280; font-size:12px; }
     .td.bold { font-weight:600; }
@@ -60,7 +60,7 @@
     .b-teal { background:#d1faf4; color:#047857; }
     .b-gold { background:#fef3c7; color:#b45309; }
     .b-green { background:#dcfce7; color:#16a34a; }
-    .b-gray { background:#F0F4F8; color:#6B7280; }
+    .b-gray { background:#F5F2EB; color:#6B7280; }
     .b-blue { background:#dbeafe; color:#1d4ed8; }
     .b-red { background:#fee2e2; color:#dc2626; }
     .b-orange { background:#ffedd5; color:#c2410c; }
@@ -70,7 +70,7 @@
     .btn:disabled { opacity:0.4; cursor:not-allowed; }
     .btn-teal { background:#00C2A8; color:#050D1F; }
     .btn-navy { background:#050D1F; color:#00C2A8; }
-    .btn-ghost { background:#F0F4F8; color:#374151; border:1px solid #E2E8F0; }
+    .btn-ghost { background:#F5F2EB; color:#374151; border:1px solid #E8E4DC; }
     .btn-lg { padding:10px 20px; font-size:13px; border-radius:10px; }
     /* Alert */
     .alert { border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -83,18 +83,18 @@
     .modal-sub { font-size:13px; color:#6B7280; margin-bottom:22px; }
     .form-group { margin-bottom:14px; }
     .form-label { display:block; font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
-    .form-input { width:100%; padding:10px 12px; border:1.5px solid #E2E8F0; border-radius:9px; font-size:13px; font-family:inherit; color:#050D1F; background:#F8FAFC; outline:none; }
+    .form-input { width:100%; padding:10px 12px; border:1.5px solid #E8E4DC; border-radius:9px; font-size:13px; font-family:inherit; color:#050D1F; background:#F5F2EB; outline:none; }
     .form-input:focus { border-color:#00C2A8; background:#fff; }
     select.form-input { cursor:pointer; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .form-error { color:#dc2626; font-size:12px; margin-top:6px; display:none; }
-    .modal-foot { display:flex; gap:10px; margin-top:20px; padding-top:18px; border-top:1px solid #E2E8F0; }
+    .modal-foot { display:flex; gap:10px; margin-top:20px; padding-top:18px; border-top:1px solid #E8E4DC; }
     /* Toggle switch for caregiver */
     .toggle-row { display:flex; gap:6px; }
-    .tog { flex:1; padding:9px; border:1.5px solid #E2E8F0; border-radius:9px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; background:#fff; color:#6B7280; text-align:center; transition:all 0.15s; }
+    .tog { flex:1; padding:9px; border:1.5px solid #E8E4DC; border-radius:9px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; background:#fff; color:#6B7280; text-align:center; transition:all 0.15s; }
     .tog.on { border-color:#00C2A8; background:#d1faf4; color:#065f46; }
     /* Upload area */
-    .upload-area { border:2px dashed #E2E8F0; border-radius:12px; padding:28px; text-align:center; cursor:pointer; transition:all 0.15s; background:#F8FAFC; }
+    .upload-area { border:2px dashed #E8E4DC; border-radius:12px; padding:28px; text-align:center; cursor:pointer; transition:all 0.15s; background:#F5F2EB; }
     .upload-area:hover { border-color:#00C2A8; background:#f0fdf9; }
     .upload-area.drag { border-color:#00C2A8; background:#d1faf4; }
     /* Drawer */
@@ -103,9 +103,9 @@
     .drawer { position:fixed; right:0; top:0; bottom:0; width:380px; max-width:100vw; background:#fff; z-index:45; overflow-y:auto; padding:24px; transform:translateX(100%); transition:transform 0.25s; box-shadow:-8px 0 32px rgba(0,0,0,0.1); }
     .drawer.open { transform:translateX(0); }
     /* Settings */
-    .settings-section { background:#fff; border-radius:14px; border:1px solid #E2E8F0; padding:22px; margin-bottom:16px; }
-    .settings-title { font-size:14px; font-weight:700; color:#050D1F; margin-bottom:14px; border-bottom:1px solid #F0F4F8; padding-bottom:10px; }
-    .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F0F4F8; gap:12px; }
+    .settings-section { background:#fff; border-radius:14px; border:1px solid #E8E4DC; padding:22px; margin-bottom:16px; }
+    .settings-title { font-size:14px; font-weight:700; color:#050D1F; margin-bottom:14px; border-bottom:1px solid #F5F2EB; padding-bottom:10px; }
+    .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F5F2EB; gap:12px; }
     .settings-row:last-child { border-bottom:none; }
     .settings-key { font-size:11px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:0.4px; flex-shrink:0; }
     .settings-val { font-size:13px; color:#050D1F; text-align:right; }
@@ -114,8 +114,8 @@
     .toast.show { opacity:1; }
     .toast.ok { background:#065f46; }
     .toast.err { background:#991b1b; }
-    #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F0F4F8; z-index:100; }
-    .spinner { width:36px; height:36px; border:3px solid #E2E8F0; border-top-color:#00C2A8; border-radius:50%; animation:spin 0.8s linear infinite; }
+    #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F5F2EB; z-index:100; }
+    .spinner { width:36px; height:36px; border:3px solid #E8E4DC; border-top-color:#00C2A8; border-radius:50%; animation:spin 0.8s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg);} }
     @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:repeat(2,1fr)}}
 </style>
@@ -290,7 +290,7 @@
   <div class="page" id="sec-alerts" style="display:none">
     <div class="page-title">Alerts</div>
     <div class="page-sub">Patients requiring attention</div>
-    <div id="alertsList"><div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">No alerts right now.</div></div>
+    <div id="alertsList"><div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">No alerts right now.</div></div>
   </div>
 
   <!-- ── SETTINGS ── -->
@@ -299,9 +299,9 @@
     <div class="page-sub">Facility account and preferences</div>
 
     <div class="settings-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F5F2EB;padding-bottom:10px">
         <div class="settings-title" style="margin:0;border:none;padding:0">Point of Contact</div>
-        <button id="editPocBtn" onclick="toggleEditPoc()" style="background:#F0F4F8;border:1px solid #E2E8F0;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
+        <button id="editPocBtn" onclick="toggleEditPoc()" style="background:#F5F2EB;border:1px solid #E8E4DC;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
       </div>
       <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setPocName">—</span><input class="form-input" id="editPocName" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">Email</span><span class="settings-val" id="setPocEmail">—</span><input class="form-input" id="editPocEmail" type="email" style="display:none;max-width:55%;padding:6px 10px"></div>
@@ -373,17 +373,19 @@
           <input class="form-input" id="cgPatLast" placeholder="Doe">
         </div>
       </div>
-      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Caregiver (receives SMS invite)</div>
-        <div class="form-row">
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Caregiver Name</label>
-            <input class="form-input" id="cgName" placeholder="John Doe">
-          </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Caregiver Phone</label>
-            <input class="form-input" id="cgPhone" type="tel" placeholder="(555) 000-0000">
-          </div>
+      <div style="background:#F5F2EB;border:1px solid #E8E4DC;border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Caregiver Info</div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Caregiver Name <span style="color:#EF4444">*</span></label>
+          <input class="form-input" id="cgName" placeholder="John Doe" required>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Caregiver Email <span style="color:#EF4444">*</span></label>
+          <input class="form-input" id="cgEmail" type="email" placeholder="caregiver@email.com" required>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Caregiver Phone <span style="color:#EF4444">*</span></label>
+          <input class="form-input" id="cgPhone" type="tel" placeholder="(555) 000-0000" required>
         </div>
       </div>
     </div>
@@ -440,7 +442,7 @@
     </div>
     <div id="csvPreview" style="display:none;margin-top:14px">
       <div style="font-size:13px;font-weight:600;color:#050D1F;margin-bottom:8px" id="csvPreviewLabel"></div>
-      <div style="max-height:160px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:9px;font-size:12px;color:#374151;padding:10px;background:#F8FAFC" id="csvPreviewContent"></div>
+      <div style="max-height:160px;overflow-y:auto;border:1px solid #E8E4DC;border-radius:9px;font-size:12px;color:#374151;padding:10px;background:#F5F2EB" id="csvPreviewContent"></div>
     </div>
     <div id="csvError" class="form-error"></div>
     <div class="modal-foot">
@@ -461,7 +463,7 @@
       <div style="font-size:12px;color:#9CA3AF;margin-top:4px">Exports from Epic, Cerner, Google Calendar, Outlook</div>
       <input type="file" id="icsFile" accept=".ics" style="display:none" onchange="handleICS(event)">
     </div>
-    <div id="icsPreview" style="display:none;margin-top:14px;font-size:13px;color:#374151;padding:12px;background:#F8FAFC;border-radius:9px;border:1px solid #E2E8F0" id="icsPreviewText"></div>
+    <div id="icsPreview" style="display:none;margin-top:14px;font-size:13px;color:#374151;padding:12px;background:#F5F2EB;border-radius:9px;border:1px solid #E8E4DC" id="icsPreviewText"></div>
     <div class="modal-foot">
       <button class="btn btn-ghost btn-lg" style="padding:10px 18px" onclick="document.getElementById('calModal').classList.remove('open')">Cancel</button>
       <button class="btn btn-navy btn-lg" style="flex:1" id="icsSubmit" onclick="submitICS()" disabled>Import Appointments →</button>
@@ -661,7 +663,7 @@ function renderRidesTab() {
 function renderAlerts() {
   var alerts = allRides.filter(function(r){ return ['invited','reminder_sent','no_response','pending'].includes(r.status); });
   var el = document.getElementById('alertsList');
-  if (!alerts.length) { el.innerHTML = '<div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">No alerts right now. All patients are on track.</div>'; return; }
+  if (!alerts.length) { el.innerHTML = '<div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">No alerts right now. All patients are on track.</div>'; return; }
   el.innerHTML = alerts.map(function(r){
     var t = r.pickup_time ? new Date(r.pickup_time) : null;
     var apptStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : 'Unknown date';
@@ -769,11 +771,15 @@ async function submitAddPatient() {
     var pLast  = document.getElementById('cgPatLast').value.trim();
     var cgN    = document.getElementById('cgName').value.trim();
     var cgP    = document.getElementById('cgPhone').value.trim();
+    var cgEmail = document.getElementById('cgEmail') ? document.getElementById('cgEmail').value.trim() : '';
     if (!pFirst || !pLast) { showErr('Please enter patient name.'); return; }
-    if (!cgN || !cgP) { showErr('Please enter caregiver name and phone.'); return; }
+    if (!cgN) { showErr('Please enter caregiver name.'); return; }
+    if (!cgEmail || !cgEmail.includes('@')) { showErr('Please enter caregiver email address.'); return; }
+    if (!cgP || cgP.replace(/\D/g,'').length < 10) { showErr('Please enter a valid caregiver phone number.'); return; }
     patientName = pFirst + ' ' + pLast;
     caregiverName = cgN;
     contactPhone = cgP;
+    patEmail = cgEmail;
   }
 
   if (!apptDate) { showErr('Please select appointment date.'); return; }
@@ -1051,7 +1057,7 @@ function openDrawer(rideId) {
     '<div style="font-size:17px;font-weight:700;color:#050D1F;margin-bottom:4px">' + esc(r.patient_name || 'Patient') + '</div>' +
     '<div style="margin-bottom:16px">' + statusBadge(r.status) + '</div>' +
     rows.map(function(row){
-      return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #F0F4F8;gap:12px">' +
+      return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #F5F2EB;gap:12px">' +
         '<span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0">' + row[0] + '</span>' +
         '<span style="font-size:13px;color:#050D1F;text-align:right">' + esc(String(row[1])) + '</span>' +
         '</div>';

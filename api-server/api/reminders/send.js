@@ -48,7 +48,25 @@ module.exports = async function handler(req, res) {
       console.warn('audit log insert failed (non-fatal):', auditErr.message);
     }
 
-    return res.status(200).json({ success: true, sms_sent: smsSent });
+    let emailSent = false;
+    const contactEmail = ride.contact_email || null;
+    if (contactEmail && process.env.RESEND_API_KEY) {
+      try {
+        const { Resend } = require('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const apptStr = ride.pickup_time ? new Date(ride.pickup_time).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'}) : 'your upcoming appointment';
+        const patName = ride.patient_name || 'there';
+        const facName = ride.hospital_name || 'your healthcare facility';
+        await resend.emails.send({
+          from: 'CareVoy <notifications@carevoy.co>',
+          to: contactEmail,
+          subject: 'Reminder: Your ride is waiting to be scheduled',
+          html: '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px"><div style="background:#050D1F;padding:20px 24px;border-radius:12px 12px 0 0;text-align:center"><span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:1px">CareVoy</span></div><div style="background:#fff;border:1px solid #E8E4DC;border-top:none;border-radius:0 0 12px 12px;padding:28px 24px"><p style="color:#1A1714;font-size:16px;font-weight:600;margin:0 0 12px">Hi ' + patName + ',</p><p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px"><strong>' + facName + '</strong> has arranged a medical ride for you on <strong>' + apptStr + '</strong>.</p><p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 24px">Please visit your patient portal to schedule your pickup time and confirm your ride.</p><a href="https://partners.carevoy.co/patients" style="display:inline-block;background:#050D1F;color:#fff;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">Schedule My Ride</a><p style="color:#9CA3AF;font-size:12px;margin:24px 0 0">Automated reminder from CareVoy on behalf of ' + facName + '</p></div></div>'
+        });
+        emailSent = true;
+      } catch(e){ console.warn('Reminder email error:', e.message); }
+    }
+    return res.status(200).json({ success: true, sms_sent: smsSent, email_sent: emailSent });
   } catch(e) {
     console.error('Reminder send error:', e);
     return res.status(500).json({ error: e.message });

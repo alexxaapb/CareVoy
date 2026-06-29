@@ -5,10 +5,10 @@
   <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CareVoy — Driver Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Poppins',-apple-system,sans-serif; background:#F0F4F8; min-height:100vh; display:flex; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:#F5F2EB; min-height:100vh; display:flex; }
     .sidebar { width:200px; min-height:100vh; background:#050D1F; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:20; }
     .sidebar-brand { padding:18px 16px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.07); }
     .brand-name { color:#fff; font-size:15px; font-weight:700; }
@@ -25,17 +25,17 @@
     .page { padding:24px 28px 64px; max-width:760px; }
     /* Stats */
     .earn-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
-    .earn-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E2E8F0; }
+    .earn-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E8E4DC; }
     .earn-label { color:#6B7280; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
     .earn-value { font-size:26px; font-weight:700; color:#050D1F; }
     .earn-value.teal { color:#00C2A8; }
     .earn-sub { font-size:11px; color:#9CA3AF; margin-top:2px; }
     .perf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
-    .perf-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E2E8F0; }
+    .perf-card { background:#fff; border-radius:12px; padding:16px 18px; border:1px solid #E8E4DC; }
     /* Section label */
     .sec-label { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
     /* Ride cards */
-    .ride-card { background:#fff; border-radius:14px; border:1px solid #E2E8F0; padding:18px 20px; margin-bottom:12px; transition:box-shadow 0.15s; }
+    .ride-card { background:#fff; border-radius:14px; border:1px solid #E8E4DC; padding:18px 20px; margin-bottom:12px; transition:box-shadow 0.15s; }
     .ride-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.07); }
     .ride-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
     .ride-time { font-size:16px; font-weight:700; color:#00C2A8; }
@@ -54,34 +54,34 @@
     .b-gold { background:#fef3c7; color:#b45309; }
     .b-teal { background:#d1faf4; color:#047857; }
     .b-green { background:#dcfce7; color:#16a34a; }
-    .b-gray { background:#F0F4F8; color:#6B7280; }
+    .b-gray { background:#F5F2EB; color:#6B7280; }
     .b-orange { background:#ffedd5; color:#c2410c; }
     /* Action buttons */
     .ride-action { width:100%; padding:13px; border-radius:10px; border:none; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity 0.15s; }
     .ride-action:hover { opacity:0.88; }
     .act-start    { background:#00C2A8; color:#050D1F; }
     .act-complete { background:#16a34a; color:#fff; }
-    .act-done     { background:#F0F4F8; color:#9CA3AF; border:1px solid #E2E8F0; cursor:default; }
+    .act-done     { background:#F5F2EB; color:#9CA3AF; border:1px solid #E8E4DC; cursor:default; }
     .act-done:hover { opacity:1; }
     /* Warn */
     .warn-card { background:#fef3c7; border:1px solid #f59e0b; border-radius:14px; padding:24px; }
     .warn-title { color:#92400e; font-size:16px; font-weight:700; margin-bottom:6px; }
     .warn-body { color:#78350f; font-size:13px; line-height:1.5; }
     /* History table */
-    .panel { background:#fff; border-radius:14px; border:1px solid #E2E8F0; overflow:hidden; margin-bottom:20px; }
-    .panel-hd { padding:14px 18px; border-bottom:1px solid #F0F4F8; display:flex; justify-content:space-between; align-items:center; }
+    .panel { background:#fff; border-radius:14px; border:1px solid #E8E4DC; overflow:hidden; margin-bottom:20px; }
+    .panel-hd { padding:14px 18px; border-bottom:1px solid #F5F2EB; display:flex; justify-content:space-between; align-items:center; }
     .panel-title { color:#050D1F; font-size:14px; font-weight:700; }
-    .tbl-head { display:grid; grid-template-columns:1.4fr 1fr 1fr 0.8fr; padding:9px 18px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; }
+    .tbl-head { display:grid; grid-template-columns:1.4fr 1fr 1fr 0.8fr; padding:9px 18px; background:#F5F2EB; border-bottom:1px solid #E8E4DC; }
     .th { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.5px; }
-    .tbl-row { display:grid; grid-template-columns:1.4fr 1fr 1fr 0.8fr; align-items:center; padding:12px 18px; border-bottom:1px solid #F0F4F8; }
+    .tbl-row { display:grid; grid-template-columns:1.4fr 1fr 1fr 0.8fr; align-items:center; padding:12px 18px; border-bottom:1px solid #F5F2EB; }
     .tbl-row:last-child { border-bottom:none; }
     .td { font-size:13px; color:#050D1F; }
     .td.muted { color:#6B7280; font-size:12px; }
     .empty { padding:40px; text-align:center; color:#9CA3AF; font-size:13px; }
     /* Settings */
-    .settings-section { background:#fff; border-radius:14px; border:1px solid #E2E8F0; padding:22px; margin-bottom:16px; }
-    .settings-title { font-size:14px; font-weight:700; color:#050D1F; margin-bottom:14px; border-bottom:1px solid #F0F4F8; padding-bottom:10px; }
-    .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F0F4F8; gap:12px; }
+    .settings-section { background:#fff; border-radius:14px; border:1px solid #E8E4DC; padding:22px; margin-bottom:16px; }
+    .settings-title { font-size:14px; font-weight:700; color:#050D1F; margin-bottom:14px; border-bottom:1px solid #F5F2EB; padding-bottom:10px; }
+    .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F5F2EB; gap:12px; }
     .settings-row:last-child { border-bottom:none; }
     .settings-key { font-size:11px; font-weight:700; color:#6B7280; text-transform:uppercase; }
     .settings-val { font-size:13px; color:#050D1F; text-align:right; }
@@ -91,8 +91,8 @@
     .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#050D1F; color:#fff; padding:13px 22px; border-radius:12px; font-size:13px; font-weight:600; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; max-width:400px; text-align:center; }
     .toast.show { opacity:1; }
     .toast.ok { background:#065f46; }
-    #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F0F4F8; z-index:100; }
-    .spinner { width:36px; height:36px; border:3px solid #E2E8F0; border-top-color:#00C2A8; border-radius:50%; animation:spin 0.8s linear infinite; }
+    #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F5F2EB; z-index:100; }
+    .spinner { width:36px; height:36px; border:3px solid #E8E4DC; border-top-color:#00C2A8; border-radius:50%; animation:spin 0.8s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg);} }
     @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.earn-grid,.perf-grid{grid-template-columns:1fr 1fr}}
 </style>
@@ -105,7 +105,7 @@
 
 <div class="sidebar">
   <div class="sidebar-brand">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9IiMwNjBEMUYiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjAuMzQgNjkxLjk1KSBzY2FsZSgwLjUwOTEgLTAuNTA5MSkiPjxwYXRoIGQ9Ik0zODMgNzEyUTUxNSA3MTIgNjA1LjAgNjQxLjVRNjk1IDU3MSA3MjEgNDUwSDUxMFE0OTEgNDkwIDQ1Ny41IDUxMS4wUTQyNCA1MzIgMzgwIDUzMlEzMTIgNTMyIDI3MS41IDQ4My41UTIzMSA0MzUgMjMxIDM1NFEyMzEgMjcyIDI3MS41IDIyMy41UTMxMiAxNzUgMzgwIDE3NVE0MjQgMTc1IDQ1Ny41IDE5Ni4wUTQ5MSAyMTcgNTEwIDI1N0g3MjFRNjk1IDEzNiA2MDUuMCA2NS41UTUxNSAtNSAzODMgLTVRMjc5IC01IDE5OS4wIDQwLjVRMTE5IDg2IDc1LjUgMTY3LjVRMzIgMjQ5IDMyIDM1NFEzMiA0NTggNzUuNSA1MzkuNVExMTkgNjIxIDE5OS4wIDY2Ni41UTI3OSA3MTIgMzgzIDcxMloiIGZpbGw9IiNGRkZGRkYiLz48L2c+PHBhdGggZD0iTSA3NTguMjAgNTU1LjQxIEEgMjUwIDI1MCAwIDEgMSA3NTguMjAgNDY4LjU5IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMEMyQTgiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9Ijc1OC4yMCIgY3k9IjU1NS40MSIgcj0iMTciIGZpbGw9IiNGNUE2MjMiLz48Y2lyY2xlIGN4PSI3NTguMjAiIGN5PSI0NjguNTkiIHI9IjE3IiBmaWxsPSIjRjVBNjIzIi8+PC9zdmc+" width="28" height="28" style="border-radius:6px;flex-shrink:0">
+    <svg width="28" height="28" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px;flex-shrink:0"><rect width="1024" height="1024" fill="#060D1F"/><g transform="translate(320.34 691.95) scale(0.5091 -0.5091)"><path d="M383 712Q515 712 605.0 641.5Q695 571 721 450H510Q491 490 457.5 511.0Q424 532 380 532Q312 532 271.5 483.5Q231 435 231 354Q231 272 271.5 223.5Q312 175 380 175Q424 175 457.5 196.0Q491 217 510 257H721Q695 136 605.0 65.5Q515 -5 383 -5Q279 -5 199.0 40.5Q119 86 75.5 167.5Q32 249 32 354Q32 458 75.5 539.5Q119 621 199.0 666.5Q279 712 383 712Z" fill="#FFFFFF"/></g><path d="M 758.20 555.41 A 250 250 0 1 1 758.20 468.59" fill="none" stroke="#00C2A8" stroke-width="22" stroke-linecap="round"/><circle cx="758.20" cy="555.41" r="17" fill="#F5A623"/><circle cx="758.20" cy="468.59" r="17" fill="#F5A623"/></svg>
     <span class="brand-name">CareVoy</span>
   </div>
   <nav class="sidebar-nav">
@@ -196,7 +196,7 @@
     <div class="sec-label">Today's Rides</div>
     <div class="mvp-banner">ℹ MVP — simulating ride status before full NEMT dispatch API integration.</div>
     <div id="todayRidesSection">
-      <div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">Loading today's rides…</div>
+      <div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">Loading today's rides…</div>
     </div>
   </div>
 
@@ -273,9 +273,9 @@
     <div style="font-size:13px;color:#6B7280;margin-bottom:22px">Your driver account</div>
 
     <div class="settings-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F0F4F8;padding-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F5F2EB;padding-bottom:10px">
         <div class="settings-title" style="margin:0;border:none;padding:0">Account</div>
-        <button id="editAcctBtn" onclick="toggleEditAcct()" style="background:#F0F4F8;border:1px solid #E2E8F0;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
+        <button id="editAcctBtn" onclick="toggleEditAcct()" style="background:#F5F2EB;border:1px solid #E8E4DC;color:#050D1F;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
       </div>
       <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setName">—</span><input class="form-input" id="editName" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">NEMT Company</span><span class="settings-val" id="setCompany">—</span></div>
@@ -392,7 +392,7 @@ async function loadAvailableRides() {
     body.innerHTML = rides.map(function(rd) {
       var t = rd.pickup_time ? new Date(rd.pickup_time) : null;
       var tStr = t ? t.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : 'TBD';
-      return '<div style="background:#fff;border-radius:12px;border:1px solid #E2E8F0;padding:16px;margin-bottom:10px">' +
+      return '<div style="background:#fff;border-radius:12px;border:1px solid #E8E4DC;padding:16px;margin-bottom:10px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center">' +
           '<div>' +
             '<div style="font-weight:700;font-size:14px;color:#050D1F">' + esc(rd.patient_name || 'Patient') + '</div>' +
@@ -539,7 +539,7 @@ function renderTodayRides() {
   var todayR = allRides.filter(function(r){ return r.pickup_time && r.pickup_time.startsWith(today); });
   var section = document.getElementById('todayRidesSection');
   if (!todayR.length) {
-    section.innerHTML = '<div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E2E8F0">No rides assigned for today.</div>';
+    section.innerHTML = '<div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">No rides assigned for today.</div>';
     return;
   }
   section.innerHTML = todayR.map(function(r){ return rideCard(r); }).join('');
