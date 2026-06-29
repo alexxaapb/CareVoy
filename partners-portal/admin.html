@@ -1297,20 +1297,36 @@
 })();
 
   function setViewMode(mode) {
-    var modes = ['admin','coordinator','driver','patient'];
-    modes.forEach(function(m) {
-      var btn = document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1));
-      if (btn) { btn.style.background = 'rgba(255,255,255,.08)'; btn.style.color = '#9CA3AF'; }
-    });
-    var active = document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1));
-    if (active) { active.style.background = 'rgba(0,194,168,.2)'; active.style.color = '#00C2A8'; }
-    if (mode === 'coordinator') { window.open('/coordinator', '_blank'); }
-    else if (mode === 'driver') { window.open('/driver', '_blank'); }
-    else if (mode === 'patient') { window.open('/patients', '_blank'); }
-    // admin = stay here
-    setTimeout(function(){ 
-      var adminBtn = document.getElementById('modeAdmin');
-      if(adminBtn){ adminBtn.style.background='rgba(0,194,168,.2)'; adminBtn.style.color='#00C2A8'; }
-    }, 100);
+    if (mode === 'admin') return;
+    if (mode === 'patient') { window.open('/patients', '_blank'); return; }
+    if (mode === 'coordinator') {
+      // Pick a facility to preview as
+      var opts = '<option value="">-- Select Facility --</option>';
+      if (window._allHospitals) {
+        window._allHospitals.forEach(function(h) {
+          opts += '<option value="' + h.id + '">' + esc(h.name||h.id) + '</option>';
+        });
+      }
+      var sel = '<div style="padding:16px"><div style="font-size:13px;font-weight:700;color:#050D1F;margin-bottom:10px">View as Coordinator — select a facility:</div><select id="previewFacSel" style="width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:12px">' + opts + '</select><button onclick="var v=document.getElementById('previewFacSel').value;if(v)window.open('/coordinator?preview_hospital='+v,'_blank');document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Open</button> <button onclick="document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#F3F4F6;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px">Cancel</button></div>';
+      var d = document.createElement('div');
+      d.id = 'previewPicker';
+      d.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:999;min-width:340px;';
+      d.innerHTML = sel;
+      document.body.appendChild(d);
+    }
+    if (mode === 'driver') {
+      var opts = '<option value="">-- Select NEMT Partner --</option>';
+      if (window._allNemt) {
+        window._allNemt.forEach(function(n) {
+          opts += '<option value="' + n.id + '">' + esc(n.company_name||n.id) + '</option>';
+        });
+      }
+      var sel = '<div style="padding:16px"><div style="font-size:13px;font-weight:700;color:#050D1F;margin-bottom:10px">View as Driver — select a NEMT partner:</div><select id="previewNemtSel" style="width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:12px">' + opts + '</select><button onclick="var v=document.getElementById('previewNemtSel').value;if(v)window.open('/driver?preview_nemt='+v,'_blank');document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Open</button> <button onclick="document.getElementById('previewPicker').remove();" style="padding:10px 20px;background:#F3F4F6;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px">Cancel</button></div>';
+      var d = document.createElement('div');
+      d.id = 'previewPicker';
+      d.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:999;min-width:340px;';
+      d.innerHTML = sel;
+      document.body.appendChild(d);
+    }
   }
 </script>

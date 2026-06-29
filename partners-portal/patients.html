@@ -199,9 +199,9 @@
     <div class="auth-sub">Sign in to view your rides and receipts</div>
     <div class="auth-err" id="loginErr"></div>
     <label class="form-label">Email address</label>
-    <input class="form-input" id="loginEmail" type="email" placeholder="you@email.com" autocomplete="email">
+    <input class="form-input" id="loginEmail" type="email" placeholder="you@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
     <label class="form-label">Password</label>
-    <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <div class="remember-row">
       <input type="checkbox" id="rememberMe" checked>
       <label for="rememberMe">Keep me signed in</label>
