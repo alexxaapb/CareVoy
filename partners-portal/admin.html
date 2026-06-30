@@ -770,19 +770,72 @@
     }).join('');
   }
 
+  window._allFacilities = [];
   function renderFacilities(list) {
+    window._allFacilities = list || [];
     var el = document.getElementById('facilitiesTable');
     document.getElementById('facilitiesSub').textContent = list.length + ' total';
     if (!list.length) {
       el.innerHTML = '<div class="table-head fac-grid"><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div><div class="empty-row">No facilities yet. Invite one using the button above.</div>';
       return;
     }
-    var rows = list.map(function(f) {
+    var rows = list.map(function(f, i) {
       var badge = f.active ? '<span class="badge green">● Active</span>' : '<span class="badge gray">Inactive</span>';
       var type = (f.facility_type || 'Hospital').replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-      return '<div class="table-row fac-grid"><div class="td">' + esc(f.name||'—') + '</div><div class="td muted">' + esc(f.city||'—') + '</div><div class="td muted">' + type + '</div><div class="td">' + badge + '</div></div>';
+      return '<div class="table-row fac-grid cv-fac-row" data-idx="' + i + '" style="cursor:pointer"><div class="td">' + esc(f.name||'—') + '</div><div class="td muted">' + esc(f.city||'—') + '</div><div class="td muted">' + type + '</div><div class="td">' + badge + '</div></div>';
     }).join('');
     el.innerHTML = '<div class="table-head fac-grid"><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div>' + rows;
+    Array.prototype.forEach.call(el.querySelectorAll('.cv-fac-row'), function(row){
+      row.addEventListener('click', function(e){ showFacilityProfile(parseInt(row.getAttribute('data-idx'),10), e); });
+    });
+  }
+
+  function showFacilityProfile(idx, evt) {
+    if (evt) evt.stopPropagation();
+    var data = window._allFacilities[idx];
+    if (!data) return;
+    var fields = [
+      ["Name", data.name], ["City", data.city], ["State", data.state],
+      ["Type", (data.facility_type||'Hospital').replace(/_/g,' ')],
+      ["Contact Email", data.contact_email], ["Contact Phone", data.contact_phone],
+      ["Address", data.address]
+    ];
+    var rows = fields.filter(function(f){return f[1];}).map(function(f) {
+      return '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6">' +
+        '<div style="width:140px;font-size:12px;color:#6B7280;flex-shrink:0">' + f[0] + '</div>' +
+        '<div style="font-size:13px;color:#050D1F;font-weight:500">' + (f[1]||"-") + '</div></div>';
+    }).join("");
+    var _btnBg  = data.active ? '#FEF2F2' : '#ECFDF5';
+    var _btnCl  = data.active ? '#EF4444' : '#059669';
+    var _btnBrd = data.active ? '#FECACA' : '#A7F3D0';
+    var _btnTxt = data.active ? 'Set Inactive' : 'Set Active';
+    var _newVal = !data.active;
+    var _facId  = data.id;
+    var toggleBtn = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
+      + '<span style="font-size:12px;color:#6B7280">Status: <strong>' + (data.active ? 'Active' : 'Inactive') + '</strong></span>'
+      + '<button id="facToggleBtn" style="padding:8px 18px;border-radius:8px;background:' + _btnBg + ';color:' + _btnCl + ';border:1px solid ' + _btnBrd + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + _btnTxt + '</button></div>';
+    document.getElementById("rideDetailBody").innerHTML = rows + toggleBtn;
+    var _tb = document.getElementById("facToggleBtn");
+    if (_tb) _tb.addEventListener("click", function(){ toggleFacilityActive(_facId, _newVal); });
+    var modal = document.getElementById("rideDetailModal");
+    var titleEl = modal.querySelector('div[style*="font-size:18px"]');
+    if (titleEl) titleEl.textContent = "Facility Profile";
+    modal.style.display = "flex";
+  }
+
+  async function toggleFacilityActive(facilityId, newActive) {
+    var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var _KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+    var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+    var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    try {
+      await fetch(_SUPA + '/rest/v1/hospitals?id=eq.' + facilityId, {
+        method: 'PATCH', headers: _H, body: JSON.stringify({ active: newActive })
+      });
+      document.getElementById("rideDetailModal").style.display = "none";
+      showToast(newActive ? 'Facility set to Active' : 'Facility set to Inactive', 'ok');
+      loadDashboard();
+    } catch(e) { showToast('Could not update status', 'err'); }
   }
 
   window._allNemt = [];
