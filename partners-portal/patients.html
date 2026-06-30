@@ -730,6 +730,16 @@ async function loadReceipts() {
   }).join('');
 }
 
+// ── AI chip topics ──
+function askTopic(btn) {
+  var q = btn.getAttribute('data-q');
+  if (!q) return;
+  var chips = document.getElementById('chatChips');
+  if (chips) chips.style.display = 'none';
+  var inp = document.getElementById('chatInput');
+  if (inp) { inp.value = q; sendChat(); }
+}
+
 // ── AI chat ──
 async function sendChat() {
   const input = document.getElementById('chatInput');
