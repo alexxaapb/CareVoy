@@ -783,16 +783,13 @@
     var rows = list.map(function(f, i) {
       var badge = f.active ? '<span class="badge green">● Active</span>' : '<span class="badge gray">Inactive</span>';
       var type = (f.facility_type || 'Hospital').replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-      return '<div class="table-row fac-grid cv-fac-row" data-idx="' + i + '" style="cursor:pointer"><div class="td">' + esc(f.name||'—') + '</div><div class="td muted">' + esc(f.city||'—') + '</div><div class="td muted">' + type + '</div><div class="td">' + badge + '</div></div>';
+      return '<div class="table-row fac-grid" style="cursor:pointer" onclick="showFacilityProfile(' + i + ')"><div class="td">' + esc(f.name||'—') + '</div><div class="td muted">' + esc(f.city||'—') + '</div><div class="td muted">' + type + '</div><div class="td">' + badge + '</div></div>';
     }).join('');
     el.innerHTML = '<div class="table-head fac-grid"><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div>' + rows;
-    Array.prototype.forEach.call(el.querySelectorAll('.cv-fac-row'), function(row){
-      row.addEventListener('click', function(e){ showFacilityProfile(parseInt(row.getAttribute('data-idx'),10), e); });
-    });
+
   }
 
-  function showFacilityProfile(idx, evt) {
-    if (evt) evt.stopPropagation();
+  function showFacilityProfile(idx) {
     var data = window._allFacilities[idx];
     if (!data) return;
     var fields = [
@@ -850,17 +847,14 @@
     }
     var rows = list.map(function(p, i) {
       var active = p.active ? '<span class="badge teal">Yes</span>' : '<span class="badge gray">No</span>';
-      return '<div class="table-row nemt-grid cv-nemt-row" data-idx="' + i + '" style="cursor:pointer"><div class="td">' + esc(p.company_name||'—') + '</div><div class="td muted">' + esc(p.city||'—') + '</div><div class="td muted">—</div><div class="td">' + active + '</div><div class="td muted">—</div></div>';
+      return '<div class="table-row nemt-grid" style="cursor:pointer" onclick="showNemtProfile(' + i + ')"><div class="td">' + esc(p.company_name||'—') + '</div><div class="td muted">' + esc(p.city||'—') + '</div><div class="td muted">—</div><div class="td">' + active + '</div><div class="td muted">—</div></div>';
     }).join('');
     el.innerHTML = '<div class="table-head nemt-grid"><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div>' + rows;
     // delegated click -> open read-only partner detail
-    Array.prototype.forEach.call(el.querySelectorAll('.cv-nemt-row'), function(row){
-      row.addEventListener('click', function(e){ showNemtProfile(parseInt(row.getAttribute('data-idx'),10), e); });
-    });
+
   }
 
-  function showNemtProfile(idx, evt) {
-    if (evt) evt.stopPropagation();
+  function showNemtProfile(idx) {
     var data = window._allNemt[idx];
     if (!data) return;
     var intake = data.intake_data || {};
