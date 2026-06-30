@@ -36,6 +36,10 @@
     .btn-ghost:hover{background:#eef1f6}
     .auth-toggle{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
     .auth-toggle a{color:var(--teal);font-weight:600;text-decoration:none;cursor:pointer}
+    .pw-wrap{position:relative}
+    .pw-wrap .form-input{padding-right:60px}
+    .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer;font-family:inherit;padding:4px}
+    .pw-toggle:hover{color:var(--navy)}
     .auth-err{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:14px;display:none}
     .remember-row{display:flex;align-items:center;gap:8px;margin-bottom:20px}
     .remember-row input{width:16px;height:16px;accent-color:var(--teal)}
@@ -203,7 +207,7 @@
     <label class="form-label">Email address</label>
     <input class="form-input" id="loginEmail" type="email" placeholder="you@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
     <label class="form-label">Password</label>
-    <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="pw-wrap"><input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"><button type="button" class="pw-toggle" onclick="togglePw('loginPass',this)">SHOW</button></div>
     <div class="remember-row">
       <input type="checkbox" id="rememberMe" checked>
       <label for="rememberMe">Keep me signed in</label>
@@ -231,7 +235,7 @@
     <label class="form-label">Phone number <span style="color:#9CA3AF;font-weight:400">(optional — for driver contact)</span></label>
     <input class="form-input" id="signupPhone" type="tel" placeholder="(555) 000-0000">
     <label class="form-label">Password</label>
-    <input class="form-input" id="signupPass" type="password" placeholder="Min 8 characters" autocomplete="new-password">
+    <div class="pw-wrap"><input class="form-input" id="signupPass" type="password" placeholder="Min 8 characters" autocomplete="new-password"><button type="button" class="pw-toggle" onclick="togglePw('signupPass',this)">SHOW</button></div>
     <button class="btn btn-navy" id="signupBtn" onclick="doSignup()">Create account</button>
     <div class="auth-toggle">Already have an account? <a onclick="showScreen('login')">Sign in</a></div>
   </div>
@@ -265,7 +269,7 @@
     <div class="auth-sub">Choose a new password for your CareVoy account.</div>
     <div class="auth-err" id="resetErr"></div>
     <label class="form-label">New password</label>
-    <input class="form-input" id="resetPass" type="password" placeholder="Min 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doResetPassword()">
+    <div class="pw-wrap"><input class="form-input" id="resetPass" type="password" placeholder="Min 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doResetPassword()"><button type="button" class="pw-toggle" onclick="togglePw('resetPass',this)">SHOW</button></div>
     <button class="btn btn-navy" onclick="doResetPassword()" id="resetBtn">Update password</button>
   </div>
 </div>
@@ -428,6 +432,12 @@ function showScreen(s) {
 }
 
 // ── Toast ──
+function togglePw(fieldId, btn) {
+  var inp = document.getElementById(fieldId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'HIDE'; }
+  else { inp.type = 'password'; btn.textContent = 'SHOW'; }
+}
+
 function toast(msg, duration=2800) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -654,6 +664,7 @@ function openBookModal(rideId) {
       ? `<div class="facility-covered-box"><span style="font-size:18px"></span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
       : `<div class="hsa-pill">HSA/FSA eligible — IRS 213(d) receipt emailed automatically</div>
          <div class="payment-label">Payment method</div>
+         <div id="apple-pay-btn" style="display:none;margin-bottom:12px"></div>
          <div id="stripe-element"></div>
          <div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>`
     }
@@ -670,10 +681,28 @@ function closeBookModal() {
 // ── Stripe ──
 function initStripeElement() {
   if (!stripe) stripe = Stripe('pk_live_51RjK8uP5wxb0rHMZXvh9ZHSuFB9KAeqNvp8O7GiZDiRHkX07dFIYPXFjf3f9Z7T8s9d5dW7Q4xqJ3vp8d6bPxIz00uKkQsb3u');
-  const elements = stripe.elements();
-  const card = elements.create('card', { style: { base: { fontSize:'14px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
+
+  // Payment Request Button (Apple Pay / Google Pay) — shows only if supported
+  var paymentRequest = stripe.paymentRequest({
+    country: 'US', currency: 'usd',
+    total: { label: 'CareVoy Medical Ride', amount: 0 },
+    requestPayerName: true, requestPayerEmail: true
+  });
+
+  var prButton = stripe.elements().create('paymentRequestButton', { paymentRequest: paymentRequest });
+  paymentRequest.canMakePayment().then(function(result) {
+    if (result) {
+      prButton.mount('#apple-pay-btn');
+      document.getElementById('apple-pay-btn').style.display = 'block';
+    }
+  });
+
+  // Standard card element as fallback
+  var elements = stripe.elements();
+  var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
   card.mount('#stripe-element');
   window._stripeCard = card;
+  window._paymentRequest = paymentRequest;
 }
 
 // ── Confirm booking ──
@@ -690,15 +719,31 @@ async function confirmBooking() {
   const btn = document.getElementById('bookConfirmBtn');
   btn.disabled = true; btn.textContent = 'Confirming…';
   try {
+    // For self-pay rides, create a Stripe payment method from card
+    var paymentMethodId = null;
+    if (!isFacility && window._stripeCard) {
+      var { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: window._stripeCard,
+        billing_details: { name: currentUser.user_metadata?.full_name || '', email: currentUser.email }
+      });
+      if (pmError) {
+        btn.disabled = false; btn.textContent = 'Confirm ride';
+        toast(pmError.message || 'Payment failed. Please check your card.');
+        return;
+      }
+      paymentMethodId = paymentMethod.id;
+    }
     await sb.from('rides').update({
       pickup_time: pickupDt.toISOString(),
       pickup_address: pickup,
       patient_id: currentUser.id,
       status: 'confirmed',
-      payment_responsibility: currentRide.payment_responsibility
+      payment_responsibility: currentRide.payment_responsibility,
+      stripe_payment_method: paymentMethodId
     }).eq('id', currentRide.id);
     closeBookModal();
-    toast('Ride confirmed! ');
+    toast('Ride confirmed');
     await loadRides();
   } catch(e) {
     btn.disabled = false; btn.textContent = 'Confirm ride';
