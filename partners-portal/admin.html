@@ -348,11 +348,12 @@
     <button onclick="exportCSV('patients')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
   </div>
   <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">
-    <div class="rides-table-head" style="grid-template-columns:1.6fr 1.4fr 1fr 0.8fr">
+    <div class="rides-table-head" style="grid-template-columns:1.6fr 1.2fr 1fr 0.6fr 0.8fr">
       <div class="th">Name</div>
       <div class="th">Phone</div>
       <div class="th">Email</div>
       <div class="th">Joined</div>
+      <div class="th">Actions</div>
     </div>
     <div id="patientsBody">
       <div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading...</div>
@@ -1069,7 +1070,8 @@
   var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
   var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Prefer': 'return=minimal' };
   try {
-    await fetch(_SUPA + '/rest/v1/rides?id=eq.' + rideId, { method: 'DELETE', headers: _H });
+    var resp = await fetch(_SUPA + '/rest/v1/rides?id=eq.' + rideId, { method: 'DELETE', headers: _H });
+  if (!resp.ok) { var err = await resp.text(); showToast('Delete failed: ' + err, 'err'); return; }
     showToast('Ride deleted', 'ok');
     loadAllRides();
   } catch(e) { showToast('Could not delete ride', 'err'); }
@@ -1133,7 +1135,7 @@ function signOut() {
         } else if (r.nemt_partner_id) {
           actionBtn = '<span style="font-size:11px;color:#9CA3AF">Assigned</span>';
         }
-        var deleteBtn = '<button onclick="adminDeleteRide(\'' + esc(r.id) + '\')" style="margin-left:6px;padding:4px 8px;background:none;border:1px solid #FECACA;border-radius:6px;color:#EF4444;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">Del</button>';
+        var deleteBtn = '<button onclick="adminDeleteRide(\'' + esc(r.id) + '\')" style="margin-left:6px;padding:4px 8px;background:none;border:1px solid #FECACA;border-radius:6px;color:#EF4444;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">Delete</button>';
         return '<div class="rides-row" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">' +
           '<div class="td">' + esc(r.patient_name || 'Patient') + '</div>' +
           '<div class="td muted" style="font-size:12px">' + esc(hospName) + '</div>' +
