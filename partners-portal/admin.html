@@ -992,11 +992,12 @@
         var phone = p.phone || '—';
         var email = p.email || '—';
         var bg = i % 2 === 0 ? '#fff' : '#F9FAFB';
-        return '<div class="rides-row" style="grid-template-columns:1.6fr 1.4fr 1fr 0.8fr;background:' + bg + '">' +
+        return '<div class="rides-row" style="grid-template-columns:1.6fr 1.2fr 1fr 0.6fr 0.8fr;background:' + bg + '">' +
           '<div class="td"><strong>' + esc(p.full_name || 'Unknown') + '</strong></div>' +
           '<div class="td">' + esc(phone) + '</div>' +
           '<div class="td" style="font-size:11px">' + esc(email) + '</div>' +
           '<div class="td" style="font-size:11px;color:#6B7280">' + esc(joined) + '</div>' +
+          '<div class="td"><button onclick="deletePatient(\'' + esc(p.id||'') + '\',\'' + esc(email) + '\')" style="padding:4px 10px;background:none;border:1px solid #FECACA;border-radius:6px;color:#EF4444;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Remove</button></div>' +
         '</div>';
       }).join('');
     } catch(e) {
@@ -1061,7 +1062,20 @@
     setTimeout(function() { t.classList.remove('show'); }, 3500);
   }
 
-  async function deletePatient(patientId, patientEmail) {
+  async function adminDeleteRide(rideId) {
+  if (!confirm('Delete this ride permanently?')) return;
+  var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+  var _KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+  var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+  var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Prefer': 'return=minimal' };
+  try {
+    await fetch(_SUPA + '/rest/v1/rides?id=eq.' + rideId, { method: 'DELETE', headers: _H });
+    showToast('Ride deleted', 'ok');
+    loadAllRides();
+  } catch(e) { showToast('Could not delete ride', 'err'); }
+}
+
+async function deletePatient(patientId, patientEmail) {
   if (!confirm('Remove this patient and all their rides permanently? This cannot be undone.')) return;
   var _URL = 'https://byflpckbjjumxxjxoplk.supabase.co';
   var _K   = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
@@ -1119,13 +1133,14 @@ function signOut() {
         } else if (r.nemt_partner_id) {
           actionBtn = '<span style="font-size:11px;color:#9CA3AF">Assigned</span>';
         }
+        var deleteBtn = '<button onclick="adminDeleteRide(\'' + esc(r.id) + '\')" style="margin-left:6px;padding:4px 8px;background:none;border:1px solid #FECACA;border-radius:6px;color:#EF4444;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">Del</button>';
         return '<div class="rides-row" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">' +
           '<div class="td">' + esc(r.patient_name || 'Patient') + '</div>' +
           '<div class="td muted" style="font-size:12px">' + esc(hospName) + '</div>' +
           '<div class="td muted" style="font-size:12px">—</div>' +
           '<div class="td">' + badge + '</div>' +
           '<div class="td muted" style="font-size:12px">' + tStr + '</div>' +
-          '<div class="td">' + actionBtn + '</div></div>';
+          '<div class="td">' + actionBtn + deleteBtn + '</div></div>';
       }).join('');
     } catch(e) { body.innerHTML = '<div style="padding:40px;text-align:center;color:red;font-size:13px">Error: ' + e.message + '</div>'; }
   }
@@ -1232,7 +1247,7 @@ function signOut() {
 </script>
 
   <!-- Ride Detail Modal -->
-  <div id="rideDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center">
+  <div id="rideDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:16px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div style="font-size:18px;font-weight:700;color:#050D1F">Ride Details</div>

@@ -363,8 +363,15 @@
       </div>
       <div class="profile-card">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px">Password</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">A reset link will be sent to your email</div>
-        <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px" onclick="sendPasswordReset()">Send reset link</button>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Update your password directly or receive a reset link by email</div>
+        <div class="field-group">
+          <label class="form-label">New password</label>
+          <input class="form-input" id="newPassInline" type="password" placeholder="Min 8 characters" autocomplete="new-password">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-navy" style="width:auto;padding:10px 24px;font-size:13px" onclick="changePasswordInline()">Update password</button>
+          <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px" onclick="sendPasswordReset()">Send reset link instead</button>
+        </div>
       </div>
     </div>
   </div>
@@ -791,6 +798,15 @@ async function doResetPassword() {
   // Clear the hash and go to app
   history.replaceState(null, '', window.location.pathname);
   setTimeout(async function(){ await initApp(); }, 1200);
+}
+
+async function changePasswordInline() {
+  var pass = document.getElementById('newPassInline').value;
+  if (!pass || pass.length < 8) { toast('Password must be at least 8 characters'); return; }
+  var { error } = await sb.auth.updateUser({ password: pass });
+  if (error) { toast(error.message); return; }
+  document.getElementById('newPassInline').value = '';
+  toast('Password updated');
 }
 
 async function sendPasswordReset() {
