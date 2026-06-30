@@ -370,6 +370,11 @@
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px">A reset link will be sent to your email</div>
         <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px" onclick="sendPasswordReset()">Send reset link</button>
       </div>
+      <div class="profile-card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Help and Support</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">For questions about your rides, receipts, or account, email us at <a href="mailto:contact@carevoy.co" style="color:var(--teal);font-weight:600;text-decoration:none">contact@carevoy.co</a> and someone will follow up within 48 business hours.</div>
+        <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px;color:#EF4444;border-color:#FECACA" onclick="deleteMyAccount()">Delete my account</button>
+      </div>
     </div>
   </div>
 
@@ -500,6 +505,11 @@ async function doForgot() {
 async function doSignout() {
   await sb.auth.signOut();
   currentUser = null; allRides = [];
+  // Clear all form fields
+  document.querySelectorAll('input').forEach(function(inp){ inp.value = ''; });
+  document.getElementById('chatMessages').innerHTML = '<div class="chat-msg ai">Hello. I can answer questions about your rides, receipts, and HSA/FSA reimbursement. Select a topic below or type your question.</div>';
+  var chips = document.getElementById('chatChips');
+  if (chips) chips.style.display = 'flex';
   showScreen('login');
 }
 
@@ -538,6 +548,8 @@ async function initApp() {
   document.getElementById('profileEmail').textContent = currentUser.email || '';
   document.getElementById('editName').value = currentUser.user_metadata?.full_name || '';
   document.getElementById('editPhone').value = currentUser.user_metadata?.phone || '';
+  // Claim any pending invites by email match (works on login AND signup)
+  await claimInvitedRides(currentUser.email, currentUser.id);
   await loadRides();
   switchTab('Rides', document.getElementById('navRides'));
 }
@@ -553,14 +565,14 @@ async function loadRides() {
 }
 
 const STATUS_LABEL = {
-  invited:'Pending invite', app_downloaded:'Pending invite', reminder_sent:'Pending invite', no_response:'Pending invite',
-  pending:'Finding your driver', confirmed:'Confirmed', assigned:'Driver assigned',
-  en_route:'Driver on the way', arrived:'Driver arrived', completed:'Completed', cancelled:'Cancelled'
+  invited:'Pending', app_downloaded:'Pending', reminder_sent:'Pending', no_response:'Pending',
+  pending:'Pending', confirmed:'Confirmed', assigned:'Assigned',
+  in_progress:'In Progress', en_route:'In Progress', arrived:'Driver arrived', completed:'Completed', cancelled:'Cancelled'
 };
 const STATUS_BADGE = {
   invited:'badge-pending', app_downloaded:'badge-pending', reminder_sent:'badge-pending', no_response:'badge-pending',
   pending:'badge-pending', confirmed:'badge-confirmed', assigned:'badge-assigned',
-  en_route:'badge-enroute', arrived:'badge-arrived', completed:'badge-completed', cancelled:'badge-cancelled'
+  in_progress:'badge-enroute', en_route:'badge-enroute', arrived:'badge-arrived', completed:'badge-completed', cancelled:'badge-cancelled'
 };
 
 function renderRides() {
@@ -594,7 +606,9 @@ function buildRideCard(r, isPast) {
   const payLabel = r.payment_responsibility === 'facility' ? 'Facility covers this ride' : r.payment_responsibility === 'self_pay' ? 'Self-pay' : '';
   let action = '';
   if (isPending) action = `<div class="ride-action"><button class="schedule-btn" onclick="openBookModal('${r.id}')"><span></span> Schedule this ride</button></div>`;
-  else if (r.status === 'completed' && r.actual_cost) action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare paid: <strong style="color:var(--navy)">$${r.actual_cost}</strong></span><button class="view-btn" onclick="viewReceipt('${r.id}')">View receipt</button></div>`;
+  else if (r.status === 'confirmed') action = `<div class="ride-action" style="display:flex;gap:10px"><span style="font-size:13px;color:var(--muted)">Waiting for driver assignment</span><button onclick="cancelRide('${r.id}')" style="padding:6px 14px;border-radius:8px;border:1px solid #FECACA;background:none;color:#EF4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel ride</button></div>`;
+  else if (r.status === 'assigned' || r.status === 'in_progress' || r.status === 'en_route') action = `<div class="ride-action"><div style="font-size:13px;color:var(--navy);font-weight:600">Driver: ${r.driver_name || 'Assigned'}</div>${r.driver_phone ? '<div style="font-size:12px;color:var(--muted);margin-top:2px">Contact: ' + r.driver_phone + '</div>' : ''}</div>`;
+  else if (r.status === 'completed' && r.actual_cost) action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare paid: <strong style="color:var(--navy)">$${r.actual_cost}</strong></span></div>`;
   return `<div class="ride-card" onclick="openRideDetail('${r.id}')">
     <span class="ride-badge ${badge}">${label}</span>
     <div class="ride-facility">${facility}</div>
@@ -608,6 +622,30 @@ function buildRideCard(r, isPast) {
 }
 
 // ── Ride detail ──
+async function deleteMyAccount() {
+  if (!confirm('Are you sure you want to delete your account? This will remove all your data and cannot be undone.')) return;
+  if (!confirm('This is permanent. Continue?')) return;
+  try {
+    // Delete rides associated with this account
+    await sb.from('rides').delete().eq('patient_id', currentUser.id);
+    await sb.from('patients').delete().eq('id', currentUser.id);
+    await sb.auth.signOut();
+    currentUser = null; allRides = [];
+    document.querySelectorAll('input').forEach(function(inp){ inp.value = ''; });
+    toast('Account deleted');
+    showScreen('login');
+  } catch(e) { toast('Could not delete account. Please email contact@carevoy.co for assistance.'); }
+}
+
+async function cancelRide(rideId) {
+  if (!confirm('Cancel this ride?')) return;
+  try {
+    await sb.from('rides').update({ status: 'cancelled' }).eq('id', rideId);
+    toast('Ride cancelled');
+    await loadRides();
+  } catch(e) { toast('Could not cancel ride'); }
+}
+
 function openRideDetail(rideId) {
   const r = allRides.find(x => x.id === rideId);
   if (!r) return;
@@ -886,7 +924,11 @@ async function onLoad() {
   });
   const { data } = await sb.auth.getUser();
   if (data.user) { currentUser = data.user; await initApp(); }
-  else showScreen('login');
+  else {
+    // If coming from invite email, show signup instead of login
+    if (window.location.hash === '#signup') showScreen('signup');
+    else showScreen('login');
+  }
 }
 onLoad();
 </script>

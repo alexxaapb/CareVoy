@@ -341,7 +341,7 @@ function badge(s) {
 function exportNemtCSV(type) {
   var status;
   if (type === 'history') status = 'completed';
-  else if (type === 'available') status = 'invited,pending,confirmed';
+  else if (type === 'available') status = 'confirmed';
   else if (type === 'schedule') status = 'assigned,en_route,arrived';
   else status = 'assigned,en_route,arrived';
   var urlBase = type === 'available'

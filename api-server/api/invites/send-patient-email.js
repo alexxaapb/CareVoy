@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
             Please visit your CareVoy patient portal to schedule your pickup time and confirm your ride.
             Your HSA/FSA receipt will be generated automatically after your ride is completed.
           </p>
-          <a href="https://partners.carevoy.co/patients"
+          <a href="https://partners.carevoy.co/patients#signup"
              style="display:inline-block;background:#050D1F;color:#fff;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">
             Schedule My Ride
           </a>

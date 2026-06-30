@@ -760,9 +760,13 @@ function openAddPatientModal() {
   document.getElementById('addPatientModal').classList.add('open');
 }
 function closeAddPatient() {
-  var payResp = document.getElementById('paymentResp'); if (payResp) payResp.value = 'self_pay';
   document.getElementById('addPatientModal').classList.remove('open');
   document.getElementById('addPatError').style.display = 'none';
+  // Clear all form fields
+  var ids = ['patFirstName','patLastName','patPhone','patEmail','apptDate','apptTime','cgName','cgEmail','cgPhone'];
+  ids.forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
+  var payResp = document.getElementById('paymentResp'); if (payResp) payResp.value = 'self_pay';
+  var rideType = document.getElementById('rideType'); if (rideType) rideType.value = '';
 }
 
 async function submitAddPatient() {
