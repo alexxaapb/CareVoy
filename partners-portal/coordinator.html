@@ -871,14 +871,14 @@ async function submitAddPatient() {
         hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null, invited_at: new Date().toISOString(), reminder_sent: false })
     });
     try {
-      await fetch(API + '/api/invites/send-sms', {
+      await fetch(API + '/api/invites/send-patient-email', {
         method: 'POST',
-        headers: { ...H, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: contactPhone, patient_name: patientName, facility: hospitalInfo ? hospitalInfo.name : 'your facility' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: patEmail, patient_name: patientName, facility: hospitalInfo ? hospitalInfo.name : 'your facility' })
       });
     } catch(e2) {}
     closeAddPatient();
-    showToast('Invite re-sent to ' + contactPhone, 'ok');
+    showToast('Invite re-sent to ' + patEmail, 'ok');
     await loadRides();
     renderPatientTable();
     btn.disabled = false; btn.textContent = 'Send Invite \u2192';
@@ -899,14 +899,14 @@ async function submitAddPatient() {
         hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null, invited_at: new Date().toISOString(), reminder_sent: false })
     });
     try {
-      await fetch(API + '/api/invites/send-sms', {
+      await fetch(API + '/api/invites/send-patient-email', {
         method: 'POST',
-        headers: { ...H, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: contactPhone, patient_name: patientName, facility: hospitalInfo ? hospitalInfo.name : 'your facility' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: patEmail, patient_name: patientName, facility: hospitalInfo ? hospitalInfo.name : 'your facility' })
       });
     } catch(e2) {}
     closeAddPatient();
-    showToast('Invite re-sent to ' + contactPhone, 'ok');
+    showToast('Invite re-sent to ' + patEmail, 'ok');
     await loadRides();
     renderPatientTable();
     btn.disabled = false; btn.textContent = 'Send Invite \u2192';
@@ -919,6 +919,7 @@ async function submitAddPatient() {
     patient_name: patientName,
     caregiver_name: caregiverName || null,
     contact_phone: contactPhone,
+    contact_email: patEmail,
     procedure_type: apptType,
     pickup_time: pickupISO,
     status: 'invited',
