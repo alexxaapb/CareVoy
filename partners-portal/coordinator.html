@@ -405,8 +405,8 @@
       <label class="form-label">Appointment Type <span style="color:#EF4444">*</span></label>
       <select class="form-input" id="apptType">
         <option value="">Select type…</option>
-        <option>Medical appointment</option>
-        <option>Dialysis</option>
+        <option value="pre_op">Medical Appointment</option>
+        <option value="dialysis">Dialysis</option>
         <option>Physical / Occupational therapy</option>
         <option>Post-procedure follow-up</option>
         <option>Other medical visit</option>
@@ -678,7 +678,7 @@ function renderAlerts() {
     var isNoResp = r.status === 'no_response';
     return '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#fca5a5':'#fde68a') + ';padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">' +
       '<div><div style="font-size:13px;font-weight:600;color:#050D1F">' + esc(r.patient_name||'Patient') + '</div>' +
-      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(r.procedure_type||'Appointment') + ' · ' + apptStr + '</div>' +
+      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc((r.procedure_type||'Appointment').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})) + ' · ' + apptStr + '</div>' +
       '<div style="margin-top:6px">' + statusBadge(r.status) + '</div></div>' +
       '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#EF4444;border:1px solid #FECACA" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>' +
       '</div>';

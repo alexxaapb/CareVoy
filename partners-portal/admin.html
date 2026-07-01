@@ -686,8 +686,8 @@
       ['Pickup', r.pickup_address || '—'],
       ['Dropoff', r.dropoff_address || '—'],
       ['Pickup time', t],
-      ['Ride type', r.ride_type || '—'],
-      ['Procedure', r.procedure_type || '—'],
+      ['Ride type', (r.ride_type || '—').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})],
+      ['Procedure', (r.procedure_type || '—').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})],
     ];
     document.getElementById('rideDetailBody').innerHTML = rows.map(function(row) {
       return '<div style="display:flex;padding:8px 0;border-bottom:1px solid #FFFFFF">' +
