@@ -369,7 +369,12 @@
       </div>
       <div class="profile-card">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Payment Methods</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">Your card is securely stored by Stripe. You can update your payment method during your next ride booking.</div>
+        <div id="profileCardInfo" style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px">Manage your payment method for self-pay rides.</div>
+        <div id="profileStripeCard" style="display:none;margin-bottom:14px">
+          <div id="profileCardElement" style="padding:14px;border:1.5px solid var(--border);border-radius:10px;background:#fff"></div>
+        </div>
+        <button class="btn btn-navy" style="width:auto;padding:10px 20px;font-size:13px" id="addCardBtn" onclick="toggleProfileCard()">Add or Update Card</button>
+        <button class="btn btn-navy" style="width:auto;padding:10px 20px;font-size:13px;display:none" id="saveCardBtn" onclick="saveProfileCard()">Save Card</button>
       </div>
 
       <div class="profile-card">
@@ -653,7 +658,12 @@ function buildRideCard(r, isPast) {
   let action = '';
   if (isPending) action = `<div class="ride-action"><button class="schedule-btn" onclick="openBookModal('${r.id}')"><span></span> Schedule this ride</button></div>`;
   else if (r.status === 'confirmed') action = `<div class="ride-action" style="display:flex;gap:10px"><span style="font-size:13px;color:var(--muted)">Waiting for driver assignment</span><button onclick="cancelRide('${r.id}')" style="padding:6px 14px;border-radius:8px;border:1px solid #FECACA;background:none;color:#EF4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel ride</button></div>`;
-  else if (r.status === 'assigned' || r.status === 'in_progress' || r.status === 'en_route') action = `<div class="ride-action"><div style="font-size:13px;color:var(--navy);font-weight:600">Driver: ${r.driver_name || 'Assigned'}</div>${r.driver_phone ? '<div style="font-size:12px;color:var(--muted);margin-top:2px">Contact: ' + r.driver_phone + '</div>' : ''}</div>`;
+  else if (r.status === 'assigned' || r.status === 'in_progress' || r.status === 'en_route') {
+    var dName = r.driver_name ? r.driver_name.split(' ')[0] : 'Your driver';
+    var dPhone = r.driver_phone ? r.driver_phone.replace(/\d(?=\d{4})/g, '*') : '';
+    var emergencyBtn = (r.status === 'in_progress' || r.status === 'en_route') ? '<a href="tel:911" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:8px 16px;border-radius:8px;border:1.5px solid #FECACA;color:#EF4444;font-size:12px;font-weight:700;text-decoration:none;font-family:inherit">Emergency: 911</a>' : '';
+    action = `<div class="ride-action"><div style="font-size:13px;color:var(--navy);font-weight:600">Driver: ${dName}</div>${dPhone ? '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + dPhone + '</div>' : ''}<div style="font-size:11px;color:var(--muted);margin-top:4px">Contact your driver through CareVoy support</div>${emergencyBtn}</div>`;
+  }
   else if (r.status === 'completed' && r.actual_cost) action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare paid: <strong style="color:var(--navy)">$${r.actual_cost}</strong></span></div>`;
   return `<div class="ride-card" onclick="openRideDetail('${r.id}')">
     <span class="ride-badge ${badge}">${label}</span>
@@ -778,7 +788,7 @@ function closeBookModal() {
 
 // ── Stripe ──
 function initStripeElement() {
-  if (!stripe) stripe = Stripe('pk_live_51RjK8uP5wxb0rHMZXvh9ZHSuFB9KAeqNvp8O7GiZDiRHkX07dFIYPXFjf3f9Z7T8s9d5dW7Q4xqJ3vp8d6bPxIz00uKkQsb3u');
+  if (!stripe) stripe = Stripe('pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2');
   var elements = stripe.elements();
   var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
   card.mount('#stripe-element');
@@ -924,6 +934,38 @@ async function changePasswordInline() {
   if (error) { toast(error.message); return; }
   document.getElementById('newPassInline').value = '';
   toast('Password updated');
+}
+
+function toggleProfileCard() {
+  var cardDiv = document.getElementById('profileStripeCard');
+  var addBtn = document.getElementById('addCardBtn');
+  var saveBtn = document.getElementById('saveCardBtn');
+  if (!stripe) stripe = Stripe('pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2');
+  if (!window._profileCard) {
+    var elements = stripe.elements();
+    window._profileCard = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif" } } });
+    window._profileCard.mount('#profileCardElement');
+  }
+  cardDiv.style.display = 'block';
+  addBtn.style.display = 'none';
+  saveBtn.style.display = 'inline-block';
+}
+
+async function saveProfileCard() {
+  var btn = document.getElementById('saveCardBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  var { paymentMethod, error } = await stripe.createPaymentMethod({
+    type: 'card', card: window._profileCard,
+    billing_details: { name: currentUser.user_metadata?.full_name || '', email: currentUser.email }
+  });
+  if (error) { toast(error.message); btn.disabled = false; btn.textContent = 'Save Card'; return; }
+  document.getElementById('profileCardInfo').textContent = 'Card saved: **** ' + (paymentMethod.card?.last4 || '');
+  document.getElementById('profileStripeCard').style.display = 'none';
+  document.getElementById('saveCardBtn').style.display = 'none';
+  document.getElementById('addCardBtn').textContent = 'Update Card';
+  document.getElementById('addCardBtn').style.display = 'inline-block';
+  btn.disabled = false; btn.textContent = 'Save Card';
+  toast('Card saved');
 }
 
 async function sendPasswordReset() {

@@ -338,7 +338,7 @@ var STATUS_CLASS = {
 };
 var STATUS_LABELS = {
   pending:'Pending', confirmed:'Confirmed', assigned:'Assigned',
-  en_route:'En Route', arrived:'Arrived', completed:'Completed', cancelled:'Cancelled'
+  en_route:'In Progress', in_progress:'In Progress', arrived:'Arrived', completed:'Completed', cancelled:'Cancelled'
 };
 function badge(s) {
   return '<span class="badge ' + (STATUS_CLASS[s]||'b-gray') + '">● ' + (STATUS_LABELS[s]||s) + '</span>';
@@ -593,7 +593,7 @@ function rideCard(r) {
 
   var actionBtn = '';
   if (['assigned','confirmed','pending'].includes(status)) {
-    actionBtn = '<button class="ride-action act-start" onclick="updateStatus(\'' + r.id + '\',\'en_route\')">▶ Start Ride</button>';
+    actionBtn = '<button class="ride-action act-start" onclick="updateStatus(\'' + r.id + '\',\'in_progress\')">▶ Start Ride</button>';
   } else if (['en_route','arrived'].includes(status)) {
     actionBtn = '<button class="ride-action act-complete" onclick="updateStatus(\'' + r.id + '\',\'completed\')">✓ Complete Ride</button>';
   } else if (status === 'completed') {
