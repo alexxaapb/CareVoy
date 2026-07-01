@@ -252,7 +252,16 @@
   <div class="page" id="sec-rates" style="display:none">
     <div style="font-size:22px;font-weight:700;color:#050D1F;margin-bottom:16px">Your Rates</div>
     <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;padding:20px">
-      <div style="font-size:13px;color:#6B7280;line-height:1.6">Your pricing was set during signup. To update your rates, contact support@carevoy.co.</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Update your pricing below. Patients see an estimated fare based on these rates.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div><label style="font-size:12px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Base Fare ($)</label><input type="number" id="rateBase" step="0.01" style="width:100%;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px;font-size:14px;font-family:inherit"></div>
+        <div><label style="font-size:12px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Per Mile ($)</label><input type="number" id="ratePerMile" step="0.01" style="width:100%;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px;font-size:14px;font-family:inherit"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div><label style="font-size:12px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Wheelchair Surcharge ($)</label><input type="number" id="rateWheelchair" step="0.01" style="width:100%;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px;font-size:14px;font-family:inherit"></div>
+        <div><label style="font-size:12px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">Stretcher Surcharge ($)</label><input type="number" id="rateStretcher" step="0.01" style="width:100%;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px;font-size:14px;font-family:inherit"></div>
+      </div>
+      <button onclick="saveRates()" style="padding:10px 24px;background:#050D1F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Save Rates</button>
     </div>
   </div>
 
@@ -710,7 +719,7 @@ function showNoPartner() {
 }
 
 function showNav(name, el) {
-  ['overview','available','schedule','history','earnings','settings'].forEach(function(s){
+  ['overview','available','schedule','history','rates','earnings','settings'].forEach(function(s){
     document.getElementById('sec-' + s).style.display = s === name ? 'block' : 'none';
   });
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
@@ -718,6 +727,7 @@ function showNav(name, el) {
   if (name === 'available') loadAvailableRides();
   if (name === 'schedule') renderSchedule();
   if (name === 'history') renderHistory();
+  if (name === 'rates') loadRates();
 }
 
 function signOut() { sessionStorage.removeItem('cv_nemt_token'); sessionStorage.removeItem('cv_nemt_uid'); window.location.href = '/'; }
