@@ -111,6 +111,7 @@
     <button class="nav-item" onclick="showNav('available',this)">Available Rides</button>
     <button class="nav-item" onclick="showNav('schedule',this)">My Schedule</button>
     <button class="nav-item" onclick="showNav('history',this)">Ride History</button>
+    <button class="nav-item" onclick="showNav('rates',this)">My Rates</button>
     <button class="nav-item" onclick="showNav('earnings',this)">Earnings</button>
     <button class="nav-item" onclick="showNav('settings',this)">Settings</button>
   </nav>
@@ -430,6 +431,38 @@ async function declineRide(rideId) {
   } catch(e) { showToast('Could not decline', 'err'); }
 }
 
+async function loadRates() {
+  if (!staffInfo || !staffInfo.nemt_partner_id) return;
+  try {
+    var r = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge', { headers: H });
+    var d = await r.json();
+    if (d && d[0]) {
+      document.getElementById('rateBase').value = d[0].base_fare || '';
+      document.getElementById('ratePerMile').value = d[0].per_mile_rate || '';
+      document.getElementById('rateWheelchair').value = d[0].wheelchair_surcharge || '';
+      document.getElementById('rateStretcher').value = d[0].stretcher_surcharge || '';
+    }
+  } catch(e) {}
+}
+
+async function saveRates() {
+  if (!staffInfo || !staffInfo.nemt_partner_id) { showToast('No partner linked', 'err'); return; }
+  var body = {
+    base_fare: parseFloat(document.getElementById('rateBase').value) || null,
+    per_mile_rate: parseFloat(document.getElementById('ratePerMile').value) || null,
+    wheelchair_surcharge: parseFloat(document.getElementById('rateWheelchair').value) || null,
+    stretcher_surcharge: parseFloat(document.getElementById('rateStretcher').value) || null
+  };
+  try {
+    await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id, {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    showToast('Rates saved', 'ok');
+  } catch(e) { showToast('Could not save', 'err'); }
+}
+
 async function acceptRide(rideId) {
   if (!staffInfo || !staffInfo.nemt_partner_id) return;
   try {
@@ -483,6 +516,7 @@ async function init() {
     document.getElementById('topSub').textContent = partnerName + ' · ' + new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
     document.getElementById('sidebarPartner').textContent = partnerName;
     document.getElementById('setName').textContent = staffInfo.full_name || '—';
+    loadRates();
     document.getElementById('setCompany').textContent = partnerName;
     if (partnerInfo) {
       document.getElementById('setCity').textContent = partnerInfo.city || '—';
@@ -533,7 +567,7 @@ function computeStats() {
   var monthCanc  = monthR.filter(function(r){ return r.status==='cancelled'; }).length;
   var compRate   = monthR.length > 0 ? Math.round((monthDone/monthR.length)*100) : 0;
 
-  document.getElementById('earnToday').textContent    = '$' + todayDone * AVG_FARE;
+  document.getElementById('earnToday').textContent    = todayDone > 0 ? '$' + (todayDone * (AVG_FARE||0)) : '—';
   document.getElementById('earnTodaySub').textContent = todayR.length + ' ride' + (todayR.length===1?'':'s');
   document.getElementById('earnWeek').textContent     = '$' + weekDone * AVG_FARE;
   document.getElementById('earnWeekSub').textContent  = weekDone + ' completed';
@@ -616,36 +650,38 @@ function rideCard(r) {
 // ── Status update — writes to Supabase, coordinator + admin see it instantly ──
 async function updateStatus(rideId, newStatus) {
   statusOverrides[rideId] = newStatus;
-  renderTodayRides(); // optimistic
-  showToast(newStatus === 'en_route' ? 'Ride started — en route' : 'Ride completed', 'ok');
+  renderTodayRides();
+  renderSchedule();
+  showToast(newStatus === 'in_progress' ? 'Ride started' : newStatus === 'completed' ? 'Ride completed' : 'Status updated', 'ok');
   try {
+    var updateBody = { status: newStatus };
+    if (newStatus === 'completed') updateBody.completed_at = new Date().toISOString();
     await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
       method: 'PATCH',
       headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ status: newStatus })
+      body: JSON.stringify(updateBody)
     });
-    // Coordinator dashboard and admin dashboard both poll Supabase every 30s
-    // so they see the update automatically without any additional call needed
-  } catch(e) { /* optimistic update already shown */ }
+    // On completion, trigger receipt email
+    if (newStatus === 'completed') {
+      try {
+        await fetch(API + '/api/notify/ride-completed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ride_id: rideId })
+        });
+      } catch(e2) {}
+    }
+  } catch(e) { showToast('Status update failed', 'err'); }
   await loadRides();
 }
 
 function renderSchedule() {
   var upcoming = allRides.filter(function(r){
-    return r.pickup_time && new Date(r.pickup_time) >= new Date() && !['completed','cancelled'].includes(getStatus(r));
+    return !['completed','cancelled'].includes(getStatus(r));
   });
   var body = document.getElementById('scheduleBody');
   if (!upcoming.length) { body.innerHTML = '<div class="empty">No upcoming rides scheduled.</div>'; return; }
-  body.innerHTML = upcoming.map(function(r){
-    var t = r.pickup_time ? new Date(r.pickup_time) : null;
-    var dt = t ? t.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
-    return '<div class="tbl-row" style="grid-template-columns:1.4fr 1fr 1.2fr 0.8fr">' +
-      '<div class="td">' + esc(r.patient_name||'Patient') + '</div>' +
-      '<div class="td muted">' + dt + '</div>' +
-      '<div class="td muted">' + esc(r.dropoff_address||'—') + '</div>' +
-      '<div class="td"><span class="badge ' + (STATUS_CLASS[getStatus(r)]||'b-gray') + '">● ' + (STATUS_LABELS[getStatus(r)]||getStatus(r)) + '</span></div>' +
-      '</div>';
-  }).join('');
+  body.innerHTML = upcoming.map(function(r){ return rideCard(r); }).join('');
 }
 
 function renderHistory() {
