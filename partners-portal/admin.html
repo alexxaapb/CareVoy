@@ -832,7 +832,7 @@
       });
       document.getElementById("rideDetailModal").style.display = "none";
       showToast(newActive ? 'Facility set to Active' : 'Facility set to Inactive', 'ok');
-      loadDashboard();
+      loadStats();
     } catch(e) { showToast('Could not update status', 'err'); }
   }
 
@@ -907,7 +907,7 @@
       });
       document.getElementById("rideDetailModal").style.display = "none";
       showToast(newActive ? 'Partner set to Active' : 'Partner set to Inactive', 'ok');
-      loadDashboard();
+      loadStats();
     } catch(e) { showToast('Could not update status', 'err'); }
   }
 
@@ -1087,7 +1087,7 @@ async function deletePatient(patientId, patientEmail) {
       await fetch(_URL + '/rest/v1/patients?id=eq.' + patientId, { method: 'DELETE', headers: _H });
     }
     showToast('Patient and all rides removed', 'ok');
-    loadDashboard();
+    loadStats();
   } catch(e) { showToast('Could not delete patient: ' + e.message, 'err'); }
 }
 

@@ -682,9 +682,17 @@ async function deleteMyAccount() {
   if (!confirm('Are you sure you want to delete your account? This will remove all your data and cannot be undone.')) return;
   if (!confirm('This is permanent. Continue?')) return;
   try {
-    // Delete rides associated with this account
     await sb.from('rides').delete().eq('patient_id', currentUser.id);
+    await sb.from('rides').delete().eq('contact_email', currentUser.email);
     await sb.from('patients').delete().eq('id', currentUser.id);
+    // Delete auth user via API (requires service role)
+    try {
+      await fetch(API + '/api/auth/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUser.id })
+      });
+    } catch(e2) {}
     await sb.auth.signOut();
     currentUser = null; allRides = [];
     document.querySelectorAll('input').forEach(function(inp){ inp.value = ''; });

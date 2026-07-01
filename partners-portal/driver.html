@@ -440,7 +440,7 @@ async function acceptRide(rideId) {
         nemt_partner_id: staffInfo.nemt_partner_id,
         status: 'assigned',
         assigned_at: new Date().toISOString(),
-        driver_name: staffInfo.full_name || null,
+        driver_name: staffInfo.full_name || staffInfo.company_name || 'Driver',
         driver_phone: staffInfo.phone || null
       })
     });
@@ -594,7 +594,7 @@ function rideCard(r) {
   var actionBtn = '';
   if (['assigned','confirmed','pending'].includes(status)) {
     actionBtn = '<button class="ride-action act-start" onclick="updateStatus(\'' + r.id + '\',\'in_progress\')">▶ Start Ride</button>';
-  } else if (['en_route','arrived'].includes(status)) {
+  } else if (['en_route','arrived','in_progress'].includes(status)) {
     actionBtn = '<button class="ride-action act-complete" onclick="updateStatus(\'' + r.id + '\',\'completed\')">✓ Complete Ride</button>';
   } else if (status === 'completed') {
     actionBtn = '<button class="ride-action act-done" disabled>✓ Completed</button>';
