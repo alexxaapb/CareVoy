@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.stripe.com/v3/"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjjS-GU3jUKzEu4n0r6OJ6JteGGPxT9Lg&libraries=places" async defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjjS-GU3jUKzEu4n0r6OJ6JteGGPxT9Lg&libraries=places,geometry" async defer></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
@@ -735,6 +735,40 @@ function openRideDetail(rideId) {
 }
 
 // ── Book modal ──
+function estimateFare() {
+  var pickup = document.getElementById('bookPickup').value;
+  if (!pickup || !currentRide) return;
+  var dest = currentRide.dropoff_address || currentRide.hospital_name;
+  if (!dest || typeof google === 'undefined' || !google.maps) return;
+
+  var service = new google.maps.DistanceMatrixService();
+  service.getDistanceMatrix({
+    origins: [pickup],
+    destinations: [dest],
+    travelMode: 'DRIVING',
+    unitSystem: google.maps.UnitSystem.IMPERIAL
+  }, function(response, status) {
+    if (status !== 'OK' || !response.rows[0] || !response.rows[0].elements[0]) return;
+    var element = response.rows[0].elements[0];
+    if (element.status !== 'OK') return;
+    var miles = element.distance.value / 1609.34;
+
+    // Get NEMT rates from the ride's assigned NEMT or use defaults
+    var baseFare = 25;
+    var perMile = 2.50;
+    var wheelchairSurcharge = 0;
+    var stretcherSurcharge = 0;
+
+    var estimated = baseFare + (perMile * miles);
+    if (document.getElementById('bookWheelchair').checked) estimated += 10;
+    if (document.getElementById('bookStretcher').checked) estimated += 25;
+
+    window._estimatedFare = Math.round(estimated * 100) / 100;
+    document.getElementById('fareAmount').textContent = '$' + window._estimatedFare.toFixed(2);
+    document.getElementById('fareEstimate').style.display = 'block';
+  });
+}
+
 function initPlacesAutocomplete() {
   var input = document.getElementById("bookPickup");
   if (!input || input._acInit) return;
@@ -744,7 +778,7 @@ function initPlacesAutocomplete() {
   });
   ac.addListener("place_changed", function() {
     var place = ac.getPlace();
-    if (place && place.formatted_address) input.value = place.formatted_address;
+    if (place && place.formatted_address) { input.value = place.formatted_address; setTimeout(estimateFare, 300); }
   });
   input._acInit = true;
 }
@@ -779,6 +813,27 @@ function openBookModal(rideId) {
     ${isFacilityCovered
       ? `<div class="facility-covered-box"><span style="font-size:18px"></span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
       : `<div class="hsa-pill">HSA/FSA eligible — Your card will be charged after ride completion. An IRS 213(d) receipt will be emailed automatically.</div>
+         <div style="margin-bottom:16px">
+           <div class="payment-label" style="margin-bottom:10px">Ride options</div>
+           <div style="display:flex;flex-wrap:wrap;gap:10px">
+             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
+               <input type="checkbox" id="bookWheelchair" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Wheelchair accessible
+             </label>
+             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
+               <input type="checkbox" id="bookStretcher" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Stretcher transport
+             </label>
+             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
+               <input type="checkbox" id="bookCompanion" style="width:16px;height:16px;accent-color:#00C2A8"> Bringing a companion
+             </label>
+           </div>
+         </div>
+         <div id="fareEstimate" style="display:none;background:rgba(0,194,168,0.06);border:1px solid rgba(0,194,168,0.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+           <div style="display:flex;justify-content:space-between;align-items:center">
+             <span style="font-size:13px;color:#00836F;font-weight:600">Estimated fare</span>
+             <span id="fareAmount" style="font-size:18px;font-weight:700;color:#050D1F">—</span>
+           </div>
+           <div style="font-size:11px;color:#6B7280;margin-top:4px">Final fare based on actual distance. Card charged after ride completion.</div>
+         </div>
          <div class="payment-label">Payment method</div>
          <div id="apple-pay-btn" style="display:none;margin-bottom:12px"></div>
          <div id="stripe-element"></div>
@@ -790,6 +845,12 @@ function openBookModal(rideId) {
 }
 
 function closeBookModal() {
+  // Clear mobility options
+  var wb = document.getElementById('bookWheelchair'); if(wb) wb.checked = false;
+  var sb2 = document.getElementById('bookStretcher'); if(sb2) sb2.checked = false;
+  var cb = document.getElementById('bookCompanion'); if(cb) cb.checked = false;
+  document.getElementById('fareEstimate').style.display = 'none';
+  window._estimatedFare = null;
   document.getElementById('bookModal').classList.remove('open');
   currentRide = null;
 }
