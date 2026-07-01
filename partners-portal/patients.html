@@ -237,7 +237,7 @@
     <label class="form-label">Phone number <span style="color:#9CA3AF;font-weight:400">(optional — for driver contact)</span></label>
     <input class="form-input" id="signupPhone" type="tel" placeholder="(555) 000-0000">
     <label class="form-label">Password</label>
-    <div class="pw-wrap"><input class="form-input" id="signupPass" type="password" placeholder="Min 8 characters" autocomplete="new-password"><button type="button" class="pw-toggle" onclick="togglePw('signupPass',this)">SHOW</button></div>
+    <div class="pw-wrap"><input class="form-input" id="signupPass" type="password" placeholder="Min 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()"><button type="button" class="pw-toggle" onclick="togglePw('signupPass',this)">SHOW</button></div>
     <button class="btn btn-navy" id="signupBtn" onclick="doSignup()">Create account</button>
     <div class="auth-toggle">Already have an account? <a onclick="showScreen('login')">Sign in</a></div>
   </div>
