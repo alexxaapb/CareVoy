@@ -785,28 +785,10 @@ function closeBookModal() {
 // ── Stripe ──
 function initStripeElement() {
   if (!stripe) stripe = Stripe('pk_live_51RjK8uP5wxb0rHMZXvh9ZHSuFB9KAeqNvp8O7GiZDiRHkX07dFIYPXFjf3f9Z7T8s9d5dW7Q4xqJ3vp8d6bPxIz00uKkQsb3u');
-
-  // Payment Request Button (Apple Pay / Google Pay) — shows only if supported
-  var paymentRequest = stripe.paymentRequest({
-    country: 'US', currency: 'usd',
-    total: { label: 'CareVoy Medical Ride', amount: 0 },
-    requestPayerName: true, requestPayerEmail: true
-  });
-
-  var prButton = stripe.elements().create('paymentRequestButton', { paymentRequest: paymentRequest });
-  paymentRequest.canMakePayment().then(function(result) {
-    if (result) {
-      prButton.mount('#apple-pay-btn');
-      document.getElementById('apple-pay-btn').style.display = 'block';
-    }
-  });
-
-  // Standard card element as fallback
   var elements = stripe.elements();
   var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
   card.mount('#stripe-element');
   window._stripeCard = card;
-  window._paymentRequest = paymentRequest;
 }
 
 // ── Confirm booking ──
