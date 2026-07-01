@@ -350,8 +350,8 @@ function exportNemtCSV(type) {
   var status;
   if (type === 'history') status = 'completed';
   else if (type === 'available') status = 'confirmed';
-  else if (type === 'schedule') status = 'assigned,en_route,arrived';
-  else status = 'assigned,en_route,arrived';
+  else if (type === 'schedule') status = 'assigned,in_progress,en_route,arrived';
+  else status = 'assigned,in_progress,en_route,arrived';
   var urlBase = type === 'available'
     ? SUPA + '/rest/v1/rides?nemt_partner_id=is.null&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500'
     : SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + partnerId + '&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500';

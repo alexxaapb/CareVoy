@@ -48,7 +48,16 @@ module.exports = async function handler(req, res) {
               from: 'CareVoy <notifications@carevoy.co>',
               to: [email],
               subject: 'Your CareVoy ride is confirmed',
-              html: '<p>' + msg + '</p>'
+              html: '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">' +
+                '<div style="background:#050D1F;padding:20px 24px;border-radius:12px 12px 0 0;text-align:center">' +
+                '<span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:1px">CareVoy</span></div>' +
+                '<div style="background:#fff;border:1px solid #E8E4DC;border-top:none;border-radius:0 0 12px 12px;padding:28px 24px">' +
+                '<p style="color:#050D1F;font-size:16px;font-weight:600;margin:0 0 12px">Hi ' + name + ',</p>' +
+                '<p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">A driver has been assigned for your ride to <strong>' + fac + '</strong> on <strong>' + when + '</strong>.</p>' +
+                '<p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 24px">You can view your ride details and driver information in your patient portal.</p>' +
+                '<a href="https://partners.carevoy.co/patients" style="display:inline-block;background:#050D1F;color:#fff;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">View My Ride</a>' +
+                '<p style="color:#9CA3AF;font-size:12px;margin:24px 0 0">This notification was sent on behalf of ' + fac + ' via CareVoy.</p>' +
+                '</div></div>'
             })
           });
           if (r.ok) sent = true;

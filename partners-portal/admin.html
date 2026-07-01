@@ -915,13 +915,13 @@
     var map = {
       invited:'gray', reminder_sent:'gold', no_response:'red',
       app_downloaded:'blue', pending:'gold', confirmed:'teal',
-      assigned:'teal', en_route:'gold', arrived:'green',
+      assigned:'teal', en_route:'gold', in_progress:'gold', arrived:'green',
       completed:'green', cancelled:'gray'
     };
     var labels = {
       invited:'INVITE SENT', reminder_sent:'REMINDER SENT', no_response:'NO RESPONSE',
-      app_downloaded:'APP DOWNLOADED', pending:'PENDING', confirmed:'CONFIRMED',
-      assigned:'ASSIGNED', en_route:'EN ROUTE', arrived:'ARRIVED',
+      app_downloaded:'ACCOUNT CREATED', pending:'PENDING', confirmed:'SCHEDULED',
+      assigned:'ASSIGNED', en_route:'IN PROGRESS', in_progress:'IN PROGRESS', arrived:'ARRIVED',
       completed:'COMPLETED', cancelled:'CANCELLED'
     };
     return '<span class="badge ' + (map[s]||'gray') + '">● ' + (labels[s]||s.toUpperCase()) + '</span>';
@@ -1086,7 +1086,9 @@ async function deletePatient(patientId, patientEmail) {
       await fetch(_URL + '/rest/v1/rides?patient_id=eq.' + patientId, { method: 'DELETE', headers: _H });
       await fetch(_URL + '/rest/v1/patients?id=eq.' + patientId, { method: 'DELETE', headers: _H });
     }
-    showToast('Patient and all rides removed', 'ok');
+    // Also delete auth user
+    try { await fetch('https://care-voy-api-server.vercel.app/api/auth/delete-user', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:patientId}) }); } catch(e3){}
+    showToast('Patient removed', 'ok');
     loadStats();
   } catch(e) { showToast('Could not delete patient: ' + e.message, 'err'); }
 }
