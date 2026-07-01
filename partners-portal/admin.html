@@ -1072,23 +1072,19 @@
 }
 
 async function deletePatient(patientId, patientEmail) {
-  if (!confirm('Remove this patient and all their rides permanently? This cannot be undone.')) return;
-  var _URL = 'https://byflpckbjjumxxjxoplk.supabase.co';
-  var _K   = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
-  var _tk  = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
-  var _H   = { 'apikey': _K, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+  if (!confirm('Remove this patient permanently? This cannot be undone.')) return;
   try {
-    // Delete their rides first (FK constraint)
-    if (patientEmail) {
-      await fetch(_URL + '/rest/v1/rides?contact_email=eq.' + encodeURIComponent(patientEmail), { method: 'DELETE', headers: _H });
+    var resp = await fetch('https://care-voy-api-server.vercel.app/api/auth/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: patientId, patient_email: patientEmail })
+    });
+    var result = await resp.json();
+    if (result.success) {
+      showToast('Patient removed', 'ok');
+    } else {
+      showToast('Could not delete: ' + (result.error || 'Unknown error'), 'err');
     }
-    if (patientId) {
-      await fetch(_URL + '/rest/v1/rides?patient_id=eq.' + patientId, { method: 'DELETE', headers: _H });
-      await fetch(_URL + '/rest/v1/patients?id=eq.' + patientId, { method: 'DELETE', headers: _H });
-    }
-    // Also delete auth user
-    try { await fetch('https://care-voy-api-server.vercel.app/api/auth/delete-user', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:patientId}) }); } catch(e3){}
-    showToast('Patient removed', 'ok');
     loadStats();
   } catch(e) { showToast('Could not delete patient: ' + e.message, 'err'); }
 }

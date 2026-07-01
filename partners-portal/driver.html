@@ -329,6 +329,7 @@
 
 <script>
 var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+var API  = 'https://care-voy-api-server.vercel.app';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 var AVG_FARE = null;
 
@@ -364,7 +365,7 @@ function exportNemtCSV(type) {
   else status = 'assigned,in_progress,en_route,arrived';
   var urlBase = type === 'available'
     ? SUPA + '/rest/v1/rides?nemt_partner_id=is.null&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500'
-    : SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + partnerId + '&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500';
+    : SUPA + '/rest/v1/rides?nemt_partner_id=eq.' + (staffInfo?staffInfo.nemt_partner_id:'') + '&status=in.(' + status + ')&select=id,patient_name,contact_phone,hospital_name,hospital_state,status,pickup_time,pickup_address,dropoff_address,ride_type,created_at&order=pickup_time.desc&limit=500';
   var url = urlBase;
   fetch(url, { headers: H })
   .then(function(r){ return r.json(); })
@@ -661,26 +662,19 @@ async function updateStatus(rideId, newStatus) {
   statusOverrides[rideId] = newStatus;
   renderTodayRides();
   renderSchedule();
-  showToast(newStatus === 'in_progress' ? 'Ride started' : newStatus === 'completed' ? 'Ride completed' : 'Status updated', 'ok');
   try {
-    var updateBody = { status: newStatus };
-    if (newStatus === 'completed') updateBody.completed_at = new Date().toISOString();
-    await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
-      method: 'PATCH',
-      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify(updateBody)
+    var resp = await fetch(API + '/api/rides/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ride_id: rideId, status: newStatus })
     });
-    // On completion, trigger receipt email
-    if (newStatus === 'completed') {
-      try {
-        await fetch(API + '/api/notify/ride-completed', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ride_id: rideId })
-        });
-      } catch(e2) {}
+    var result = await resp.json();
+    if (result.success) {
+      showToast(newStatus === 'in_progress' ? 'Ride started' : newStatus === 'completed' ? 'Ride completed' : 'Status updated', 'ok');
+    } else {
+      showToast('Failed: ' + (result.error || 'Unknown error'), 'err');
     }
-  } catch(e) { showToast('Status update failed', 'err'); }
+  } catch(e) { showToast('Status update failed: ' + e.message, 'err'); }
   await loadRides();
 }
 
