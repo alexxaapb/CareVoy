@@ -100,9 +100,9 @@
     .invite-wait-text{font-size:13px;color:var(--navy);line-height:1.6;font-weight:500}
 
     /* ── Booking modal ── */
-    .modal-overlay{position:fixed;inset:0;background:rgba(5,13,31,.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
+    .modal-overlay{position:fixed;inset:0;background:rgba(5,13,31,.5);z-index:100;display:none;align-items:center;justify-content:center}
     .modal-overlay.open{display:flex}
-    .modal-sheet{background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:540px;padding:28px 24px 40px;max-height:90vh;overflow-y:auto}
+    .modal-sheet{background:var(--white);border-radius:20px;width:100%;max-width:540px;padding:28px 24px 40px;max-height:90vh;overflow-y:auto}
     .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 24px}
     .modal-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
     .modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
@@ -366,6 +366,17 @@
         <button class="btn btn-navy" style="width:auto;padding:10px 24px;font-size:13px" onclick="saveProfile()">Save changes</button>
       </div>
       <div class="profile-card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Payment Methods</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">Your card is securely stored by Stripe. You can update it during your next ride booking.</div>
+        <div id="savedCards" style="margin-bottom:8px"></div>
+      </div>
+
+      <div class="profile-card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Payment Methods</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">Your card is securely stored by Stripe. You can update your payment method during your next ride booking.</div>
+      </div>
+
+      <div class="profile-card">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px">Password</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px">A reset link will be sent to your email</div>
         <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px" onclick="sendPasswordReset()">Send reset link</button>
@@ -553,6 +564,17 @@ async function initApp() {
     if (!data.user) { showScreen('login'); return; }
     currentUser = data.user;
   }
+  // Check if this is a patient (not a coordinator/admin/driver logging into wrong portal)
+  const { data: staffCheck } = await sb.from('staff').select('role').eq('id', currentUser.id).maybeSingle();
+  if (staffCheck && staffCheck.role) {
+    toast('This portal is for patients. Use partners.carevoy.co to sign in.');
+    await sb.auth.signOut();
+    currentUser = null;
+    showScreen('login');
+    return;
+  }
+  var _sc = await sb.from('staff').select('role').eq('id',currentUser.id);
+  if(_sc.data && _sc.data.length>0){toast('This portal is for patients. Use partners.carevoy.co to sign in.');await sb.auth.signOut();currentUser=null;showScreen('login');return;}
   showScreen('app');
   document.getElementById('topbarName').textContent = currentUser.user_metadata?.full_name?.split(' ')[0] || '';
   // Profile tab
@@ -609,14 +631,29 @@ function renderRides() {
   list.innerHTML = html;
 }
 
+function formatRideType(t) {
+  if (!t) return '';
+  var map = { 'pre_op':'Medical Appointment', 'post_op':'Post-Op', 'dialysis':'Dialysis',
+    'follow_up':'Follow-Up', 'consultation':'Consultation', 'therapy':'Therapy',
+    'imaging':'Imaging', 'lab_work':'Lab Work', 'procedure':'Procedure' };
+  return map[t] || t.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+}
+
+function formatPayment(p) {
+  if (!p) return '';
+  if (p === 'facility') return 'Facility-Covered';
+  if (p === 'self_pay') return 'Self-Pay';
+  return p.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+}
+
 function buildRideCard(r, isPast) {
-  const isPending = ['invited','app_downloaded','reminder_sent','no_response'].includes(r.status);
+  const isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(r.status);
   const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Your Facility';
   const pickupDate = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'TBD';
   const pickupTime = r.pickup_time ? new Date(r.pickup_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
   const label = STATUS_LABEL[r.status] || r.status;
   const badge = STATUS_BADGE[r.status] || 'badge-pending';
-  const payLabel = r.payment_responsibility === 'facility' ? 'Facility covers this ride' : r.payment_responsibility === 'self_pay' ? 'Self-pay' : '';
+  const payLabel = r.payment_responsibility === 'facility' ? 'Facility-Covered' : r.payment_responsibility === 'self_pay' ? 'Self-pay' : '';
   let action = '';
   if (isPending) action = `<div class="ride-action"><button class="schedule-btn" onclick="openBookModal('${r.id}')"><span></span> Schedule this ride</button></div>`;
   else if (r.status === 'confirmed') action = `<div class="ride-action" style="display:flex;gap:10px"><span style="font-size:13px;color:var(--muted)">Waiting for driver assignment</span><button onclick="cancelRide('${r.id}')" style="padding:6px 14px;border-radius:8px;border:1px solid #FECACA;background:none;color:#EF4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel ride</button></div>`;
@@ -627,7 +664,7 @@ function buildRideCard(r, isPast) {
     <div class="ride-facility">${facility}</div>
     <div class="ride-meta">
       <span>${pickupDate}${pickupTime ? ' · ' + pickupTime : ''}</span>
-      ${r.ride_type ? `<span class="ride-meta-dot"></span><span>${r.ride_type}</span>` : ''}
+      ${r.ride_type ? `<span class="ride-meta-dot"></span><span>${formatRideType(r.ride_type)}</span>` : ''}
       ${payLabel ? `<span class="ride-meta-dot"></span><span>${payLabel}</span>` : ''}
     </div>
     ${action}
@@ -663,7 +700,7 @@ function openRideDetail(rideId) {
   const r = allRides.find(x => x.id === rideId);
   if (!r) return;
   currentRide = r;
-  const isPending = ['invited','app_downloaded','reminder_sent','no_response'].includes(r.status);
+  const isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(r.status);
   if (isPending) { openBookModal(rideId); return; }
   // Show read-only detail in modal
   const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || '—';
@@ -677,7 +714,7 @@ function openRideDetail(rideId) {
     <div class="info-row"><div class="info-label">Pickup</div><div class="info-value">${r.pickup_address || 'TBD'}</div></div>
     <div class="info-row"><div class="info-label">Dropoff</div><div class="info-value">${r.dropoff_address || facility}</div></div>
     <div class="info-row"><div class="info-label">Type</div><div class="info-value">${r.ride_type || '—'}</div></div>
-    <div class="info-row"><div class="info-label">Payment</div><div class="info-value">${r.payment_responsibility === 'facility' ? 'Facility covers this ride' : 'Self-pay'}</div></div>
+    <div class="info-row"><div class="info-label">Payment</div><div class="info-value">${r.payment_responsibility === 'facility' ? 'Facility-Covered' : 'Self-pay'}</div></div>
   `;
   document.getElementById('bookConfirmBtn').style.display = 'none';
   document.getElementById('bookModal').classList.add('open');
@@ -791,7 +828,6 @@ async function confirmBooking() {
       patient_id: currentUser.id,
       status: 'confirmed',
       payment_responsibility: currentRide.payment_responsibility,
-      stripe_payment_method: paymentMethodId
     }).eq('id', currentRide.id);
     closeBookModal();
     toast('Ride confirmed');
