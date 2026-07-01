@@ -651,7 +651,7 @@ function rideRow(r, cols) {
   return '<div class="tbl-row" style="grid-template-columns:' + cols + '" onclick="openDrawer(\'' + r.id + '\')">' +
     '<div class="td bold">' + esc(r.patient_name || 'Patient') + (r.caregiver_name ? '<br><span style="font-size:11px;color:#9CA3AF;font-weight:400">Caregiver: ' + esc(r.caregiver_name) + '</span>' : '') + '</div>' +
     '<div class="td muted">' + dateStr + '</div>' +
-    '<div class="td muted">' + esc(r.procedure_type || '—') + '</div>' +
+    '<div class="td muted">' + esc((r.procedure_type || '—').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})) + '</div>' +
     '<div class="td">' + statusBadge(r.status) + '</div>' +
     '<div class="td" onclick="event.stopPropagation()">' + actionBtn + '</div>' +
     '</div>';
@@ -737,6 +737,19 @@ async function deleteRide(evt, rideId) {
     renderPatientTable();
     showToast('Ride removed', 'ok');
   } catch(e) { showToast('Could not remove: ' + e.message, 'err'); }
+}
+
+function exportCoordCSV() {
+  if (!allRides || !allRides.length) { alert('No data to export'); return; }
+  var fields = ['patient_name','contact_email','contact_phone','procedure_type','status','payment_responsibility','pickup_time','pickup_address','hospital_name'];
+  var csv = fields.join(',') + '\n' + allRides.map(function(r) {
+    return fields.map(function(f) { var v = r[f]==null?'':String(r[f]); return '"' + v.replace(/"/g,'""') + '"'; }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'carevoy_rides_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
 }
 
 async function cancelRide(evt, rideId) {
@@ -942,7 +955,7 @@ async function submitAddPatient() {
         hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null,
     invited_at: new Date().toISOString(),
     reminder_sent: false,
-    ride_type: 'pre_op',
+    ride_type: apptType || 'pre_op',
     payment_responsibility: document.getElementById('paymentResp').value || 'self_pay',
     pickup_address: null,
     dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null
@@ -1026,7 +1039,7 @@ async function submitCSV() {
         hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null,
       invited_at: new Date().toISOString(),
       reminder_sent: false,
-      ride_type: 'pre_op',
+      ride_type: apptType || 'pre_op',
       dropoff_address: hospitalInfo ? hospitalInfo.name : null
     };
     try {

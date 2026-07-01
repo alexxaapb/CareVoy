@@ -654,7 +654,7 @@ function buildRideCard(r, isPast) {
   const pickupTime = r.pickup_time ? new Date(r.pickup_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
   const label = STATUS_LABEL[r.status] || r.status;
   const badge = STATUS_BADGE[r.status] || 'badge-pending';
-  const payLabel = r.payment_responsibility === 'facility' ? 'Facility-Covered' : r.payment_responsibility === 'self_pay' ? 'Self-pay' : '';
+  const payLabel = r.payment_responsibility === 'facility' ? 'Facility-Covered' : r.payment_responsibility === 'self_pay' ? 'Self-Pay' : '';
   let action = '';
   if (isPending) action = `<div class="ride-action"><button class="schedule-btn" onclick="openBookModal('${r.id}')"><span></span> Schedule this ride</button></div>`;
   else if (r.status === 'confirmed') action = `<div class="ride-action" style="display:flex;gap:10px"><span style="font-size:13px;color:var(--muted)">Waiting for driver assignment</span><button onclick="cancelRide('${r.id}')" style="padding:6px 14px;border-radius:8px;border:1px solid #FECACA;background:none;color:#EF4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel ride</button></div>`;
@@ -728,7 +728,7 @@ function openRideDetail(rideId) {
     <div class="info-row"><div class="info-label">Pickup</div><div class="info-value">${r.pickup_address || 'TBD'}</div></div>
     <div class="info-row"><div class="info-label">Dropoff</div><div class="info-value">${r.dropoff_address || facility}</div></div>
     <div class="info-row"><div class="info-label">Type</div><div class="info-value">${r.ride_type || '—'}</div></div>
-    <div class="info-row"><div class="info-label">Payment</div><div class="info-value">${r.payment_responsibility === 'facility' ? 'Facility-Covered' : 'Self-pay'}</div></div>
+    <div class="info-row"><div class="info-label">Payment</div><div class="info-value">${r.payment_responsibility === 'facility' ? 'Facility-Covered' : 'Self-Pay'}</div></div>
   `;
   document.getElementById('bookConfirmBtn').style.display = 'none';
   document.getElementById('bookModal').classList.add('open');
@@ -858,6 +858,12 @@ function closeBookModal() {
 // ── Stripe ──
 function initStripeElement() {
   if (!stripe) stripe = Stripe('pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2');
+  var fareAmt = Math.round((window._estimatedFare || 50) * 100);
+  try {
+    var payReq = stripe.paymentRequest({ country:'US', currency:'usd', total:{label:'CareVoy Medical Ride',amount:fareAmt}, requestPayerName:true });
+    var prBtn = stripe.elements().create('paymentRequestButton', {paymentRequest:payReq});
+    payReq.canMakePayment().then(function(r){ if(r){ var d=document.getElementById('apple-pay-btn'); if(d){prBtn.mount('#apple-pay-btn');d.style.display='block';} } });
+  } catch(e) { /* Apple Pay not supported */ }
   var elements = stripe.elements();
   var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
   card.mount('#stripe-element');

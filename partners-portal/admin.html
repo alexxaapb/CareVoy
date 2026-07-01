@@ -640,8 +640,8 @@
       filename = 'carevoy_rides_' + new Date().toISOString().slice(0,10) + '.csv';
       fields = ['id','patient_name','contact_phone','hospital_name','hospital_state','status','payment_responsibility','pickup_time','pickup_address','dropoff_address','ride_type','procedure_type','driver_name','assigned_at','completed_at','created_at'];
     } else if (type === 'patients') {
-      url = SUPA_URL + '/rest/v1/rpc/admin_list_patients';
-      isRpc = true;
+      url = SUPA_URL + '/rest/v1/patients?select=id,full_name,phone,email,created_at&order=created_at.desc&limit=1000';
+      isRpc = false;
       filename = 'carevoy_patients_' + new Date().toISOString().slice(0,10) + '.csv';
       fields = ['id','full_name','phone','email','created_at'];
     } else if (type === 'facilities') {
@@ -1059,16 +1059,16 @@
 
   async function adminDeleteRide(rideId) {
   if (!confirm('Delete this ride permanently?')) return;
-  var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
-  var _KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
-  var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
-  var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Prefer': 'return=minimal' };
   try {
-    var resp = await fetch(_SUPA + '/rest/v1/rides?id=eq.' + rideId, { method: 'DELETE', headers: _H });
-  if (!resp.ok) { var err = await resp.text(); showToast('Delete failed: ' + err, 'err'); return; }
-    showToast('Ride deleted', 'ok');
-    loadAllRides();
-  } catch(e) { showToast('Could not delete ride', 'err'); }
+    var resp = await fetch('https://care-voy-api-server.vercel.app/api/rides/update-status', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ride_id: rideId, action: 'delete' })
+    });
+    var result = await resp.json();
+    if (result.success) { showToast('Ride deleted', 'ok'); }
+    else { showToast('Delete failed: ' + (result.error||''), 'err'); }
+    loadStats();
+  } catch(e) { showToast('Could not delete ride: ' + e.message, 'err'); }
 }
 
 async function deletePatient(patientId, patientEmail) {
