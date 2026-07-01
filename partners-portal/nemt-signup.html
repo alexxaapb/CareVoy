@@ -263,6 +263,32 @@
     <div class="pw-wrap"><input type="password" id="password" placeholder="Minimum 8 characters"/ oninput="clearError('password')"><button type="button" class="pw-eye" id="eyeBtn" onclick="togglePw('password',this)">SHOW</button></div>
 
     <div class="error" id="errMsg"></div>
+    <div style="margin-top:24px;padding-top:20px;border-top:2px solid #E8ECF2">
+      <div style="font-size:16px;font-weight:700;color:#050D1F;margin-bottom:4px">Pricing</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:16px;line-height:1.5">Set your rates below. Patients will see an estimated fare before confirming their ride. You keep 100% of every fare.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div>
+          <label class="fl">Base Fare ($) *</label>
+          <input type="number" id="baseFare" step="0.01" min="0" placeholder="25.00" required style="width:100%;padding:10px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-size:14px;font-family:inherit">
+        </div>
+        <div>
+          <label class="fl">Per Mile Rate ($) *</label>
+          <input type="number" id="perMileRate" step="0.01" min="0" placeholder="2.50" required style="width:100%;padding:10px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-size:14px;font-family:inherit">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div>
+          <label class="fl">Wheelchair Surcharge ($)</label>
+          <input type="number" id="wheelchairSurcharge" step="0.01" min="0" placeholder="10.00" style="width:100%;padding:10px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-size:14px;font-family:inherit">
+        </div>
+        <div>
+          <label class="fl">Stretcher Surcharge ($)</label>
+          <input type="number" id="stretcherSurcharge" step="0.01" min="0" placeholder="25.00" style="width:100%;padding:10px 12px;border:1.5px solid #E8ECF2;border-radius:8px;font-size:14px;font-family:inherit">
+        </div>
+      </div>
+      <div style="font-size:11px;color:#9CA3AF;margin-bottom:20px">Example: $25 base + $2.50/mile = $50 for a 10-mile ride.</div>
+    </div>
+
     <button class="submit" id="btn" onclick="submitNemt()">Join CareVoy &rarr;</button>
     <p class="note">By submitting, you agree to CareVoy&rsquo;s partner terms. We&rsquo;ll review your application and notify you within 24 hours.</p>
   </div>
@@ -398,6 +424,10 @@
           method:'POST',headers:{...H,'Prefer':'return=representation'},
           body:JSON.stringify({company_name:company,city,service_states:states,
             vehicle_types:vehicles,dispatch_phone:dispatch,contact_email:email,active:false,pending_review:true,
+            base_fare:parseFloat(document.getElementById('baseFare').value)||null,
+            per_mile_rate:parseFloat(document.getElementById('perMileRate').value)||null,
+            wheelchair_surcharge:parseFloat(document.getElementById('wheelchairSurcharge').value)||null,
+            stretcher_surcharge:parseFloat(document.getElementById('stretcherSurcharge').value)||null,
             intake_data:{years_operation:yearsOp,fleet_size:fleet,weekly_rides:weeklyR,
               works_with_brokers:brokers,broker_names:brokerNames,dispatch_software:software,
               insurance_doc:insPath,contact_phone:phone,home_state:homeState}})
