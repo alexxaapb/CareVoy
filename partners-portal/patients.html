@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.stripe.com/v3/"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjjS-GU3jUKzEu4n0r6OJ6JteGGPxT9Lg&libraries=places" async defer></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
@@ -102,6 +103,7 @@
     /* ── Booking modal ── */
     .modal-overlay{position:fixed;inset:0;background:rgba(5,13,31,.5);z-index:100;display:none;align-items:center;justify-content:center}
     .modal-overlay.open{display:flex}
+    .pac-container{z-index:9999!important}
     .modal-sheet{background:var(--white);border-radius:20px;width:100%;max-width:540px;padding:28px 24px 40px;max-height:90vh;overflow-y:auto}
     .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 24px}
     .modal-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
@@ -721,6 +723,20 @@ function openRideDetail(rideId) {
 }
 
 // ── Book modal ──
+function initPlacesAutocomplete() {
+  var input = document.getElementById("bookPickup");
+  if (!input || input._acInit) return;
+  if (typeof google === "undefined" || !google.maps || !google.maps.places) return;
+  var ac = new google.maps.places.Autocomplete(input, {
+    types: ["address"], componentRestrictions: {country: "us"}, fields: ["formatted_address"]
+  });
+  ac.addListener("place_changed", function() {
+    var place = ac.getPlace();
+    if (place && place.formatted_address) input.value = place.formatted_address;
+  });
+  input._acInit = true;
+}
+
 function openBookModal(rideId) {
   const r = allRides.find(x => x.id === rideId);
   if (!r) return;
@@ -746,7 +762,7 @@ function openBookModal(rideId) {
     </div>
     <div class="field-group">
       <label class="form-label">Pickup address</label>
-      <input class="form-input" id="bookPickup" placeholder="Your home or care location" style="margin:0" value="${r.pickup_address || ''}">
+      <input class="form-input" id="bookPickup" placeholder="Start typing your address..." onfocus="initPlacesAutocomplete()" autocomplete="off" style="margin:0" value="${r.pickup_address || ''}">
     </div>
     ${isFacilityCovered
       ? `<div class="facility-covered-box"><span style="font-size:18px"></span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
