@@ -725,26 +725,40 @@ async function deleteRide(evt, rideId) {
   evt.stopPropagation();
   if (!confirm('Remove this ride permanently?')) return;
   try {
-    await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, { method: 'DELETE', headers: H });
+    var resp = await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, { method: 'DELETE', headers: H });
+    if (!resp.ok) { showToast('Could not remove ride', 'err'); return; }
+    // Remove from local array
+    allRides = allRides.filter(function(r) { return r.id !== rideId; });
+    updateStats();
+    renderDashRides();
+    renderRidesTab();
+    renderAlerts();
+    renderPatientTable();
     showToast('Ride removed', 'ok');
-  } catch(e) { showToast('Could not remove', 'err'); }
-  await loadRides();
-  renderPatientTable();
+  } catch(e) { showToast('Could not remove: ' + e.message, 'err'); }
 }
 
 async function cancelRide(evt, rideId) {
   evt.stopPropagation();
-  if (!confirm('Cancel this ride? This will remove the invite.')) return;
+  if (!confirm('Cancel this ride?')) return;
   try {
-    await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+    var resp = await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
       method: 'PATCH',
       headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({ status: 'cancelled' })
     });
+    if (!resp.ok) { showToast('Could not cancel ride', 'err'); return; }
+    // Update local array instead of re-fetching (prevents all rides from disappearing)
+    for (var i = 0; i < allRides.length; i++) {
+      if (allRides[i].id === rideId) { allRides[i].status = 'cancelled'; break; }
+    }
+    updateStats();
+    renderDashRides();
+    renderRidesTab();
+    renderAlerts();
+    renderPatientTable();
     showToast('Ride cancelled', 'ok');
-  } catch(e) { showToast('Could not cancel', 'err'); }
-  await loadRides();
-  renderPatientTable();
+  } catch(e) { showToast('Could not cancel: ' + e.message, 'err'); }
 }
 
 // ── Add patient ────────────────────────────────────────────
