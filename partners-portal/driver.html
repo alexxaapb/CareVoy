@@ -338,7 +338,7 @@ var token = localStorage.getItem('cv_nemt_token') || sessionStorage.getItem('cv_
 var uid   = localStorage.getItem('cv_nemt_uid') || sessionStorage.getItem('cv_nemt_uid') || localStorage.getItem('cv_admin_uid');
 if (!uid && !new URLSearchParams(window.location.search).get('preview_nemt')) { window.location.href = '/'; }
 
-var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY };
+var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + (token || KEY) };
 var staffInfo = null;
 var partnerInfo = null;
 var allRides = [];
@@ -503,14 +503,14 @@ async function init() {
   try {
     // Admin keyfob: preview_nemt param lets admin view any NEMT's dashboard
     var previewNemt = new URLSearchParams(window.location.search).get('preview_nemt');
-    var sr;
-    if (previewNemt) {
-      sr = await fetch(SUPA + '/rest/v1/staff?nemt_partner_id=eq.' + previewNemt + '&role=eq.nemt&select=*&limit=1', { headers: H });
-    } else {
-      sr = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=*', { headers: H });
-    }
-    var sd = await sr.json();
-    staffInfo = sd[0] || null;
+    // Look up staff via API (service role, no token expiry)
+    var lookupResp = await fetch(API + '/api/staff/lookup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(previewNemt ? { nemt_partner_id: previewNemt } : { uid: uid })
+    });
+    var lookupData = await lookupResp.json();
+    staffInfo = lookupData.staff || null;
+    partnerInfo = lookupData.partner || null;
 
     if (!staffInfo || !staffInfo.nemt_partner_id) {
       showNoPartner();
@@ -518,10 +518,6 @@ async function init() {
       document.getElementById('app').style.display = 'flex';
       return;
     }
-
-    var pr = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name,city,service_states,vehicle_types,dispatch_phone', { headers: H });
-    var pd = await pr.json();
-    partnerInfo = pd[0] || null;
 
     var partnerName = partnerInfo ? partnerInfo.company_name : 'NEMT Partner';
     document.getElementById('topSub').textContent = partnerName + ' · ' + new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
