@@ -332,6 +332,7 @@ var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var API  = 'https://care-voy-api-server.vercel.app';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 var AVG_FARE = null;
+function calcAvgFare() { var done = allRides.filter(function(r){return r.status==='completed'&&(r.actual_cost||r.estimated_cost);}); if(!done.length)return null; var sum=done.reduce(function(a,r){return a+parseFloat(r.actual_cost||r.estimated_cost||0);},0); return (sum/done.length); }
 
 var token = localStorage.getItem('cv_nemt_token') || sessionStorage.getItem('cv_nemt_token') || localStorage.getItem('cv_admin_token');
 var uid   = localStorage.getItem('cv_nemt_uid') || sessionStorage.getItem('cv_nemt_uid') || localStorage.getItem('cv_admin_uid');
@@ -600,7 +601,7 @@ function computeStats() {
   document.getElementById('metricAvailable').textContent = available;
 
   document.getElementById('perfComp').textContent     = compRate + '%';
-  document.getElementById('perfFare').textContent     = '—';
+  var _avg = calcAvgFare(); document.getElementById('perfFare').textContent = _avg ? '$' + _avg.toFixed(2) : '—';
   document.getElementById('perfCanc').textContent     = monthCanc;
   document.getElementById('earningsMonthBig').textContent = '$' + monthDone * AVG_FARE;
   document.getElementById('earningsAllTime').textContent  = '$' + allRides.filter(function(r){return r.status==='completed';}).length * AVG_FARE;
@@ -620,6 +621,8 @@ function renderTodayRides() {
 }
 
 function rideCard(r) {
+  var _fare = r.actual_cost || r.estimated_cost;
+  var _fareStr = _fare ? '$' + parseFloat(_fare).toFixed(2) : '';
   var status = getStatus(r);
   var t = r.pickup_time ? new Date(r.pickup_time) : null;
   var timeStr = t ? t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';

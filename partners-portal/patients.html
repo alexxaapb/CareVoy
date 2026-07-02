@@ -664,7 +664,7 @@ function buildRideCard(r, isPast) {
     var emergencyBtn = (r.status === 'in_progress' || r.status === 'en_route') ? '<a href="tel:911" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:8px 16px;border-radius:8px;border:1.5px solid #FECACA;color:#EF4444;font-size:12px;font-weight:700;text-decoration:none;font-family:inherit">Emergency: 911</a>' : '';
     action = `<div class="ride-action"><div style="font-size:13px;color:var(--navy);font-weight:600">Driver: ${dName}</div>${dPhone ? '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + dPhone + '</div>' : ''}<div style="font-size:11px;color:var(--muted);margin-top:4px">Contact your driver through CareVoy support</div>${emergencyBtn}</div>`;
   }
-  else if (r.status === 'completed' && r.actual_cost) action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare paid: <strong style="color:var(--navy)">$${r.actual_cost}</strong></span></div>`;
+  else if (r.status === 'completed') { var fareShow = r.actual_cost || r.estimated_cost; if (fareShow && r.payment_responsibility !== 'facility') action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare: <strong style="color:var(--navy)">$${parseFloat(fareShow).toFixed(2)}</strong></span></div>`; }
   return `<div class="ride-card" onclick="openRideDetail('${r.id}')">
     <span class="ride-badge ${badge}">${label}</span>
     <div class="ride-facility">${facility}</div>
@@ -916,6 +916,10 @@ async function confirmBooking() {
       patient_id: currentUser.id,
       status: 'confirmed',
       payment_responsibility: currentRide.payment_responsibility,
+      mobility_needs: (function(){var m=[];if(document.getElementById("bookWheelchair")&&document.getElementById("bookWheelchair").checked)m.push("wheelchair");if(document.getElementById("bookStretcher")&&document.getElementById("bookStretcher").checked)m.push("stretcher");return m.length?m.join(","):null;})(),
+      companion_requested: (document.getElementById("bookCompanion")&&document.getElementById("bookCompanion").checked)||false,
+      estimated_cost: window._estimatedFare||null,
+      estimated_miles: window._estimatedMiles||null,
     }).eq('id', currentRide.id);
     closeBookModal();
     toast('Ride confirmed');
