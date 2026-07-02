@@ -120,7 +120,7 @@
     @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
-<body>
+<body style="opacity:0;transition:opacity .15s">
 
 <div id="loading"><div class="spinner"></div></div>
 
@@ -739,6 +739,16 @@ async function deleteRide(evt, rideId) {
   } catch(e) { showToast('Could not remove: ' + e.message, 'err'); }
 }
 
+async function resendReceipt(rideId) {
+  try {
+    var resp = await fetch(API + '/api/rides/update-status', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ride_id: rideId, status: 'completed', resend_only: true })
+    });
+    showToast('Receipt resent to patient', 'ok');
+  } catch(e) { showToast('Could not resend', 'err'); }
+}
+
 function exportCoordCSV() {
   if (!allRides || !allRides.length) { alert('No data to export'); return; }
   var fields = ['patient_name','contact_email','contact_phone','procedure_type','status','payment_responsibility','pickup_time','pickup_address','hospital_name'];
@@ -1191,7 +1201,7 @@ async function saveEditPoc() {
   } catch(e) { showToast('Update failed', 'err'); }
 }
 
-init();
+init().then(function(){document.body.style.opacity="1";}).catch(function(){document.body.style.opacity="1";});
 setInterval(loadAll, 30000);
 </script>
 </body>

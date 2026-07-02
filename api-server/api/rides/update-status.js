@@ -27,7 +27,27 @@ module.exports = async function handler(req, res) {
     const update = { status };
     if (status === 'assigned' && driver_name) { update.driver_name = driver_name; update.driver_phone = driver_phone || null; update.assigned_at = new Date().toISOString(); }
     if (status === 'in_progress') { /* just status */ }
-    if (status === 'completed') { update.completed_at = new Date().toISOString(); }
+    if (status === 'completed') {
+      update.completed_at = new Date().toISOString();
+      // Calculate actual fare from NEMT rates + distance if not already set
+      const { data: existingRide } = await sb.from('rides').select('*').eq('id', ride_id).single();
+      if (existingRide && !existingRide.actual_cost) {
+        let fare = existingRide.estimated_cost || 0;
+        // If no estimate, calculate from NEMT rates
+        if (!fare && existingRide.nemt_partner_id) {
+          const { data: nemt } = await sb.from('nemt_partners').select('base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge').eq('id', existingRide.nemt_partner_id).single();
+          if (nemt) {
+            fare = parseFloat(nemt.base_fare || 25);
+            // Estimate 10 miles if no distance data
+            fare += parseFloat(nemt.per_mile_rate || 2.5) * 10;
+            const mobility = existingRide.mobility_needs || '';
+            if (mobility.includes('wheelchair')) fare += parseFloat(nemt.wheelchair_surcharge || 0);
+            if (mobility.includes('stretcher')) fare += parseFloat(nemt.stretcher_surcharge || 0);
+          }
+        }
+        update.actual_cost = Math.round(fare * 100) / 100;
+      }
+    }
 
     const { error } = await sb.from('rides').update(update).eq('id', ride_id);
     if (error) return res.status(500).json({ error: error.message });
@@ -44,7 +64,7 @@ module.exports = async function handler(req, res) {
           const rideDate = ride.pickup_time ? new Date(ride.pickup_time).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : '';
           const pickup = ride.pickup_address || 'Pickup location';
           const dropoff = ride.dropoff_address || facility;
-          const cost = ride.estimated_cost || ride.actual_cost || 0;
+          const cost = ride.actual_cost || ride.estimated_cost || 0;
           const isFacility = ride.payment_responsibility === 'facility';
 
           const html = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">

@@ -95,7 +95,7 @@
     @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.earn-grid,.perf-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
-<body>
+<body style="opacity:0;transition:opacity .15s">
 
 <div id="loading"><div class="spinner"></div></div>
 
@@ -764,7 +764,7 @@ async function saveEditAcct() {
   } catch(e) { showToast('Update failed', 'err'); }
 }
 
-init();
+init().then(function(){document.body.style.opacity="1";}).catch(function(){document.body.style.opacity="1";});
 setInterval(loadRides, 30000);
 </script>
 </body>

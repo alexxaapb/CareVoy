@@ -152,7 +152,7 @@
     @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
-<body>
+<body style="opacity:0;transition:opacity .15s">
 
 <!-- Sidebar -->
 <div class="sidebar">
@@ -1236,7 +1236,7 @@ function signOut() {
   });
 
 
-  loadStats();
+  loadStats().then(function(){document.body.style.opacity="1";}).catch(function(){document.body.style.opacity="1";});
   setInterval(loadStats, 30000);
 </script>
 
