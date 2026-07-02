@@ -336,9 +336,9 @@ function calcAvgFare() { var done = allRides.filter(function(r){return r.status=
 
 var token = localStorage.getItem('cv_nemt_token') || sessionStorage.getItem('cv_nemt_token') || localStorage.getItem('cv_admin_token');
 var uid   = localStorage.getItem('cv_nemt_uid') || sessionStorage.getItem('cv_nemt_uid') || localStorage.getItem('cv_admin_uid');
-if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_nemt')) { window.location.href = '/'; } }
+if (!uid && !new URLSearchParams(window.location.search).get('preview_nemt')) { window.location.href = '/'; }
 
-var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY };
 var staffInfo = null;
 var partnerInfo = null;
 var allRides = [];
