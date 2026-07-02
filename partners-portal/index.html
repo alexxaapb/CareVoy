@@ -141,6 +141,8 @@
           // NEMT driver: save token and go to driver portal
           sessionStorage.setItem('cv_nemt_token', token);
           sessionStorage.setItem('cv_nemt_uid',   uid);
+          localStorage.setItem('cv_nemt_token', token);
+          localStorage.setItem('cv_nemt_uid',   uid);
           window.location.href = '/driver';
           return;
         }
@@ -149,6 +151,8 @@
           // Staff coordinator: save token and go to coordinator portal
           sessionStorage.setItem('cv_coord_token', token);
           sessionStorage.setItem('cv_coord_uid',   uid);
+          localStorage.setItem('cv_coord_token', token);
+          localStorage.setItem('cv_coord_uid',   uid);
           window.location.href = '/coordinator';
           return;
         }
@@ -159,6 +163,8 @@
         if (coordData && coordData[0]) {
           sessionStorage.setItem('cv_coord_token', token);
           sessionStorage.setItem('cv_coord_uid',   uid);
+          localStorage.setItem('cv_coord_token', token);
+          localStorage.setItem('cv_coord_uid',   uid);
           window.location.href = '/coordinator';
           return;
         }

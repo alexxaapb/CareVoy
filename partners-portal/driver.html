@@ -333,8 +333,8 @@ var API  = 'https://care-voy-api-server.vercel.app';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 var AVG_FARE = null;
 
-var token = sessionStorage.getItem('cv_nemt_token') || localStorage.getItem('cv_admin_token');
-var uid   = sessionStorage.getItem('cv_nemt_uid') || localStorage.getItem('cv_admin_uid');
+var token = localStorage.getItem('cv_nemt_token') || sessionStorage.getItem('cv_nemt_token') || localStorage.getItem('cv_admin_token');
+var uid   = localStorage.getItem('cv_nemt_uid') || sessionStorage.getItem('cv_nemt_uid') || localStorage.getItem('cv_admin_uid');
 if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_nemt')) { window.location.href = '/'; } }
 
 var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
@@ -724,7 +724,7 @@ function showNav(name, el) {
   if (name === 'rates') loadRates();
 }
 
-function signOut() { sessionStorage.removeItem('cv_nemt_token'); sessionStorage.removeItem('cv_nemt_uid'); window.location.href = '/'; }
+function signOut() { ['cv_nemt_token','cv_nemt_uid'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
 function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function pad(n) { return String(n).padStart(2,'0'); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

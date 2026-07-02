@@ -343,7 +343,15 @@
     <div id="patientFields">
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Patient First Name <span style="color:#EF4444">*</span></label>
+          <div class="form-group" style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #F3F4F6">
+      <label class="form-label">Quick select existing patient</label>
+      <select class="form-input" id="existingPatient" onchange="fillExistingPatient()">
+        <option value="">— New patient —</option>
+      </select>
+      <div style="font-size:11px;color:#9CA3AF;margin-top:4px">Select a patient you've booked before to auto-fill their info</div>
+    </div>
+
+    <label class="form-label">Patient First Name <span style="color:#EF4444">*</span></label>
           <input class="form-input" id="patFirstName" placeholder="Jane">
         </div>
         <div class="form-group">
@@ -407,9 +415,9 @@
         <option value="">Select type…</option>
         <option value="pre_op">Medical Appointment</option>
         <option value="dialysis">Dialysis</option>
-        <option>Physical / Occupational therapy</option>
-        <option>Post-procedure follow-up</option>
-        <option>Other medical visit</option>
+        <option value="therapy">Physical / Occupational Therapy</option>
+        <option value="follow_up">Post-Procedure Follow-Up</option>
+        <option value="pre_op">Other Medical Visit</option>
       </select>
     </div>
     <div style="margin-bottom:14px">
@@ -485,8 +493,8 @@ var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 var API  = 'https://care-voy-api-server.vercel.app';
 
-var token = sessionStorage.getItem('cv_coord_token') || localStorage.getItem('cv_admin_token');
-var uid   = sessionStorage.getItem('cv_coord_uid') || localStorage.getItem('cv_admin_uid');
+var token = localStorage.getItem('cv_coord_token') || sessionStorage.getItem('cv_coord_token') || localStorage.getItem('cv_admin_token');
+var uid   = localStorage.getItem('cv_coord_uid') || sessionStorage.getItem('cv_coord_uid') || localStorage.getItem('cv_admin_uid');
 if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_hospital')) { window.location.href = '/'; } }
 
 var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
@@ -1128,7 +1136,7 @@ function openDrawer(rideId) {
         '<span style="font-size:13px;color:#050D1F;text-align:right">' + esc(String(row[1])) + '</span>' +
         '</div>';
     }).join('') +
-    (r.status === 'completed' ? '<button class="btn btn-teal" style="width:100%;margin-top:16px;padding:12px;font-size:13px;border-radius:10px">Download Receipt</button>' : '') +
+    (r.status === 'completed' ? '<button class="btn btn-teal" style="width:100%;margin-top:16px;padding:12px;font-size:13px;border-radius:10px" onclick="resendReceipt(\'' + r.id + '\')">Resend Receipt to Patient</button>' : '') +
     (['invited','reminder_sent','no_response'].includes(r.status) ? '<button class="btn btn-navy" style="width:100%;margin-top:16px;padding:12px;font-size:13px;border-radius:10px" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder Now</button>' : '');
   document.getElementById('drawerScrim').classList.add('open');
   document.getElementById('drawer').classList.add('open');
@@ -1149,7 +1157,7 @@ function showNav(name, el) {
 }
 
 // ── Helpers ────────────────────────────────────────────────
-function signOut() { sessionStorage.removeItem('cv_coord_token'); sessionStorage.removeItem('cv_coord_uid'); window.location.href = '/'; }
+function signOut() { ['cv_coord_token','cv_coord_uid'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
 function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function pad(n) { return String(n).padStart(2,'0'); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
