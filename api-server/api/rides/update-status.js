@@ -38,8 +38,8 @@ module.exports = async function handler(req, res) {
           const { data: nemt } = await sb.from('nemt_partners').select('base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge').eq('id', existingRide.nemt_partner_id).single();
           if (nemt) {
             fare = parseFloat(nemt.base_fare || 25);
-            // Estimate 10 miles if no distance data
-            fare += parseFloat(nemt.per_mile_rate || 2.5) * 10;
+            var miles = existingRide.estimated_miles || 10;
+            fare += parseFloat(nemt.per_mile_rate || 2.5) * miles;
             const mobility = existingRide.mobility_needs || '';
             if (mobility.includes('wheelchair')) fare += parseFloat(nemt.wheelchair_surcharge || 0);
             if (mobility.includes('stretcher')) fare += parseFloat(nemt.stretcher_surcharge || 0);

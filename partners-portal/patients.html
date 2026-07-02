@@ -727,7 +727,7 @@ function openRideDetail(rideId) {
     <div class="info-row"><div class="info-label">Time</div><div class="info-value">${pickupTime || 'TBD'}</div></div>
     <div class="info-row"><div class="info-label">Pickup</div><div class="info-value">${r.pickup_address || 'TBD'}</div></div>
     <div class="info-row"><div class="info-label">Dropoff</div><div class="info-value">${r.dropoff_address || facility}</div></div>
-    <div class="info-row"><div class="info-label">Type</div><div class="info-value">${r.ride_type || '—'}</div></div>
+    <div class="info-row"><div class="info-label">Type</div><div class="info-value">${formatRideType(r.ride_type) || '—'}</div></div>
     <div class="info-row"><div class="info-label">Payment</div><div class="info-value">${r.payment_responsibility === 'facility' ? 'Facility-Covered' : 'Self-Pay'}</div></div>
   `;
   document.getElementById('bookConfirmBtn').style.display = 'none';
@@ -735,35 +735,44 @@ function openRideDetail(rideId) {
 }
 
 // ── Book modal ──
-function estimateFare() {
+async function estimateFare() {
   var pickup = document.getElementById('bookPickup').value;
   if (!pickup || !currentRide) return;
   var dest = currentRide.dropoff_address || currentRide.hospital_name;
   if (!dest || typeof google === 'undefined' || !google.maps) return;
 
+  // Fetch REAL NEMT rates from the database
+  var baseFare = 25, perMile = 2.50, wheelchairSurcharge = 10, stretcherSurcharge = 25;
+  try {
+    if (currentRide.nemt_partner_id) {
+      var { data: nemt } = await sb.from('nemt_partners')
+        .select('base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge')
+        .eq('id', currentRide.nemt_partner_id).single();
+      if (nemt) {
+        baseFare = parseFloat(nemt.base_fare) || 25;
+        perMile = parseFloat(nemt.per_mile_rate) || 2.50;
+        wheelchairSurcharge = parseFloat(nemt.wheelchair_surcharge) || 0;
+        stretcherSurcharge = parseFloat(nemt.stretcher_surcharge) || 0;
+      }
+    }
+  } catch(e) {}
+
   var service = new google.maps.DistanceMatrixService();
   service.getDistanceMatrix({
-    origins: [pickup],
-    destinations: [dest],
-    travelMode: 'DRIVING',
-    unitSystem: google.maps.UnitSystem.IMPERIAL
+    origins: [pickup], destinations: [dest],
+    travelMode: 'DRIVING', unitSystem: google.maps.UnitSystem.IMPERIAL
   }, function(response, status) {
     if (status !== 'OK' || !response.rows[0] || !response.rows[0].elements[0]) return;
     var element = response.rows[0].elements[0];
     if (element.status !== 'OK') return;
     var miles = element.distance.value / 1609.34;
 
-    // Get NEMT rates from the ride's assigned NEMT or use defaults
-    var baseFare = 25;
-    var perMile = 2.50;
-    var wheelchairSurcharge = 0;
-    var stretcherSurcharge = 0;
-
     var estimated = baseFare + (perMile * miles);
-    if (document.getElementById('bookWheelchair').checked) estimated += 10;
-    if (document.getElementById('bookStretcher').checked) estimated += 25;
+    if (document.getElementById('bookWheelchair').checked) estimated += wheelchairSurcharge;
+    if (document.getElementById('bookStretcher').checked) estimated += stretcherSurcharge;
 
     window._estimatedFare = Math.round(estimated * 100) / 100;
+    window._estimatedMiles = Math.round(miles * 10) / 10;
     document.getElementById('fareAmount').textContent = '$' + window._estimatedFare.toFixed(2);
     document.getElementById('fareEstimate').style.display = 'block';
   });
@@ -849,8 +858,10 @@ function closeBookModal() {
   var wb = document.getElementById('bookWheelchair'); if(wb) wb.checked = false;
   var sb2 = document.getElementById('bookStretcher'); if(sb2) sb2.checked = false;
   var cb = document.getElementById('bookCompanion'); if(cb) cb.checked = false;
-  document.getElementById('fareEstimate').style.display = 'none';
+  var fe = document.getElementById('fareEstimate'); if(fe) fe.style.display = 'none';
+  var cbtn = document.getElementById('bookConfirmBtn'); if(cbtn) cbtn.style.display = '';
   window._estimatedFare = null;
+  document.getElementById('bookModal').classList.remove('open');
   document.getElementById('bookModal').classList.remove('open');
   currentRide = null;
 }
