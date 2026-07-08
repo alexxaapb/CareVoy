@@ -520,6 +520,18 @@
   const token = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
   if (!token) { window.location.href = '/'; }
 
+  function rideTypeLabel(t) {
+    var map = {
+      'pre_op':    'Pre-Op Appointment',
+      'post_op':   'Post-Op / Return',
+      'dialysis':  'Dialysis',
+      'therapy':   'Physical / Occupational Therapy',
+      'follow_up': 'Post-Procedure Follow-Up',
+      'other':     'Other Medical Visit'
+    };
+    return map[t] || (t ? t.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) : '—');
+  }
+
   var currentInviteUrl = '';
 
   document.getElementById('dateLabel').textContent = new Date().toLocaleDateString(undefined, {
@@ -686,7 +698,7 @@
       ['Pickup', r.pickup_address || '—'],
       ['Dropoff', r.dropoff_address || '—'],
       ['Pickup time', t],
-      ['Ride type', (r.ride_type || '—').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})],
+      ['Ride type', rideTypeLabel(r.ride_type)],
       ['Procedure', (r.procedure_type || '—').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})],
     ];
     document.getElementById('rideDetailBody').innerHTML = rows.map(function(row) {

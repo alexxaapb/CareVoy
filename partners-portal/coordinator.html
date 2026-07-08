@@ -413,11 +413,12 @@
       <label class="form-label">Appointment Type <span style="color:#EF4444">*</span></label>
       <select class="form-input" id="apptType">
         <option value="">Select type…</option>
-        <option value="pre_op">Medical Appointment</option>
+        <option value="pre_op">Pre-Op Appointment</option>
+        <option value="post_op">Post-Op / Return</option>
         <option value="dialysis">Dialysis</option>
         <option value="therapy">Physical / Occupational Therapy</option>
         <option value="follow_up">Post-Procedure Follow-Up</option>
-        <option value="pre_op">Other Medical Visit</option>
+        <option value="other">Other Medical Visit</option>
       </select>
     </div>
     <div style="margin-bottom:14px">
@@ -593,6 +594,18 @@ async function loadRides() {
   renderDashRides();
   renderRidesTab();
   renderAlerts();
+}
+
+function rideTypeLabel(t) {
+  var map = {
+    'pre_op':    'Pre-Op Appointment',
+    'post_op':   'Post-Op / Return',
+    'dialysis':  'Dialysis',
+    'therapy':   'Physical / Occupational Therapy',
+    'follow_up': 'Post-Procedure Follow-Up',
+    'other':     'Other Medical Visit'
+  };
+  return map[t] || (t ? t.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) : '—');
 }
 
 // ── Stats ──────────────────────────────────────────────────
@@ -1119,7 +1132,7 @@ function openDrawer(rideId) {
     ['Caregiver', r.caregiver_name || 'None'],
     ['Appointment', fmt],
     ['Type', r.procedure_type || '—'],
-    ['Direction', r.ride_type === 'post_op' ? 'From facility' : 'To facility'],
+    ['Appointment Type', rideTypeLabel(r.ride_type)],
     ['Pickup Address', r.pickup_address || 'Pending patient confirmation'],
     ['Destination', r.dropoff_address || '—'],
     ['Transport Status', STATUS_LABELS[r.status] || r.status],

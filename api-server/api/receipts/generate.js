@@ -24,10 +24,15 @@ function eligibilityLabel(tag) {
 }
 
 function rideTypeLabel(t) {
-  if (t === "pre_op") return "Pre-operative transport";
-  if (t === "post_op") return "Post-operative transport";
-  if (t === "dialysis") return "Dialysis transport";
-  return t ? t.replace(/_/g, " ") : "Medical transport";
+  const map = {
+    'pre_op':    'Pre-Op Appointment',
+    'post_op':   'Post-Op / Return',
+    'dialysis':  'Dialysis',
+    'therapy':   'Physical / Occupational Therapy',
+    'follow_up': 'Post-Procedure Follow-Up',
+    'other':     'Other Medical Visit',
+  };
+  return map[t] || (t ? t.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "Medical transport");
 }
 
 function fmtTimestamp(iso) {

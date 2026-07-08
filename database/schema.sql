@@ -105,7 +105,7 @@ create table if not exists public.rides (
   patient_id uuid references public.patients(id) on delete cascade,
   hospital_id uuid references public.hospitals(id) on delete set null,
   nemt_partner_id uuid references public.nemt_partners(id) on delete set null,
-  ride_type text check (ride_type in ('pre_op', 'post_op')),
+  ride_type text check (ride_type in ('pre_op', 'post_op', 'dialysis', 'therapy', 'follow_up', 'other')),
   pickup_address text,
   dropoff_address text,
   pickup_time timestamptz,

@@ -654,9 +654,14 @@ function renderRides() {
 
 function formatRideType(t) {
   if (!t) return '';
-  var map = { 'pre_op':'Medical Appointment', 'post_op':'Post-Op', 'dialysis':'Dialysis',
-    'follow_up':'Follow-Up', 'consultation':'Consultation', 'therapy':'Therapy',
-    'imaging':'Imaging', 'lab_work':'Lab Work', 'procedure':'Procedure' };
+  var map = {
+    'pre_op':    'Pre-Op Appointment',
+    'post_op':   'Post-Op / Return',
+    'dialysis':  'Dialysis',
+    'therapy':   'Physical / Occupational Therapy',
+    'follow_up': 'Post-Procedure Follow-Up',
+    'other':     'Other Medical Visit'
+  };
   return map[t] || t.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
 }
 
