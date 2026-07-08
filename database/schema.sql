@@ -579,6 +579,10 @@ grant execute on function public.next_receipt_seq(int) to service_role;
 alter table public.rides add column if not exists receipt_number text;
 alter table public.rides add column if not exists receipt_pdf_url text;
 
+-- 3b. Unique constraint on receipts.ride_id — required for the upsert in
+--     generateAndStoreReceipt() to resolve conflicts correctly.
+alter table public.receipts add constraint receipts_ride_id_unique unique (ride_id);
+
 -- 4. Columns that exist in the live DB but were omitted from this file
 --    (listed here for documentation — skip if your DB already has them):
 -- alter table public.rides add column if not exists estimated_miles numeric;
