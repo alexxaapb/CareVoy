@@ -12,8 +12,10 @@
   "type": "commonjs",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.0",
+    "@sparticuz/chromium-min": "^131.0.1",
     "@supabase/supabase-js": "^2.106.0",
     "dotenv": "^17.4.2",
+    "puppeteer-core": "^22.15.0",
     "resend": "^6.12.3",
     "stripe": "^22.1.1"
   }

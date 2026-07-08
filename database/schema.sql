@@ -537,3 +537,58 @@ $$;
 
 revoke all on function public.add_care_recipient(text,text,text,date,text,text,text) from public;
 grant execute on function public.add_care_recipient(text,text,text,date,text,text,text) to authenticated;
+
+-- =========================================================================
+-- Receipt PDF system
+-- Run these statements in Supabase SQL editor to set up receipt numbering.
+-- =========================================================================
+
+-- 1. Sequential receipt counter (one row per calendar year)
+create table if not exists public.receipt_counters (
+  year int primary key,
+  next_seq int not null default 1
+);
+
+-- 2. Atomic incrementer — returns the next sequence number for a given year.
+--    First call for a year inserts (year, 1) and returns 1.
+--    Subsequent calls increment and return the new value.
+--    Safe under concurrent execution (single atomic upsert, no race condition).
+create or replace function public.next_receipt_seq(p_year int)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_seq int;
+begin
+  insert into public.receipt_counters (year, next_seq)
+  values (p_year, 1)
+  on conflict (year) do update
+    set next_seq = receipt_counters.next_seq + 1
+  returning next_seq into v_seq;
+  return v_seq;
+end;
+$$;
+
+-- Grant authenticated and service-role access
+grant execute on function public.next_receipt_seq(int) to authenticated;
+grant execute on function public.next_receipt_seq(int) to service_role;
+
+-- 3. Add receipt tracking columns to rides (idempotent — IF NOT EXISTS)
+alter table public.rides add column if not exists receipt_number text;
+alter table public.rides add column if not exists receipt_pdf_url text;
+
+-- 4. Columns that exist in the live DB but were omitted from this file
+--    (listed here for documentation — skip if your DB already has them):
+-- alter table public.rides add column if not exists estimated_miles numeric;
+-- alter table public.rides add column if not exists contact_email text;
+-- alter table public.rides add column if not exists patient_name text;
+-- alter table public.rides add column if not exists hospital_name text;
+-- alter table public.rides add column if not exists payment_responsibility text;
+-- alter table public.rides add column if not exists assigned_at timestamptz;
+-- alter table public.rides add column if not exists completed_at timestamptz;
+-- alter table public.nemt_partners add column if not exists base_fare numeric;
+-- alter table public.nemt_partners add column if not exists per_mile_rate numeric;
+-- alter table public.nemt_partners add column if not exists wheelchair_surcharge numeric;
+-- alter table public.nemt_partners add column if not exists stretcher_surcharge numeric;
