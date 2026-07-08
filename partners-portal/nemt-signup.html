@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Join CareVoy | Transport Partner Signup</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.google.com/recaptcha/api.js?render=6LeZu0gtAAAAAKaz2x49j0y9EFI9cmn2hlSlPaq2" async defer></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Inter',-apple-system,sans-serif;background:#FFFFFF;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px;}
@@ -303,6 +304,22 @@
     var SUPA='https://byflpckbjjumxxjxoplk.supabase.co';
     var SUPA_KEY='sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
     var API='https://care-voy-api-server.vercel.app';
+    var RCAP_SITE='6LeZu0gtAAAAAKaz2x49j0y9EFI9cmn2hlSlPaq2';
+
+    async function verifyRecaptcha(action) {
+      var token = await new Promise(function(resolve, reject) {
+        grecaptcha.ready(function() {
+          grecaptcha.execute(RCAP_SITE, { action: action }).then(resolve).catch(reject);
+        });
+      });
+      var r = await fetch(API + '/api/verify-recaptcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+      });
+      var d = await r.json();
+      if (!d.success || d.score < 0.5) throw new Error('Security check failed. Please try again.');
+    }
 
     function val(id){return (document.getElementById(id)||{}).value?.trim()||'';}
 
@@ -408,6 +425,7 @@
       btn.disabled=true;btn.textContent='Submitting…';
 
       try{
+        await verifyRecaptcha('nemt_signup');
         var sr=await fetch(SUPA+'/auth/v1/signup',{
           method:'POST',
           headers:{'Content-Type':'application/json','apikey':SUPA_KEY},

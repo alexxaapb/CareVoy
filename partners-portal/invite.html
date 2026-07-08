@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CareVoy — Partner Signup</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.google.com/recaptcha/api.js?render=6LeZu0gtAAAAAKaz2x49j0y9EFI9cmn2hlSlPaq2" async defer></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Poppins',-apple-system,sans-serif; background:#F0F4F8; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
@@ -175,6 +176,22 @@
 var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
 var API  = 'https://care-voy-api-server.vercel.app';
+var RCAP_SITE = '6LeZu0gtAAAAAKaz2x49j0y9EFI9cmn2hlSlPaq2';
+
+async function verifyRecaptcha(action) {
+  var token = await new Promise(function(resolve, reject) {
+    grecaptcha.ready(function() {
+      grecaptcha.execute(RCAP_SITE, { action: action }).then(resolve).catch(reject);
+    });
+  });
+  var r = await fetch(API + '/api/verify-recaptcha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: token })
+  });
+  var d = await r.json();
+  if (!d.success || d.score < 0.5) throw new Error('Security check failed. Please try again.');
+}
 
 var inviteData = null;
 
@@ -280,10 +297,8 @@ async function submitSignup() {
   btn.textContent = 'Creating account…';
 
   try {
+    await verifyRecaptcha('invite_signup');
     // API creates user with admin key (bypasses email confirmation) then we sign in
-    btn.disabled = true;
-    btn.textContent = 'Creating account…';
-
     try {
       var acceptRes = await fetch(API + '/api/invite/accept', {
         method: 'POST',
