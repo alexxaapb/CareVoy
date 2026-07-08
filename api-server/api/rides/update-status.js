@@ -66,14 +66,22 @@ module.exports = async function handler(req, res) {
           // Generate branded PDF receipt
           let pdfAttachment = null;
           let receiptNumber = null;
-          let pdfUrl = null;
+          let pdfUrl = null;  // signed URL for email link (1-year TTL)
           try {
-            const { generateAndStoreReceipt } = require('../../lib/receipt-pdf');
+            const { generateAndStoreReceipt, getSignedUrl } = require('../../lib/receipt-pdf');
             const result = await generateAndStoreReceipt(sb, ride_id);
             receiptNumber = result.receiptNumber;
-            pdfUrl = result.pdfUrl;
             if (result.pdfBuffer) {
               pdfAttachment = { filename: `carevoy-receipt-${receiptNumber}.pdf`, content: result.pdfBuffer };
+              // Generate a 1-year signed URL so the email link stays valid
+              try {
+                pdfUrl = await getSignedUrl(sb, result.storagePath, 60 * 60 * 24 * 365);
+              } catch (_) {}
+            } else if (result.storagePath) {
+              // Already stored from a prior run — still generate signed URL for the email
+              try {
+                pdfUrl = await getSignedUrl(sb, result.storagePath, 60 * 60 * 24 * 365);
+              } catch (_) {}
             }
           } catch (pdfErr) {
             console.error('PDF generation error (email will send without attachment):', pdfErr);

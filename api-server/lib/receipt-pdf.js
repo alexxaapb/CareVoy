@@ -383,26 +383,34 @@ async function fetchRideForReceipt(supabase, rideId) {
   return ride;
 }
 
-// ── Upload PDF to Supabase Storage ───────────────────────────────────────────
+// ── Upload PDF to private Supabase Storage bucket ────────────────────────────
+// Returns the storage path (not a URL). Paths never expire; signed URLs do.
 async function uploadPdf(supabase, receiptNumber, rideId, pdfBuffer) {
   const [year, seq] = receiptNumber.split('-');
-  const filePath = `${year}/${seq}/${rideId}.pdf`;
+  const storagePath = `${year}/${seq}/${rideId}.pdf`;
 
   const { error } = await supabase.storage
     .from('receipts')
-    .upload(filePath, pdfBuffer, { contentType: 'application/pdf', upsert: true });
+    .upload(storagePath, pdfBuffer, { contentType: 'application/pdf', upsert: true });
 
   if (error) throw new Error('Storage upload error: ' + error.message);
+  return storagePath;
+}
 
-  const { data: { publicUrl } } = supabase.storage
+// ── Generate a short-lived signed URL from a stored path ─────────────────────
+// expiresIn: seconds (e.g. 3600 = 1 hour, 31536000 = 1 year)
+async function getSignedUrl(supabase, storagePath, expiresIn) {
+  const { data, error } = await supabase.storage
     .from('receipts')
-    .getPublicUrl(filePath);
-
-  return publicUrl;
+    .createSignedUrl(storagePath, expiresIn);
+  if (error) throw new Error('Signed URL error: ' + error.message);
+  return data.signedUrl;
 }
 
 // ── Main orchestrator ────────────────────────────────────────────────────────
-// Returns { receiptNumber, pdfUrl, pdfBuffer } on success.
+// Returns { receiptNumber, storagePath, pdfBuffer } on success.
+// storagePath is stored in rides.receipt_pdf_url — call getSignedUrl() when you
+// need an actual download URL (so URLs can expire without invalidating the data).
 // If the ride already has a receipt, returns immediately with cached values.
 async function generateAndStoreReceipt(supabase, rideId) {
   // Idempotency check — never issue a second receipt number for the same ride
@@ -413,7 +421,7 @@ async function generateAndStoreReceipt(supabase, rideId) {
     .single();
 
   if (existing?.receipt_pdf_url) {
-    return { receiptNumber: existing.receipt_number, pdfUrl: existing.receipt_pdf_url, pdfBuffer: null };
+    return { receiptNumber: existing.receipt_number, storagePath: existing.receipt_pdf_url, pdfBuffer: null };
   }
 
   const ride = await fetchRideForReceipt(supabase, rideId);
@@ -421,10 +429,10 @@ async function generateAndStoreReceipt(supabase, rideId) {
   const receiptNumber = await assignReceiptNumber(supabase, year);
   const html = buildReceiptHtml(ride, receiptNumber);
   const pdfBuffer = await generatePdfBuffer(html);
-  const pdfUrl = await uploadPdf(supabase, receiptNumber, rideId, pdfBuffer);
+  const storagePath = await uploadPdf(supabase, receiptNumber, rideId, pdfBuffer);
 
-  // Persist receipt number and PDF URL on the ride row
-  await supabase.from('rides').update({ receipt_number: receiptNumber, receipt_pdf_url: pdfUrl }).eq('id', rideId);
+  // Persist receipt number and storage path on the ride row
+  await supabase.from('rides').update({ receipt_number: receiptNumber, receipt_pdf_url: storagePath }).eq('id', rideId);
 
   // Upsert into receipts table (aligns with existing schema columns)
   const { items, total } = buildLineItems(ride);
@@ -432,7 +440,7 @@ async function generateAndStoreReceipt(supabase, rideId) {
     {
       ride_id: rideId,
       patient_id: ride.patient_id,
-      pdf_url: pdfUrl,
+      pdf_url: storagePath,
       provider_name: ride.nemt_partners?.company_name || 'CareVoy / APB Ventures LLC',
       service_date: ride.pickup_time ? ride.pickup_time.split('T')[0] : null,
       service_type: rideTypeLabel(ride.ride_type),
@@ -442,7 +450,7 @@ async function generateAndStoreReceipt(supabase, rideId) {
     { onConflict: 'ride_id', ignoreDuplicates: false }
   );
 
-  return { receiptNumber, pdfUrl, pdfBuffer };
+  return { receiptNumber, storagePath, pdfBuffer };
 }
 
 module.exports = {
@@ -450,5 +458,6 @@ module.exports = {
   buildLineItems,
   generatePdfBuffer,
   generateAndStoreReceipt,
+  getSignedUrl,
   rideTypeLabel,
 };
