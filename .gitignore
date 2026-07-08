@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Generated sample receipts (produced by scripts/generate-sample.js)
+api-server/sample-receipt.html
+api-server/sample-receipt.pdf
