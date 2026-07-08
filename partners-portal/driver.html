@@ -331,7 +331,11 @@
 var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var API  = 'https://care-voy-api-server.vercel.app';
 var KEY  = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
-var AVG_FARE = null;
+function fareSum(rides) {
+  return rides
+    .filter(function(r){ return r.status === 'completed'; })
+    .reduce(function(s, r){ return s + parseFloat(r.actual_cost || r.estimated_cost || 0); }, 0);
+}
 function calcAvgFare() { var done = allRides.filter(function(r){return r.status==='completed'&&(r.actual_cost||r.estimated_cost);}); if(!done.length)return null; var sum=done.reduce(function(a,r){return a+parseFloat(r.actual_cost||r.estimated_cost||0);},0); return (sum/done.length); }
 
 var token = localStorage.getItem('cv_nemt_token') || sessionStorage.getItem('cv_nemt_token') || localStorage.getItem('cv_admin_token');
@@ -578,11 +582,15 @@ function computeStats() {
   var monthCanc  = monthR.filter(function(r){ return r.status==='cancelled'; }).length;
   var compRate   = monthR.length > 0 ? Math.round((monthDone/monthR.length)*100) : 0;
 
-  document.getElementById('earnToday').textContent    = todayDone > 0 ? '$' + (todayDone * (AVG_FARE||0)) : '—';
+  var todayEarn  = fareSum(todayR);
+  var weekEarn   = fareSum(weekR);
+  var monthEarn  = fareSum(monthR);
+
+  document.getElementById('earnToday').textContent    = todayEarn > 0 ? '$' + todayEarn.toFixed(2) : '—';
   document.getElementById('earnTodaySub').textContent = todayR.length + ' ride' + (todayR.length===1?'':'s');
-  document.getElementById('earnWeek').textContent     = '$' + weekDone * AVG_FARE;
+  document.getElementById('earnWeek').textContent     = '$' + weekEarn.toFixed(2);
   document.getElementById('earnWeekSub').textContent  = weekDone + ' completed';
-  document.getElementById('earnMonth').textContent    = '$' + monthDone * AVG_FARE;
+  document.getElementById('earnMonth').textContent    = '$' + monthEarn.toFixed(2);
   document.getElementById('earnMonthSub').textContent = monthDone + ' completed';
 
   // ── NEMT metrics: acceptance rate + avg time to accept ──
@@ -603,8 +611,8 @@ function computeStats() {
   document.getElementById('perfComp').textContent     = compRate + '%';
   var _avg = calcAvgFare(); document.getElementById('perfFare').textContent = _avg ? '$' + _avg.toFixed(2) : '—';
   document.getElementById('perfCanc').textContent     = monthCanc;
-  document.getElementById('earningsMonthBig').textContent = '$' + monthDone * AVG_FARE;
-  document.getElementById('earningsAllTime').textContent  = '$' + allRides.filter(function(r){return r.status==='completed';}).length * AVG_FARE;
+  document.getElementById('earningsMonthBig').textContent = '$' + monthEarn.toFixed(2);
+  document.getElementById('earningsAllTime').textContent  = '$' + fareSum(allRides).toFixed(2);
 }
 
 function getStatus(r) { return statusOverrides[r.id] || r.status; }

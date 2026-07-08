@@ -604,9 +604,9 @@ function updateStats() {
 
   // Hero metrics
   var completed = allRides.filter(function(r){ return r.status === 'completed'; });
-  var SAVINGS_PER_RIDE = 14; // ~30% of avg $46 ride saved via HSA/FSA pre-tax
   document.getElementById('statKept').textContent = completed.length;
-  document.getElementById('statSavings').textContent = '$' + (completed.length * SAVINGS_PER_RIDE).toLocaleString();
+  var totalRideCost = completed.reduce(function(s,r){ return s + parseFloat(r.actual_cost || r.estimated_cost || 0); }, 0);
+  document.getElementById('statSavings').textContent = '$' + Math.round(totalRideCost * 0.30).toLocaleString();
 
   // Upcoming this week
   var weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() + 7);
