@@ -330,7 +330,7 @@
 <script>
 var SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
 var API  = 'https://care-voy-api-server.vercel.app';
-var KEY  = 'sb_publishable_mwR5uT4W3C2M-K5LbBag4g_GdN0plrT';
+var KEY  = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
 var AVG_FARE = null;
 function calcAvgFare() { var done = allRides.filter(function(r){return r.status==='completed'&&(r.actual_cost||r.estimated_cost);}); if(!done.length)return null; var sum=done.reduce(function(a,r){return a+parseFloat(r.actual_cost||r.estimated_cost||0);},0); return (sum/done.length); }
 
