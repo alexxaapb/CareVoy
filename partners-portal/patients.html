@@ -808,6 +808,7 @@ async function estimateFare() {
     window._estimatedMiles = Math.round(miles * 10) / 10;
     document.getElementById('fareAmount').textContent = '$' + window._estimatedFare.toFixed(2);
     document.getElementById('fareEstimate').style.display = 'block';
+    initApplePay();
   });
 }
 
@@ -902,16 +903,21 @@ function closeBookModal() {
 // ── Stripe ──
 function initStripeElement() {
   if (!stripe) stripe = Stripe('pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2');
-  var fareAmt = Math.round((window._estimatedFare || 50) * 100);
+  var elements = stripe.elements();
+  var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
+  card.mount('#stripe-element');
+  window._stripeCard = card;
+  // Apple Pay is initialized separately in initApplePay(), only once the real fare is known
+}
+
+function initApplePay() {
+  if (!stripe || !window._estimatedFare) return;
+  var fareAmt = Math.round(window._estimatedFare * 100);
   try {
     var payReq = stripe.paymentRequest({ country:'US', currency:'usd', total:{label:'CareVoy Medical Ride',amount:fareAmt}, requestPayerName:true });
     var prBtn = stripe.elements().create('paymentRequestButton', {paymentRequest:payReq});
     payReq.canMakePayment().then(function(r){ if(r){ var d=document.getElementById('apple-pay-btn'); if(d){prBtn.mount('#apple-pay-btn');d.style.display='block';} } });
   } catch(e) { /* Apple Pay not supported */ }
-  var elements = stripe.elements();
-  var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
-  card.mount('#stripe-element');
-  window._stripeCard = card;
 }
 
 // ── Confirm booking ──
