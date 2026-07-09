@@ -396,6 +396,37 @@ create policy "rides_nemt_update" on public.rides
     )
   );
 
+-- coordinator: can select/insert/update rides belonging to their hospital
+drop policy if exists "rides_coord_select" on public.rides;
+create policy "rides_coord_select" on public.rides
+  for select using (
+    exists (
+      select 1 from public.hospital_coordinators hc
+      where hc.id = auth.uid()
+        and hc.hospital_id = rides.hospital_id
+    )
+  );
+
+drop policy if exists "rides_coord_insert" on public.rides;
+create policy "rides_coord_insert" on public.rides
+  for insert with check (
+    exists (
+      select 1 from public.hospital_coordinators hc
+      where hc.id = auth.uid()
+        and hc.hospital_id = rides.hospital_id
+    )
+  );
+
+drop policy if exists "rides_coord_update" on public.rides;
+create policy "rides_coord_update" on public.rides
+  for update using (
+    exists (
+      select 1 from public.hospital_coordinators hc
+      where hc.id = auth.uid()
+        and hc.hospital_id = rides.hospital_id
+    )
+  );
+
 -- nemt_partners: no public policies (admin/service-role only)
 
 -- =========================================================================

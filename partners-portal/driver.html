@@ -343,6 +343,34 @@ var uid   = localStorage.getItem('cv_nemt_uid') || sessionStorage.getItem('cv_ne
 if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_nemt')) { window.location.href = '/'; } }
 
 var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+
+async function tryRefreshToken(role) {
+  var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
+  if (!expiresAt || Date.now() < expiresAt - 300000) return;
+  var rt = localStorage.getItem('cv_' + role + '_refresh');
+  if (!rt) return;
+  try {
+    var r = await fetch(SUPA + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+      body: JSON.stringify({ refresh_token: rt })
+    });
+    if (!r.ok) throw new Error('refresh failed');
+    var d = await r.json();
+    token = d.access_token;
+    H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+    localStorage.setItem('cv_' + role + '_token',   d.access_token);
+    localStorage.setItem('cv_' + role + '_refresh', d.refresh_token);
+    localStorage.setItem('cv_' + role + '_expires', String(Date.now() + (d.expires_in || 3600) * 1000));
+    sessionStorage.setItem('cv_' + role + '_token', d.access_token);
+  } catch(e) {
+    if (Date.now() > expiresAt) {
+      ['cv_' + role + '_token','cv_' + role + '_refresh','cv_' + role + '_expires'].forEach(function(k){ localStorage.removeItem(k); });
+      window.location.href = '/';
+    }
+  }
+}
+
 var staffInfo = null;
 var partnerInfo = null;
 var allRides = [];
@@ -504,6 +532,7 @@ async function acceptRide(rideId) {
 }
 
 async function init() {
+  await tryRefreshToken('nemt');
   try {
     // Admin keyfob: preview_nemt param lets admin view any NEMT's dashboard
     var previewNemt = new URLSearchParams(window.location.search).get('preview_nemt');
@@ -735,7 +764,7 @@ function showNav(name, el) {
   if (name === 'rates') loadRates();
 }
 
-function signOut() { ['cv_nemt_token','cv_nemt_uid'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
+function signOut() { ['cv_nemt_token','cv_nemt_uid','cv_nemt_refresh','cv_nemt_expires'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
 function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function pad(n) { return String(n).padStart(2,'0'); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

@@ -1,0 +1,312 @@
+diff --git a/database/schema.sql b/database/schema.sql
+index f5cd91c..74b2614 100644
+--- a/database/schema.sql
++++ b/database/schema.sql
+@@ -405,6 +405,37 @@ create policy "rides_nemt_update" on public.rides
+     )
+   );
+ 
++-- coordinator: can select/insert/update rides belonging to their hospital
++drop policy if exists "rides_coord_select" on public.rides;
++create policy "rides_coord_select" on public.rides
++  for select using (
++    exists (
++      select 1 from public.hospital_coordinators hc
++      where hc.id = auth.uid()
++        and hc.hospital_id = rides.hospital_id
++    )
++  );
++
++drop policy if exists "rides_coord_insert" on public.rides;
++create policy "rides_coord_insert" on public.rides
++  for insert with check (
++    exists (
++      select 1 from public.hospital_coordinators hc
++      where hc.id = auth.uid()
++        and hc.hospital_id = rides.hospital_id
++    )
++  );
++
++drop policy if exists "rides_coord_update" on public.rides;
++create policy "rides_coord_update" on public.rides
++  for update using (
++    exists (
++      select 1 from public.hospital_coordinators hc
++      where hc.id = auth.uid()
++        and hc.hospital_id = rides.hospital_id
++    )
++  );
++
+ -- nemt_partners: no public policies (admin/service-role only)
+ 
+ -- =========================================================================
+diff --git a/partners-portal/admin.html b/partners-portal/admin.html
+index 529e2c7..0a36b0d 100644
+--- a/partners-portal/admin.html
++++ b/partners-portal/admin.html
+@@ -517,7 +517,7 @@
+   const SUPA_KEY = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
+   const API = 'https://care-voy-api-server.vercel.app';
+ 
+-  const token = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
++  let token = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
+   if (!token) { window.location.href = '/'; }
+ 
+   function rideTypeLabel(t) {
+@@ -542,6 +542,32 @@
+     return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token };
+   }
+ 
++  async function tryRefreshToken(role) {
++    var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
++    if (!expiresAt || Date.now() < expiresAt - 300000) return;
++    var rt = localStorage.getItem('cv_' + role + '_refresh');
++    if (!rt) return;
++    try {
++      var r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
++        body: JSON.stringify({ refresh_token: rt })
++      });
++      if (!r.ok) throw new Error('refresh failed');
++      var d = await r.json();
++      token = d.access_token;
++      localStorage.setItem('cv_' + role + '_token',   d.access_token);
++      localStorage.setItem('cv_' + role + '_refresh', d.refresh_token);
++      localStorage.setItem('cv_' + role + '_expires', String(Date.now() + (d.expires_in || 3600) * 1000));
++      sessionStorage.setItem('cv_' + role + '_token', d.access_token);
++    } catch(e) {
++      if (Date.now() > expiresAt) {
++        ['cv_' + role + '_token','cv_' + role + '_refresh','cv_' + role + '_expires'].forEach(function(k){ localStorage.removeItem(k); });
++        window.location.href = '/';
++      }
++    }
++  }
++
+   function todayStr() {
+     var d = new Date();
+     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+@@ -1102,8 +1128,10 @@ async function deletePatient(patientId, patientEmail) {
+ }
+ 
+ function signOut() {
+-    sessionStorage.removeItem('cv_admin_token');
+-    sessionStorage.removeItem('cv_admin_uid');
++    ['cv_admin_token','cv_admin_uid','cv_admin_refresh','cv_admin_expires'].forEach(function(k){
++      sessionStorage.removeItem(k);
++      localStorage.removeItem(k);
++    });
+     window.location.href = '/';
+   }
+ 
+@@ -1217,8 +1245,7 @@ function signOut() {
+     document.getElementById('confirmAssignBtn').textContent = 'Assigning…';
+     document.getElementById('confirmAssignBtn').disabled = true;
+     try {
+-      var token = sessionStorage.getItem('cv_admin_token');
+-      var res = await fetch(API_URL + '/api/rides/assign', {
++      var res = await fetch(API + '/api/rides/assign', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+         body: JSON.stringify({ ride_id: assigningRideId, nemt_partner_id: selectedAssignPartnerId })
+@@ -1248,8 +1275,10 @@ function signOut() {
+   });
+ 
+ 
+-  loadStats().then(function(){document.body.style.opacity="1";}).catch(function(){document.body.style.opacity="1";});
+-  setInterval(loadStats, 30000);
++  tryRefreshToken('admin').then(function(){
++    loadStats().then(function(){document.body.style.opacity="1";}).catch(function(){document.body.style.opacity="1";});
++  });
++  setInterval(function(){ tryRefreshToken('admin').then(loadStats); }, 30000);
+ </script>
+ 
+   <!-- Ride Detail Modal -->
+diff --git a/partners-portal/coordinator.html b/partners-portal/coordinator.html
+index bf9f4d1..bd0c5bd 100644
+--- a/partners-portal/coordinator.html
++++ b/partners-portal/coordinator.html
+@@ -499,6 +499,34 @@ var uid   = localStorage.getItem('cv_coord_uid') || sessionStorage.getItem('cv_c
+ if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_hospital')) { window.location.href = '/'; } }
+ 
+ var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
++
++async function tryRefreshToken(role) {
++  var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
++  if (!expiresAt || Date.now() < expiresAt - 300000) return;
++  var rt = localStorage.getItem('cv_' + role + '_refresh');
++  if (!rt) return;
++  try {
++    var r = await fetch(SUPA + '/auth/v1/token?grant_type=refresh_token', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json', 'apikey': KEY },
++      body: JSON.stringify({ refresh_token: rt })
++    });
++    if (!r.ok) throw new Error('refresh failed');
++    var d = await r.json();
++    token = d.access_token;
++    H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
++    localStorage.setItem('cv_' + role + '_token',   d.access_token);
++    localStorage.setItem('cv_' + role + '_refresh', d.refresh_token);
++    localStorage.setItem('cv_' + role + '_expires', String(Date.now() + (d.expires_in || 3600) * 1000));
++    sessionStorage.setItem('cv_' + role + '_token', d.access_token);
++  } catch(e) {
++    if (Date.now() > expiresAt) {
++      ['cv_' + role + '_token','cv_' + role + '_refresh','cv_' + role + '_expires'].forEach(function(k){ localStorage.removeItem(k); });
++      window.location.href = '/';
++    }
++  }
++}
++
+ var coordInfo = null;
+ var hospitalInfo = null;
+ var allRides = [];
+@@ -535,6 +563,7 @@ function statusBadge(s) {
+ 
+ // ── Init ───────────────────────────────────────────────────
+ async function init() {
++  await tryRefreshToken('coord');
+   try {
+     // Admin keyfob: if preview_hospital param, load that facility's coordinator instead
+     var previewHospital = new URLSearchParams(window.location.search).get('preview_hospital');
+@@ -1173,7 +1202,7 @@ function showNav(name, el) {
+ }
+ 
+ // ── Helpers ────────────────────────────────────────────────
+-function signOut() { ['cv_coord_token','cv_coord_uid'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
++function signOut() { ['cv_coord_token','cv_coord_uid','cv_coord_refresh','cv_coord_expires'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
+ function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+ function pad(n) { return String(n).padStart(2,'0'); }
+ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+diff --git a/partners-portal/driver.html b/partners-portal/driver.html
+index a24366f..029817a 100644
+--- a/partners-portal/driver.html
++++ b/partners-portal/driver.html
+@@ -343,6 +343,34 @@ var uid   = localStorage.getItem('cv_nemt_uid') || sessionStorage.getItem('cv_ne
+ if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_nemt')) { window.location.href = '/'; } }
+ 
+ var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
++
++async function tryRefreshToken(role) {
++  var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
++  if (!expiresAt || Date.now() < expiresAt - 300000) return;
++  var rt = localStorage.getItem('cv_' + role + '_refresh');
++  if (!rt) return;
++  try {
++    var r = await fetch(SUPA + '/auth/v1/token?grant_type=refresh_token', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json', 'apikey': KEY },
++      body: JSON.stringify({ refresh_token: rt })
++    });
++    if (!r.ok) throw new Error('refresh failed');
++    var d = await r.json();
++    token = d.access_token;
++    H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
++    localStorage.setItem('cv_' + role + '_token',   d.access_token);
++    localStorage.setItem('cv_' + role + '_refresh', d.refresh_token);
++    localStorage.setItem('cv_' + role + '_expires', String(Date.now() + (d.expires_in || 3600) * 1000));
++    sessionStorage.setItem('cv_' + role + '_token', d.access_token);
++  } catch(e) {
++    if (Date.now() > expiresAt) {
++      ['cv_' + role + '_token','cv_' + role + '_refresh','cv_' + role + '_expires'].forEach(function(k){ localStorage.removeItem(k); });
++      window.location.href = '/';
++    }
++  }
++}
++
+ var staffInfo = null;
+ var partnerInfo = null;
+ var allRides = [];
+@@ -504,6 +532,7 @@ async function acceptRide(rideId) {
+ }
+ 
+ async function init() {
++  await tryRefreshToken('nemt');
+   try {
+     // Admin keyfob: preview_nemt param lets admin view any NEMT's dashboard
+     var previewNemt = new URLSearchParams(window.location.search).get('preview_nemt');
+@@ -735,7 +764,7 @@ function showNav(name, el) {
+   if (name === 'rates') loadRates();
+ }
+ 
+-function signOut() { ['cv_nemt_token','cv_nemt_uid'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
++function signOut() { ['cv_nemt_token','cv_nemt_uid','cv_nemt_refresh','cv_nemt_expires'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
+ function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+ function pad(n) { return String(n).padStart(2,'0'); }
+ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+diff --git a/partners-portal/index.html b/partners-portal/index.html
+index 9446f9a..de9d6cf 100644
+--- a/partners-portal/index.html
++++ b/partners-portal/index.html
+@@ -137,9 +137,11 @@
+         var authData = await authRes.json();
+         if (!authRes.ok) throw new Error(authData.error_description || authData.message || 'Login failed. Check your email and password.');
+ 
+-        var token = authData.access_token;
+-        var uid   = authData.user.id;
+-        var H     = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
++        var token        = authData.access_token;
++        var uid          = authData.user.id;
++        var refreshToken = authData.refresh_token || '';
++        var expiresAt    = String(Date.now() + (authData.expires_in || 3600) * 1000);
++        var H            = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+ 
+         // Check staff role
+         var staffRes  = await fetch(SUPA + '/rest/v1/staff?id=eq.' + uid + '&select=role', { headers: H });
+@@ -147,31 +149,34 @@
+         var role = staffData[0] && staffData[0].role;
+ 
+         if (role === 'admin') {
+-          // Admin: save token and go to admin dashboard
+           sessionStorage.setItem('cv_admin_token', token);
+           sessionStorage.setItem('cv_admin_uid',   uid);
+-          localStorage.setItem('cv_admin_token', token);
+-          localStorage.setItem('cv_admin_uid',   uid);
++          localStorage.setItem('cv_admin_token',   token);
++          localStorage.setItem('cv_admin_uid',     uid);
++          localStorage.setItem('cv_admin_refresh', refreshToken);
++          localStorage.setItem('cv_admin_expires', expiresAt);
+           window.location.href = '/admin.html';
+           return;
+         }
+ 
+         if (role === 'nemt') {
+-          // NEMT driver: save token and go to driver portal
+           sessionStorage.setItem('cv_nemt_token', token);
+           sessionStorage.setItem('cv_nemt_uid',   uid);
+-          localStorage.setItem('cv_nemt_token', token);
+-          localStorage.setItem('cv_nemt_uid',   uid);
++          localStorage.setItem('cv_nemt_token',   token);
++          localStorage.setItem('cv_nemt_uid',     uid);
++          localStorage.setItem('cv_nemt_refresh', refreshToken);
++          localStorage.setItem('cv_nemt_expires', expiresAt);
+           window.location.href = '/driver';
+           return;
+         }
+ 
+         if (role === 'coordinator') {
+-          // Staff coordinator: save token and go to coordinator portal
+           sessionStorage.setItem('cv_coord_token', token);
+           sessionStorage.setItem('cv_coord_uid',   uid);
+-          localStorage.setItem('cv_coord_token', token);
+-          localStorage.setItem('cv_coord_uid',   uid);
++          localStorage.setItem('cv_coord_token',   token);
++          localStorage.setItem('cv_coord_uid',     uid);
++          localStorage.setItem('cv_coord_refresh', refreshToken);
++          localStorage.setItem('cv_coord_expires', expiresAt);
+           window.location.href = '/coordinator';
+           return;
+         }
+@@ -182,8 +187,10 @@
+         if (coordData && coordData[0]) {
+           sessionStorage.setItem('cv_coord_token', token);
+           sessionStorage.setItem('cv_coord_uid',   uid);
+-          localStorage.setItem('cv_coord_token', token);
+-          localStorage.setItem('cv_coord_uid',   uid);
++          localStorage.setItem('cv_coord_token',   token);
++          localStorage.setItem('cv_coord_uid',     uid);
++          localStorage.setItem('cv_coord_refresh', refreshToken);
++          localStorage.setItem('cv_coord_expires', expiresAt);
+           window.location.href = '/coordinator';
+           return;
+         }

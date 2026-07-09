@@ -517,7 +517,7 @@
   const SUPA_KEY = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
   const API = 'https://care-voy-api-server.vercel.app';
 
-  const token = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
+  let token = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
   if (!token) { window.location.href = '/'; }
 
   function rideTypeLabel(t) {
@@ -540,6 +540,32 @@
 
   function authHeaders() {
     return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token };
+  }
+
+  async function tryRefreshToken(role) {
+    var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
+    if (!expiresAt || Date.now() < expiresAt - 300000) return;
+    var rt = localStorage.getItem('cv_' + role + '_refresh');
+    if (!rt) return;
+    try {
+      var r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
+        body: JSON.stringify({ refresh_token: rt })
+      });
+      if (!r.ok) throw new Error('refresh failed');
+      var d = await r.json();
+      token = d.access_token;
+      localStorage.setItem('cv_' + role + '_token',   d.access_token);
+      localStorage.setItem('cv_' + role + '_refresh', d.refresh_token);
+      localStorage.setItem('cv_' + role + '_expires', String(Date.now() + (d.expires_in || 3600) * 1000));
+      sessionStorage.setItem('cv_' + role + '_token', d.access_token);
+    } catch(e) {
+      if (Date.now() > expiresAt) {
+        ['cv_' + role + '_token','cv_' + role + '_refresh','cv_' + role + '_expires'].forEach(function(k){ localStorage.removeItem(k); });
+        window.location.href = '/';
+      }
+    }
   }
 
   function todayStr() {
@@ -1102,8 +1128,10 @@ async function deletePatient(patientId, patientEmail) {
 }
 
 function signOut() {
-    sessionStorage.removeItem('cv_admin_token');
-    sessionStorage.removeItem('cv_admin_uid');
+    ['cv_admin_token','cv_admin_uid','cv_admin_refresh','cv_admin_expires'].forEach(function(k){
+      sessionStorage.removeItem(k);
+      localStorage.removeItem(k);
+    });
     window.location.href = '/';
   }
 
@@ -1217,8 +1245,7 @@ function signOut() {
     document.getElementById('confirmAssignBtn').textContent = 'Assigning…';
     document.getElementById('confirmAssignBtn').disabled = true;
     try {
-      var token = sessionStorage.getItem('cv_admin_token');
-      var res = await fetch(API_URL + '/api/rides/assign', {
+      var res = await fetch(API + '/api/rides/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ ride_id: assigningRideId, nemt_partner_id: selectedAssignPartnerId })
@@ -1248,8 +1275,10 @@ function signOut() {
   });
 
 
-  loadStats().then(function(){document.body.style.opacity="1";}).catch(function(){document.body.style.opacity="1";});
-  setInterval(loadStats, 30000);
+  tryRefreshToken('admin').then(function(){
+    loadStats().then(function(){document.body.style.opacity="1";}).catch(function(){document.body.style.opacity="1";});
+  });
+  setInterval(function(){ tryRefreshToken('admin').then(loadStats); }, 30000);
 </script>
 
   <!-- Ride Detail Modal -->

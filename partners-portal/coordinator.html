@@ -499,6 +499,34 @@ var uid   = localStorage.getItem('cv_coord_uid') || sessionStorage.getItem('cv_c
 if (!token || !uid) { if (!new URLSearchParams(window.location.search).get('preview_hospital')) { window.location.href = '/'; } }
 
 var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+
+async function tryRefreshToken(role) {
+  var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
+  if (!expiresAt || Date.now() < expiresAt - 300000) return;
+  var rt = localStorage.getItem('cv_' + role + '_refresh');
+  if (!rt) return;
+  try {
+    var r = await fetch(SUPA + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+      body: JSON.stringify({ refresh_token: rt })
+    });
+    if (!r.ok) throw new Error('refresh failed');
+    var d = await r.json();
+    token = d.access_token;
+    H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
+    localStorage.setItem('cv_' + role + '_token',   d.access_token);
+    localStorage.setItem('cv_' + role + '_refresh', d.refresh_token);
+    localStorage.setItem('cv_' + role + '_expires', String(Date.now() + (d.expires_in || 3600) * 1000));
+    sessionStorage.setItem('cv_' + role + '_token', d.access_token);
+  } catch(e) {
+    if (Date.now() > expiresAt) {
+      ['cv_' + role + '_token','cv_' + role + '_refresh','cv_' + role + '_expires'].forEach(function(k){ localStorage.removeItem(k); });
+      window.location.href = '/';
+    }
+  }
+}
+
 var coordInfo = null;
 var hospitalInfo = null;
 var allRides = [];
@@ -535,6 +563,7 @@ function statusBadge(s) {
 
 // ── Init ───────────────────────────────────────────────────
 async function init() {
+  await tryRefreshToken('coord');
   try {
     // Admin keyfob: if preview_hospital param, load that facility's coordinator instead
     var previewHospital = new URLSearchParams(window.location.search).get('preview_hospital');
@@ -1170,7 +1199,7 @@ function showNav(name, el) {
 }
 
 // ── Helpers ────────────────────────────────────────────────
-function signOut() { ['cv_coord_token','cv_coord_uid'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
+function signOut() { ['cv_coord_token','cv_coord_uid','cv_coord_refresh','cv_coord_expires'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }
 function todayStr() { var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function pad(n) { return String(n).padStart(2,'0'); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
