@@ -425,7 +425,7 @@ async function loadAvailableRides() {
   }
   try {
     var r = await fetch(
-      SUPA + '/rest/v1/rides?nemt_partner_id=is.null&status=in.(invited,pending,confirmed)&select=*&order=pickup_time.asc',
+      SUPA + '/rest/v1/rides?nemt_partner_id=is.null&status=in.(confirmed)&select=*&order=pickup_time.asc',
       { headers: H }
     );
     var rides = await r.json();
