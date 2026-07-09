@@ -192,7 +192,7 @@
     }
   </style>
 </head>
-<body style="opacity:0;transition:opacity .2s">
+<body>
 
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
@@ -1180,7 +1180,7 @@ async function onLoad() {
     else showScreen('login');
   }
 }
-onLoad().then(function(){ document.body.style.opacity='1'; });
+onLoad();
 </script>
 </body>
 </html>

@@ -383,18 +383,20 @@
               payment_type: val('paymentType'), current_process: val('currentProcess'),
               pain_point: val('painPoint'), contact_title: val('title'), contact_phone: val('phone') } })
         });
+        if (!hRes.ok) throw new Error('Could not create facility record. Please contact support@carevoy.co.');
         var hd = await hRes.json();
         var hospitalId = Array.isArray(hd) ? hd[0]?.id : hd?.id;
 
         if (hospitalId) {
-          await fetch(SUPA + '/rest/v1/hospital_coordinators', {
-            method: 'POST', headers: H,
+          var hcRes = await fetch(SUPA + '/rest/v1/hospital_coordinators', {
+            method: 'POST', headers: { ...H, 'Prefer': 'return=minimal' },
             body: JSON.stringify({ id: uid, full_name: val('firstName')+' '+val('lastName'),
               email: val('email'), hospital_id: hospitalId })
           });
+          if (!hcRes.ok) throw new Error('Could not create coordinator profile. Please contact support@carevoy.co.');
         }
         await fetch(SUPA + '/rest/v1/staff', { method: 'POST', headers: H,
-          body: JSON.stringify({ id: uid, role: 'coordinator', hospital_id: hospitalId, email: val('email'), full_name: val('firstName')+' '+val('lastName') }) });
+          body: JSON.stringify({ id: uid, role: 'coordinator', email: val('email'), full_name: val('firstName')+' '+val('lastName') }) });
 
         await notifyTeam('facility', val('facilityName'), val('email'), val('phone'),
           val('city'), val('state'), {

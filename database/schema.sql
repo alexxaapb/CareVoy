@@ -338,14 +338,23 @@ drop policy if exists "hsa_fsa_questions_patient_all" on public.hsa_fsa_question
 create policy "hsa_fsa_questions_patient_all" on public.hsa_fsa_questions
   for all using (auth.uid() = patient_id) with check (auth.uid() = patient_id);
 
--- hospital_coordinators: coordinators see only their own row
+-- hospital_coordinators: coordinators see/edit only their own row; can insert own row
 drop policy if exists "coordinators_select_own" on public.hospital_coordinators;
 create policy "coordinators_select_own" on public.hospital_coordinators
   for select using (auth.uid() = id);
 
+drop policy if exists "coordinators_insert_own" on public.hospital_coordinators;
+create policy "coordinators_insert_own" on public.hospital_coordinators
+  for insert with check (auth.uid() = id);
+
 drop policy if exists "coordinators_update_own" on public.hospital_coordinators;
 create policy "coordinators_update_own" on public.hospital_coordinators
   for update using (auth.uid() = id) with check (auth.uid() = id);
+
+-- hospitals: any authenticated user can create (pending_review=true requires admin approval before activation)
+drop policy if exists "hospitals_insert_authenticated" on public.hospitals;
+create policy "hospitals_insert_authenticated" on public.hospitals
+  for insert with check (auth.uid() is not null);
 
 -- hospitals: coordinators see only their hospital
 drop policy if exists "hospitals_coordinator_select" on public.hospitals;
@@ -393,6 +402,37 @@ create policy "rides_nemt_update" on public.rides
       where s.id = auth.uid()
         and s.role = 'nemt'
         and s.nemt_partner_id = rides.nemt_partner_id
+    )
+  );
+
+-- coordinator: can select/insert/update rides belonging to their hospital
+drop policy if exists "rides_coord_select" on public.rides;
+create policy "rides_coord_select" on public.rides
+  for select using (
+    exists (
+      select 1 from public.hospital_coordinators hc
+      where hc.id = auth.uid()
+        and hc.hospital_id = rides.hospital_id
+    )
+  );
+
+drop policy if exists "rides_coord_insert" on public.rides;
+create policy "rides_coord_insert" on public.rides
+  for insert with check (
+    exists (
+      select 1 from public.hospital_coordinators hc
+      where hc.id = auth.uid()
+        and hc.hospital_id = rides.hospital_id
+    )
+  );
+
+drop policy if exists "rides_coord_update" on public.rides;
+create policy "rides_coord_update" on public.rides
+  for update using (
+    exists (
+      select 1 from public.hospital_coordinators hc
+      where hc.id = auth.uid()
+        and hc.hospital_id = rides.hospital_id
     )
   );
 
