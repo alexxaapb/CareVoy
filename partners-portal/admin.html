@@ -1044,6 +1044,7 @@
     }
   }
 
+    location.hash = name;
     var sections = ['overview','patients','rides','facilities','partners','revenue','settings'];
     // Update nav active state
     document.querySelectorAll('.nav-item').forEach(function(el, i) {
@@ -1282,7 +1283,13 @@ function signOut() {
 
 
   tryRefreshToken('admin').then(function(){
-    loadStats().then(function(){var l=document.getElementById('loading');if(l)l.style.display='none';}).catch(function(){var l=document.getElementById('loading');if(l)l.style.display='none';});
+    loadStats().then(function(){
+      var l=document.getElementById('loading');if(l)l.style.display='none';
+      var _hash = (location.hash || '').replace('#', '');
+      if (_hash && ['overview','patients','rides','facilities','partners','revenue','settings'].includes(_hash)) {
+        showSection(_hash);
+      }
+    }).catch(function(){var l=document.getElementById('loading');if(l)l.style.display='none';});
   });
   setInterval(function(){ tryRefreshToken('admin').then(loadStats); }, 30000);
 </script>

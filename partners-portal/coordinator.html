@@ -608,6 +608,10 @@ async function init() {
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
+    var _hash = (location.hash || '').replace('#', '');
+    if (_hash && ['dashboard','patients','rides','alerts','settings'].includes(_hash)) {
+      showNav(_hash, document.querySelector('.nav-item[onclick*="\'' + _hash + '\'"]'));
+    }
   } catch(e) {
     document.getElementById('loading').innerHTML = '<div style="text-align:center;color:#6B7280"><p style="font-size:16px">⚠️ Could not load</p><p style="font-size:13px;margin-top:6px">' + e.message + '</p></div>';
   }
@@ -1193,6 +1197,7 @@ function closeDrawer() {
 
 // ── Nav ────────────────────────────────────────────────────
 function showNav(name, el) {
+  location.hash = name;
   ['dashboard','patients','rides','alerts','settings'].forEach(function(s){
     document.getElementById('sec-' + s).style.display = s === name ? 'block' : 'none';
   });

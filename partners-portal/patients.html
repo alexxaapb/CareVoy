@@ -607,7 +607,13 @@ async function initApp() {
   // Claim any pending invites by email match (works on login AND signup)
   await claimInvitedRides(currentUser.email, currentUser.id);
   await loadRides();
-  switchTab('Rides', document.getElementById('navRides'));
+  var _savedTab = localStorage.getItem('cv_patient_tab');
+  var _validTabs = ['Rides','Receipts','AI','Profile'];
+  if (_savedTab && _validTabs.includes(_savedTab)) {
+    switchTab(_savedTab, document.querySelector('.bottom-nav-item[onclick*="\'' + _savedTab + '\'"]') || document.getElementById('navRides'));
+  } else {
+    switchTab('Rides', document.getElementById('navRides'));
+  }
 }
 
 // ── Load rides ──
@@ -1142,6 +1148,7 @@ async function sendPasswordReset() {
 
 // ── Tab switching ──
 function switchTab(name, el) {
+  localStorage.setItem('cv_patient_tab', name);
   document.querySelectorAll('.tab-section').forEach(function(s) {
     s.classList.remove('active');
     s.style.display = '';
