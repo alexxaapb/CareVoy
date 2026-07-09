@@ -497,11 +497,17 @@ async function saveRates() {
     stretcher_surcharge: parseFloat(document.getElementById('rateStretcher').value) || null
   };
   try {
-    await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id, {
+    var resp = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id, {
       method: 'PATCH',
-      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(body)
     });
+    if (!resp.ok) { showToast('Save failed — server error', 'err'); return; }
+    var updated = await resp.json();
+    if (!Array.isArray(updated) || updated.length === 0) {
+      showToast('Save failed — permission denied', 'err');
+      return;
+    }
     showToast('Rates saved', 'ok');
   } catch(e) { showToast('Could not save', 'err'); }
 }
