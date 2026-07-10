@@ -550,7 +550,7 @@
 
   async function tryRefreshToken(role) {
     var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
-    if (!expiresAt || Date.now() < expiresAt - 300000) return;
+    if (expiresAt && Date.now() < expiresAt - 300000) return;
     var rt = localStorage.getItem('cv_' + role + '_refresh');
     if (!rt) return;
     try {
@@ -1366,7 +1366,9 @@ function signOut() {
   }
 
   function renderPending() {
-    fetch(SU + "/rest/v1/nemt_partners?pending_review=eq.true&select=id,company_name,city,service_states,created_at,intake_data,contact_email", { headers: hdr })
+    var _tk = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token');
+    var _hdr = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _tk };
+    fetch(SU + "/rest/v1/nemt_partners?pending_review=eq.true&select=id,company_name,city,service_states,created_at,intake_data,contact_email", { headers: _hdr })
     .then(function(r){ return r.json(); })
     .then(function(nemt){
       _pendingNemt = nemt || [];

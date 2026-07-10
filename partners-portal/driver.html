@@ -346,7 +346,7 @@ var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + token };
 
 async function tryRefreshToken(role) {
   var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
-  if (!expiresAt || Date.now() < expiresAt - 300000) return;
+  if (expiresAt && Date.now() < expiresAt - 300000) return;
   var rt = localStorage.getItem('cv_' + role + '_refresh');
   if (!rt) return;
   try {
@@ -589,6 +589,7 @@ async function init() {
 }
 
 async function loadRides() {
+  await tryRefreshToken('nemt');
   if (!staffInfo || !staffInfo.nemt_partner_id) return;
   var today = todayStr();
   var r = await fetch(
