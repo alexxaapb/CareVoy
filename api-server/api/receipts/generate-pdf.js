@@ -1,6 +1,7 @@
 'use strict';
 
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 const { generateAndStoreReceipt, getSignedUrl } = require('../../lib/receipt-pdf');
 
 const SIGNED_URL_TTL = 60 * 60; // 1 hour — coordinator/admin uses it immediately
@@ -18,7 +19,8 @@ module.exports = async function handler(req, res) {
   try {
     const supabase = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { realtime: { transport: ws } }
     );
 
 
@@ -28,7 +30,7 @@ module.exports = async function handler(req, res) {
       const authHeader = req.headers['authorization'] || '';
       const token = authHeader.replace(/^Bearer\s+/i, '');
       if (!token) return res.status(401).json({ error: 'Unauthorized' });
-      const anonClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY || 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H');
+      const anonClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY || 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H', { realtime: { transport: ws } });
       const { data: { user: caller }, error: authErr } = await anonClient.auth.getUser(token);
       if (authErr || !caller) return res.status(401).json({ error: 'Invalid or expired token' });
       const { data: rideCheck } = await supabase.from('rides').select('patient_id').eq('id', rideId).single();
