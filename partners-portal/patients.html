@@ -995,14 +995,23 @@ function viewReceipt(rideId) {
   modal.style.display = 'flex';
 }
 
-function downloadReceipt(rideId) {
-  var r = allRides.find(function(x){ return x.id === rideId; });
-  if (!r) return;
-  var content = document.getElementById('receiptContent').innerHTML;
-  var win = window.open('', '_blank');
-  win.document.write('<html><head><title>CareVoy Receipt</title></head><body style="margin:0;font-family:sans-serif">' + content + '</body></html>');
-  win.document.close();
-  setTimeout(function(){ win.print(); }, 250);
+async function downloadReceipt(rideId) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch(API + '/api/receipts/generate-pdf?rideId=' + rideId, {
+      headers: { 'Authorization': 'Bearer ' + (session ? session.access_token : '') }
+    });
+    if (!resp.ok) { toast('Could not load receipt'); return; }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'carevoy-receipt-' + rideId + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e) { toast('Could not download receipt'); }
 }
 
 function _oldViewReceipt(rideId) {

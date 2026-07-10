@@ -71,7 +71,7 @@ function buildLineItems(ride) {
 
 // ── HTML template ────────────────────────────────────────────────────────────
 function buildReceiptHtml(ride, receiptNumber) {
-  const patient    = ride.patients    || {};
+  const patient    = { full_name: ride.patient_name, email: ride.contact_email, phone: ride.contact_phone };
   const hospital   = ride.hospitals   || {};
   const nemt       = ride.nemt_partners || {};
   const isFacility = ride.payment_responsibility === 'facility';

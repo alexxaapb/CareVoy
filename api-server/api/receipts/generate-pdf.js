@@ -21,6 +21,24 @@ module.exports = async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+
+    // Allow either: internal secret (server-to-server) OR a valid JWT owning the ride / staff member
+    const internalSecret = req.headers['x-internal-secret'];
+    if (internalSecret !== process.env.INTERNAL_API_SECRET) {
+      const authHeader = req.headers['authorization'] || '';
+      const token = authHeader.replace(/^Bearer\s+/i, '');
+      if (!token) return res.status(401).json({ error: 'Unauthorized' });
+      const anonClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY || 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H');
+      const { data: { user: caller }, error: authErr } = await anonClient.auth.getUser(token);
+      if (authErr || !caller) return res.status(401).json({ error: 'Invalid or expired token' });
+      const { data: rideCheck } = await supabase.from('rides').select('patient_id').eq('id', rideId).single();
+      if (!rideCheck) return res.status(404).json({ error: 'Ride not found' });
+      const isOwner = rideCheck.patient_id === caller.id;
+      if (!isOwner) {
+        const { data: staffRow } = await supabase.from('staff').select('role').eq('id', caller.id).single();
+        if (!staffRow) return res.status(403).json({ error: 'Forbidden' });
+      }
+    }
     const { receiptNumber, storagePath, pdfBuffer } = await generateAndStoreReceipt(supabase, rideId);
 
     // Fresh generation — stream the buffer directly (no round-trip to Storage needed)
