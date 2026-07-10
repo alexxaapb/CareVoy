@@ -337,7 +337,7 @@ async function resolveChromium() {
 async function generatePdfBuffer(html) {
   // Uses Browserless.io remote Chromium instead of launching a local browser
   // (avoids Chromium/libnss3 compatibility issues in Vercel serverless)
-  const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN;
+  const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN_API;
   const resp = await fetch(`https://production-sfo.browserless.io/pdf?token=${BROWSERLESS_TOKEN}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
