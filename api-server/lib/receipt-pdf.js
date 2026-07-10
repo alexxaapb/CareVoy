@@ -335,28 +335,27 @@ async function resolveChromium() {
 
 // ── PDF generation (Puppeteer + Chromium) ────────────────────────────────────
 async function generatePdfBuffer(html) {
-  const puppeteer = require('puppeteer-core');
-  const { executablePath, args, defaultViewport } = await resolveChromium();
-
-  const browser = await puppeteer.launch({
-    executablePath,
-    args,
-    defaultViewport: defaultViewport || null,
-    headless: true,
+  // Uses Browserless.io remote Chromium instead of launching a local browser
+  // (avoids Chromium/libnss3 compatibility issues in Vercel serverless)
+  const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN;
+  const resp = await fetch(`https://production-sfo.browserless.io/pdf?token=${BROWSERLESS_TOKEN}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      html,
+      options: {
+        printBackground: true,
+        format: 'Letter',
+        margin: { top: '0', right: '0', bottom: '0', left: '0' },
+      },
+    }),
   });
-
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdf = await page.pdf({
-      format: 'letter',
-      printBackground: true,
-      margin: { top: '0', right: '0', bottom: '0', left: '0' },
-    });
-    return Buffer.from(pdf);
-  } finally {
-    await browser.close();
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`Browserless PDF generation failed: ${resp.status} ${errText}`);
   }
+  const arrayBuffer = await resp.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }
 
 // ── Atomic receipt number (calls Supabase RPC) ───────────────────────────────
