@@ -918,6 +918,18 @@ async function confirmBooking() {
   if (pickupDt < new Date()) { toast('Please select a future date and time'); return; }
   const btn = document.getElementById('bookConfirmBtn');
   btn.disabled = true; btn.textContent = 'Confirming…';
+  // Ensure fare estimate has finished calculating before proceeding (race condition guard)
+  if (window._estimatedFare == null && !isFacility) {
+    btn.textContent = 'Calculating fare…';
+    await new Promise(resolve => {
+      var attempts = 0;
+      var check = setInterval(function() {
+        attempts++;
+        if (window._estimatedFare != null || attempts > 20) { clearInterval(check); resolve(); }
+      }, 250);
+    });
+    btn.textContent = 'Confirming…';
+  }
   try {
     // For self-pay rides, create a Stripe payment method from card
     var paymentMethodId = null;
