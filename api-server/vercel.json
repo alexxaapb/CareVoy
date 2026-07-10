@@ -5,15 +5,5 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" }
-  ],
-  "functions": {
-    "api/rides/update-status.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/receipts/generate-pdf.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  }
+  ]
 }
