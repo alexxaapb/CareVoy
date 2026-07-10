@@ -25,8 +25,9 @@ module.exports = async function handler(req, res) {
 
     // Build update payload
     const update = { status };
+    if (status === 'confirmed') { update.confirmed_at = new Date().toISOString(); }
     if (status === 'assigned' && driver_name) { update.driver_name = driver_name; update.driver_phone = driver_phone || null; update.assigned_at = new Date().toISOString(); }
-    if (status === 'in_progress') { /* just status */ }
+    if (status === 'in_progress') { update.in_progress_at = new Date().toISOString(); }
     if (status === 'completed') {
       update.completed_at = new Date().toISOString();
       // Calculate actual fare from NEMT rates + distance if not already set

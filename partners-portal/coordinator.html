@@ -1195,34 +1195,7 @@ async function submitICS() {
 function openDrawer(rideId) {
   var r = allRides.find(function(x){ return x.id === rideId; });
   if (!r) return;
-  var t = r.pickup_time ? new Date(r.pickup_time) : null;
-  var fmt = t ? t.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'}) + ' at ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
-  var rows = [
-    ['Patient', r.patient_name || '—'],
-    ['Caregiver', r.caregiver_name || 'None'],
-    ['Appointment', fmt],
-    ['Type', r.procedure_type || '—'],
-    ['Appointment Type', rideTypeLabel(r.ride_type)],
-    ['Pickup Address', r.pickup_address || 'Pending patient confirmation'],
-    ['Destination', r.dropoff_address || '—'],
-    ['Transport Status', STATUS_LABELS[r.status] || r.status],
-    ['NEMT Assigned', r.nemt_partner_id ? 'Yes' : 'Pending assignment'],
-    ['Driver', r.driver_name || 'Not yet assigned'],
-    ['Mobility Needs', r.mobility_needs || 'None'],
-  ];
-  document.getElementById('drawerContent').innerHTML =
-    '<div style="font-size:17px;font-weight:700;color:#050D1F;margin-bottom:4px">' + esc(r.patient_name || 'Patient') + '</div>' +
-    '<div style="margin-bottom:16px">' + statusBadge(r.status) + '</div>' +
-    rows.map(function(row){
-      return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #FFFFFF;gap:12px">' +
-        '<span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0">' + row[0] + '</span>' +
-        '<span style="font-size:13px;color:#050D1F;text-align:right">' + esc(String(row[1])) + '</span>' +
-        '</div>';
-    }).join('') +
-    (r.status === 'completed' ? '<button class="btn btn-teal" style="width:100%;margin-top:16px;padding:12px;font-size:13px;border-radius:10px" onclick="resendReceipt(\'' + r.id + '\')">Resend Receipt to Patient</button>' : '') +
-    (['invited','reminder_sent','no_response'].includes(r.status) ? '<button class="btn btn-navy" style="width:100%;margin-top:16px;padding:12px;font-size:13px;border-radius:10px" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder Now</button>' : '');
-  document.getElementById('drawerScrim').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
+  openCVRideDetail(r, { role: 'coord' });
 }
 function closeDrawer() {
   document.getElementById('drawerScrim').classList.remove('open');
@@ -1295,6 +1268,87 @@ async function saveEditPoc() {
 
 init();
 setInterval(loadAll, 30000);
+
+// ── Shared Ride Detail Modal ──────────────────────────
+function openCVRideDetail(ride, opts) {
+  if (!ride) return;
+  opts = opts || {};
+  var r = ride;
+  var SL = { invited:'Invite Sent', reminder_sent:'Reminder Sent', no_response:'No Response', pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
+  var SBG = { invited:'#EFF6FF', reminder_sent:'#EFF6FF', no_response:'#FEF2F2', pending:'#FFFBEB', confirmed:'#ECFDF5', assigned:'#F0FDF4', in_progress:'#FFF7ED', completed:'#F0FDF4', cancelled:'#FEF2F2' };
+  var STC = { invited:'#1D4ED8', reminder_sent:'#1D4ED8', no_response:'#DC2626', pending:'#B45309', confirmed:'#059669', assigned:'#16A34A', in_progress:'#D97706', completed:'#059669', cancelled:'#DC2626' };
+  function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F3F4F6') + ';color:' + (STC[s]||'#6B7280') + '">' + (SL[s]||s) + '</span>'; }
+  function fmtTs(ts) { if (!ts) return null; var d=new Date(ts); return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+  function escStr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function rideTypeLbl(rt) { return {ambulatory:'Ambulatory',wheelchair:'Wheelchair',stretcher:'Stretcher',ambulance:'Ambulance'}[rt]||rt||'—'; }
+  var SO = ['invited','reminder_sent','no_response','pending','confirmed','assigned','in_progress','completed'];
+  var curIdx = SO.indexOf(r.status);
+  var steps = [
+    { key:'invited',     label:'Requested',      ts: r.created_at },
+    { key:'confirmed',   label:'Confirmed',       ts: r.confirmed_at },
+    { key:'assigned',    label:'Driver Assigned', ts: r.assigned_at },
+    { key:'in_progress', label:'Ride Started',    ts: r.in_progress_at },
+    { key:'completed',   label:'Completed',       ts: r.completed_at },
+  ];
+  var tlHTML = '<div style="margin:20px 0 16px"><div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Status Timeline</div><div>';
+  steps.forEach(function(step, i) {
+    var done = SO.indexOf(step.key) <= curIdx && r.status !== 'cancelled';
+    var isLast = i === steps.length - 1;
+    var dotC = done ? '#00836F' : '#E5E7EB';
+    var lineC = (done && !isLast) ? '#00836F' : '#E5E7EB';
+    var ts = fmtTs(step.ts);
+    tlHTML += '<div style="display:flex;align-items:flex-start;gap:12px' + (isLast?'':';padding-bottom:14px') + '"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:2px"><div style="width:10px;height:10px;border-radius:50%;background:' + dotC + ';flex-shrink:0"></div>' + (isLast?'':'<div style="width:2px;min-height:18px;flex:1;background:' + lineC + ';margin:3px 0"></div>') + '</div><div><div style="font-size:12px;font-weight:600;color:' + (done?'#050D1F':'#9CA3AF') + '">' + step.label + '</div>' + (ts?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">' + ts + '</div>':'') + '</div></div>';
+  });
+  tlHTML += '</div></div>';
+  var fareHTML = '';
+  var rates = opts.rates;
+  var total = parseFloat(r.actual_cost || r.estimated_cost || 0);
+  var miles = parseFloat(r.estimated_miles || 0);
+  function fareRow(label, val, bold) { return '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:#6B7280">' + label + '</span><span style="' + (bold?'font-weight:700;color:#050D1F':'color:#374151') + '">' + val + '</span></div>'; }
+  if (total > 0 || (rates && rates.base_fare)) {
+    var fc = '';
+    if (rates && rates.base_fare) {
+      var base = parseFloat(rates.base_fare), mileAmt = parseFloat(rates.per_mile_rate||0)*miles, wc=0, st=0, mob=r.mobility_needs||'';
+      if (mob.includes('wheelchair')) wc = parseFloat(rates.wheelchair_surcharge||0);
+      if (mob.includes('stretcher')) st = parseFloat(rates.stretcher_surcharge||0);
+      var calc = base + mileAmt + wc + st;
+      fc += fareRow('Base Fare','$'+base.toFixed(2));
+      if (miles>0) fc += fareRow(miles.toFixed(1)+' mi \u00d7 $'+parseFloat(rates.per_mile_rate||0).toFixed(2)+'/mi','$'+mileAmt.toFixed(2));
+      if (wc>0) fc += fareRow('Wheelchair Surcharge','$'+wc.toFixed(2));
+      if (st>0) fc += fareRow('Stretcher Surcharge','$'+st.toFixed(2));
+      fc += '<div style="border-top:1px solid #CBD5E1;margin:6px 0 2px"></div>';
+      fc += fareRow(r.actual_cost?'Total (Actual)':'Estimated Total','$'+(r.actual_cost?parseFloat(r.actual_cost).toFixed(2):calc.toFixed(2)),true);
+    } else if (total>0) { fc += fareRow(r.actual_cost?'Actual Fare':'Estimated Fare','$'+total.toFixed(2),true); }
+    if (r.payment_responsibility) { var isFac=r.payment_responsibility==='facility'; fc += '<div style="margin-top:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:'+(isFac?'rgba(16,185,129,0.08)':'rgba(0,131,111,0.08)')+';color:'+(isFac?'#065F46':'#00836F')+'">'+(isFac?'Facility-Covered':'Self-Pay')+'</div>'; }
+    fareHTML = '<div style="margin:0 0 20px;padding:14px 16px;background:#F8FAFC;border-radius:12px;border:1px solid #E2E8F0"><div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Fare Breakdown</div>' + fc + '</div>';
+  }
+  var t = r.pickup_time ? new Date(r.pickup_time) : null;
+  var dateStr = t ? t.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})+' at '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+  var proc = (r.procedure_type||'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();})||'—';
+  var rows = [['Appointment',dateStr],['Pickup',r.pickup_address||'Pending patient confirmation'],['Destination',r.dropoff_address],['Procedure',proc],['Transport',rideTypeLbl(r.ride_type)],['Mobility',r.mobility_needs],['Driver',r.driver_name]].filter(function(row){return row[1];});
+  var infoHTML = '<div style="margin:16px 0 20px">'+rows.map(function(row){return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F1F5F9;gap:12px"><span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0">'+row[0]+'</span><span style="font-size:13px;color:#050D1F;text-align:right">'+escStr(String(row[1]))+'</span></div>';}).join('')+'</div>';
+  var ctaHTML = '';
+  if (opts.role === 'coord') {
+    if (['invited','reminder_sent','no_response'].includes(r.status)) ctaHTML += '<button class="btn btn-navy" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();sendReminder(event,\''+r.id+'\')">Send Reminder</button>';
+    if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#EF4444;border-color:#FECACA" onclick="closeCVRideDetail();cancelRide(event,\''+r.id+'\')">Cancel Ride</button>';
+    if (r.status === 'completed') ctaHTML += '<button class="btn btn-teal" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();resendReceipt(\''+r.id+'\')">Resend Receipt</button>';
+  }
+  document.getElementById('cvRDMTitle').innerHTML = escStr(r.patient_name||'Ride Details')+(r.status?' <span style="vertical-align:middle">'+mkBadge(r.status)+'</span>':'');
+  document.getElementById('cvRDMBody').innerHTML = infoHTML+tlHTML+fareHTML+(ctaHTML?'<div style="margin-top:4px">'+ctaHTML+'</div>':'');
+  document.getElementById('cvRideDetailModal').style.display = 'flex';
+}
+function closeCVRideDetail() { document.getElementById('cvRideDetailModal').style.display = 'none'; }
 </script>
+
+<!-- Shared Ride Detail Modal -->
+<div id="cvRideDetailModal" onclick="if(event.target===this)closeCVRideDetail()" style="display:none;position:fixed;inset:0;background:rgba(5,13,31,0.6);z-index:3000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(5,13,31,0.3)">
+    <div style="position:sticky;top:0;background:#fff;padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1F5F9;border-radius:16px 16px 0 0">
+      <div id="cvRDMTitle" style="font-size:17px;font-weight:700;color:#050D1F;flex:1;min-width:0;padding-right:12px"></div>
+      <button onclick="closeCVRideDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;line-height:1;flex-shrink:0">&times;</button>
+    </div>
+    <div id="cvRDMBody" style="padding:4px 24px 24px"></div>
+  </div>
+</div>
 </body>
 </html>
