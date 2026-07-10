@@ -1,4 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
+const ws = require('ws');
 const { Resend } = require("resend");
 
 function classifyEligibility(procedureType, facilityType) {
@@ -54,7 +55,7 @@ module.exports = async (req, res) => {
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    , { realtime: { transport: ws } });
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { rideId, patientId } = req.body;
 

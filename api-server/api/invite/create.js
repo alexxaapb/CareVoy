@@ -1,10 +1,11 @@
 const { createClient } = require("@supabase/supabase-js");
+const ws = require('ws');
 const crypto = require("crypto");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+, { realtime: { transport: ws } });
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");

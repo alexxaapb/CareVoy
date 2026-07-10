@@ -3,11 +3,12 @@
 // an SMS (via Twilio) and/or email (via Resend) so they know a driver accepted
 // even if they never enabled push notifications.
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+, { realtime: { transport: ws } });
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

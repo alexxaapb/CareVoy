@@ -10,7 +10,8 @@ module.exports = async function handler(req, res) {
     if (!ride_id) return res.status(400).json({ error: 'Missing ride_id' });
 
     const { createClient } = require('@supabase/supabase-js');
-    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const ws = require('ws');
+    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { realtime: { transport: ws } });
 
     // Get ride details
     const { data: ride } = await sb.from('rides').select('*').eq('id', ride_id).single();

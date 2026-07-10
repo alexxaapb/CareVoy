@@ -4,11 +4,12 @@
 // form: the scheduled_appointments table. The auto-invite engine handles
 // the rest (invites ~7 days before, or immediately if sooner).
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+, { realtime: { transport: ws } });
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

@@ -1,10 +1,11 @@
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 const { Resend } = require('resend');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+, { realtime: { transport: ws } });
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 

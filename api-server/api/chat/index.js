@@ -1,4 +1,5 @@
 const Anthropic = require("@anthropic-ai/sdk");
+const ws = require('ws');
 const { createClient } = require("@supabase/supabase-js");
 
 module.exports = async (req, res) => {
@@ -14,7 +15,7 @@ module.exports = async (req, res) => {
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    , { realtime: { transport: ws } });
 
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",

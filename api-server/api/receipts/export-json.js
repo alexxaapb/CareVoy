@@ -1,4 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
+const ws = require('ws');
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -11,7 +12,7 @@ module.exports = async (req, res) => {
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    , { realtime: { transport: ws } });
     const { rideId } = req.query;
     if (!rideId) return res.status(400).json({ error: "rideId required" });
 

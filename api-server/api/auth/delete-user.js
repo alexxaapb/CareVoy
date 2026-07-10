@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,7 +15,7 @@ module.exports = async function handler(req, res) {
     const sb = createClient(
       process.env.SUPABASE_URL || 'https://byflpckbjjumxxjxoplk.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    , { realtime: { transport: ws } });
 
     // Delete rides by patient_id and contact_email
     await sb.from('rides').delete().eq('patient_id', user_id);

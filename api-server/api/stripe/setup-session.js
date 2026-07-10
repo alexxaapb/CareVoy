@@ -1,4 +1,5 @@
 const Stripe = require("stripe");
+const ws = require('ws');
 const { createClient } = require("@supabase/supabase-js");
 
 module.exports = async (req, res) => {
@@ -12,7 +13,7 @@ module.exports = async (req, res) => {
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    , { realtime: { transport: ws } });
 
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Unauthorized" });
