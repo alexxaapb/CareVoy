@@ -743,13 +743,22 @@ async function cancelRide(rideId) {
   } catch(e) { toast('Could not cancel ride'); }
 }
 
-function openRideDetail(rideId) {
+async function openRideDetail(rideId) {
   const r = allRides.find(x => x.id === rideId);
   if (!r) return;
   currentRide = r;
   const isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(r.status);
   if (isPending) { openBookModal(rideId); return; }
-  openCVRideDetail(r, { role: 'patient' });
+  var rates = null;
+  if (r.nemt_partner_id) {
+    try {
+      var { data: nemt } = await sb.from('nemt_partners')
+        .select('base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge')
+        .eq('id', r.nemt_partner_id).single();
+      if (nemt) rates = nemt;
+    } catch(e) {}
+  }
+  openCVRideDetail(r, { role: 'patient', rates: rates });
 }
 
 // ── Book modal ──
@@ -1235,13 +1244,31 @@ function openCVRideDetail(ride, opts) {
   });
   tlHTML += '</div></div>';
   var fareHTML = '';
+  var rates = opts.rates;
   var total = parseFloat(r.actual_cost || r.estimated_cost || 0);
-  if (total > 0 && r.payment_responsibility !== 'facility') {
-    var fc = '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:#6B7280">' + (r.actual_cost?'Actual Fare':'Estimated Fare') + '</span><span style="font-weight:700;color:#050D1F">$' + total.toFixed(2) + '</span></div>';
-    fc += '<div style="margin-top:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(0,131,111,0.08);color:#00836F">Self-Pay · Eligible for HSA/FSA reimbursement</div>';
-    fareHTML = '<div style="margin:0 0 20px;padding:14px 16px;background:#F8FAFC;border-radius:12px;border:1px solid #E2E8F0"><div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Fare</div>' + fc + '</div>';
-  } else if (r.payment_responsibility === 'facility') {
+  var miles = parseFloat(r.estimated_miles || 0);
+  function fareRow(label, val, bold) { return '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:#6B7280">' + label + '</span><span style="' + (bold?'font-weight:700;color:#050D1F':'color:#374151') + '">' + val + '</span></div>'; }
+  if (r.payment_responsibility === 'facility') {
     fareHTML = '<div style="margin:0 0 20px;padding:12px 14px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:12px;font-size:12px;color:#065F46;font-weight:600">Facility-Covered — No payment required from you</div>';
+  } else if (total > 0 || (rates && rates.base_fare)) {
+    var fc = '';
+    if (rates && rates.base_fare) {
+      var base = parseFloat(rates.base_fare), mileAmt = parseFloat(rates.per_mile_rate||0)*miles, wc=0, st=0, mob=r.mobility_needs||'';
+      if (mob.includes('wheelchair')) wc = parseFloat(rates.wheelchair_surcharge||0);
+      if (mob.includes('stretcher')) st = parseFloat(rates.stretcher_surcharge||0);
+      var calc = base + mileAmt + wc + st;
+      fc += fareRow('Base Fare','$'+base.toFixed(2));
+      if (miles>0) fc += fareRow(miles.toFixed(1)+' mi × $'+parseFloat(rates.per_mile_rate||0).toFixed(2)+'/mi','$'+mileAmt.toFixed(2));
+      if (wc>0) fc += fareRow('Wheelchair Accessibility','$'+wc.toFixed(2));
+      if (st>0) fc += fareRow('Stretcher Transport','$'+st.toFixed(2));
+      if (r.companion_requested) fc += fareRow('Companion Rider','$0.00');
+      fc += '<div style="border-top:1px solid #CBD5E1;margin:6px 0 2px"></div>';
+      fc += fareRow(r.actual_cost?'Total Paid':'Estimated Total','$'+(r.actual_cost?parseFloat(r.actual_cost).toFixed(2):calc.toFixed(2)),true);
+    } else {
+      fc += fareRow(r.actual_cost?'Actual Fare':'Estimated Fare','$'+total.toFixed(2),true);
+    }
+    fc += '<div style="margin-top:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(0,131,111,0.08);color:#00836F">Self-Pay · Eligible for HSA/FSA reimbursement</div>';
+    fareHTML = '<div style="margin:0 0 20px;padding:14px 16px;background:#F8FAFC;border-radius:12px;border:1px solid #E2E8F0"><div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Fare Breakdown</div>' + fc + '</div>';
   }
   var t = r.pickup_time ? new Date(r.pickup_time) : null;
   var dateStr = t ? t.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})+' at '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
