@@ -928,7 +928,7 @@ async function confirmBooking() {
   const btn = document.getElementById('bookConfirmBtn');
   btn.disabled = true; btn.textContent = 'Confirming…';
   // Ensure fare estimate has finished calculating before proceeding (race condition guard)
-  if (window._estimatedFare == null && !isFacility) {
+  if (window._estimatedFare == null) {
     btn.textContent = 'Calculating fare…';
     await new Promise(resolve => {
       var attempts = 0;
