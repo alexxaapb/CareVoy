@@ -795,8 +795,10 @@ async function estimateFare() {
     var miles = element.distance.value / 1609.34;
 
     var estimated = baseFare + (perMile * miles);
-    if (document.getElementById('bookWheelchair').checked) estimated += wheelchairSurcharge;
-    if (document.getElementById('bookStretcher').checked) estimated += stretcherSurcharge;
+    var wheelchairEl = document.getElementById('bookWheelchair');
+    var stretcherEl = document.getElementById('bookStretcher');
+    if (wheelchairEl && wheelchairEl.checked) estimated += wheelchairSurcharge;
+    if (stretcherEl && stretcherEl.checked) estimated += stretcherSurcharge;
 
     window._estimatedFare = Math.round(estimated * 100) / 100;
     window._estimatedMiles = Math.round(miles * 10) / 10;
