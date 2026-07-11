@@ -849,23 +849,23 @@ function openBookModal(rideId) {
       <label class="form-label">Pickup address</label>
       <input class="form-input" id="bookPickup" placeholder="Start typing your address..." onfocus="initPlacesAutocomplete()" autocomplete="off" style="margin:0" value="${r.pickup_address || ''}">
     </div>
+    <div style="margin-bottom:16px">
+      <div class="payment-label" style="margin-bottom:10px">Ride options</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
+          <input type="checkbox" id="bookWheelchair" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Wheelchair accessible
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
+          <input type="checkbox" id="bookStretcher" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Stretcher transport
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
+          <input type="checkbox" id="bookCompanion" style="width:16px;height:16px;accent-color:#00C2A8"> Bringing a companion
+        </label>
+      </div>
+    </div>
     ${isFacilityCovered
       ? `<div class="facility-covered-box"><span style="font-size:18px"></span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
       : `<div class="hsa-pill">HSA/FSA eligible — Your card will be charged after ride completion. An IRS 213(d) receipt will be emailed automatically.</div>
-         <div style="margin-bottom:16px">
-           <div class="payment-label" style="margin-bottom:10px">Ride options</div>
-           <div style="display:flex;flex-wrap:wrap;gap:10px">
-             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
-               <input type="checkbox" id="bookWheelchair" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Wheelchair accessible
-             </label>
-             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
-               <input type="checkbox" id="bookStretcher" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Stretcher transport
-             </label>
-             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
-               <input type="checkbox" id="bookCompanion" style="width:16px;height:16px;accent-color:#00C2A8"> Bringing a companion
-             </label>
-           </div>
-         </div>
          <div id="fareEstimate" style="display:none;background:rgba(0,194,168,0.06);border:1px solid rgba(0,194,168,0.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
            <div style="display:flex;justify-content:space-between;align-items:center">
              <span style="font-size:13px;color:#00836F;font-weight:600">Estimated fare</span>
