@@ -907,6 +907,11 @@ async function submitAddPatient() {
   var apptDate = document.getElementById('apptDate').value;
   var apptTime = document.getElementById('apptTime').value;
   var apptType = document.getElementById('apptType').value;
+  if (!apptDate || !apptTime) {
+    err.textContent = 'Please select both an appointment date and time.';
+    err.style.display = 'block';
+    return;
+  }
 
   if (bookingFor === 'patient') {
     var first = document.getElementById('patFirstName').value.trim();
