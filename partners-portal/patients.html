@@ -1219,7 +1219,7 @@ function openCVRideDetail(ride, opts) {
   if (!ride) return;
   opts = opts || {};
   var r = ride;
-  var SL = { invited:'Invite Sent', reminder_sent:'Reminder Sent', no_response:'No Response', pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
+  var SL = { invited:'Invite Sent', app_downloaded:'Account Created', reminder_sent:'Reminder Sent', no_response:'No Response', pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
   var SBG = { invited:'#EFF6FF', reminder_sent:'#EFF6FF', no_response:'#FEF2F2', pending:'#FFFBEB', confirmed:'#ECFDF5', assigned:'#F0FDF4', in_progress:'#FFF7ED', completed:'#F0FDF4', cancelled:'#FEF2F2' };
   var STC = { invited:'#1D4ED8', reminder_sent:'#1D4ED8', no_response:'#DC2626', pending:'#B45309', confirmed:'#059669', assigned:'#16A34A', in_progress:'#D97706', completed:'#059669', cancelled:'#DC2626' };
   function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F3F4F6') + ';color:' + (STC[s]||'#6B7280') + '">' + (SL[s]||s) + '</span>'; }
