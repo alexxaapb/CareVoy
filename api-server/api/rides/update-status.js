@@ -31,22 +31,22 @@ module.exports = async function handler(req, res) {
     if (status === 'in_progress') { update.in_progress_at = new Date().toISOString(); }
     if (status === 'completed') {
       update.completed_at = new Date().toISOString();
-      // Calculate actual fare from NEMT rates + distance if not already set
+      // Always calculate actual fare fresh from the NEMT's CURRENT rates at completion time.
+      // Never trust a frozen estimated_cost — NEMT rates can change between booking and completion.
       const { data: existingRide } = await sb.from('rides').select('*').eq('id', ride_id).single();
       if (existingRide && !existingRide.actual_cost) {
-        let fare = existingRide.estimated_cost || 0;
-        // If no estimate, calculate from NEMT rates
-        if (!fare && existingRide.nemt_partner_id) {
-          const { data: nemt } = await sb.from('nemt_partners').select('base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge').eq('id', existingRide.nemt_partner_id).single();
-          if (nemt) {
-            fare = parseFloat(nemt.base_fare || 25);
-            var miles = existingRide.estimated_miles || 10;
-            fare += parseFloat(nemt.per_mile_rate || 2.5) * miles;
-            const mobility = existingRide.mobility_needs || '';
-            if (mobility.includes('wheelchair')) fare += parseFloat(nemt.wheelchair_surcharge || 0);
-            if (mobility.includes('stretcher')) fare += parseFloat(nemt.stretcher_surcharge || 0);
-          }
+        if (!existingRide.nemt_partner_id || !existingRide.estimated_miles) {
+          return res.status(400).json({ error: 'Cannot complete ride: missing NEMT assignment or mileage data required to calculate fare.' });
         }
+        const { data: nemt } = await sb.from('nemt_partners').select('base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge').eq('id', existingRide.nemt_partner_id).single();
+        if (!nemt) {
+          return res.status(400).json({ error: 'Cannot complete ride: NEMT partner rates not found.' });
+        }
+        let fare = parseFloat(nemt.base_fare || 0);
+        fare += parseFloat(nemt.per_mile_rate || 0) * existingRide.estimated_miles;
+        const mobility = existingRide.mobility_needs || '';
+        if (mobility.includes('wheelchair')) fare += parseFloat(nemt.wheelchair_surcharge || 0);
+        if (mobility.includes('stretcher')) fare += parseFloat(nemt.stretcher_surcharge || 0);
         update.actual_cost = Math.round(fare * 100) / 100;
       }
     }
