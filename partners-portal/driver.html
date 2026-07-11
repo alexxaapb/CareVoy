@@ -821,7 +821,7 @@ setInterval(loadRides, 30000);
 // ── Shared Ride Detail Modal ──────────────────────────
 function openDriverRideDetail(id) {
   var ride = allRides.find(function(r){ return r.id === id; });
-  openCVRideDetail(ride, { role: 'nemt', rates: staffInfo });
+  openCVRideDetail(ride, { role: 'nemt', rates: partnerInfo });
 }
 function openCVRideDetail(ride, opts) {
   if (!ride) return;
@@ -878,7 +878,7 @@ function openCVRideDetail(ride, opts) {
   var t = r.pickup_time ? new Date(r.pickup_time) : null;
   var dateStr = t ? t.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})+' at '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
   var proc = (r.procedure_type||'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();})||'—';
-  var rows = [['Appointment',dateStr],['Pickup',r.pickup_address||'Pending patient confirmation'],['Destination',r.dropoff_address],['Transport',rideTypeLbl(r.ride_type)],['Mobility',r.mobility_needs],['Facility',r.hospital_name]].filter(function(row){return row[1];});
+  var rows = [['Appointment',dateStr],['Pickup',r.pickup_address||'Pending patient confirmation'],['Destination',r.dropoff_address],['Mobility',r.mobility_needs],['Facility',r.hospital_name]].filter(function(row){return row[1];});
   var infoHTML = '<div style="margin:16px 0 20px">'+rows.map(function(row){return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F1F5F9;gap:12px"><span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0">'+row[0]+'</span><span style="font-size:13px;color:#050D1F;text-align:right">'+escStr(String(row[1]))+'</span></div>';}).join('')+'</div>';
   document.getElementById('cvRDMTitle').innerHTML = escStr(r.patient_name||'Ride Details')+(r.status?' <span style="vertical-align:middle">'+mkBadge(r.status)+'</span>':'');
   document.getElementById('cvRDMBody').innerHTML = infoHTML+tlHTML+fareHTML;
