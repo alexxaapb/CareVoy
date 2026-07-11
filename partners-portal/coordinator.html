@@ -1163,10 +1163,18 @@ async function submitICS() {
 }
 
 // ── Drawer ─────────────────────────────────────────────────
-function openDrawer(rideId) {
+async function openDrawer(rideId) {
   var r = allRides.find(function(x){ return x.id === rideId; });
   if (!r) return;
-  openCVRideDetail(r, { role: 'coord' });
+  var rates = null;
+  if (r.nemt_partner_id) {
+    try {
+      var res = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + r.nemt_partner_id + '&select=base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge', { headers: H });
+      var data = await res.json();
+      if (data && data[0]) rates = data[0];
+    } catch(e) {}
+  }
+  openCVRideDetail(r, { role: 'coord', rates: rates });
 }
 function closeDrawer() {
   document.getElementById('drawerScrim').classList.remove('open');
