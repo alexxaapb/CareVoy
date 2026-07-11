@@ -406,6 +406,15 @@ async function getSignedUrl(supabase, storagePath, expiresIn) {
   return data.signedUrl;
 }
 
+async function downloadPdf(supabase, storagePath) {
+  const { data, error } = await supabase.storage
+    .from('receipts')
+    .download(storagePath);
+  if (error) throw new Error('PDF download error: ' + error.message);
+  const arrayBuffer = await data.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
 // ── Main orchestrator ────────────────────────────────────────────────────────
 // Returns { receiptNumber, storagePath, pdfBuffer } on success.
 // storagePath is stored in rides.receipt_pdf_url — call getSignedUrl() when you
@@ -458,5 +467,6 @@ module.exports = {
   generatePdfBuffer,
   generateAndStoreReceipt,
   getSignedUrl,
+  downloadPdf,
   rideTypeLabel,
 };

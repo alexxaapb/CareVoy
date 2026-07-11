@@ -80,10 +80,18 @@ module.exports = async function handler(req, res) {
                 pdfUrl = await getSignedUrl(sb, result.storagePath, 60 * 60 * 24 * 365);
               } catch (_) {}
             } else if (result.storagePath) {
-              // Already stored from a prior run — still generate signed URL for the email
+              // Already stored from a prior run — download the existing PDF to attach it again,
+              // and also generate a signed URL for the email link.
               try {
                 pdfUrl = await getSignedUrl(sb, result.storagePath, 60 * 60 * 24 * 365);
               } catch (_) {}
+              try {
+                const { downloadPdf } = require('../../lib/receipt-pdf');
+                const existingBuffer = await downloadPdf(sb, result.storagePath);
+                pdfAttachment = { filename: `carevoy-receipt-${receiptNumber}.pdf`, content: existingBuffer };
+              } catch (dlErr) {
+                console.error('Could not re-download existing PDF for attachment:', dlErr);
+              }
             }
           } catch (pdfErr) {
             console.error('PDF generation error (email will send without attachment):', pdfErr);
