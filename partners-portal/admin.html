@@ -1085,7 +1085,7 @@
   if (!confirm('Delete this ride permanently?')) return;
   try {
     var resp = await fetch('https://care-voy-api-server.vercel.app/api/rides/update-status', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ ride_id: rideId, action: 'delete' })
     });
     var result = await resp.json();

@@ -800,7 +800,7 @@ async function deleteRide(evt, rideId) {
 async function resendReceipt(rideId) {
   try {
     var resp = await fetch(API + '/api/rides/update-status', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { ...H, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ride_id: rideId, status: 'completed', resend_only: true })
     });
     showToast('Receipt resent to patient', 'ok');

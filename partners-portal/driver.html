@@ -714,7 +714,7 @@ async function updateStatus(rideId, newStatus) {
   try {
     var resp = await fetch(API + '/api/rides/update-status', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ ride_id: rideId, status: newStatus })
     });
     var result = await resp.json();
