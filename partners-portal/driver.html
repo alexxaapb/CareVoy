@@ -680,6 +680,7 @@ function rideCard(r) {
   if (r.companion_requested) tags += '<span class="tag tag-blue">Companion</span>';
   if (r.caregiver_name) tags += '<span class="tag tag-teal">Caregiver booking</span>';
   if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('wheelchair')) tags += '<span class="tag tag-teal">Wheelchair</span>';
+  if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('stretcher')) tags += '<span class="tag tag-teal">Stretcher</span>';
   if (r.mobility_needs && r.mobility_needs.toLowerCase().includes('extra')) tags += '<span class="tag tag-gold">Extra time</span>';
 
   var actionBtn = '';
