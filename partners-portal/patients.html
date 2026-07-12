@@ -399,8 +399,9 @@
 
       <div class="profile-card">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Help and Support</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">For questions about your rides, receipts, or account, email us at <a href="mailto:contact@carevoy.co" style="color:var(--teal);font-weight:600;text-decoration:none">contact@carevoy.co</a> and someone will follow up within 48 business hours.</div>
-        <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px;color:#EF4444;border-color:#FECACA" onclick="deleteMyAccount()">Delete my account</button>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">For questions about your rides, receipts, or account, our team will follow up within 48 business hours.</div>
+        <a href="mailto:support@carevoy.co" class="btn btn-navy" style="width:auto;padding:10px 24px;font-size:13px;text-decoration:none;display:inline-block;margin-bottom:12px">Support</a>
+        <button class="btn btn-ghost" style="width:auto;padding:10px 24px;font-size:13px;color:#EF4444;border-color:#FECACA;display:block;margin-top:12px" onclick="deleteMyAccount()">Delete my account</button>
       </div>
     </div>
   </div>
@@ -731,7 +732,7 @@ async function deleteMyAccount() {
     document.querySelectorAll('input').forEach(function(inp){ inp.value = ''; });
     toast('Account deleted');
     showScreen('login');
-  } catch(e) { toast('Could not delete account. Please email contact@carevoy.co for assistance.'); }
+  } catch(e) { toast('Could not delete account. Please email support@carevoy.co for assistance.'); }
 }
 
 async function cancelRide(rideId) {
