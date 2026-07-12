@@ -12,6 +12,16 @@ module.exports = async function handler(req, res) {
     const { ride_id, status, driver_name, driver_phone, action } = req.body;
     if (!ride_id) return res.status(400).json({ error: 'Missing ride_id' });
 
+    const authHeader = req.headers['authorization'] || '';
+    const jwtToken = authHeader.replace(/^Bearer\s+/i, '');
+    if (!jwtToken) return res.status(401).json({ error: 'Unauthorized' });
+    const anonSb = require('@supabase/supabase-js').createClient(
+      process.env.SUPABASE_URL || 'https://byflpckbjjumxxjxoplk.supabase.co',
+      process.env.SUPABASE_ANON_KEY || 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H'
+    );
+    const { data: { user: caller }, error: authErr } = await anonSb.auth.getUser(jwtToken);
+    if (authErr || !caller) return res.status(401).json({ error: 'Invalid or expired token' });
+
     const sb = createClient(
       process.env.SUPABASE_URL || 'https://byflpckbjjumxxjxoplk.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY
