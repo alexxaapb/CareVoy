@@ -554,7 +554,7 @@ async function init() {
       return;
     }
 
-    var pr = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name,city,service_states,vehicle_types,dispatch_phone', { headers: H });
+    var pr = await fetch(SUPA + '/rest/v1/nemt_partners?id=eq.' + staffInfo.nemt_partner_id + '&select=company_name,city,service_states,vehicle_types,dispatch_phone,base_fare,per_mile_rate,wheelchair_surcharge,stretcher_surcharge', { headers: H });
     var pd = await pr.json();
     partnerInfo = pd[0] || null;
 
