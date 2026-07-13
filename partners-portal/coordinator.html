@@ -1046,32 +1046,62 @@ async function submitAddPatient() {
     return;
   }
 
-  var pickupISO = new Date(apptDate + 'T' + (apptTime || '08:00')).toISOString();
-  var payload = {
-    hospital_id: coordInfo.hospital_id,
-    patient_name: patientName,
-    caregiver_name: caregiverName || null,
-    contact_phone: contactPhone,
-    contact_email: patEmail,
-    procedure_type: apptType,
-    pickup_time: pickupISO,
-    status: 'invited',
+  var rideDirection = document.querySelector('input[name="rideDirection"]:checked').value;
+  var returnTimeVal = document.getElementById('returnTime') ? document.getElementById('returnTime').value : '';
+  if (rideDirection === 'both' && !returnTimeVal) {
+    showErr('Please select a return pickup time for the round trip.');
+    return;
+  }
+  var isRecurringChecked = apptType === 'dialysis' && document.getElementById('isRecurring') && document.getElementById('isRecurring').checked;
+  var weeksToSchedule = isRecurringChecked ? parseInt(document.getElementById('recurringWeeks').value, 10) : 1;
+  var recurringSeriesId = weeksToSchedule > 1
+    ? 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(ch) {
+        var r = Math.random() * 16 | 0;
+        var v = ch === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      })
+    : null;
+  var legs = rideDirection === 'both' ? ['pre_op', 'post_op'] : [rideDirection];
+  var payloads = [];
+  for (var week = 0; week < weeksToSchedule; week++) {
+    var weekOffsetMs = week * 7 * 24 * 60 * 60 * 1000;
+    var baseApptDateTime = new Date(new Date(apptDate + 'T' + (apptTime || '08:00')).getTime() + weekOffsetMs);
+    legs.forEach(function(leg) {
+      var isPre = leg === 'pre_op';
+      var legPickupTime = new Date(baseApptDateTime);
+      if (!isPre && returnTimeVal) {
+        var rtParts = returnTimeVal.split(':');
+        legPickupTime.setHours(parseInt(rtParts[0], 10), parseInt(rtParts[1], 10), 0, 0);
+      }
+      payloads.push({
+        hospital_id: coordInfo.hospital_id,
+        patient_name: patientName,
+        caregiver_name: caregiverName || null,
+        contact_phone: contactPhone,
+        contact_email: patEmail,
+        procedure_type: apptType,
+        pickup_time: legPickupTime.toISOString(),
+        status: 'invited',
         hospital_state: hospitalInfo ? (hospitalInfo.state || null) : null,
         hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null,
-    invited_at: new Date().toISOString(),
-    reminder_sent: false,
-    ride_type: apptType || 'pre_op',
-    payment_responsibility: document.getElementById('paymentResp').value || 'self_pay',
-    pickup_address: null,
-    dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null
-  };
-
+        invited_at: new Date().toISOString(),
+        reminder_sent: false,
+        ride_type: apptType || 'pre_op',
+        payment_responsibility: document.getElementById('paymentResp').value || 'self_pay',
+        pickup_address: null,
+        dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null,
+        is_recurring: !!recurringSeriesId,
+        recurring_weeks: recurringSeriesId ? weeksToSchedule : null,
+        recurring_series_id: recurringSeriesId
+      });
+    });
+  }
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
     var r = await fetch(SUPA + '/rest/v1/rides', {
       method: 'POST',
       headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payloads)
     });
     if (!r.ok) { var d = await r.json().catch(function(){return{};}); throw new Error(d.message || 'Failed'); }
     // Send patient invite email (portal-based, no app required)
