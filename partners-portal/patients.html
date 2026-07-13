@@ -943,20 +943,38 @@ async function confirmBooking() {
     btn.textContent = 'Confirming…';
   }
   try {
-    // For self-pay rides, create a Stripe payment method from card
-    var paymentMethodId = null;
+    // For self-pay rides, properly save the card to the patient's Stripe Customer
+    // (creates a reusable payment method for charging at ride completion, not just a one-time token)
     if (!isFacility && window._stripeCard) {
-      var { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: window._stripeCard,
-        billing_details: { name: currentUser.user_metadata?.full_name || '', email: currentUser.email }
+      btn.textContent = 'Saving card…';
+      const { data: { session } } = await sb.auth.getSession();
+      const setupResp = await fetch(API + '/api/stripe/setup-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : '') },
+        body: JSON.stringify({ email: currentUser.email })
       });
-      if (pmError) {
+      const setupData = await setupResp.json();
+      if (!setupResp.ok) {
         btn.disabled = false; btn.textContent = 'Confirm ride';
-        toast(pmError.message || 'Payment failed. Please check your card.');
+        toast(setupData.error || 'Could not set up payment. Please try again.');
         return;
       }
-      paymentMethodId = paymentMethod.id;
+      var { setupIntent, error: setupError } = await stripe.confirmCardSetup(setupData.clientSecret, {
+        payment_method: {
+          card: window._stripeCard,
+          billing_details: { name: currentUser.user_metadata?.full_name || '', email: currentUser.email }
+        }
+      });
+      if (setupError) {
+        btn.disabled = false; btn.textContent = 'Confirm ride';
+        toast(setupError.message || 'Payment failed. Please check your card.');
+        return;
+      }
+      // Save the confirmed payment method so completion can charge it later
+      await sb.from('patients').upsert(
+        { id: currentUser.id, stripe_customer_id: setupData.customerId, stripe_payment_method_id: setupIntent.payment_method },
+        { onConflict: 'id' }
+      );
     }
     await sb.from('rides').update({
       pickup_time: pickupDt.toISOString(),
