@@ -823,7 +823,7 @@ function initPlacesAutocomplete() {
   input._acInit = true;
 }
 
-function openBookModal(rideId) {
+async function openBookModal(rideId) {
   const r = allRides.find(x => x.id === rideId);
   if (!r) return;
   currentRide = r;
@@ -875,15 +875,43 @@ function openBookModal(rideId) {
            <div style="font-size:11px;color:#6B7280;margin-top:4px">Final fare based on actual distance. Card charged after ride completion.</div>
          </div>
          <div class="payment-label">Payment method</div>
+         <div id="savedCardDisplay" style="display:none;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:12px">
+           <div style="display:flex;justify-content:space-between;align-items:center">
+             <span style="font-size:13px;color:#050D1F;font-weight:600" id="savedCardText">Card on file</span>
+             <button type="button" onclick="useNewCard()" style="background:none;border:none;color:#00836F;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use a different card</button>
+           </div>
+         </div>
          <div id="apple-pay-btn" style="display:none;margin-bottom:12px"></div>
          <div id="stripe-element"></div>
          <div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>`
     }
   `;
-  if (!isFacilityCovered) initStripeElement();
+  if (!isFacilityCovered) {
+    await checkSavedCard();
+  }
   document.getElementById('bookModal').classList.add('open');
 }
 
+async function checkSavedCard() {
+  try {
+    const { data: patient } = await sb.from('patients').select('stripe_payment_method_id').eq('id', currentUser.id).maybeSingle();
+    if (patient && patient.stripe_payment_method_id) {
+      window._savedPaymentMethodId = patient.stripe_payment_method_id;
+      document.getElementById('savedCardDisplay').style.display = 'block';
+      document.getElementById('stripe-element').style.display = 'none';
+      return;
+    }
+  } catch(e) {}
+  window._savedPaymentMethodId = null;
+  document.getElementById('savedCardDisplay').style.display = 'none';
+  initStripeElement();
+}
+function useNewCard() {
+  window._savedPaymentMethodId = null;
+  document.getElementById('savedCardDisplay').style.display = 'none';
+  document.getElementById('stripe-element').style.display = 'block';
+  if (!window._stripeCard) initStripeElement();
+}
 function closeBookModal() {
   // Clear mobility options
   var wb = document.getElementById('bookWheelchair'); if(wb) wb.checked = false;
@@ -945,7 +973,8 @@ async function confirmBooking() {
   try {
     // For self-pay rides, properly save the card to the patient's Stripe Customer
     // (creates a reusable payment method for charging at ride completion, not just a one-time token)
-    if (!isFacility && window._stripeCard) {
+    // Skip entirely if the patient is using an already-saved card (window._savedPaymentMethodId set)
+    if (!isFacility && !window._savedPaymentMethodId && window._stripeCard) {
       btn.textContent = 'Saving card…';
       const { data: { session } } = await sb.auth.getSession();
       const setupResp = await fetch(API + '/api/stripe/setup-session', {
