@@ -763,7 +763,34 @@ function renderAlerts() {
   var alerts = allRides.filter(function(r){ return ['invited','reminder_sent','no_response','pending'].includes(r.status); });
   var el = document.getElementById('alertsList');
   if (!alerts.length) { el.innerHTML = '<div class="empty" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">No alerts right now. All patients are on track.</div>'; return; }
-  el.innerHTML = alerts.map(function(r){
+
+  // Group recurring-series alerts together; leave non-recurring alerts individual
+  var seriesGroups = {};
+  var individual = [];
+  alerts.forEach(function(r) {
+    if (r.is_recurring && r.recurring_series_id) {
+      if (!seriesGroups[r.recurring_series_id]) seriesGroups[r.recurring_series_id] = [];
+      seriesGroups[r.recurring_series_id].push(r);
+    } else {
+      individual.push(r);
+    }
+  });
+
+  var html = '';
+  Object.keys(seriesGroups).forEach(function(seriesId) {
+    var group = seriesGroups[seriesId];
+    var first = group[0];
+    var isNoResp = group.some(function(r){ return r.status === 'no_response'; });
+    var procLabel = (first.procedure_type||'Appointment').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+    html += '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#fca5a5':'#fde68a') + ';padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+      '<div><div style="font-size:13px;font-weight:600;color:#050D1F">' + esc(first.patient_name||'Patient') + '</div>' +
+      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(procLabel) + ' Series &middot; ' + group.length + ' of ' + group.length + ' pending</div>' +
+      '</div>' +
+      '<button class="btn btn-navy" onclick="sendReminderSeries(event,\'' + seriesId + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#EF4444;border:1px solid #FECACA" onclick="cancelRideSeries(event,\'' + seriesId + '\')">Cancel Series</button>' +
+      '</div>';
+  });
+
+  html += individual.map(function(r){
     var t = r.pickup_time ? new Date(r.pickup_time) : null;
     var apptStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : 'Unknown date';
     var isNoResp = r.status === 'no_response';
@@ -774,6 +801,34 @@ function renderAlerts() {
       '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#EF4444;border:1px solid #FECACA" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>' +
       '</div>';
   }).join('');
+
+  el.innerHTML = html;
+}
+async function sendReminderSeries(evt, seriesId) {
+  evt.stopPropagation();
+  var group = allRides.filter(function(r){ return r.recurring_series_id === seriesId && ['invited','reminder_sent','no_response','pending'].includes(r.status); });
+  if (!group.length) return;
+  for (var i = 0; i < group.length; i++) {
+    await sendReminder(null, group[i].id, true);
+  }
+  showToast('Reminder sent for entire series', 'ok');
+  await loadRides();
+}
+async function cancelRideSeries(evt, seriesId) {
+  evt.stopPropagation();
+  var group = allRides.filter(function(r){ return r.recurring_series_id === seriesId && ['invited','reminder_sent','no_response','pending'].includes(r.status); });
+  if (!confirm('Cancel the entire series (' + group.length + ' remaining rides)?')) return;
+  try {
+    var resp = await fetch(SUPA + '/rest/v1/rides?recurring_series_id=eq.' + seriesId + '&status=in.(invited,reminder_sent,no_response,pending)', {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status: 'cancelled' })
+    });
+    if (!resp.ok) { showToast('Could not cancel series', 'err'); return; }
+    allRides.forEach(function(r){ if (r.recurring_series_id === seriesId && ['invited','reminder_sent','no_response','pending'].includes(r.status)) r.status = 'cancelled'; });
+    updateStats(); renderPatientTable(); renderAlerts();
+    showToast('Entire series cancelled', 'ok');
+  } catch(e) { showToast('Could not cancel series', 'err'); }
 }
 
 // Patient list uses rides table (patient_id, patient_name, status)
@@ -800,8 +855,8 @@ function renderPatientTable() {
 }
 
 // ── Send reminder ──────────────────────────────────────────
-async function sendReminder(evt, rideId) {
-  evt.stopPropagation();
+async function sendReminder(evt, rideId, silent) {
+  if (evt) evt.stopPropagation();
   try {
     await fetch(API + '/api/reminders/send', {
       method: 'POST',
@@ -809,8 +864,10 @@ async function sendReminder(evt, rideId) {
       body: JSON.stringify({ ride_id: rideId })
     });
   } catch(e) {}
-  showToast('Reminder sent', 'ok');
-  await loadRides();
+  if (!silent) {
+    showToast('Reminder sent', 'ok');
+    await loadRides();
+  }
 }
 
 async function deleteRide(evt, rideId) {
