@@ -772,11 +772,20 @@ function renderAlerts() {
     var first = group[0];
     var isNoResp = group.some(function(r){ return r.status === 'no_response'; });
     var procLabel = (first.procedure_type||'Appointment').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
-    html += '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#fca5a5':'#fde68a') + ';padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+    var sortedGroup = group.slice().sort(function(a,b){ return new Date(a.pickup_time) - new Date(b.pickup_time); });
+    var datesListHtml = sortedGroup.map(function(r){
+      var t = r.pickup_time ? new Date(r.pickup_time) : null;
+      var dStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) + ' at ' + t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : 'Unknown date';
+      return '<div style="font-size:12px;color:#374151;padding:4px 0">' + dStr + '</div>';
+    }).join('');
+    html += '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#fca5a5':'#fde68a') + ';padding:16px 18px;margin-bottom:10px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer" onclick="toggleSeriesExpand(\'' + seriesId + '\')">' +
       '<div><div style="font-size:13px;font-weight:600;color:#050D1F">' + esc(first.patient_name||'Patient') + '</div>' +
-      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(procLabel) + ' Series &middot; ' + group.length + ' of ' + group.length + ' pending</div>' +
+      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(procLabel) + ' Series &middot; ' + group.length + ' of ' + group.length + ' pending &middot; <span style="color:#00836F;text-decoration:underline">view dates</span></div>' +
       '</div>' +
-      '<button class="btn btn-navy" onclick="sendReminderSeries(event,\'' + seriesId + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#EF4444;border:1px solid #FECACA" onclick="cancelRideSeries(event,\'' + seriesId + '\')">Cancel Series</button>' +
+      '<div><button class="btn btn-navy" onclick="event.stopPropagation();sendReminderSeries(event,\'' + seriesId + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#EF4444;border:1px solid #FECACA" onclick="event.stopPropagation();cancelRideSeries(event,\'' + seriesId + '\')">Cancel Series</button></div>' +
+      '</div>' +
+      '<div id="seriesDates-' + seriesId + '" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #F1F5F9">' + datesListHtml + '</div>' +
       '</div>';
   });
 
@@ -793,6 +802,11 @@ function renderAlerts() {
   }).join('');
 
   el.innerHTML = html;
+}
+function toggleSeriesExpand(seriesId) {
+  var el = document.getElementById('seriesDates-' + seriesId);
+  if (!el) return;
+  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
 }
 async function sendReminderSeries(evt, seriesId) {
   evt.stopPropagation();
