@@ -411,7 +411,7 @@
 
     <div class="form-group">
       <label class="form-label">Appointment Type <span style="color:#EF4444">*</span></label>
-      <select class="form-input" id="apptType">
+      <select class="form-input" id="apptType" onchange="toggleRecurringOption()">
         <option value="">Select type…</option>
         <option value="pre_op">Pre-Op Appointment</option>
         <option value="post_op">Post-Op / Return</option>
@@ -420,6 +420,39 @@
         <option value="follow_up">Post-Procedure Follow-Up</option>
         <option value="other">Other Medical Visit</option>
       </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ride Direction <span style="color:#EF4444">*</span></label>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px" id="rideDirLabelTo">
+          <input type="radio" name="rideDirection" value="pre_op" checked onchange="updateRideDirection()" style="margin-right:6px">To facility
+        </label>
+        <label style="flex:1;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px" id="rideDirLabelFrom">
+          <input type="radio" name="rideDirection" value="post_op" onchange="updateRideDirection()" style="margin-right:6px">From facility
+        </label>
+        <label style="flex:1;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px" id="rideDirLabelBoth">
+          <input type="radio" name="rideDirection" value="both" onchange="updateRideDirection()" style="margin-right:6px">Round trip
+        </label>
+      </div>
+    </div>
+    <div id="returnTimeBox" style="display:none;margin-bottom:14px">
+      <label class="form-label">Return pickup time <span style="color:#EF4444">*</span></label>
+      <input class="form-input" id="returnTime" type="time">
+    </div>
+    <div id="recurringOptionBox" style="display:none;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;margin-bottom:10px">
+        <input type="checkbox" id="isRecurring" onchange="toggleRecurringWeeks()" style="width:16px;height:16px;accent-color:#00C2A8">
+        Recurring weekly (dialysis)
+      </label>
+      <div id="recurringWeeksBox" style="display:none;padding-left:24px">
+        <label class="form-label" style="font-size:12px">Number of weeks</label>
+        <select class="form-input" id="recurringWeeks" style="max-width:120px" onchange="updateRecurringNote()">
+          <option value="4">4 weeks</option>
+          <option value="8">8 weeks</option>
+          <option value="12">12 weeks</option>
+        </select>
+        <div style="font-size:11px;color:#6B7280;margin-top:6px" id="recurringWeeksNote">4 rides will be scheduled, one per week.</div>
+      </div>
     </div>
     <div style="margin-bottom:14px">
       <label class="form-label">Who pays for the ride? <span style="color:#EF4444">*</span></label>
@@ -1062,6 +1095,30 @@ async function submitAddPatient() {
 }
 
 function showErr(msg) { var e = document.getElementById('addPatError'); e.textContent = msg; e.style.display = 'block'; }
+function toggleRecurringOption() {
+  var apptType = document.getElementById('apptType').value;
+  var box = document.getElementById('recurringOptionBox');
+  if (apptType === 'dialysis') {
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+    document.getElementById('isRecurring').checked = false;
+    toggleRecurringWeeks();
+  }
+}
+function toggleRecurringWeeks() {
+  var checked = document.getElementById('isRecurring').checked;
+  document.getElementById('recurringWeeksBox').style.display = checked ? 'block' : 'none';
+  updateRecurringNote();
+}
+function updateRecurringNote() {
+  var weeks = document.getElementById('recurringWeeks').value;
+  document.getElementById('recurringWeeksNote').textContent = weeks + ' rides will be scheduled, one per week.';
+}
+function updateRideDirection() {
+  var val = document.querySelector('input[name="rideDirection"]:checked').value;
+  document.getElementById('returnTimeBox').style.display = (val === 'both') ? 'block' : 'none';
+}
 
 // ── CSV upload ─────────────────────────────────────────────
 function openUploadModal() { document.getElementById('uploadModal').classList.add('open'); }
