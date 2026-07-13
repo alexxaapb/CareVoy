@@ -58,6 +58,35 @@ module.exports = async function handler(req, res) {
         if (mobility.includes('wheelchair')) fare += parseFloat(nemt.wheelchair_surcharge || 0);
         if (mobility.includes('stretcher')) fare += parseFloat(nemt.stretcher_surcharge || 0);
         update.actual_cost = Math.round(fare * 100) / 100;
+
+        // Charge the patient's saved card for self-pay rides
+        if (existingRide.payment_responsibility !== 'facility' && existingRide.patient_id) {
+          const { data: patient } = await sb.from('patients').select('stripe_customer_id, stripe_payment_method_id').eq('id', existingRide.patient_id).single();
+          if (patient && patient.stripe_customer_id && patient.stripe_payment_method_id) {
+            try {
+              const Stripe = require('stripe');
+              const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+              const amountCents = Math.round(update.actual_cost * 100);
+              const paymentIntent = await stripe.paymentIntents.create({
+                amount: amountCents,
+                currency: 'usd',
+                customer: patient.stripe_customer_id,
+                payment_method: patient.stripe_payment_method_id,
+                off_session: true,
+                confirm: true,
+                metadata: { rideId: ride_id, patientId: existingRide.patient_id },
+                description: 'CareVoy medical transportation — IRS Code 213(d)',
+              });
+              update.payment_status = paymentIntent.status === 'succeeded' ? 'paid' : 'pending';
+              update.stripe_payment_intent_id = paymentIntent.id;
+            } catch (chargeErr) {
+              console.error('Charge failed at completion:', chargeErr);
+              update.payment_status = 'failed';
+            }
+          } else {
+            update.payment_status = 'no_payment_method';
+          }
+        }
       }
     }
 
