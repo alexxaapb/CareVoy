@@ -827,12 +827,16 @@ async function openBookModal(rideId) {
   const r = allRides.find(x => x.id === rideId);
   if (!r) return;
   currentRide = r;
+  window._pairedRide = null;
+  if (r.round_trip_pair_id) {
+    window._pairedRide = allRides.find(x => x.round_trip_pair_id === r.round_trip_pair_id && x.id !== r.id) || null;
+  }
   const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Your appointment';
   const isFacilityCovered = r.payment_responsibility === 'facility';
   const today = new Date();
   const minDate = today.toISOString().split('T')[0];
-  document.getElementById('bookModalTitle').textContent = 'Schedule your ride';
-  document.getElementById('bookModalSub').textContent = `to ${facility}`;
+  document.getElementById('bookModalTitle').textContent = window._pairedRide ? 'Schedule your round trip' : 'Schedule your ride';
+  document.getElementById('bookModalSub').textContent = window._pairedRide ? `Round trip to ${facility} — one address, both legs` : `to ${facility}`;
   document.getElementById('bookConfirmBtn').style.display = 'inline-block';
   document.getElementById('bookConfirmBtn').textContent = 'Confirm ride';
   document.getElementById('bookModalBody').innerHTML = `
@@ -1026,19 +1030,36 @@ async function confirmBooking() {
         { onConflict: 'id' }
       );
     }
+    var mobilityStr = (function(){var m=[];if(document.getElementById("bookWheelchair")&&document.getElementById("bookWheelchair").checked)m.push("wheelchair");if(document.getElementById("bookStretcher")&&document.getElementById("bookStretcher").checked)m.push("stretcher");return m.length?m.join(","):null;})();
+    var companionChecked = (document.getElementById("bookCompanion")&&document.getElementById("bookCompanion").checked)||false;
     await sb.from('rides').update({
       pickup_time: pickupDt.toISOString(),
       pickup_address: pickup,
       patient_id: currentUser.id,
       status: 'confirmed',
       payment_responsibility: currentRide.payment_responsibility,
-      mobility_needs: (function(){var m=[];if(document.getElementById("bookWheelchair")&&document.getElementById("bookWheelchair").checked)m.push("wheelchair");if(document.getElementById("bookStretcher")&&document.getElementById("bookStretcher").checked)m.push("stretcher");return m.length?m.join(","):null;})(),
-      companion_requested: (document.getElementById("bookCompanion")&&document.getElementById("bookCompanion").checked)||false,
+      mobility_needs: mobilityStr,
+      companion_requested: companionChecked,
       estimated_cost: window._estimatedFare||null,
       estimated_miles: window._estimatedMiles||null,
     }).eq('id', currentRide.id);
+    // If this ride is paired as a round trip, confirm the return leg too —
+    // using the SAME address (pickup/dropoff swapped, since the return leg goes home)
+    if (window._pairedRide) {
+      await sb.from('rides').update({
+        pickup_address: currentRide.dropoff_address || currentRide.hospital_name,
+        dropoff_address: pickup,
+        patient_id: currentUser.id,
+        status: 'confirmed',
+        payment_responsibility: currentRide.payment_responsibility,
+        mobility_needs: mobilityStr,
+        companion_requested: companionChecked,
+        estimated_cost: window._estimatedFare||null,
+        estimated_miles: window._estimatedMiles||null,
+      }).eq('id', window._pairedRide.id);
+    }
     closeBookModal();
-    toast('Ride confirmed');
+    toast(window._pairedRide ? 'Round trip confirmed' : 'Ride confirmed');
     await loadRides();
   } catch(e) {
     btn.disabled = false; btn.textContent = 'Confirm ride';
