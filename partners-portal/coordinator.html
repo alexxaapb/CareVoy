@@ -855,6 +855,36 @@ function exportCoordCSV() {
 
 async function cancelRide(evt, rideId) {
   evt.stopPropagation();
+  var r = allRides.find(function(x){ return x.id === rideId; });
+  if (r && r.is_recurring && r.recurring_series_id) {
+    var seriesRides = allRides.filter(function(x){ return x.recurring_series_id === r.recurring_series_id && !['completed','cancelled'].includes(x.status); });
+    var choice = confirm('This ride is part of a recurring series (' + seriesRides.length + ' remaining). Click OK to cancel the ENTIRE series, or Cancel to cancel only this one ride.');
+    try {
+      if (choice) {
+        var resp2 = await fetch(SUPA + '/rest/v1/rides?recurring_series_id=eq.' + r.recurring_series_id + '&status=in.(invited,app_downloaded,reminder_sent,no_response,pending,confirmed)', {
+          method: 'PATCH',
+          headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ status: 'cancelled' })
+        });
+        if (!resp2.ok) { showToast('Could not cancel series', 'err'); return; }
+        allRides.forEach(function(x){ if (x.recurring_series_id === r.recurring_series_id && !['completed','cancelled'].includes(x.status)) x.status = 'cancelled'; });
+        showToast('Entire series cancelled', 'ok');
+        updateStats(); renderPatientTable(); renderAlerts();
+        return;
+      } else {
+        var resp3 = await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+          method: 'PATCH',
+          headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ status: 'cancelled' })
+        });
+        if (!resp3.ok) { showToast('Could not cancel ride', 'err'); return; }
+        for (var j = 0; j < allRides.length; j++) { if (allRides[j].id === rideId) { allRides[j].status = 'cancelled'; break; } }
+        updateStats(); renderPatientTable(); renderAlerts();
+        showToast('This ride cancelled', 'ok');
+        return;
+      }
+    } catch(e) { showToast('Could not cancel ride', 'err'); return; }
+  }
   if (!confirm('Cancel this ride?')) return;
   try {
     var resp = await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
