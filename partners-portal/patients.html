@@ -848,7 +848,7 @@ async function openBookModal(rideId) {
     </div>
     <div class="field-group">
       <label class="form-label">Pickup address</label>
-      <input class="form-input" id="bookPickup" placeholder="Start typing your address..." onfocus="initPlacesAutocomplete()" autocomplete="off" style="margin:0" value="${r.pickup_address || ''}">
+      <input class="form-input" id="bookPickup" placeholder="Start typing your address..." onfocus="initPlacesAutocomplete()" autocomplete="off" style="margin:0" value="">
     </div>
     <div style="margin-bottom:16px">
       <div class="payment-label" style="margin-bottom:10px">Ride options</div>
@@ -883,6 +883,7 @@ async function openBookModal(rideId) {
          </div>
          <div id="apple-pay-btn" style="display:none;margin-bottom:12px"></div>
          <div id="stripe-element"></div>
+         <div id="backToSavedCardLink" style="display:none;margin-top:8px"><button type="button" onclick="useSavedCard()" style="background:none;border:none;color:#00836F;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use saved card instead</button></div>
          <div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>`
     }
   `;
@@ -897,6 +898,18 @@ async function checkSavedCard() {
     const { data: patient } = await sb.from('patients').select('stripe_payment_method_id').eq('id', currentUser.id).maybeSingle();
     if (patient && patient.stripe_payment_method_id) {
       window._savedPaymentMethodId = patient.stripe_payment_method_id;
+      var cardLabel = 'Card on file';
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const cardResp = await fetch(API + '/api/stripe/get-card-details', {
+          headers: { 'Authorization': 'Bearer ' + (session ? session.access_token : '') }
+        });
+        const cardData = await cardResp.json();
+        if (cardData.hasCard && cardData.last4) {
+          cardLabel = (cardData.brand ? cardData.brand.charAt(0).toUpperCase() + cardData.brand.slice(1) : 'Card') + ' ending in ' + cardData.last4;
+        }
+      } catch(e2) {}
+      document.getElementById('savedCardText').textContent = cardLabel;
       document.getElementById('savedCardDisplay').style.display = 'block';
       document.getElementById('stripe-element').style.display = 'none';
       return;
@@ -907,10 +920,18 @@ async function checkSavedCard() {
   initStripeElement();
 }
 function useNewCard() {
+  window._savedPaymentMethodId_backup = window._savedPaymentMethodId;
   window._savedPaymentMethodId = null;
   document.getElementById('savedCardDisplay').style.display = 'none';
   document.getElementById('stripe-element').style.display = 'block';
+  var link = document.getElementById('backToSavedCardLink'); if (link) link.style.display = 'block';
   if (!window._stripeCard) initStripeElement();
+}
+function useSavedCard() {
+  window._savedPaymentMethodId = window._savedPaymentMethodId_backup;
+  document.getElementById('savedCardDisplay').style.display = 'block';
+  document.getElementById('stripe-element').style.display = 'none';
+  var link = document.getElementById('backToSavedCardLink'); if (link) link.style.display = 'none';
 }
 function closeBookModal() {
   // Clear mobility options
