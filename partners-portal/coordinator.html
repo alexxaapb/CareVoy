@@ -581,7 +581,7 @@ async function init() {
     }
 
     if (coordInfo.hospital_id) {
-      var hr = await fetch(SUPA + '/rest/v1/hospitals?id=eq.' + coordInfo.hospital_id + '&select=name,city', { headers: H });
+      var hr = await fetch(SUPA + '/rest/v1/hospitals?id=eq.' + coordInfo.hospital_id + '&select=name,city,state', { headers: H });
       var hd = await hr.json();
       hospitalInfo = hd[0] || null;
     }
