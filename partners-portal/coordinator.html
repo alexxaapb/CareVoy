@@ -705,13 +705,13 @@ function updateStats() {
     });
     return count;
   })();
-  document.getElementById('statAction').textContent = uniqueActionCount;
+  document.getElementById('statAction').textContent = action.length;
   document.getElementById('statUpcoming').textContent = upcoming.length;
 
 
   if (action.length > 0) {
     document.getElementById('alertBanner').style.display = 'flex';
-    document.getElementById('alertBannerText').textContent = action.length + ' patient' + (action.length>1?'s':' ') + ' still need' + (action.length===1?'s':'') + ' to confirm their ride.';
+    document.getElementById('alertBannerText').textContent = action.length + ' ride' + (action.length>1?'s':' ') + ' still need' + (action.length===1?'s':'') + ' to be confirmed.';
     var badge = document.getElementById('alertNavBadge');
     badge.textContent = action.length; badge.style.display = 'inline';
   } else {
