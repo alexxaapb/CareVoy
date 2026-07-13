@@ -167,7 +167,7 @@
     <!-- Hero metrics: the numbers a facility shows their boss -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
       <div class="stat-card" style="background:linear-gradient(135deg,#050D1F 0%,#0a1a3a 100%);border:none">
-        <div class="stat-label" style="color:#9CA3AF">Appointments Kept</div>
+        <div class="stat-label" style="color:#9CA3AF">Rides Completed</div>
         <div class="stat-value" style="color:#00C2A8;font-size:32px" id="statKept">—</div>
         <div style="color:#6B7280;font-size:11px;margin-top:2px">Completed rides = appointments your patients made</div>
       </div>
@@ -192,14 +192,7 @@
         <div class="stat-label">Needs Action</div>
         <div class="stat-value gold" id="statAction">—</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Avg Time to Confirm</div>
-        <div class="stat-value teal" id="statAvgConfirm">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Self-Complete Rate</div>
-        <div class="stat-value teal" id="statSelfComplete">—</div>
-      </div>
+
       <div class="stat-card">
         <div class="stat-label">Upcoming This Week</div>
         <div class="stat-value" id="statUpcoming">—</div>
@@ -700,7 +693,19 @@ function updateStats() {
   // Operational metrics
   document.getElementById('statTotal').textContent = allRides.length;
   document.getElementById('statConfirmed').textContent = confirmed.length;
-  document.getElementById('statAction').textContent = action.length;
+  var uniqueActionCount = (function() {
+    var seenSeries = {};
+    var count = 0;
+    action.forEach(function(r) {
+      if (r.is_recurring && r.recurring_series_id) {
+        if (!seenSeries[r.recurring_series_id]) { seenSeries[r.recurring_series_id] = true; count++; }
+      } else {
+        count++;
+      }
+    });
+    return count;
+  })();
+  document.getElementById('statAction').textContent = uniqueActionCount;
   document.getElementById('statUpcoming').textContent = upcoming.length;
 
   // ── New metrics: avg time-to-confirm + self-complete rate ──
