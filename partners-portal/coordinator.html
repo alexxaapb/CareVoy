@@ -1066,6 +1066,13 @@ async function submitAddPatient() {
   for (var week = 0; week < weeksToSchedule; week++) {
     var weekOffsetMs = week * 7 * 24 * 60 * 60 * 1000;
     var baseApptDateTime = new Date(new Date(apptDate + 'T' + (apptTime || '08:00')).getTime() + weekOffsetMs);
+    var roundTripPairId = (rideDirection === 'both')
+      ? 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(ch) {
+          var r = Math.random() * 16 | 0;
+          var v = ch === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        })
+      : null;
     legs.forEach(function(leg) {
       var isPre = leg === 'pre_op';
       var legPickupTime = new Date(baseApptDateTime);
@@ -1092,7 +1099,8 @@ async function submitAddPatient() {
         dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null,
         is_recurring: !!recurringSeriesId,
         recurring_weeks: recurringSeriesId ? weeksToSchedule : null,
-        recurring_series_id: recurringSeriesId
+        recurring_series_id: recurringSeriesId,
+        round_trip_pair_id: roundTripPairId
       });
     });
   }
