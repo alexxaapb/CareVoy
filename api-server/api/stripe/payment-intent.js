@@ -16,8 +16,8 @@ module.exports = async (req, res) => {
       currency: "usd",
       customer: customerId,
       payment_method: paymentMethodId,
+      off_session: true,
       confirm: true,
-      automatic_payment_methods: { enabled: true, allow_redirects: "never" },
       metadata: { rideId, patientId },
       description: "CareVoy medical transportation — IRS Code 213(d)",
     });
@@ -25,6 +25,9 @@ module.exports = async (req, res) => {
     res.status(200).json({ clientSecret: intent.client_secret, status: intent.status });
   } catch (e) {
     console.error("payment-intent error:", e);
+    if (e.code === 'authentication_required' || e.type === 'StripeCardError') {
+      return res.status(402).json({ error: 'Card declined or requires authentication: ' + e.message, requiresAction: true });
+    }
     res.status(500).json({ error: e.message });
   }
 };
