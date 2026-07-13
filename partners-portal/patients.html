@@ -575,7 +575,7 @@ async function claimInvitedRides(email, userId) {
 // ── Get rides ──
 async function getRides(email, userId) {
   try {
-    const { data } = await sb.from('rides').select('*,hospitals(name)').or('patient_id.eq.' + userId + ',contact_email.eq.' + email).order('created_at', { ascending: false });
+    const { data } = await sb.from('rides').select('*,hospitals(name)').or('patient_id.eq.' + userId + ',contact_email.eq.' + email).order('pickup_time', { ascending: true });
     return data || [];
   } catch(e) { return []; }
 }
@@ -639,16 +639,25 @@ const STATUS_BADGE = {
   in_progress:'badge-enroute', en_route:'badge-enroute', arrived:'badge-arrived', completed:'badge-completed', cancelled:'badge-cancelled'
 };
 
+function dedupeRoundTripPairs(rides) {
+  const seenPairs = {};
+  return rides.filter(r => {
+    if (!r.round_trip_pair_id) return true;
+    if (seenPairs[r.round_trip_pair_id]) return false;
+    seenPairs[r.round_trip_pair_id] = true;
+    return true;
+  });
+}
 function renderRides() {
   const list = document.getElementById('ridesList');
-  const upcoming = allRides.filter(r => !['completed','cancelled'].includes(r.status));
-  const past = allRides.filter(r => ['completed','cancelled'].includes(r.status));
-
+  const upcomingAll = allRides.filter(r => !['completed','cancelled'].includes(r.status));
+  const pastAll = allRides.filter(r => ['completed','cancelled'].includes(r.status));
+  const upcoming = dedupeRoundTripPairs(upcomingAll);
+  const past = dedupeRoundTripPairs(pastAll);
   if (!allRides.length) {
     list.innerHTML = `<div class="invite-wait"><span class="invite-wait-icon"></span><div class="invite-wait-text">Your healthcare facility will send you a ride invitation. It will appear here automatically — no action needed until then.</div></div><div class="empty-box"><div class="empty-icon"></div><div class="empty-title">No rides yet</div><div class="empty-sub">Once your facility coordinates a ride, you'll see it here.</div></div>`;
     return;
   }
-
   let html = '';
   if (upcoming.length) {
     upcoming.forEach(r => { html += buildRideCard(r, false); });
