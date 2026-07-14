@@ -829,8 +829,10 @@ async function estimateFare() {
 
     window._estimatedFare = Math.round(estimated * 100) / 100;
     window._estimatedMiles = Math.round(miles * 10) / 10;
-    document.getElementById('fareAmount').textContent = '$' + window._estimatedFare.toFixed(2);
-    document.getElementById('fareEstimate').style.display = 'block';
+    var fareAmountEl = document.getElementById('fareAmount');
+    var fareEstimateEl = document.getElementById('fareEstimate');
+    if (fareAmountEl) fareAmountEl.textContent = '$' + window._estimatedFare.toFixed(2);
+    if (fareEstimateEl) fareEstimateEl.style.display = 'block';
     initApplePay();
   });
 }
