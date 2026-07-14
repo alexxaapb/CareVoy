@@ -994,6 +994,8 @@ function openAddPatientModal() {
       sel.appendChild(opt);
     });
   }
+  var apptDateEl = document.getElementById('apptDate');
+  if (apptDateEl) apptDateEl.min = new Date().toISOString().split('T')[0];
   document.getElementById('addPatientModal').classList.add('open');
 }
 
