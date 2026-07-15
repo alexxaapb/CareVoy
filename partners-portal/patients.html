@@ -641,7 +641,14 @@ const STATUS_BADGE = {
 
 function dedupeRoundTripPairs(rides) {
   const seenPairs = {};
-  return rides.filter(r => {
+  // Sort so the outbound (pre_op) leg represents the pair
+  var sorted = rides.slice().sort(function(a,b){
+    if (a.round_trip_pair_id && a.round_trip_pair_id === b.round_trip_pair_id) {
+      return a.ride_type === 'pre_op' ? -1 : 1;
+    }
+    return 0;
+  });
+  return sorted.filter(r => {
     if (!r.round_trip_pair_id) return true;
     if (seenPairs[r.round_trip_pair_id]) return false;
     seenPairs[r.round_trip_pair_id] = true;
@@ -689,9 +696,65 @@ function formatPayment(p) {
   return p.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
 }
 
+function buildRoundTripCard(r, isPast, facility) {
+  // Find both legs of the pair
+  var legs = allRides.filter(function(x){ return x.round_trip_pair_id === r.round_trip_pair_id; });
+  var outbound = legs.find(function(x){ return x.ride_type === 'pre_op'; }) || legs[0];
+  var ret = legs.find(function(x){ return x.ride_type === 'post_op'; }) || legs[1] || null;
+  var status = outbound.status;
+  var isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(status);
+  var label = STATUS_LABEL[status] || status;
+  var badge = STATUS_BADGE[status] || 'badge-pending';
+  var payLabel = outbound.payment_responsibility === 'facility' ? 'Facility-Covered' : outbound.payment_responsibility === 'self_pay' ? 'Self-Pay' : '';
+
+  function legRow(leg, idx, fromLabel, toLabel) {
+    if (!leg) return '';
+    var t = leg.pickup_time ? new Date(leg.pickup_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD';
+    var d = leg.pickup_time ? new Date(leg.pickup_time).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : '';
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0' + (idx===0 ? ';border-bottom:1px dashed var(--border)' : '') + '">' +
+      '<div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(0,194,168,.12);color:#00836F;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">' + (idx+1) + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:11px;font-weight:700;color:#00836F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">' + fromLabel + '</div>' +
+        '<div style="font-size:13px;color:var(--navy);font-weight:600">' + d + ' · ' + t + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + toLabel + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  var outFrom = outbound.pickup_address || 'Your address';
+  var outTo = outbound.dropoff_address || facility;
+  var retFrom = ret ? (ret.pickup_address || facility) : '';
+  var retTo = ret ? (ret.dropoff_address || 'Your address') : '';
+
+  var body = legRow(outbound, 0, 'To facility', outFrom + '  →  ' + outTo) +
+             (ret ? legRow(ret, 1, 'Return home', retFrom + '  →  ' + retTo) : '');
+
+  var action = '';
+  if (isPending) {
+    action = '<div class="ride-action"><button class="schedule-btn" onclick="openRoundTripModal(\'' + outbound.id + '\')"><span></span> Book round trip</button></div>';
+  } else if (status === 'confirmed') {
+    action = '<div class="ride-action" style="display:flex;gap:10px;align-items:center"><span style="font-size:13px;color:var(--muted)">Waiting for driver assignment</span><button onclick="cancelRide(\'' + outbound.id + '\')" style="padding:6px 14px;border-radius:8px;border:1px solid #FECACA;background:none;color:#EF4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel trip</button></div>';
+  }
+
+  return '<div class="ride-card">' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
+      '<span class="ride-badge ' + badge + '">' + label + '</span>' +
+      '<span style="font-size:11px;font-weight:700;color:#00836F;background:rgba(0,194,168,.1);padding:3px 10px;border-radius:20px">ROUND TRIP</span>' +
+    '</div>' +
+    '<div class="ride-facility">' + facility + '</div>' +
+    (payLabel ? '<div class="ride-meta"><span>' + payLabel + '</span></div>' : '') +
+    '<div style="margin-top:10px">' + body + '</div>' +
+    action +
+  '</div>';
+}
+
 function buildRideCard(r, isPast) {
   const isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(r.status);
   const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Your Facility';
+  // ── Round-trip airline-style card ──
+  if (r.round_trip_pair_id) {
+    return buildRoundTripCard(r, isPast, facility);
+  }
   const pickupDate = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'TBD';
   const pickupTime = r.pickup_time ? new Date(r.pickup_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
   const label = STATUS_LABEL[r.status] || r.status;
@@ -971,8 +1034,9 @@ function closeBookModal() {
   var sb2 = document.getElementById('bookStretcher'); if(sb2) sb2.checked = false;
   var cb = document.getElementById('bookCompanion'); if(cb) cb.checked = false;
   var fe = document.getElementById('fareEstimate'); if(fe) fe.style.display = 'none';
-  var cbtn = document.getElementById('bookConfirmBtn'); if(cbtn) cbtn.style.display = '';
+  var cbtn = document.getElementById('bookConfirmBtn'); if(cbtn) { cbtn.style.display = ''; cbtn.setAttribute('onclick','confirmBooking()'); cbtn.textContent='Confirm ride'; cbtn.disabled=false; }
   window._estimatedFare = null;
+  window._rtOutbound = null; window._rtReturn = null;
   document.getElementById('bookModal').classList.remove('open');
   document.getElementById('bookModal').classList.remove('open');
   currentRide = null;
@@ -999,6 +1063,138 @@ function initApplePay() {
 }
 
 // ── Confirm booking ──
+async function openRoundTripModal(outboundId) {
+  var outbound = allRides.find(function(x){ return x.id === outboundId; });
+  if (!outbound) return;
+  var legs = allRides.filter(function(x){ return x.round_trip_pair_id === outbound.round_trip_pair_id; });
+  var ret = legs.find(function(x){ return x.ride_type === 'post_op'; }) || null;
+  window._rtOutbound = outbound;
+  window._rtReturn = ret;
+  currentRide = outbound;
+  var facility = (outbound.hospitals && outbound.hospitals.name) || outbound.hospital_name || 'the facility';
+  var isFacilityCovered = outbound.payment_responsibility === 'facility';
+
+  var outDate = outbound.pickup_time ? new Date(outbound.pickup_time) : null;
+  var retDate = ret && ret.pickup_time ? new Date(ret.pickup_time) : null;
+  var outWhen = outDate ? outDate.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}) + ' at ' + outDate.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD';
+  var retWhen = retDate ? retDate.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}) + ' at ' + retDate.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD';
+
+  document.getElementById('bookModalTitle').textContent = 'Book your round trip';
+  document.getElementById('bookModalSub').textContent = 'Confirm your home address for both legs';
+  var cbtn = document.getElementById('bookConfirmBtn');
+  cbtn.style.display = 'inline-block';
+  cbtn.textContent = 'Confirm round trip';
+  cbtn.setAttribute('onclick', 'confirmRoundTrip()');
+
+  document.getElementById('bookModalBody').innerHTML =
+    '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px;margin-bottom:16px">' +
+      '<div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:12px;border-bottom:1px dashed #E2E8F0">' +
+        '<div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(0,194,168,.12);color:#00836F;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div>' +
+        '<div><div style="font-size:11px;font-weight:700;color:#00836F;text-transform:uppercase;letter-spacing:.5px">To facility</div>' +
+        '<div style="font-size:13px;color:#050D1F;font-weight:600;margin-top:2px">' + outWhen + '</div>' +
+        '<div style="font-size:12px;color:#6B7280;margin-top:2px">Home → ' + facility + '</div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;align-items:flex-start;padding-top:12px">' +
+        '<div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(245,166,35,.15);color:#B45309;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div>' +
+        '<div><div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.5px">Return home</div>' +
+        '<div style="font-size:13px;color:#050D1F;font-weight:600;margin-top:2px">' + retWhen + '</div>' +
+        '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + facility + ' → Home</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="field-group">' +
+      '<label class="form-label">Your home address</label>' +
+      '<input class="form-input" id="rtHomeAddress" placeholder="Start typing your address..." onfocus="initRtAutocomplete()" autocomplete="off" style="margin:0" value="">' +
+      '<div style="font-size:11px;color:#6B7280;margin-top:6px">Used as pickup for leg 1 and drop-off for leg 2. You can adjust the return drop-off below if needed.</div>' +
+    '</div>' +
+    '<div class="field-group" style="margin-top:12px">' +
+      '<label class="form-label">Return drop-off <span style="color:#9CA3AF;font-weight:400">(optional — defaults to home)</span></label>' +
+      '<input class="form-input" id="rtReturnDropoff" placeholder="Same as home address" onfocus="initRtReturnAutocomplete()" autocomplete="off" style="margin:0" value="">' +
+    '</div>' +
+    (isFacilityCovered
+      ? '<div class="facility-covered-box"><span class="facility-covered-text">Your facility covers this round trip. No payment needed.</span></div>'
+      : '<div class="hsa-pill">HSA/FSA eligible — Your card will be charged after each leg completes. IRS 213(d) receipts emailed automatically.</div>' +
+        '<div class="payment-label">Payment method</div>' +
+        '<div id="savedCardDisplay" style="display:none;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#050D1F;font-weight:600" id="savedCardText">Card on file</span><button type="button" onclick="useNewCard()" style="background:none;border:none;color:#00836F;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use a different card</button></div></div>' +
+        '<div id="stripe-element"></div>' +
+        '<div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>');
+
+  if (!isFacilityCovered) { await checkSavedCard(); }
+  document.getElementById('bookModal').classList.add('open');
+}
+
+function initRtAutocomplete() {
+  var input = document.getElementById('rtHomeAddress');
+  if (!input || input._acInit || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+  var ac = new google.maps.places.Autocomplete(input, { types:['address'], componentRestrictions:{country:'us'}, fields:['formatted_address'] });
+  ac.addListener('place_changed', function(){ var p = ac.getPlace(); if (p && p.formatted_address) input.value = p.formatted_address; });
+  input._acInit = true;
+}
+function initRtReturnAutocomplete() {
+  var input = document.getElementById('rtReturnDropoff');
+  if (!input || input._acInit || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+  var ac = new google.maps.places.Autocomplete(input, { types:['address'], componentRestrictions:{country:'us'}, fields:['formatted_address'] });
+  ac.addListener('place_changed', function(){ var p = ac.getPlace(); if (p && p.formatted_address) input.value = p.formatted_address; });
+  input._acInit = true;
+}
+
+async function confirmRoundTrip() {
+  var outbound = window._rtOutbound;
+  var ret = window._rtReturn;
+  if (!outbound) return;
+  var home = document.getElementById('rtHomeAddress') ? document.getElementById('rtHomeAddress').value.trim() : '';
+  if (!home) { toast('Please enter your home address'); return; }
+  var returnDropoff = document.getElementById('rtReturnDropoff') && document.getElementById('rtReturnDropoff').value.trim() ? document.getElementById('rtReturnDropoff').value.trim() : home;
+  var facility = outbound.dropoff_address || ((outbound.hospitals && outbound.hospitals.name) || outbound.hospital_name);
+  var isFacility = outbound.payment_responsibility === 'facility';
+  var btn = document.getElementById('bookConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Confirming…';
+
+  try {
+    // Save card once for the whole trip if self-pay + new card
+    if (!isFacility && !window._savedPaymentMethodId && window._stripeCard) {
+      btn.textContent = 'Saving card…';
+      const { data: { session } } = await sb.auth.getSession();
+      const setupResp = await fetch(API + '/api/stripe/setup-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : '') },
+        body: JSON.stringify({ email: currentUser.email })
+      });
+      const setupData = await setupResp.json();
+      if (!setupData.clientSecret) { btn.disabled=false; btn.textContent='Confirm round trip'; toast(setupData.error||'Could not set up payment.'); return; }
+      const { setupIntent, error: setupError } = await stripe.confirmCardSetup(setupData.clientSecret, {
+        payment_method: { card: window._stripeCard, billing_details: { name: currentUser.user_metadata?.full_name || '', email: currentUser.email } }
+      });
+      if (setupError) { btn.disabled=false; btn.textContent='Confirm round trip'; toast(setupError.message||'Payment failed.'); return; }
+      await sb.from('patients').upsert({ id: currentUser.id, stripe_customer_id: setupData.customerId, stripe_payment_method_id: setupIntent.payment_method }, { onConflict:'id' });
+    }
+    btn.textContent = 'Confirming…';
+    // Leg 1: outbound — home → facility
+    await sb.from('rides').update({
+      pickup_address: home,
+      dropoff_address: facility,
+      patient_id: currentUser.id,
+      status: 'confirmed',
+      payment_responsibility: outbound.payment_responsibility
+    }).eq('id', outbound.id);
+    // Leg 2: return — facility → home (or custom dropoff)
+    if (ret) {
+      await sb.from('rides').update({
+        pickup_address: facility,
+        dropoff_address: returnDropoff,
+        patient_id: currentUser.id,
+        status: 'confirmed',
+        payment_responsibility: outbound.payment_responsibility
+      }).eq('id', ret.id);
+    }
+    closeBookModal();
+    toast('Round trip confirmed');
+    await loadRides();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Confirm round trip';
+    toast('Something went wrong, please try again');
+  }
+}
+
 async function confirmBooking() {
   if (!currentRide) return;
   const date    = document.getElementById('bookDate')?.value;

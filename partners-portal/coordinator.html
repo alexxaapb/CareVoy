@@ -1166,6 +1166,7 @@ async function submitAddPatient() {
           return v.toString(16);
         })
       : null;
+    var facilityAddr = hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null;
     legs.forEach(function(leg) {
       var isPre = leg === 'pre_op';
       var legPickupTime = new Date(baseApptDateTime);
@@ -1186,10 +1187,10 @@ async function submitAddPatient() {
         hospital_name: hospitalInfo ? (hospitalInfo.name || null) : null,
         invited_at: new Date().toISOString(),
         reminder_sent: false,
-        ride_type: apptType || 'pre_op',
+        ride_type: leg,
         payment_responsibility: document.getElementById('paymentResp').value || 'self_pay',
-        pickup_address: null,
-        dropoff_address: hospitalInfo ? hospitalInfo.name + (hospitalInfo.city ? ', ' + hospitalInfo.city : '') : null,
+        pickup_address: isPre ? null : facilityAddr,
+        dropoff_address: isPre ? facilityAddr : null,
         is_recurring: !!recurringSeriesId,
         recurring_weeks: recurringSeriesId ? weeksToSchedule : null,
         recurring_series_id: recurringSeriesId,
