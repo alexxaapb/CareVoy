@@ -699,8 +699,24 @@ function formatPayment(p) {
 function buildRoundTripCard(r, isPast, facility) {
   // Find both legs of the pair
   var legs = allRides.filter(function(x){ return x.round_trip_pair_id === r.round_trip_pair_id; });
-  var outbound = legs.find(function(x){ return x.ride_type === 'pre_op'; }) || legs[0];
-  var ret = legs.find(function(x){ return x.ride_type === 'post_op'; }) || legs[1] || null;
+  // De-duplicate by id in case of any repeats
+  var seen = {}; legs = legs.filter(function(x){ if(seen[x.id]) return false; seen[x.id]=true; return true; });
+  // Identify legs robustly: prefer ride_type, but fall back to pickup_time order
+  // (outbound = earlier pickup_time; return = later). This survives mislabeled ride_type data.
+  var outbound = null, ret = null;
+  var preLeg = legs.find(function(x){ return x.ride_type === 'pre_op'; });
+  var postLeg = legs.find(function(x){ return x.ride_type === 'post_op'; });
+  if (preLeg && postLeg && preLeg.id !== postLeg.id) {
+    outbound = preLeg; ret = postLeg;
+  } else if (legs.length >= 2) {
+    // Mislabeled or duplicate ride_type — sort the two distinct legs by pickup_time
+    var byTime = legs.slice().sort(function(a,b){ return new Date(a.pickup_time) - new Date(b.pickup_time); });
+    outbound = byTime[0];
+    ret = byTime[byTime.length - 1];
+    if (outbound.id === ret.id) ret = null;
+  } else {
+    outbound = legs[0]; ret = null;
+  }
   var status = outbound.status;
   var isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(status);
   var label = STATUS_LABEL[status] || status;
@@ -1067,7 +1083,20 @@ async function openRoundTripModal(outboundId) {
   var outbound = allRides.find(function(x){ return x.id === outboundId; });
   if (!outbound) return;
   var legs = allRides.filter(function(x){ return x.round_trip_pair_id === outbound.round_trip_pair_id; });
-  var ret = legs.find(function(x){ return x.ride_type === 'post_op'; }) || null;
+  var seen = {}; legs = legs.filter(function(x){ if(seen[x.id]) return false; seen[x.id]=true; return true; });
+  // Robust: the return leg is the one that isn't the leg we opened from, preferring post_op / later time
+  var ret = legs.find(function(x){ return x.id !== outbound.id && x.ride_type === 'post_op'; });
+  if (!ret) {
+    var others = legs.filter(function(x){ return x.id !== outbound.id; });
+    if (others.length) {
+      others.sort(function(a,b){ return new Date(b.pickup_time) - new Date(a.pickup_time); });
+      ret = others[0];
+    }
+  }
+  // Ensure outbound is the earlier leg for consistent display
+  if (ret && new Date(ret.pickup_time) < new Date(outbound.pickup_time)) {
+    var tmp = outbound; outbound = ret; ret = tmp;
+  }
   window._rtOutbound = outbound;
   window._rtReturn = ret;
   currentRide = outbound;
