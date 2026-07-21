@@ -51,3 +51,9 @@ Thumbs.db
 # Generated sample receipts (produced by scripts/generate-sample.js)
 api-server/sample-receipt.html
 api-server/sample-receipt.pdf
+.vercel
+.env*
+
+# Secrets - never commit key material
+private_key.pem
+*.pem
