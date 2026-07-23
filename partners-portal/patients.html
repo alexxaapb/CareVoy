@@ -791,7 +791,7 @@ function buildRideCard(r, isPast) {
     <div class="ride-facility">${facility}</div>
     <div class="ride-meta">
       <span>${pickupDate}${pickupTime ? ' · ' + pickupTime : ''}</span>
-      ${r.ride_type ? `<span class="ride-meta-dot"></span><span>${formatRideType(r.ride_type)}</span>` : ''}
+      ${(r.procedure_type || r.ride_type) ? `<span class="ride-meta-dot"></span><span>${formatRideType(r.procedure_type || r.ride_type)}</span>` : ''}
       ${payLabel ? `<span class="ride-meta-dot"></span><span>${payLabel}</span>` : ''}
       ${r.is_recurring ? `<span class="ride-meta-dot"></span><span style="color:#00836F;font-weight:600">Recurring (${r.recurring_weeks} wks)</span>` : ''}
     </div>
