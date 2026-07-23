@@ -352,6 +352,10 @@
           <input class="form-input" id="patLastName" placeholder="Doe">
         </div>
       </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <button type="button" class="btn btn-ghost" style="width:100%" onclick="lookupAthenaPatient()">Look up in athenahealth</button>
+        <div style="font-size:11px;color:#9CA3AF;margin-top:4px" id="athenaLookupStatus"></div>
+      </div>
       <div class="form-group">
         <label class="form-label">Patient Email <span style="color:#EF4444">*</span></label>
         <input class="form-input" id="patEmail" type="email" placeholder="jane@email.com" required>
@@ -1013,6 +1017,26 @@ function fillExistingPatient() {
   document.getElementById('patPhone').value     = opt.dataset.phone || '';
 }
 
+async function lookupAthenaPatient() {
+  var first = document.getElementById('patFirstName').value.trim();
+  var last = document.getElementById('patLastName').value.trim();
+  var statusEl = document.getElementById('athenaLookupStatus');
+  if (!last) { statusEl.textContent = 'Enter a last name first.'; return; }
+  statusEl.textContent = 'Searching…';
+  try {
+    var r = await fetch(API + '/api/ehr/search-patient?firstName=' + encodeURIComponent(first) + '&lastName=' + encodeURIComponent(last));
+    var d = await r.json();
+    if (d.results && d.results.length) {
+      document.getElementById('patPhone').value = d.results[0].phone || '';
+      statusEl.textContent = 'Found in athenahealth — phone auto-filled.';
+    } else {
+      statusEl.textContent = 'No match found in athenahealth.';
+    }
+  } catch (e) {
+    statusEl.textContent = 'Lookup failed — you can still enter details manually.';
+  }
+}
+
 function closeAddPatient() {
   document.getElementById('addPatientModal').classList.remove('open');
   document.getElementById('addPatError').style.display = 'none';
@@ -1511,7 +1535,7 @@ function closeCVRideDetail() { document.getElementById('cvRideDetailModal').styl
 <!-- Shared Ride Detail Modal -->
 <div id="cvRideDetailModal" onclick="if(event.target===this)closeCVRideDetail()" style="display:none;position:fixed;inset:0;background:rgba(5,13,31,0.6);z-index:3000;align-items:center;justify-content:center;padding:16px">
   <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(5,13,31,0.3)">
-    <div style="position:sticky;top:0;background:#fff;padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1F5F9;border-radius:16px 16px 0 0">
+    <div style="position:sticky;top:0;background:#fff;padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1F5F9">
       <div id="cvRDMTitle" style="font-size:17px;font-weight:700;color:#050D1F;flex:1;min-width:0;padding-right:12px"></div>
       <button onclick="closeCVRideDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;line-height:1;flex-shrink:0">&times;</button>
     </div>
