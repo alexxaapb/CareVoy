@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CareVoy — Patient Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjjS-GU3jUKzEu4n0r6OJ6JteGGPxT9Lg&libraries=places,geometry" async defer></script>
@@ -12,126 +12,127 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --navy:#050D1F;--teal:#00C2A8;--gold:#F5A623;--bg:#FFFFFF;
-      --white:#fff;--border:#E8ECF2;--muted:#6B7280;--text:#111827;
-      --red:#EF4444;--green:#10B981;
+      --navy:#0A0E17;--navy-soft:#141A29;--teal:#0F9E8C;--gold:#C68A2E;--bg:#FAFAF8;
+      --white:#fff;--border:#ECEAE5;--muted:#767B87;--text:#161A22;
+      --red:#DC4C42;--green:#0E9F6E;--shadow-sm:0 1px 3px rgba(10,14,23,.05);
+      --shadow-md:0 8px 28px rgba(10,14,23,.10);
     }
-    body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    body{font-family:'Poppins',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
     .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .auth-card{background:var(--white);border-radius:20px;border:1px solid var(--border);padding:40px 36px;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(5,13,31,.06)}
+    .auth-card{background:var(--white);border-radius:22px;border:1px solid var(--border);padding:40px 36px;width:100%;max-width:420px;box-shadow:var(--shadow-md)}
     .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
     .auth-logo svg{width:36px;height:36px}
-    .auth-logo-text{font-size:20px;font-weight:700;color:var(--navy)}
-    .auth-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .auth-logo-text{font-size:20px;font-weight:600;color:var(--navy);letter-spacing:-.01em}
+    .auth-title{font-size:24px;font-weight:600;color:var(--navy);margin-bottom:4px;letter-spacing:-.01em}
     .auth-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
-    .form-label{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px;display:block}
-    .form-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-family:inherit;color:var(--navy);background:#fff;transition:border .15s;outline:none;margin-bottom:16px}
-    .form-input:focus{border-color:var(--teal)}
-    .form-input::placeholder{color:#CBD5E1}
-    .btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:all .15s}
-    .btn-navy{background:var(--navy);color:#fff}
-    .btn-navy:hover{background:#0a1628}
-    .btn-navy:disabled{opacity:.5;cursor:not-allowed}
-    .btn-ghost{background:var(--bg);color:var(--navy);border:1.5px solid var(--border);margin-top:10px}
-    .btn-ghost:hover{background:#eef1f6}
+    .form-label{font-size:11px;font-weight:600;color:var(--navy);margin-bottom:6px;display:block;letter-spacing:.02em}
+    .form-input{width:100%;padding:13px 15px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;font-family:inherit;color:var(--navy);background:#fff;transition:border .15s,box-shadow .15s;outline:none;margin-bottom:16px}
+    .form-input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(10,14,23,.06)}
+    .form-input::placeholder{color:#C7C9CF}
+    .btn{width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .15s;letter-spacing:.01em}
+    .btn-navy{background:linear-gradient(180deg,#1A2036,var(--navy));color:#fff;box-shadow:var(--shadow-sm)}
+    .btn-navy:hover{background:linear-gradient(180deg,#232B47,#0d1220);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+    .btn-navy:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .btn-ghost{background:#fff;color:var(--navy);border:1.5px solid var(--border);margin-top:10px}
+    .btn-ghost:hover{background:#F5F5F3;border-color:#DDD}
     .auth-toggle{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
-    .auth-toggle a{color:var(--teal);font-weight:600;text-decoration:none;cursor:pointer}
+    .auth-toggle a{color:var(--navy);font-weight:600;text-decoration:none;cursor:pointer;border-bottom:1.5px solid var(--teal)}
     .pw-wrap{position:relative}
     .pw-wrap .form-input{padding-right:60px}
     .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer;font-family:inherit;padding:4px}
     .pw-toggle:hover{color:var(--navy)}
-    .auth-err{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:14px;display:none}
+    .auth-err{background:#FDF2F1;border:1px solid #F5C9C5;border-radius:10px;padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:14px;display:none}
     .remember-row{display:flex;align-items:center;gap:8px;margin-bottom:20px}
-    .remember-row input{width:16px;height:16px;accent-color:var(--teal)}
+    .remember-row input{width:16px;height:16px;accent-color:var(--navy)}
     .remember-row label{font-size:13px;color:var(--muted);cursor:pointer}
     .divider{display:flex;align-items:center;gap:12px;margin:20px 0}
     .divider-line{flex:1;height:1px;background:var(--border)}
     .divider-text{font-size:11px;color:var(--muted);font-weight:500}
     .welcome-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .welcome-card{background:var(--white);border-radius:20px;border:1px solid var(--border);padding:48px 36px;width:100%;max-width:420px;text-align:center;box-shadow:0 4px 24px rgba(5,13,31,.06)}
-    .welcome-icon{width:64px;height:64px;border-radius:50%;background:rgba(0,194,168,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-    .welcome-icon svg{width:28px;height:28px;stroke:var(--teal)}
-    .welcome-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:8px}
+    .welcome-card{background:var(--white);border-radius:22px;border:1px solid var(--border);padding:48px 36px;width:100%;max-width:420px;text-align:center;box-shadow:var(--shadow-md)}
+    .welcome-icon{width:64px;height:64px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+    .welcome-icon svg{width:26px;height:26px;stroke:#fff}
+    .welcome-title{font-size:22px;font-weight:600;color:var(--navy);margin-bottom:8px;letter-spacing:-.01em}
     .welcome-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:32px}
     .app-shell{display:none;min-height:100vh;flex-direction:column}
-    .topbar{background:var(--navy);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+    .topbar{background:var(--navy);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 1px 0 rgba(255,255,255,.05) inset}
     .topbar-left{display:flex;align-items:center;gap:10px}
-    .topbar-logo{color:#fff;font-size:16px;font-weight:700;letter-spacing:.3px}
+    .topbar-logo{color:#fff;font-size:16px;font-weight:600;letter-spacing:-.01em}
     .topbar-right{display:flex;align-items:center;gap:12px}
     .topbar-name{color:#9CA3AF;font-size:13px}
-    .topbar-signout{background:rgba(255,255,255,.08);border:none;color:#9CA3AF;font-size:12px;font-family:inherit;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:500}
-    .topbar-signout:hover{background:rgba(255,255,255,.14);color:#fff}
+    .topbar-signout{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#9CA3AF;font-size:12px;font-family:inherit;padding:7px 14px;border-radius:10px;cursor:pointer;font-weight:500}
+    .topbar-signout:hover{background:rgba(255,255,255,.12);color:#fff}
     .content{flex:1;max-width:680px;margin:0 auto;padding:28px 20px 80px;width:100%}
-    .section-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .section-title{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:4px;letter-spacing:-.01em}
     .section-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
-    .ride-card{background:var(--white);border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:14px;cursor:pointer;transition:all .15s;position:relative}
-    .ride-card:hover{border-color:var(--teal);box-shadow:0 2px 12px rgba(0,194,168,.1)}
-    .ride-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;margin-bottom:10px}
-    .badge-pending{background:rgba(245,166,35,.12);color:#B45309}
-    .badge-confirmed{background:rgba(16,185,129,.12);color:#059669}
-    .badge-assigned{background:rgba(0,194,168,.12);color:#00A38C}
-    .badge-enroute{background:rgba(0,122,255,.1);color:#0066CC}
-    .badge-arrived{background:rgba(139,92,246,.12);color:#7C3AED}
-    .badge-completed{background:rgba(107,114,128,.1);color:#4B5563}
-    .badge-cancelled{background:rgba(239,68,68,.08);color:#DC2626}
-    .ride-facility{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .ride-card{background:var(--white);border-radius:18px;border:1px solid var(--border);padding:20px;margin-bottom:14px;cursor:pointer;transition:all .18s;position:relative;box-shadow:var(--shadow-sm)}
+    .ride-card:hover{border-color:#D8D8D4;box-shadow:var(--shadow-md);transform:translateY(-1px)}
+    .ride-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.02em;margin-bottom:10px}
+    .badge-pending{background:#FBF1E4;color:#9A6A1F}
+    .badge-confirmed{background:#E8F7F0;color:#0E7A52}
+    .badge-assigned{background:#E5F5F2;color:#0B8A76}
+    .badge-enroute{background:#EAF1FC;color:#2563C4}
+    .badge-arrived{background:#F1EDFB;color:#6D3FC9}
+    .badge-completed{background:#F0F0EE;color:#585B63}
+    .badge-cancelled{background:#FCEEEC;color:#C6362B}
+    .ride-facility{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:4px;letter-spacing:-.005em}
     .ride-meta{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .ride-meta-dot{width:3px;height:3px;border-radius:50%;background:var(--border)}
     .ride-action{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
     .ride-action .btn{width:auto;padding:10px 22px;font-size:13px}
-    .schedule-btn{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px}
-    .schedule-btn:hover{background:#0a1628}
-    .empty-box{background:var(--white);border-radius:16px;border:2px dashed var(--border);padding:40px 24px;text-align:center}
-    .empty-icon{font-size:32px;margin-bottom:12px}
-    .empty-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px}
+    .schedule-btn{background:linear-gradient(180deg,#1A2036,var(--navy));color:#fff;border:none;border-radius:12px;padding:11px 22px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:var(--shadow-sm)}
+    .schedule-btn:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+    .empty-box{background:var(--white);border-radius:18px;border:1.5px dashed var(--border);padding:40px 24px;text-align:center}
+    .empty-icon{width:40px;height:40px;margin:0 auto 12px;color:var(--muted)}
+    .empty-title{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px}
     .empty-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:280px;margin:0 auto}
-    .invite-wait{background:rgba(0,194,168,.06);border:1.5px solid rgba(0,194,168,.2);border-radius:14px;padding:20px;display:flex;align-items:flex-start;gap:12px;margin-bottom:20px}
-    .invite-wait-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+    .invite-wait{background:#F2FAF7;border:1.5px solid #CDEBDF;border-radius:16px;padding:20px;display:flex;align-items:flex-start;gap:12px;margin-bottom:20px}
+    .invite-wait-icon{width:20px;height:20px;flex-shrink:0;margin-top:1px;color:var(--teal)}
     .invite-wait-text{font-size:13px;color:var(--navy);line-height:1.6;font-weight:500}
-    .modal-overlay{position:fixed;inset:0;background:rgba(5,13,31,.5);z-index:100;display:none;align-items:center;justify-content:center}
+    .modal-overlay{position:fixed;inset:0;background:rgba(10,14,23,.55);z-index:100;display:none;align-items:center;justify-content:center}
     .modal-overlay.open{display:flex}
     .pac-container{z-index:9999!important}
-    .modal-sheet{background:var(--white);border-radius:20px;width:100%;max-width:540px;padding:28px 24px 40px;max-height:90vh;overflow-y:auto}
+    .modal-sheet{background:var(--white);border-radius:24px;width:100%;max-width:540px;padding:28px 24px 40px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md)}
     .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 24px}
-    .modal-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+    .modal-title{font-size:19px;font-weight:600;color:var(--navy);margin-bottom:4px;letter-spacing:-.01em}
     .modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
     .info-row{display:flex;padding:10px 0;border-bottom:1px solid var(--border)}
     .info-row:last-child{border-bottom:none}
     .info-label{font-size:12px;color:var(--muted);width:120px;flex-shrink:0;padding-top:1px}
     .info-value{font-size:13px;color:var(--navy);font-weight:600;flex:1}
     .modal-footer{margin-top:24px;display:flex;gap:10px;justify-content:flex-end}
-    .modal-footer .btn{width:auto;padding:11px 24px;font-size:13px}
-    .payment-box{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px}
-    .payment-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
-    .payment-option{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;margin-bottom:8px;transition:border .15s}
-    .payment-option.active{border-color:var(--teal);background:rgba(0,194,168,.04)}
+    .modal-footer .btn{width:auto;padding:12px 24px;font-size:13px}
+    .payment-box{background:var(--bg);border-radius:14px;padding:16px;margin-bottom:16px}
+    .payment-label{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em}
+    .payment-option{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:#fff;cursor:pointer;margin-bottom:8px;transition:border .15s}
+    .payment-option.active{border-color:var(--navy);background:#F7F7F6}
     .payment-option-icon{font-size:20px}
     .payment-option-text{flex:1}
     .payment-option-name{font-size:13px;font-weight:600;color:var(--navy)}
     .payment-option-sub{font-size:11px;color:var(--muted)}
     .payment-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .payment-option.active .payment-check{background:var(--teal);border-color:var(--teal)}
+    .payment-option.active .payment-check{background:var(--navy);border-color:var(--navy)}
     .payment-option.active .payment-check::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff}
-    .facility-covered-box{background:rgba(16,185,129,.06);border:1.5px solid rgba(16,185,129,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
-    .facility-covered-text{font-size:13px;color:#065F46;font-weight:600}
-    #stripe-element{padding:14px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:12px;background:#fff}
-    .profile-card{background:var(--white);border-radius:16px;border:1px solid var(--border);padding:24px;margin-bottom:16px}
-    .profile-avatar{width:60px;height:60px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;margin-bottom:16px}
-    .profile-name{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:2px}
+    .facility-covered-box{background:#EEFAF4;border:1.5px solid #C9EEDD;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .facility-covered-text{font-size:13px;color:#0E7A52;font-weight:600}
+    #stripe-element{padding:14px;border:1.5px solid var(--border);border-radius:12px;margin-bottom:12px;background:#fff}
+    .profile-card{background:var(--white);border-radius:18px;border:1px solid var(--border);padding:24px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+    .profile-avatar{width:60px;height:60px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:600;margin-bottom:16px}
+    .profile-name{font-size:18px;font-weight:600;color:var(--navy);margin-bottom:2px}
     .profile-email{font-size:13px;color:var(--muted)}
     .profile-field{margin-bottom:14px}
-    .receipt-card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
-    .receipt-card:hover{border-color:var(--teal);background:rgba(0,194,168,.02)}
-    .receipt-icon{width:38px;height:38px;border-radius:10px;background:rgba(0,194,168,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .receipt-card{background:var(--white);border-radius:16px;border:1px solid var(--border);padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm)}
+    .receipt-card:hover{border-color:#D8D8D4;box-shadow:var(--shadow-md)}
+    .receipt-icon{width:38px;height:38px;border-radius:12px;background:#F0F0EE;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--navy)}
     .receipt-info{flex:1}
     .receipt-name{font-size:13px;font-weight:600;color:var(--navy)}
     .receipt-meta{font-size:11px;color:var(--muted);margin-top:1px}
-    .receipt-amount{font-size:14px;font-weight:700;color:var(--navy)}
-    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+    .receipt-amount{font-size:14px;font-weight:600;color:var(--navy)}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(10,14,23,.04)}
     .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0;cursor:pointer;border:none;background:none;font-family:inherit;gap:3px;color:var(--muted);font-size:10px;font-weight:500;transition:color .15s}
     .bottom-nav-item.active{color:var(--navy)}
-    .bottom-nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
-    .nav-dot{width:4px;height:4px;border-radius:50%;background:var(--teal);margin-top:1px;opacity:0}
+    .bottom-nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+    .nav-dot{width:4px;height:4px;border-radius:50%;background:var(--navy);margin-top:1px;opacity:0}
     .bottom-nav-item.active .nav-dot{opacity:1}
     .chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px);max-height:600px}
     .chat-messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:12px}
@@ -141,20 +142,20 @@
     .chat-msg.typing{color:var(--muted);font-style:italic}
     .chat-input-row{display:flex;gap:10px;padding:12px 0;border-top:1px solid var(--border);margin-top:auto}
     .chat-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:24px;font-size:16px;font-family:inherit;outline:none;transition:border .15s}
-    .chat-input:focus{border-color:var(--teal)}
+    .chat-input:focus{border-color:var(--navy)}
     .chat-send{width:42px;height:42px;border-radius:50%;background:var(--navy);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .chat-send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.5}
-    .chat-send:hover{background:#0a1628}
+    .chat-send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.2}
+    .chat-send:hover{background:#000}
     .chat-chip{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:500;color:var(--navy);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-    .chat-chip:hover{border-color:var(--teal);background:rgba(0,194,168,.05)}
+    .chat-chip:hover{border-color:var(--navy);background:#F7F7F6}
     .tabs-hidden{display:none!important}
     .tab-section{display:none}
     .tab-section.active{display:block}
-    .toast{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+    .toast{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow-md)}
     .toast.show{opacity:1}
     .date-time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
     .field-group{margin-bottom:16px}
-    .hsa-pill{background:rgba(0,194,168,.06);border:1px solid rgba(0,194,168,.2);border-radius:10px;padding:10px 14px;font-size:11px;color:#00836F;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:16px}
+    .hsa-pill{background:#F2FAF7;border:1px solid #CDEBDF;border-radius:12px;padding:10px 14px;font-size:11px;color:#0E7A52;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:16px}
     @media(max-width:600px){
       .date-time-row{grid-template-columns:1fr}
       .auth-card,.welcome-card{padding:28px 20px}
@@ -598,7 +599,7 @@ function renderRides() {
   const upcoming = dedupeRoundTripPairs(upcomingAll);
   const past = dedupeRoundTripPairs(pastAll);
   if (!allRides.length) {
-    list.innerHTML = `<div class="invite-wait"><span class="invite-wait-icon"></span><div class="invite-wait-text">Your healthcare facility will send you a ride invitation. It will appear here automatically — no action needed until then.</div></div><div class="empty-box"><div class="empty-icon"></div><div class="empty-title">No rides yet</div><div class="empty-sub">Once your facility coordinates a ride, you'll see it here.</div></div>`;
+    list.innerHTML = `<div class="invite-wait"><span class="invite-wait-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span><div class="invite-wait-text">Your healthcare facility will send you a ride invitation. It will appear here automatically — no action needed until then.</div></div><div class="empty-box"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2H10a2 2 0 01-2-2v-2M4 13h9m0 0l-3-3m3 3l-3 3"/></svg></div><div class="empty-title">No rides yet</div><div class="empty-sub">Once your facility coordinates a ride, you'll see it here.</div></div>`;
     return;
   }
   let html = '';
@@ -893,36 +894,36 @@ async function openBookModal(rideId) {
       <div class="payment-label" style="margin-bottom:10px">Ride options</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
-          <input type="checkbox" id="bookWheelchair" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Wheelchair accessible
+          <input type="checkbox" id="bookWheelchair" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#0F9E8C"> Wheelchair accessible
         </label>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
-          <input type="checkbox" id="bookStretcher" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#00C2A8"> Stretcher transport
+          <input type="checkbox" id="bookStretcher" onchange="estimateFare()" style="width:16px;height:16px;accent-color:#0F9E8C"> Stretcher transport
         </label>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer">
-          <input type="checkbox" id="bookCompanion" style="width:16px;height:16px;accent-color:#00C2A8"> Bringing a companion
+          <input type="checkbox" id="bookCompanion" style="width:16px;height:16px;accent-color:#0F9E8C"> Bringing a companion
         </label>
       </div>
     </div>
-    ${isFacilityCovered
-      ? `<div class="facility-covered-box"><span style="font-size:18px"></span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
+   ${isFacilityCovered
+      ? `<div class="facility-covered-box"><span style="color:#0E7A52;display:flex"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span><span class="facility-covered-text">Your facility covers this ride. No payment needed.</span></div>`
       : `<div class="hsa-pill">HSA/FSA eligible — Your card will be charged after ride completion. An IRS 213(d) receipt will be emailed automatically.</div>
-         <div id="fareEstimate" style="display:none;background:rgba(0,194,168,0.06);border:1px solid rgba(0,194,168,0.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+         <div id="fareEstimate" style="display:none;background:#F2FAF7;border:1px solid #CDEBDF;border-radius:12px;padding:14px 16px;margin-bottom:16px">
            <div style="display:flex;justify-content:space-between;align-items:center">
-             <span style="font-size:13px;color:#00836F;font-weight:600">Estimated fare</span>
-             <span id="fareAmount" style="font-size:18px;font-weight:700;color:#050D1F">—</span>
+             <span style="font-size:13px;color:#0E7A52;font-weight:600">Estimated fare</span>
+             <span id="fareAmount" style="font-size:18px;font-weight:700;color:#0A0E17">—</span>
            </div>
-           <div style="font-size:11px;color:#6B7280;margin-top:4px">Final fare based on actual distance. Card charged after ride completion.</div>
+           <div style="font-size:11px;color:#767B87;margin-top:4px">Final fare based on actual distance. Card charged after ride completion.</div>
          </div>
          <div class="payment-label">Payment method</div>
-         <div id="savedCardDisplay" style="display:none;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:12px">
+         <div id="savedCardDisplay" style="display:none;background:#F7F7F6;border:1px solid #ECEAE5;border-radius:12px;padding:14px 16px;margin-bottom:12px">
            <div style="display:flex;justify-content:space-between;align-items:center">
-             <span style="font-size:13px;color:#050D1F;font-weight:600" id="savedCardText">Card on file</span>
-             <button type="button" onclick="useNewCard()" style="background:none;border:none;color:#00836F;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use a different card</button>
+             <span style="font-size:13px;color:#0A0E17;font-weight:600" id="savedCardText">Card on file</span>
+             <button type="button" onclick="useNewCard()" style="background:none;border:none;color:#0F9E8C;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use a different card</button>
            </div>
          </div>
          <div id="apple-pay-btn" style="display:none;margin-bottom:12px"></div>
          <div id="stripe-element"></div>
-         <div id="backToSavedCardLink" style="display:none;margin-top:8px"><button type="button" onclick="useSavedCard()" style="background:none;border:none;color:#00836F;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use saved card instead</button></div>
+         <div id="backToSavedCardLink" style="display:none;margin-top:8px"><button type="button" onclick="useSavedCard()" style="background:none;border:none;color:#0F9E8C;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use saved card instead</button></div>
          <div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>`
     }
   `;
@@ -989,7 +990,7 @@ function closeBookModal() {
 function initStripeElement() {
   if (!stripe) stripe = Stripe('pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2');
   var elements = stripe.elements();
-  var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif", '::placeholder':{color:'#9CA3AF'} } } });
+  var card = elements.create('card', { style: { base: { fontSize:'16px', color:'#0A0E17', fontFamily:"'Poppins',sans-serif", '::placeholder':{color:'#C7C9CF'} } } });
   card.mount('#stripe-element');
   window._stripeCard = card;
 }
@@ -1039,34 +1040,34 @@ async function openRoundTripModal(outboundId) {
   cbtn.setAttribute('onclick', 'confirmRoundTrip()');
 
   document.getElementById('bookModalBody').innerHTML =
-    '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px;margin-bottom:16px">' +
-      '<div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:12px;border-bottom:1px dashed #E2E8F0">' +
-        '<div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(0,194,168,.12);color:#00836F;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div>' +
-        '<div><div style="font-size:11px;font-weight:700;color:#00836F;text-transform:uppercase;letter-spacing:.5px">To facility</div>' +
-        '<div style="font-size:13px;color:#050D1F;font-weight:600;margin-top:2px">' + outWhen + '</div>' +
-        '<div style="font-size:12px;color:#6B7280;margin-top:2px">Home → ' + facility + '</div></div>' +
+    '<div style="background:#F7F7F6;border:1px solid #ECEAE5;border-radius:12px;padding:14px 16px;margin-bottom:16px">' +
+      '<div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:12px;border-bottom:1px dashed #ECEAE5">' +
+        '<div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#E5F5F2;color:#0B8A76;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div>' +
+        '<div><div style="font-size:11px;font-weight:700;color:#0B8A76;text-transform:uppercase;letter-spacing:.5px">To facility</div>' +
+        '<div style="font-size:13px;color:#0A0E17;font-weight:600;margin-top:2px">' + outWhen + '</div>' +
+        '<div style="font-size:12px;color:#767B87;margin-top:2px">Home → ' + facility + '</div></div>' +
       '</div>' +
       '<div style="display:flex;gap:10px;align-items:flex-start;padding-top:12px">' +
-        '<div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(245,166,35,.15);color:#B45309;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div>' +
-        '<div><div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.5px">Return home</div>' +
-        '<div style="font-size:13px;color:#050D1F;font-weight:600;margin-top:2px">' + retWhen + '</div>' +
-        '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + facility + ' → Home</div></div>' +
+        '<div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#FBF1E4;color:#9A6A1F;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div>' +
+        '<div><div style="font-size:11px;font-weight:700;color:#9A6A1F;text-transform:uppercase;letter-spacing:.5px">Return home</div>' +
+        '<div style="font-size:13px;color:#0A0E17;font-weight:600;margin-top:2px">' + retWhen + '</div>' +
+        '<div style="font-size:12px;color:#767B87;margin-top:2px">' + facility + ' → Home</div></div>' +
       '</div>' +
     '</div>' +
     '<div class="field-group">' +
       '<label class="form-label">Your home address</label>' +
       '<input class="form-input" id="rtHomeAddress" placeholder="Start typing your address..." onfocus="initRtAutocomplete()" autocomplete="off" style="margin:0" value="">' +
-      '<div style="font-size:11px;color:#6B7280;margin-top:6px">Used as pickup for leg 1 and drop-off for leg 2. You can adjust the return drop-off below if needed.</div>' +
+      '<div style="font-size:11px;color:#767B87;margin-top:6px">Used as pickup for leg 1 and drop-off for leg 2. You can adjust the return drop-off below if needed.</div>' +
     '</div>' +
     '<div class="field-group" style="margin-top:12px">' +
-      '<label class="form-label">Return drop-off <span style="color:#9CA3AF;font-weight:400">(optional — defaults to home)</span></label>' +
+      '<label class="form-label">Return drop-off <span style="color:#C7C9CF;font-weight:400">(optional — defaults to home)</span></label>' +
       '<input class="form-input" id="rtReturnDropoff" placeholder="Same as home address" onfocus="initRtReturnAutocomplete()" autocomplete="off" style="margin:0" value="">' +
     '</div>' +
     (isFacilityCovered
       ? '<div class="facility-covered-box"><span class="facility-covered-text">Your facility covers this round trip. No payment needed.</span></div>'
       : '<div class="hsa-pill">HSA/FSA eligible — Your card will be charged after each leg completes. IRS 213(d) receipts emailed automatically.</div>' +
         '<div class="payment-label">Payment method</div>' +
-        '<div id="savedCardDisplay" style="display:none;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#050D1F;font-weight:600" id="savedCardText">Card on file</span><button type="button" onclick="useNewCard()" style="background:none;border:none;color:#00836F;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use a different card</button></div></div>' +
+        '<div id="savedCardDisplay" style="display:none;background:#F7F7F6;border:1px solid #ECEAE5;border-radius:12px;padding:14px 16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#0A0E17;font-weight:600" id="savedCardText">Card on file</span><button type="button" onclick="useNewCard()" style="background:none;border:none;color:#0F9E8C;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Use a different card</button></div></div>' +
         '<div id="stripe-element"></div>' +
         '<div id="stripeError" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>');
 
@@ -1248,26 +1249,26 @@ function viewReceipt(rideId) {
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'receiptModal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(5,13,31,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,14,23,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px';
     document.body.appendChild(modal);
   }
-  modal.innerHTML = '<div style="background:#fff;border-radius:20px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto" id="receiptContent">' +
-    '<div style="background:#050D1F;padding:24px;border-radius:20px 20px 0 0;text-align:center">' +
-      '<div style="color:#fff;font-size:22px;font-weight:700;letter-spacing:1px">CareVoy</div>' +
+  modal.innerHTML = '<div style="background:#fff;border-radius:22px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto" id="receiptContent">' +
+    '<div style="background:#0A0E17;padding:24px;border-radius:22px 22px 0 0;text-align:center">' +
+      '<div style="color:#fff;font-size:22px;font-weight:600;letter-spacing:.5px">CareVoy</div>' +
       '<div style="color:#9CA3AF;font-size:12px;margin-top:4px">Medical Transportation Receipt</div>' +
     '</div>' +
     '<div style="padding:24px">' +
-      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Patient</div><div style="font-size:13px;color:#050D1F;font-weight:600">' + patName + '</div></div>' +
-      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Date</div><div style="font-size:13px;color:#050D1F;font-weight:600">' + d + '</div></div>' +
-      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Pickup</div><div style="font-size:13px;color:#050D1F;font-weight:600;flex:1">' + pickup + '</div></div>' +
-      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Destination</div><div style="font-size:13px;color:#050D1F;font-weight:600;flex:1">' + dropoff + '</div></div>' +
-      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Facility</div><div style="font-size:13px;color:#050D1F;font-weight:600">' + fac + '</div></div>' +
-      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Payment</div><div style="font-size:13px;color:#050D1F;font-weight:600">' + (isFac ? 'Facility-Covered' : 'Self-Pay') + '</div></div>' +
-      (!isFac ? '<div style="display:flex;padding:14px 0;margin-top:4px"><div style="width:120px;font-size:14px;color:#6B7280;font-weight:600">Total</div><div style="font-size:20px;color:#050D1F;font-weight:700">$' + parseFloat(cost).toFixed(2) + '</div></div>' : '') +
-      (!isFac ? '<div style="background:rgba(0,194,168,.06);border:1px solid rgba(0,194,168,.2);border-radius:10px;padding:14px;margin-top:12px;font-size:11px;color:#00836F;line-height:1.6"><strong>IRS Section 213(d) Eligible</strong><br>This receipt documents a qualified medical transportation expense eligible for HSA/FSA reimbursement.</div>' : '<div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:14px;margin-top:12px;font-size:11px;color:#065F46;line-height:1.6">This ride was covered by your healthcare facility.</div>') +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#767B87">Patient</div><div style="font-size:13px;color:#0A0E17;font-weight:600">' + patName + '</div></div>' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#767B87">Date</div><div style="font-size:13px;color:#0A0E17;font-weight:600">' + d + '</div></div>' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#767B87">Pickup</div><div style="font-size:13px;color:#0A0E17;font-weight:600;flex:1">' + pickup + '</div></div>' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#767B87">Destination</div><div style="font-size:13px;color:#0A0E17;font-weight:600;flex:1">' + dropoff + '</div></div>' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#767B87">Facility</div><div style="font-size:13px;color:#0A0E17;font-weight:600">' + fac + '</div></div>' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#767B87">Payment</div><div style="font-size:13px;color:#0A0E17;font-weight:600">' + (isFac ? 'Facility-Covered' : 'Self-Pay') + '</div></div>' +
+      (!isFac ? '<div style="display:flex;padding:14px 0;margin-top:4px"><div style="width:120px;font-size:14px;color:#767B87;font-weight:600">Total</div><div style="font-size:20px;color:#0A0E17;font-weight:700">$' + parseFloat(cost).toFixed(2) + '</div></div>' : '') +
+      (!isFac ? '<div style="background:#F2FAF7;border:1px solid #CDEBDF;border-radius:12px;padding:14px;margin-top:12px;font-size:11px;color:#0E7A52;line-height:1.6"><strong>IRS Section 213(d) Eligible</strong><br>This receipt documents a qualified medical transportation expense eligible for HSA/FSA reimbursement.</div>' : '<div style="background:#EEFAF4;border:1px solid #C9EEDD;border-radius:12px;padding:14px;margin-top:12px;font-size:11px;color:#0E7A52;line-height:1.6">This ride was covered by your healthcare facility.</div>') +
       '<div style="display:flex;gap:10px;margin-top:20px">' +
-        '<button onclick="downloadReceipt(\'' + r.id + '\')" style="flex:1;padding:12px;background:#050D1F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Download</button>' +
-        '<button onclick="document.getElementById(\'receiptModal\').remove()" style="flex:1;padding:12px;background:#F3F4F6;color:#050D1F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>' +
+        '<button onclick="downloadReceipt(\'' + r.id + '\')" style="flex:1;padding:12px;background:#0A0E17;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Download</button>' +
+        '<button onclick="document.getElementById(\'receiptModal\').remove()" style="flex:1;padding:12px;background:#F3F4F6;color:#0A0E17;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>' +
       '</div>' +
     '</div></div>';
   modal.style.display = 'flex';
@@ -1300,7 +1301,7 @@ async function loadReceipts() {
   const completed = allRides.filter(r => r.status === 'completed');
   const list = document.getElementById('receiptsList');
   if (!completed.length) {
-    list.innerHTML = '<div class="empty-box"><div class="empty-icon"></div><div class="empty-title">No receipts yet</div><div class="empty-sub">IRS 213(d) compliant receipts will appear here after your rides are completed.</div></div>';
+    list.innerHTML = '<div class="empty-box"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><div class="empty-title">No receipts yet</div><div class="empty-sub">IRS 213(d) compliant receipts will appear here after your rides are completed.</div></div>';
     return;
   }
   list.innerHTML = completed.map(r => {
@@ -1309,7 +1310,7 @@ async function loadReceipts() {
     const cost = r.actual_cost || r.estimated_cost || 0;
     const isFac = r.payment_responsibility === 'facility';
     return `<div class="receipt-card" onclick="viewReceipt('${r.id}')">
-      <div class="receipt-icon"></div>
+      <div class="receipt-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
       <div class="receipt-info"><div class="receipt-name">${fac}</div><div class="receipt-meta">${isFac ? 'Facility-Covered' : 'IRS 213(d)'} · ${d}</div></div>
       <div class="receipt-amount">${isFac ? 'Covered' : '$' + parseFloat(cost).toFixed(2)}</div>
     </div>`;
@@ -1391,7 +1392,7 @@ function toggleProfileCard() {
   if (!stripe) stripe = Stripe('pk_live_51TQy4GGqhURBumggJWT2jz3o0BO4BYlR2cKlxQaMxKTg4cyon3xWMZKI5pEvee4n1PxCnIjvFBuuyAdDHqO3CFcT00kKFBwtR2');
   if (!window._profileCard) {
     var elements = stripe.elements();
-    window._profileCard = elements.create('card', { style: { base: { fontSize:'16px', color:'#111827', fontFamily:"'Inter',sans-serif" } } });
+    window._profileCard = elements.create('card', { style: { base: { fontSize:'16px', color:'#0A0E17', fontFamily:"'Poppins',sans-serif" } } });
     window._profileCard.mount('#profileCardElement');
   }
   cardDiv.style.display = 'block';
@@ -1530,10 +1531,10 @@ function openCVRideDetail(ride, opts) {
 function closeCVRideDetail() { document.getElementById('cvRideDetailModal').style.display = 'none'; }
 </script>
 
-<div id="cvRideDetailModal" onclick="if(event.target===this)closeCVRideDetail()" style="display:none;position:fixed;inset:0;background:rgba(5,13,31,0.6);z-index:3000;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(5,13,31,0.3)">
-    <div style="position:sticky;top:0;background:#fff;padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1F5F9;border-radius:16px 16px 0 0">
-      <div id="cvRDMTitle" style="font-size:17px;font-weight:700;color:#050D1F;flex:1;min-width:0;padding-right:12px"></div>
+<div id="cvRideDetailModal" onclick="if(event.target===this)closeCVRideDetail()" style="display:none;position:fixed;inset:0;background:rgba(10,14,23,0.6);z-index:3000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(10,14,23,0.3)">
+    <div style="position:sticky;top:0;background:#fff;padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1F5F9;border-radius:20px 20px 0 0">
+      <div id="cvRDMTitle" style="font-size:17px;font-weight:600;color:#0A0E17;flex:1;min-width:0;padding-right:12px"></div>
       <button onclick="closeCVRideDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;line-height:1;flex-shrink:0">&times;</button>
     </div>
     <div id="cvRDMBody" style="padding:4px 24px 24px"></div>
