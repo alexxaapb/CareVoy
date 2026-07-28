@@ -914,13 +914,15 @@ function renderAlerts() {
       return '<div style="font-size:12px;color:#374151;padding:4px 0">' + dStr + '</div>';
     }).join('');
     html += '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#F0BCB5':'#E4E4E7') + ';padding:16px 18px;margin-bottom:10px">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer" onclick="toggleSeriesExpand(\'' + seriesId + '\')">' +
-      '<div><div style="font-size:13px;font-weight:600;color:#060D1F">' + esc(first.patient_name||'Patient') + '</div>' +
-      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(procLabel) + ' Series &middot; ' + group.length + ' of ' + group.length + ' pending &middot; <span style="color:#060D1F;text-decoration:underline">view dates</span></div>' +
-      '</div>' +
-      '<div><button class="btn btn-navy" onclick="event.stopPropagation();sendReminderSeries(event,\'' + seriesId + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="event.stopPropagation();cancelRideSeries(event,\'' + seriesId + '\')">Cancel Series</button></div>' +
+      '<div style="cursor:pointer" onclick="toggleSeriesExpand(\'' + seriesId + '\')">' +
+        '<div style="font-size:13px;font-weight:600;color:#060D1F">' + esc(first.patient_name||'Patient') + '</div>' +
+        '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(procLabel) + ' Series &middot; ' + group.length + ' of ' + group.length + ' pending &middot; <span style="color:#060D1F;text-decoration:underline">view dates</span></div>' +
       '</div>' +
       '<div id="seriesDates-' + seriesId + '" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #F1F5F9">' + datesListHtml + '</div>' +
+      '<div style="margin-top:14px;padding-top:14px;border-top:1px solid #F1F5F9;display:flex;gap:8px;justify-content:flex-end">' +
+        '<button class="btn btn-navy" onclick="sendReminderSeries(event,\'' + seriesId + '\')">Send Reminder</button>' +
+        '<button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="cancelRideSeries(event,\'' + seriesId + '\')">Cancel Series</button>' +
+      '</div>' +
       '</div>';
   });
 
@@ -928,11 +930,14 @@ function renderAlerts() {
     var t = r.pickup_time ? new Date(r.pickup_time) : null;
     var apptStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : 'Unknown date';
     var isNoResp = r.status === 'no_response';
-    return '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#F0BCB5':'#E4E4E7') + ';padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">' +
-      '<div><div style="font-size:13px;font-weight:600;color:#060D1F">' + esc(r.patient_name||'Patient') + '</div>' +
+    return '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#F0BCB5':'#E4E4E7') + ';padding:16px 18px;margin-bottom:10px">' +
+      '<div style="font-size:13px;font-weight:600;color:#060D1F">' + esc(r.patient_name||'Patient') + '</div>' +
       '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc((r.procedure_type||'Appointment').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})) + ' · ' + apptStr + '</div>' +
-      '<div style="margin-top:6px">' + statusBadge(r.status) + '</div></div>' +
-      '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>' +
+      '<div style="margin-top:6px">' + statusBadge(r.status) + '</div>' +
+      '<div style="margin-top:14px;padding-top:14px;border-top:1px solid #F1F5F9;display:flex;gap:8px;justify-content:flex-end">' +
+        '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder</button>' +
+        '<button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>' +
+      '</div>' +
       '</div>';
   }).join('');
 
@@ -1601,7 +1606,7 @@ function openCVRideDetail(ride, opts) {
   var SL = { invited:'Invite Sent', app_downloaded:'Account Created', reminder_sent:'Reminder Sent', no_response:'No Response', pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
   var SBG = { invited:'#F2F2F3', reminder_sent:'#F2F2F3', no_response:'#FBEAE8', pending:'#F2F2F3', confirmed:'#F2F2F3', assigned:'#F2F2F3', in_progress:'#F2F2F3', completed:'#F2F2F3', cancelled:'#FBEAE8' };
   var STC = { invited:'#2563C4', reminder_sent:'#B45309', no_response:'#D92D20', pending:'#B45309', confirmed:'#15803D', assigned:'#15803D', in_progress:'#0E7490', completed:'#15803D', cancelled:'#6B7280' };
-  function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F2F2F3') + ';color:' + (STC[s]||'#060D1F') + '">' + (SL[s]||s) + '</span>'; }
+  function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F2F2F3') + ';color:' + (STC[s]||'#0A0A0A') + '">' + (SL[s]||s) + '</span>'; }
   function fmtTs(ts) { if (!ts) return null; var d=new Date(ts); return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
   function escStr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function rideTypeLbl(rt) { return {ambulatory:'Ambulatory',wheelchair:'Wheelchair',stretcher:'Stretcher',ambulance:'Ambulance'}[rt]||rt||'—'; }
