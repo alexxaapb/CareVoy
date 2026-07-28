@@ -9,7 +9,7 @@
 <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Inter',-apple-system,sans-serif; background:#F6F6F7; min-height:100vh; display:flex; }
-    .sidebar { width:200px; min-height:100vh; background:#0A0A0A; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:20; }
+    .sidebar { width:200px; min-height:100vh; background:#060D1F; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:20; }
     .sidebar-brand { padding:18px 16px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.07); }
     .brand-name { color:#fff; font-size:15px; font-weight:600; }
     .sidebar-nav { flex:1; padding:14px 10px; display:flex; flex-direction:column; gap:2px; }
@@ -17,79 +17,79 @@
     .nav-item:hover { background:rgba(255,255,255,0.06); color:#fff; }
     .nav-item.active { background:rgba(255,255,255,0.10); color:#fff; font-weight:600; }
     .main { margin-left:200px; flex:1; min-height:100vh; display:flex; flex-direction:column; }
-    .topbar { background:#0A0A0A; padding:0 28px; height:58px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+    .topbar { background:#060D1F; padding:0 28px; height:58px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
     .topbar-left { display:flex; align-items:center; gap:10px; }
     .topbar-right { display:flex; align-items:center; gap:12px; }
     .role-pill { font-size:10px; font-weight:700; letter-spacing:1.5px; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,0.12); color:#fff; }
     .signout-btn { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,0.1); color:#9CA0A6; padding:6px 16px; border-radius:10px; cursor:pointer; font-size:12px; font-family:inherit; }
     .signout-btn:hover { border-color:rgba(255,255,255,0.3); color:#fff; }
     .page { padding:24px 28px 64px; }
-    .page-title { color:#0A0A0A; font-size:22px; font-weight:600; margin-bottom:2px; letter-spacing:-.01em; }
+    .page-title { color:#060D1F; font-size:22px; font-weight:600; margin-bottom:2px; letter-spacing:-.01em; }
     .page-sub { color:#6B6F76; font-size:13px; margin-bottom:24px; }
     /* Stats */
     .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
-    .stat-card { background:#fff; border-radius:14px; padding:16px 18px; border:1px solid #E4E4E7; box-shadow:0 1px 3px rgba(10,10,10,.05); }
-    .stat-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; background:#F2F2F3; color:#0A0A0A; }
+    .stat-card { background:#fff; border-radius:14px; padding:16px 18px; border:1px solid #E4E4E7; box-shadow:0 1px 3px rgba(6,13,31,.05); }
+    .stat-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; background:#F2F2F3; color:#060D1F; }
     .stat-icon.on-dark { background:rgba(255,255,255,.10); color:#fff; }
     .stat-label { color:#6B6F76; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
-    .stat-value { font-size:28px; font-weight:600; color:#0A0A0A; }
-    .stat-value.teal { color:#0A0A0A; }
-    .stat-value.gold { color:#0A0A0A; }
+    .stat-value { font-size:28px; font-weight:600; color:#060D1F; }
+    .stat-value.teal { color:#060D1F; }
+    .stat-value.gold { color:#060D1F; }
     /* Toolbar */
     .toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
     .toolbar-left { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .search-wrap { position:relative; }
     .search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:#9CA3AF; font-size:13px; }
     .search-input { padding:8px 12px 8px 32px; border:1.5px solid #E4E4E7; border-radius:10px; font-size:13px; font-family:inherit; background:#fff; outline:none; width:220px; }
-    .search-input:focus { border-color:#0A0A0A; }
+    .search-input:focus { border-color:#060D1F; }
     .filter-btn { padding:7px 13px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1.5px solid #E4E4E7; background:#fff; color:#6B6F76; transition:all 0.15s; }
-    .filter-btn.on { background:#0A0A0A; color:#fff; border-color:#0A0A0A; }
+    .filter-btn.on { background:#060D1F; color:#fff; border-color:#060D1F; }
     /* Bulk bar */
-    .bulk-bar { display:none; align-items:center; gap:10px; background:#0A0A0A; color:#fff; padding:10px 16px; border-radius:12px; margin-bottom:12px; }
+    .bulk-bar { display:none; align-items:center; gap:10px; background:#060D1F; color:#fff; padding:10px 16px; border-radius:12px; margin-bottom:12px; }
     .bulk-bar .btn { font-size:11px; }
     /* Table */
-    .panel { background:#fff; border-radius:16px; border:1px solid #E4E4E7; overflow:hidden; margin-bottom:20px; box-shadow:0 1px 3px rgba(10,10,10,.05); }
+    .panel { background:#fff; border-radius:16px; border:1px solid #E4E4E7; overflow:hidden; margin-bottom:20px; box-shadow:0 1px 3px rgba(6,13,31,.05); }
     .panel-hd { padding:14px 18px; border-bottom:1px solid #F6F6F7; display:flex; align-items:center; justify-content:space-between; }
-    .panel-title { color:#0A0A0A; font-size:14px; font-weight:600; }
+    .panel-title { color:#060D1F; font-size:14px; font-weight:600; }
     .tbl-head { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; padding:9px 18px; background:#F6F6F7; border-bottom:1px solid #E4E4E7; align-items:center; }
     .th { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.5px; }
     .tbl-row { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; align-items:center; padding:13px 18px; border-bottom:1px solid #F6F6F7; cursor:pointer; transition:background 0.1s; }
     .tbl-row:last-child { border-bottom:none; }
     .tbl-row:hover { background:#F6F6F7; }
-    .td { font-size:13px; color:#0A0A0A; }
+    .td { font-size:13px; color:#060D1F; }
     .td.muted { color:#6B6F76; font-size:12px; }
     .td.bold { font-weight:600; }
     .empty { padding:48px; text-align:center; color:#9CA3AF; font-size:13px; }
     /* Badges — flat, monochrome, red reserved for error/cancelled states */
     .badge { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; white-space:nowrap; background:none; padding:0; }
-    .b-teal { color:#0A0A0A; }
+    .b-teal { color:#060D1F; }
     .b-gold { color:#6B6F76; }
-    .b-green { color:#0A0A0A; }
+    .b-green { color:#060D1F; }
     .b-gray { color:#6B6F76; }
-    .b-blue { color:#0A0A0A; }
+    .b-blue { color:#060D1F; }
     .b-red { color:#D92D20; }
     .b-orange { color:#6B6F76; }
     /* Action buttons */
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:7px 13px; border-radius:9px; font-size:11px; font-weight:600; font-family:inherit; cursor:pointer; border:none; transition:opacity 0.15s; white-space:nowrap; }
     .btn:hover { opacity:0.85; }
     .btn:disabled { opacity:0.4; cursor:not-allowed; }
-    .btn-teal { background:#0A0A0A; color:#fff; }
-    .btn-navy { background:#0A0A0A; color:#fff; }
+    .btn-teal { background:#060D1F; color:#fff; }
+    .btn-navy { background:#060D1F; color:#fff; }
     .btn-ghost { background:#FFFFFF; color:#374151; border:1px solid #E4E4E7; }
     .btn-lg { padding:10px 20px; font-size:13px; border-radius:12px; }
     /* Alert */
     .alert { border-radius:12px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .alert-gold { background:#F2F2F3; border:1px solid #E4E4E7; color:#0A0A0A; font-size:13px; font-weight:500; }
+    .alert-gold { background:#F2F2F3; border:1px solid #E4E4E7; color:#060D1F; font-size:13px; font-weight:500; }
     /* Modal */
-    .scrim { display:none; position:fixed; inset:0; background:rgba(10,10,10,0.55); z-index:50; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+    .scrim { display:none; position:fixed; inset:0; background:rgba(6,13,31,0.55); z-index:50; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
     .scrim.open { display:flex; }
-    .modal { background:#fff; border-radius:20px; padding:28px; width:100%; max-width:540px; margin:auto; box-shadow:0 8px 28px rgba(10,10,10,.10); }
-    .modal-title { font-size:18px; font-weight:600; color:#0A0A0A; margin-bottom:5px; letter-spacing:-.01em; }
+    .modal { background:#fff; border-radius:20px; padding:28px; width:100%; max-width:540px; margin:auto; box-shadow:0 8px 28px rgba(6,13,31,.10); }
+    .modal-title { font-size:18px; font-weight:600; color:#060D1F; margin-bottom:5px; letter-spacing:-.01em; }
     .modal-sub { font-size:13px; color:#6B6F76; margin-bottom:22px; }
     .form-group { margin-bottom:14px; }
     .form-label { display:block; font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
-    .form-input { width:100%; padding:10px 12px; border:1.5px solid #E4E4E7; border-radius:10px; font-size:13px; font-family:inherit; color:#0A0A0A; background:#FFFFFF; outline:none; }
-    .form-input:focus { border-color:#0A0A0A; background:#fff; }
+    .form-input { width:100%; padding:10px 12px; border:1.5px solid #E4E4E7; border-radius:10px; font-size:13px; font-family:inherit; color:#060D1F; background:#FFFFFF; outline:none; }
+    .form-input:focus { border-color:#060D1F; background:#fff; }
     select.form-input { cursor:pointer; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .form-error { color:#dc2626; font-size:12px; margin-top:6px; display:none; }
@@ -97,30 +97,30 @@
     /* Toggle switch for caregiver */
     .toggle-row { display:flex; gap:6px; }
     .tog { flex:1; padding:9px; border:1.5px solid #E4E4E7; border-radius:10px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; background:#fff; color:#6B6F76; text-align:center; transition:all 0.15s; }
-    .tog.on { border-color:#0A0A0A; background:#F2F2F3; color:#0A0A0A; }
+    .tog.on { border-color:#060D1F; background:#F2F2F3; color:#060D1F; }
     /* Upload area */
     .upload-area { border:2px dashed #E4E4E7; border-radius:14px; padding:28px; text-align:center; cursor:pointer; transition:all 0.15s; background:#F6F6F7; }
-    .upload-area:hover { border-color:#0A0A0A; background:#F2F2F3; }
-    .upload-area.drag { border-color:#0A0A0A; background:#F2F2F3; }
+    .upload-area:hover { border-color:#060D1F; background:#F2F2F3; }
+    .upload-area.drag { border-color:#060D1F; background:#F2F2F3; }
     /* Drawer */
-    .drawer-scrim { display:none; position:fixed; inset:0; background:rgba(10,10,10,0.35); z-index:40; }
+    .drawer-scrim { display:none; position:fixed; inset:0; background:rgba(6,13,31,0.35); z-index:40; }
     .drawer-scrim.open { display:block; }
-    .drawer { position:fixed; right:0; top:0; bottom:0; width:380px; max-width:100vw; background:#fff; z-index:45; overflow-y:auto; padding:24px; transform:translateX(100%); transition:transform 0.25s; box-shadow:-8px 0 32px rgba(10,10,10,0.1); }
+    .drawer { position:fixed; right:0; top:0; bottom:0; width:380px; max-width:100vw; background:#fff; z-index:45; overflow-y:auto; padding:24px; transform:translateX(100%); transition:transform 0.25s; box-shadow:-8px 0 32px rgba(6,13,31,0.1); }
     .drawer.open { transform:translateX(0); }
     /* Settings */
-    .settings-section { background:#fff; border-radius:16px; border:1px solid #E4E4E7; padding:22px; margin-bottom:16px; box-shadow:0 1px 3px rgba(10,10,10,.05); }
-    .settings-title { font-size:14px; font-weight:600; color:#0A0A0A; margin-bottom:14px; border-bottom:1px solid #F6F6F7; padding-bottom:10px; }
+    .settings-section { background:#fff; border-radius:16px; border:1px solid #E4E4E7; padding:22px; margin-bottom:16px; box-shadow:0 1px 3px rgba(6,13,31,.05); }
+    .settings-title { font-size:14px; font-weight:600; color:#060D1F; margin-bottom:14px; border-bottom:1px solid #F6F6F7; padding-bottom:10px; }
     .settings-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F6F6F7; gap:12px; }
     .settings-row:last-child { border-bottom:none; }
     .settings-key { font-size:11px; font-weight:700; color:#6B6F76; text-transform:uppercase; letter-spacing:0.4px; flex-shrink:0; }
-    .settings-val { font-size:13px; color:#0A0A0A; text-align:right; }
+    .settings-val { font-size:13px; color:#060D1F; text-align:right; }
     /* Toast */
-    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#0A0A0A; color:#fff; padding:13px 22px; border-radius:14px; font-size:13px; font-weight:600; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; max-width:420px; text-align:center; box-shadow:0 8px 28px rgba(10,10,10,.10); }
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#060D1F; color:#fff; padding:13px 22px; border-radius:14px; font-size:13px; font-weight:600; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; max-width:420px; text-align:center; box-shadow:0 8px 28px rgba(6,13,31,.10); }
     .toast.show { opacity:1; }
-    .toast.ok { background:#0A0A0A; }
+    .toast.ok { background:#060D1F; }
     .toast.err { background:#D92D20; }
     #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F6F6F7; z-index:100; }
-    .spinner { width:36px; height:36px; border:3px solid #E4E4E7; border-top-color:#0A0A0A; border-radius:50%; animation:spin 0.8s linear infinite; }
+    .spinner { width:36px; height:36px; border:3px solid #E4E4E7; border-top-color:#060D1F; border-radius:50%; animation:spin 0.8s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg);} }
     @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:repeat(2,1fr)}}
 </style>
@@ -141,7 +141,7 @@
     <button class="nav-item active" onclick="showNav('dashboard',this)">Dashboard</button>
     <button class="nav-item" onclick="showNav('patients',this)">My Patients</button>
     <button class="nav-item" onclick="showNav('rides',this)">Rides</button>
-    <button class="nav-item" onclick="showNav('alerts',this)">Alerts <span id="alertNavBadge" style="display:none;background:#0A0A0A;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:4px"></span></button>
+    <button class="nav-item" onclick="showNav('alerts',this)">Alerts <span id="alertNavBadge" style="display:none;background:#060D1F;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:4px"></span></button>
     <button class="nav-item" onclick="showNav('settings',this)">Settings</button>
   </nav>
   <div style="padding:14px 10px;border-top:1px solid rgba(255,255,255,0.07)">
@@ -171,13 +171,13 @@
 
     <!-- Hero metrics: the numbers a facility shows their boss -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-      <div class="stat-card" style="background:#0A0A0A;border:none">
+      <div class="stat-card" style="background:#060D1F;border:none">
         <div class="stat-icon on-dark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="stat-label" style="color:#9CA3AF">Rides Completed</div>
         <div class="stat-value" style="color:#fff;font-size:32px" id="statKept">—</div>
         <div style="color:#6B7280;font-size:11px;margin-top:2px">Completed rides = appointments your patients made</div>
       </div>
-      <div class="stat-card" style="background:#0A0A0A;border:none">
+      <div class="stat-card" style="background:#060D1F;border:none">
         <div class="stat-icon on-dark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
         <div class="stat-label" style="color:#9CA3AF">Est. HSA/FSA Tax Savings</div>
         <div class="stat-value" style="color:#fff;font-size:32px" id="statSavings">—</div>
@@ -239,7 +239,7 @@
   <!-- ── PATIENTS ── -->
   <div class="page" id="sec-patients" style="display:none">
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-      <button onclick="exportCoordCSV()" style="background:#0A0A0A;color:#fff;border:none;padding:6px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Export CSV</button>
+      <button onclick="exportCoordCSV()" style="background:#060D1F;color:#fff;border:none;padding:6px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Export CSV</button>
     </div>
     <div class="page-title">My Patients</div>
     <div class="page-sub">Manage patients and send ride invites</div>
@@ -272,7 +272,7 @@
 
     <div class="panel">
       <div class="tbl-head" style="grid-template-columns:32px 1.6fr 1fr 1.2fr 1.3fr 0.9fr">
-        <div class="th"><input type="checkbox" id="patientsSelectAll" onchange="toggleSelectAll('patients', this.checked)" style="width:15px;height:15px;accent-color:#0A0A0A;cursor:pointer"></div>
+        <div class="th"><input type="checkbox" id="patientsSelectAll" onchange="toggleSelectAll('patients', this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>
         <div class="th">Patient / Caregiver</div>
         <div class="th">Appt Date</div>
         <div class="th">Appointment Type</div>
@@ -286,7 +286,7 @@
   <!-- ── RIDES ── -->
   <div class="page" id="sec-rides" style="display:none">
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-      <button onclick="exportCoordCSV()" style="background:#0A0A0A;color:#fff;border:none;padding:6px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Export CSV</button>
+      <button onclick="exportCoordCSV()" style="background:#060D1F;color:#fff;border:none;padding:6px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Export CSV</button>
     </div>
     <div class="page-title">Rides</div>
     <div class="page-sub">All rides for your facility</div>
@@ -301,7 +301,7 @@
 
     <div class="panel">
       <div class="tbl-head" style="grid-template-columns:32px 1.6fr 1fr 1.2fr 1.3fr 0.9fr">
-        <div class="th"><input type="checkbox" id="ridesSelectAll" onchange="toggleSelectAll('rides', this.checked)" style="width:15px;height:15px;accent-color:#0A0A0A;cursor:pointer"></div>
+        <div class="th"><input type="checkbox" id="ridesSelectAll" onchange="toggleSelectAll('rides', this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>
         <div class="th">Patient</div>
         <div class="th">Date</div>
         <div class="th">Appointment</div>
@@ -327,24 +327,24 @@
     <div class="settings-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #F6F6F7;padding-bottom:10px">
         <div class="settings-title" style="margin:0;border:none;padding:0">Point of Contact</div>
-        <button id="editPocBtn" onclick="toggleEditPoc()" style="background:#FFFFFF;border:1px solid #E4E4E7;color:#0A0A0A;padding:6px 14px;border-radius:9px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
+        <button id="editPocBtn" onclick="toggleEditPoc()" style="background:#FFFFFF;border:1px solid #E4E4E7;color:#060D1F;padding:6px 14px;border-radius:9px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
       </div>
       <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="setPocName">—</span><input class="form-input" id="editPocName" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">Email</span><span class="settings-val" id="setPocEmail">—</span><input class="form-input" id="editPocEmail" type="email" style="display:none;max-width:55%;padding:6px 10px"></div>
       <div class="settings-row"><span class="settings-key">Facility</span><span class="settings-val" id="setPocFacility">—</span></div>
       <div class="settings-row"><span class="settings-key">City</span><span class="settings-val" id="setPocCity">—</span></div>
-      <div id="editPocActions" style="display:none;margin-top:12px;justify-content:flex-end"><button onclick="saveEditPoc()" style="background:#0A0A0A;color:#fff;border:none;padding:8px 18px;border-radius:9px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Save Changes</button></div>
-      <div style="font-size:11px;color:#9CA3AF;margin-top:10px">To update facility name or city, contact <a href="mailto:partners@carevoy.co" style="color:#0A0A0A;text-decoration:underline">partners@carevoy.co</a></div>
+      <div id="editPocActions" style="display:none;margin-top:12px;justify-content:flex-end"><button onclick="saveEditPoc()" style="background:#060D1F;color:#fff;border:none;padding:8px 18px;border-radius:9px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Save Changes</button></div>
+      <div style="font-size:11px;color:#9CA3AF;margin-top:10px">To update facility name or city, contact <a href="mailto:partners@carevoy.co" style="color:#060D1F;text-decoration:underline">partners@carevoy.co</a></div>
     </div>
 
     <div class="settings-section">
       <div class="settings-title">Contract & Billing</div>
-      <div style="font-size:13px;color:#6B7280;line-height:1.6">Your facility agreement and pricing tier are on file with CareVoy. For billing or contract questions, contact <a href="mailto:billing@carevoy.co" style="color:#0A0A0A;text-decoration:underline">billing@carevoy.co</a>.</div>
+      <div style="font-size:13px;color:#6B7280;line-height:1.6">Your facility agreement and pricing tier are on file with CareVoy. For billing or contract questions, contact <a href="mailto:billing@carevoy.co" style="color:#060D1F;text-decoration:underline">billing@carevoy.co</a>.</div>
     </div>
 
     <div class="settings-section">
       <div class="settings-title">Notifications</div>
-      <div style="font-size:13px;color:#374151;line-height:1.6">Email alerts are sent to your registered email when rides are confirmed, drivers are assigned, and rides are completed. CareVoy automatically sends a reminder to patients who have not confirmed within 48 hours. Technical issue? Contact <a href="mailto:contact@carevoy.co" style="color:#0A0A0A;text-decoration:underline">contact@carevoy.co</a>.</div>
+      <div style="font-size:13px;color:#374151;line-height:1.6">Email alerts are sent to your registered email when rides are confirmed, drivers are assigned, and rides are completed. CareVoy automatically sends a reminder to patients who have not confirmed within 48 hours. Technical issue? Contact <a href="mailto:contact@carevoy.co" style="color:#060D1F;text-decoration:underline">contact@carevoy.co</a>.</div>
     </div>
   </div>
 
@@ -471,7 +471,7 @@
     </div>
     <div id="recurringOptionBox" style="display:none;margin-bottom:14px">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;margin-bottom:10px">
-        <input type="checkbox" id="isRecurring" onchange="toggleRecurringWeeks()" style="width:16px;height:16px;accent-color:#0A0A0A">
+        <input type="checkbox" id="isRecurring" onchange="toggleRecurringWeeks()" style="width:16px;height:16px;accent-color:#060D1F">
         Recurring weekly (dialysis)
       </label>
       <div id="recurringWeeksBox" style="display:none;padding-left:24px">
@@ -507,13 +507,13 @@
     <div class="modal-title">Bulk Upload Patients</div>
     <div class="modal-sub">Upload a CSV from your scheduling system. Required: <strong>First Name, Last Name, Email</strong>. Optional: Phone, Appointment Date, Appointment Type, Caregiver Name, Caregiver Email, Caregiver Phone. You can add patients without appointments and send ride invites later.</div>
     <div class="upload-area" id="csvDropZone" onclick="document.getElementById('csvFile').click()">
-      <div style="color:#0A0A0A;margin-bottom:8px;display:flex;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2H10a2 2 0 01-2-2v-2M4 13h9m0 0l-3-3m3 3l-3 3"/></svg></div>
+      <div style="color:#060D1F;margin-bottom:8px;display:flex;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2H10a2 2 0 01-2-2v-2M4 13h9m0 0l-3-3m3 3l-3 3"/></svg></div>
       <div style="font-size:14px;font-weight:600;color:#374151">Drop CSV here or click to browse</div>
       <div style="font-size:12px;color:#9CA3AF;margin-top:4px">Max 500 patients per upload</div>
       <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCSV(event)">
     </div>
     <div id="csvPreview" style="display:none;margin-top:14px">
-      <div style="font-size:13px;font-weight:600;color:#0A0A0A;margin-bottom:8px" id="csvPreviewLabel"></div>
+      <div style="font-size:13px;font-weight:600;color:#060D1F;margin-bottom:8px" id="csvPreviewLabel"></div>
       <div style="max-height:160px;overflow-y:auto;border:1px solid #E4E4E7;border-radius:10px;font-size:12px;color:#374151;padding:10px;background:#F6F6F7" id="csvPreviewContent"></div>
     </div>
     <div id="csvError" class="form-error"></div>
@@ -530,7 +530,7 @@
     <div class="modal-title">Import Calendar</div>
     <div class="modal-sub">Upload an .ics calendar file exported from your scheduling system. CareVoy will parse appointment events and create patient records.</div>
     <div class="upload-area" onclick="document.getElementById('icsFile').click()">
-      <div style="color:#0A0A0A;margin-bottom:8px;display:flex;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg></div>
+      <div style="color:#060D1F;margin-bottom:8px;display:flex;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg></div>
       <div style="font-size:14px;font-weight:600;color:#374151">Drop .ics file here or click to browse</div>
       <div style="font-size:12px;color:#9CA3AF;margin-top:4px">Exports from Epic, Cerner, Google Calendar, Outlook</div>
       <input type="file" id="icsFile" accept=".ics" style="display:none" onchange="handleICS(event)">
@@ -641,7 +641,7 @@ async function init() {
     var d = await r.json();
     coordInfo = Array.isArray(d) ? d[0] : null;
     if (!coordInfo) {
-      document.getElementById('loading').innerHTML = '<div style="text-align:center;padding:40px 24px"><p style="font-size:16px;color:#0A0A0A;font-weight:600;margin-bottom:8px">Account not linked to a facility</p><p style="font-size:13px;color:#6B7280;line-height:1.6">Your coordinator account exists but is not connected to a facility profile.<br>This usually means your facility signup did not complete fully.</p><p style="font-size:12px;color:#9CA3AF;margin-top:16px">Contact <a href="mailto:support@carevoy.co" style="color:#0A0A0A">support@carevoy.co</a> or your CareVoy admin to link your account.</p><button onclick="localStorage.clear();sessionStorage.clear();window.location.href=\'/\';" style="margin-top:20px;padding:8px 18px;background:#0A0A0A;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">Sign in with a different account</button></div>';
+      document.getElementById('loading').innerHTML = '<div style="text-align:center;padding:40px 24px"><p style="font-size:16px;color:#060D1F;font-weight:600;margin-bottom:8px">Account not linked to a facility</p><p style="font-size:13px;color:#6B7280;line-height:1.6">Your coordinator account exists but is not connected to a facility profile.<br>This usually means your facility signup did not complete fully.</p><p style="font-size:12px;color:#9CA3AF;margin-top:16px">Contact <a href="mailto:support@carevoy.co" style="color:#060D1F">support@carevoy.co</a> or your CareVoy admin to link your account.</p><button onclick="localStorage.clear();sessionStorage.clear();window.location.href=\'/\';" style="margin-top:20px;padding:8px 18px;background:#060D1F;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">Sign in with a different account</button></div>';
       return;
     }
 
@@ -864,7 +864,7 @@ function rideRow(r, cols, selectable, tab) {
     actionBtn += ' <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="deleteRide(event,\'' + r.id + '\')" title="Delete permanently">Delete</button>';
   }
   var checkboxCell = selectable
-    ? '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="row-select" data-id="' + r.id + '" onchange="toggleRowSelect(\'' + r.id + '\',\'' + tab + '\')" style="width:15px;height:15px;accent-color:#0A0A0A;cursor:pointer"></div>'
+    ? '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="row-select" data-id="' + r.id + '" onchange="toggleRowSelect(\'' + r.id + '\',\'' + tab + '\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>'
     : '';
   return '<div class="tbl-row" style="grid-template-columns:' + cols + '" onclick="openDrawer(\'' + r.id + '\')">' +
     checkboxCell +
@@ -919,8 +919,8 @@ function renderAlerts() {
     }).join('');
     html += '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#F0BCB5':'#E4E4E7') + ';padding:16px 18px;margin-bottom:10px">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer" onclick="toggleSeriesExpand(\'' + seriesId + '\')">' +
-      '<div><div style="font-size:13px;font-weight:600;color:#0A0A0A">' + esc(first.patient_name||'Patient') + '</div>' +
-      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(procLabel) + ' Series &middot; ' + group.length + ' of ' + group.length + ' pending &middot; <span style="color:#0A0A0A;text-decoration:underline">view dates</span></div>' +
+      '<div><div style="font-size:13px;font-weight:600;color:#060D1F">' + esc(first.patient_name||'Patient') + '</div>' +
+      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(procLabel) + ' Series &middot; ' + group.length + ' of ' + group.length + ' pending &middot; <span style="color:#060D1F;text-decoration:underline">view dates</span></div>' +
       '</div>' +
       '<div><button class="btn btn-navy" onclick="event.stopPropagation();sendReminderSeries(event,\'' + seriesId + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="event.stopPropagation();cancelRideSeries(event,\'' + seriesId + '\')">Cancel Series</button></div>' +
       '</div>' +
@@ -933,7 +933,7 @@ function renderAlerts() {
     var apptStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : 'Unknown date';
     var isNoResp = r.status === 'no_response';
     return '<div style="background:#fff;border-radius:12px;border:1px solid ' + (isNoResp?'#F0BCB5':'#E4E4E7') + ';padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">' +
-      '<div><div style="font-size:13px;font-weight:600;color:#0A0A0A">' + esc(r.patient_name||'Patient') + '</div>' +
+      '<div><div style="font-size:13px;font-weight:600;color:#060D1F">' + esc(r.patient_name||'Patient') + '</div>' +
       '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc((r.procedure_type||'Appointment').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})) + ' · ' + apptStr + '</div>' +
       '<div style="margin-top:6px">' + statusBadge(r.status) + '</div></div>' +
       '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Send Reminder</button> <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>' +
@@ -1604,8 +1604,8 @@ function openCVRideDetail(ride, opts) {
   var r = ride;
   var SL = { invited:'Invite Sent', app_downloaded:'Account Created', reminder_sent:'Reminder Sent', no_response:'No Response', pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
   var SBG = { invited:'#F2F2F3', reminder_sent:'#F2F2F3', no_response:'#FBEAE8', pending:'#F2F2F3', confirmed:'#F2F2F3', assigned:'#F2F2F3', in_progress:'#F2F2F3', completed:'#F2F2F3', cancelled:'#FBEAE8' };
-  var STC = { invited:'#0A0A0A', reminder_sent:'#0A0A0A', no_response:'#D92D20', pending:'#0A0A0A', confirmed:'#0A0A0A', assigned:'#0A0A0A', in_progress:'#0A0A0A', completed:'#0A0A0A', cancelled:'#D92D20' };
-  function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F2F2F3') + ';color:' + (STC[s]||'#0A0A0A') + '">' + (SL[s]||s) + '</span>'; }
+  var STC = { invited:'#060D1F', reminder_sent:'#060D1F', no_response:'#D92D20', pending:'#060D1F', confirmed:'#060D1F', assigned:'#060D1F', in_progress:'#060D1F', completed:'#060D1F', cancelled:'#D92D20' };
+  function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F2F2F3') + ';color:' + (STC[s]||'#060D1F') + '">' + (SL[s]||s) + '</span>'; }
   function fmtTs(ts) { if (!ts) return null; var d=new Date(ts); return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
   function escStr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function rideTypeLbl(rt) { return {ambulatory:'Ambulatory',wheelchair:'Wheelchair',stretcher:'Stretcher',ambulance:'Ambulance'}[rt]||rt||'—'; }
@@ -1622,17 +1622,17 @@ function openCVRideDetail(ride, opts) {
   steps.forEach(function(step, i) {
     var done = SO.indexOf(step.key) <= curIdx && r.status !== 'cancelled';
     var isLast = i === steps.length - 1;
-    var dotC = done ? '#0A0A0A' : '#E5E7EB';
-    var lineC = (done && !isLast) ? '#0A0A0A' : '#E5E7EB';
+    var dotC = done ? '#060D1F' : '#E5E7EB';
+    var lineC = (done && !isLast) ? '#060D1F' : '#E5E7EB';
     var ts = fmtTs(step.ts);
-    tlHTML += '<div style="display:flex;align-items:flex-start;gap:12px' + (isLast?'':';padding-bottom:14px') + '"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:2px"><div style="width:10px;height:10px;border-radius:50%;background:' + dotC + ';flex-shrink:0"></div>' + (isLast?'':'<div style="width:2px;min-height:18px;flex:1;background:' + lineC + ';margin:3px 0"></div>') + '</div><div><div style="font-size:12px;font-weight:600;color:' + (done?'#0A0A0A':'#9CA3AF') + '">' + step.label + '</div>' + (ts?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">' + ts + '</div>':'') + '</div></div>';
+    tlHTML += '<div style="display:flex;align-items:flex-start;gap:12px' + (isLast?'':';padding-bottom:14px') + '"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:2px"><div style="width:10px;height:10px;border-radius:50%;background:' + dotC + ';flex-shrink:0"></div>' + (isLast?'':'<div style="width:2px;min-height:18px;flex:1;background:' + lineC + ';margin:3px 0"></div>') + '</div><div><div style="font-size:12px;font-weight:600;color:' + (done?'#060D1F':'#9CA3AF') + '">' + step.label + '</div>' + (ts?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">' + ts + '</div>':'') + '</div></div>';
   });
   tlHTML += '</div></div>';
   var fareHTML = '';
   var rates = opts.rates;
   var total = parseFloat(r.actual_cost || r.estimated_cost || 0);
   var miles = parseFloat(r.estimated_miles || 0);
-  function fareRow(label, val, bold) { return '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:#6B7280">' + label + '</span><span style="' + (bold?'font-weight:700;color:#0A0A0A':'color:#374151') + '">' + val + '</span></div>'; }
+  function fareRow(label, val, bold) { return '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:#6B7280">' + label + '</span><span style="' + (bold?'font-weight:700;color:#060D1F':'color:#374151') + '">' + val + '</span></div>'; }
   if (total > 0 || (rates && rates.base_fare)) {
     var fc = '';
     if (rates && rates.base_fare) {
@@ -1647,14 +1647,14 @@ function openCVRideDetail(ride, opts) {
       fc += '<div style="border-top:1px solid #CBD5E1;margin:6px 0 2px"></div>';
       fc += fareRow(r.actual_cost?'Total (Actual)':'Estimated Total','$'+(r.actual_cost?parseFloat(r.actual_cost).toFixed(2):calc.toFixed(2)),true);
     } else if (total>0) { fc += fareRow(r.actual_cost?'Actual Fare':'Estimated Fare','$'+total.toFixed(2),true); }
-    if (r.payment_responsibility) { var isFac=r.payment_responsibility==='facility'; fc += '<div style="margin-top:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#F2F2F3;color:#0A0A0A">'+(isFac?'Facility-Covered':'Self-Pay')+'</div>'; }
+    if (r.payment_responsibility) { var isFac=r.payment_responsibility==='facility'; fc += '<div style="margin-top:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#F2F2F3;color:#060D1F">'+(isFac?'Facility-Covered':'Self-Pay')+'</div>'; }
     fareHTML = '<div style="margin:0 0 20px;padding:14px 16px;background:#F8FAFC;border-radius:12px;border:1px solid #E2E8F0"><div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Fare Breakdown</div>' + fc + '</div>';
   }
   var t = r.pickup_time ? new Date(r.pickup_time) : null;
   var dateStr = t ? t.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})+' at '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
   var proc = (r.procedure_type||'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();})||'—';
   var rows = [['Appointment',dateStr],['Pickup',r.pickup_address||'Pending patient confirmation'],['Destination',r.dropoff_address],['Procedure',proc],['Transport',rideTypeLbl(r.ride_type)],['Mobility',r.mobility_needs],['Driver',r.driver_name]].filter(function(row){return row[1];});
-  var infoHTML = '<div style="margin:16px 0 20px">'+rows.map(function(row){return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F1F5F9;gap:12px"><span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0">'+row[0]+'</span><span style="font-size:13px;color:#0A0A0A;text-align:right">'+escStr(String(row[1]))+'</span></div>';}).join('')+'</div>';
+  var infoHTML = '<div style="margin:16px 0 20px">'+rows.map(function(row){return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F1F5F9;gap:12px"><span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0">'+row[0]+'</span><span style="font-size:13px;color:#060D1F;text-align:right">'+escStr(String(row[1]))+'</span></div>';}).join('')+'</div>';
   var ctaHTML = '';
   if (opts.role === 'coord') {
     if (['invited','reminder_sent','no_response'].includes(r.status)) ctaHTML += '<button class="btn btn-navy" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();sendReminder(event,\''+r.id+'\')">Send Reminder</button>';
@@ -1670,10 +1670,10 @@ function closeCVRideDetail() { document.getElementById('cvRideDetailModal').styl
 </script>
 
 <!-- Shared Ride Detail Modal -->
-<div id="cvRideDetailModal" onclick="if(event.target===this)closeCVRideDetail()" style="display:none;position:fixed;inset:0;background:rgba(10,10,10,0.6);z-index:3000;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(10,10,10,0.3)">
+<div id="cvRideDetailModal" onclick="if(event.target===this)closeCVRideDetail()" style="display:none;position:fixed;inset:0;background:rgba(6,13,31,0.6);z-index:3000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(6,13,31,0.3)">
     <div style="position:sticky;top:0;background:#fff;padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1F5F9">
-      <div id="cvRDMTitle" style="font-size:17px;font-weight:600;color:#0A0A0A;flex:1;min-width:0;padding-right:12px"></div>
+      <div id="cvRDMTitle" style="font-size:17px;font-weight:600;color:#060D1F;flex:1;min-width:0;padding-right:12px"></div>
       <button onclick="closeCVRideDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;line-height:1;flex-shrink:0">&times;</button>
     </div>
     <div id="cvRDMBody" style="padding:4px 24px 24px"></div>
