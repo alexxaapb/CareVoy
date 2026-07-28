@@ -29,6 +29,8 @@
     /* Stats */
     .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
     .stat-card { background:#fff; border-radius:14px; padding:16px 18px; border:1px solid #E4E4E7; box-shadow:0 1px 3px rgba(10,10,10,.05); }
+    .stat-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; background:#F2F2F3; color:#0A0A0A; }
+    .stat-icon.on-dark { background:rgba(255,255,255,.10); color:#fff; }
     .stat-label { color:#6B6F76; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
     .stat-value { font-size:28px; font-weight:600; color:#0A0A0A; }
     .stat-value.teal { color:#0A0A0A; }
@@ -42,11 +44,14 @@
     .search-input:focus { border-color:#0A0A0A; }
     .filter-btn { padding:7px 13px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1.5px solid #E4E4E7; background:#fff; color:#6B6F76; transition:all 0.15s; }
     .filter-btn.on { background:#0A0A0A; color:#fff; border-color:#0A0A0A; }
+    /* Bulk bar */
+    .bulk-bar { display:none; align-items:center; gap:10px; background:#0A0A0A; color:#fff; padding:10px 16px; border-radius:12px; margin-bottom:12px; }
+    .bulk-bar .btn { font-size:11px; }
     /* Table */
     .panel { background:#fff; border-radius:16px; border:1px solid #E4E4E7; overflow:hidden; margin-bottom:20px; box-shadow:0 1px 3px rgba(10,10,10,.05); }
     .panel-hd { padding:14px 18px; border-bottom:1px solid #F6F6F7; display:flex; align-items:center; justify-content:space-between; }
     .panel-title { color:#0A0A0A; font-size:14px; font-weight:600; }
-    .tbl-head { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; padding:9px 18px; background:#F6F6F7; border-bottom:1px solid #E4E4E7; }
+    .tbl-head { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; padding:9px 18px; background:#F6F6F7; border-bottom:1px solid #E4E4E7; align-items:center; }
     .th { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.5px; }
     .tbl-row { display:grid; grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr; align-items:center; padding:13px 18px; border-bottom:1px solid #F6F6F7; cursor:pointer; transition:background 0.1s; }
     .tbl-row:last-child { border-bottom:none; }
@@ -167,11 +172,13 @@
     <!-- Hero metrics: the numbers a facility shows their boss -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
       <div class="stat-card" style="background:#0A0A0A;border:none">
+        <div class="stat-icon on-dark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="stat-label" style="color:#9CA3AF">Rides Completed</div>
         <div class="stat-value" style="color:#fff;font-size:32px" id="statKept">—</div>
         <div style="color:#6B7280;font-size:11px;margin-top:2px">Completed rides = appointments your patients made</div>
       </div>
       <div class="stat-card" style="background:#0A0A0A;border:none">
+        <div class="stat-icon on-dark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
         <div class="stat-label" style="color:#9CA3AF">Est. HSA/FSA Tax Savings</div>
         <div class="stat-value" style="color:#fff;font-size:32px" id="statSavings">—</div>
         <div style="color:#6B7280;font-size:11px;margin-top:2px">IRS 213(d) receipts · 30% bracket est. · actual savings vary by patient</div>
@@ -181,19 +188,23 @@
     <!-- Operational metrics -->
     <div class="stats-row">
       <div class="stat-card">
+        <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></div>
         <div class="stat-label">Total Rides</div>
         <div class="stat-value" id="statTotal">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
         <div class="stat-label">Rides Confirmed</div>
         <div class="stat-value teal" id="statConfirmed">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div>
         <div class="stat-label">Needs Action</div>
         <div class="stat-value gold" id="statAction">—</div>
       </div>
 
       <div class="stat-card">
+        <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg></div>
         <div class="stat-label">Upcoming This Week</div>
         <div class="stat-value" id="statUpcoming">—</div>
       </div>
@@ -201,7 +212,10 @@
 
     <!-- Alert banner -->
     <div class="alert alert-gold" id="alertBanner" style="display:none">
-      <span id="alertBannerText"></span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span id="alertBannerText"></span>
+      </div>
       <button class="btn btn-navy" onclick="showNav('patients',document.querySelector('.nav-item:nth-child(2)'))">View Patients</button>
     </div>
 
@@ -248,8 +262,17 @@
       </div>
     </div>
 
+    <div id="patientsBulkBar" class="bulk-bar">
+      <span id="patientsBulkCount" style="font-size:13px;font-weight:600"></span>
+      <button class="btn" style="background:rgba(255,255,255,.12);color:#fff" onclick="bulkRemind('patients')">Remind</button>
+      <button class="btn" style="background:rgba(255,255,255,.12);color:#fff" onclick="bulkCancel('patients')">Cancel</button>
+      <button class="btn" style="background:rgba(217,45,32,.85);color:#fff" onclick="bulkDelete('patients')">Delete</button>
+      <button class="btn" style="background:none;color:#9CA3AF;margin-left:auto" onclick="clearSelection('patients')">Clear</button>
+    </div>
+
     <div class="panel">
-      <div class="tbl-head" style="grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr">
+      <div class="tbl-head" style="grid-template-columns:32px 1.6fr 1fr 1.2fr 1.3fr 0.9fr">
+        <div class="th"><input type="checkbox" id="patientsSelectAll" onchange="toggleSelectAll('patients', this.checked)" style="width:15px;height:15px;accent-color:#0A0A0A;cursor:pointer"></div>
         <div class="th">Patient / Caregiver</div>
         <div class="th">Appt Date</div>
         <div class="th">Appointment Type</div>
@@ -267,8 +290,18 @@
     </div>
     <div class="page-title">Rides</div>
     <div class="page-sub">All rides for your facility</div>
+
+    <div id="ridesBulkBar" class="bulk-bar">
+      <span id="ridesBulkCount" style="font-size:13px;font-weight:600"></span>
+      <button class="btn" style="background:rgba(255,255,255,.12);color:#fff" onclick="bulkRemind('rides')">Remind</button>
+      <button class="btn" style="background:rgba(255,255,255,.12);color:#fff" onclick="bulkCancel('rides')">Cancel</button>
+      <button class="btn" style="background:rgba(217,45,32,.85);color:#fff" onclick="bulkDelete('rides')">Delete</button>
+      <button class="btn" style="background:none;color:#9CA3AF;margin-left:auto" onclick="clearSelection('rides')">Clear</button>
+    </div>
+
     <div class="panel">
-      <div class="tbl-head" style="grid-template-columns:1.6fr 1fr 1.2fr 1.3fr 0.9fr">
+      <div class="tbl-head" style="grid-template-columns:32px 1.6fr 1fr 1.2fr 1.3fr 0.9fr">
+        <div class="th"><input type="checkbox" id="ridesSelectAll" onchange="toggleSelectAll('rides', this.checked)" style="width:15px;height:15px;accent-color:#0A0A0A;cursor:pointer"></div>
         <div class="th">Patient</div>
         <div class="th">Date</div>
         <div class="th">Appointment</div>
@@ -565,6 +598,8 @@ var patientFilter = 'all';
 var bookingFor = 'patient';
 var csvRows = [];
 var icsEvents = [];
+var selectedPatientIds = new Set();
+var selectedRideIds = new Set();
 
 // ── Status helpers ─────────────────────────────────────────
 var STATUS_LABELS = {
@@ -724,16 +759,115 @@ function updateStats() {
   }
 }
 
+// ── Selection / bulk actions ─────────────────────────────────
+function toggleRowSelect(id, tab) {
+  var set = tab === 'patients' ? selectedPatientIds : selectedRideIds;
+  if (set.has(id)) set.delete(id); else set.add(id);
+  updateBulkBar(tab);
+}
+
+function toggleSelectAll(tab, checked) {
+  var set = tab === 'patients' ? selectedPatientIds : selectedRideIds;
+  set.clear();
+  var bodyId = tab === 'patients' ? 'patientBody' : 'ridesBody';
+  var body = document.getElementById(bodyId);
+  if (body) {
+    body.querySelectorAll('.row-select').forEach(function(cb){
+      cb.checked = checked;
+      if (checked) set.add(cb.dataset.id);
+    });
+  }
+  updateBulkBar(tab);
+}
+
+function updateBulkBar(tab) {
+  var set = tab === 'patients' ? selectedPatientIds : selectedRideIds;
+  var bar = document.getElementById(tab + 'BulkBar');
+  var countEl = document.getElementById(tab + 'BulkCount');
+  if (!bar) return;
+  if (set.size > 0) {
+    bar.style.display = 'flex';
+    if (countEl) countEl.textContent = set.size + ' selected';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function clearSelection(tab) {
+  var set = tab === 'patients' ? selectedPatientIds : selectedRideIds;
+  set.clear();
+  var bodyId = tab === 'patients' ? 'patientBody' : 'ridesBody';
+  var body = document.getElementById(bodyId);
+  if (body) body.querySelectorAll('.row-select').forEach(function(cb){ cb.checked = false; });
+  var selAll = document.getElementById(tab + 'SelectAll');
+  if (selAll) selAll.checked = false;
+  updateBulkBar(tab);
+}
+
+async function bulkRemind(tab) {
+  var set = tab === 'patients' ? selectedPatientIds : selectedRideIds;
+  var ids = Array.from(set);
+  if (!ids.length) return;
+  for (var i = 0; i < ids.length; i++) { await sendReminder(null, ids[i], true); }
+  showToast('Reminder sent to ' + ids.length + ' patient' + (ids.length>1?'s':''), 'ok');
+  clearSelection(tab);
+  await loadRides();
+}
+
+async function bulkCancel(tab) {
+  var set = tab === 'patients' ? selectedPatientIds : selectedRideIds;
+  var ids = Array.from(set);
+  if (!ids.length) return;
+  if (!confirm('Cancel ' + ids.length + ' ride' + (ids.length>1?'s':'') + '?')) return;
+  try {
+    var resp = await fetch(SUPA + '/rest/v1/rides?id=in.(' + ids.join(',') + ')', {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status: 'cancelled' })
+    });
+    if (!resp.ok) { showToast('Could not cancel selected rides', 'err'); return; }
+    allRides.forEach(function(r){ if (ids.includes(r.id)) r.status = 'cancelled'; });
+    updateStats(); renderDashRides(); renderRidesTab(); renderAlerts(); renderPatientTable();
+    showToast(ids.length + ' ride' + (ids.length>1?'s':'') + ' cancelled', 'ok');
+  } catch(e) { showToast('Could not cancel selected rides', 'err'); }
+  clearSelection(tab);
+}
+
+async function bulkDelete(tab) {
+  var set = tab === 'patients' ? selectedPatientIds : selectedRideIds;
+  var ids = Array.from(set);
+  if (!ids.length) return;
+  var completedSelected = allRides.filter(function(r){ return ids.includes(r.id) && r.status === 'completed'; });
+  if (completedSelected.length) { showToast('Completed rides can\'t be deleted — remove them from your selection first.', 'err'); return; }
+  if (!confirm('Permanently delete ' + ids.length + ' ride' + (ids.length>1?'s':'') + '? This cannot be undone.')) return;
+  try {
+    var resp = await fetch(SUPA + '/rest/v1/rides?id=in.(' + ids.join(',') + ')', { method: 'DELETE', headers: H });
+    if (!resp.ok) { showToast('Could not delete selected rides', 'err'); return; }
+    allRides = allRides.filter(function(r){ return !ids.includes(r.id); });
+    updateStats(); renderDashRides(); renderRidesTab(); renderAlerts(); renderPatientTable();
+    showToast(ids.length + ' ride' + (ids.length>1?'s':'') + ' deleted', 'ok');
+  } catch(e) { showToast('Could not delete selected rides', 'err'); }
+  clearSelection(tab);
+}
+
 // ── Render helpers ─────────────────────────────────────────
-function rideRow(r, cols) {
-  cols = cols || '1.6fr 1fr 1.2fr 1.3fr 0.9fr';
+function rideRow(r, cols, selectable, tab) {
+  cols = cols || (selectable ? '32px 1.6fr 1fr 1.2fr 1.3fr 0.9fr' : '1.6fr 1fr 1.2fr 1.3fr 0.9fr');
   var t = r.pickup_time ? new Date(r.pickup_time) : null;
   var dateStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : '—';
   var isPending = ['invited','reminder_sent','no_response','pending'].includes(r.status);
+  var canDelete = r.status !== 'completed';
   var actionBtn = isPending
     ? '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Remind</button> <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>'
     : '<button class="btn btn-ghost" onclick="openDrawer(\'' + r.id + '\')">View</button>';
+  if (canDelete) {
+    actionBtn += ' <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="deleteRide(event,\'' + r.id + '\')" title="Delete permanently">Delete</button>';
+  }
+  var checkboxCell = selectable
+    ? '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="row-select" data-id="' + r.id + '" onchange="toggleRowSelect(\'' + r.id + '\',\'' + tab + '\')" style="width:15px;height:15px;accent-color:#0A0A0A;cursor:pointer"></div>'
+    : '';
   return '<div class="tbl-row" style="grid-template-columns:' + cols + '" onclick="openDrawer(\'' + r.id + '\')">' +
+    checkboxCell +
     '<div class="td bold">' + esc(r.patient_name || 'Patient') + (r.caregiver_name ? '<br><span style="font-size:11px;color:#9CA3AF;font-weight:400">Caregiver: ' + esc(r.caregiver_name) + '</span>' : '') + '</div>' +
     '<div class="td muted">' + dateStr + '</div>' +
     '<div class="td muted">' + esc((r.procedure_type || '—').replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();})) + '</div>' +
@@ -750,7 +884,8 @@ function renderDashRides() {
 
 function renderRidesTab() {
   var body = document.getElementById('ridesBody');
-  body.innerHTML = allRides.length ? allRides.map(function(r){ return rideRow(r); }).join('') : '<div class="empty">No rides for your facility yet.</div>';
+  body.innerHTML = allRides.length ? allRides.map(function(r){ return rideRow(r, null, true, 'rides'); }).join('') : '<div class="empty">No rides for your facility yet.</div>';
+  clearSelection('rides');
 }
 
 function renderAlerts() {
@@ -859,7 +994,8 @@ function renderPatientTable() {
     return matchFilter && matchSearch;
   });
   var body = document.getElementById('patientBody');
-  body.innerHTML = rows.length ? rows.map(function(r){ return rideRow(r); }).join('') : '<div class="empty">No patients in this view.</div>';
+  body.innerHTML = rows.length ? rows.map(function(r){ return rideRow(r, null, true, 'patients'); }).join('') : '<div class="empty">No patients in this view.</div>';
+  clearSelection('patients');
 }
 
 // ── Send reminder ──────────────────────────────────────────
@@ -1523,6 +1659,7 @@ function openCVRideDetail(ride, opts) {
   if (opts.role === 'coord') {
     if (['invited','reminder_sent','no_response'].includes(r.status)) ctaHTML += '<button class="btn btn-navy" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();sendReminder(event,\''+r.id+'\')">Send Reminder</button>';
     if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();cancelRide(event,\''+r.id+'\')">Cancel Ride</button>';
+    if (r.status !== 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();deleteRide(event,\''+r.id+'\')">Delete Permanently</button>';
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-teal" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();resendReceipt(\''+r.id+'\')">Resend Receipt</button>';
   }
   document.getElementById('cvRDMTitle').innerHTML = escStr(r.patient_name||'Ride Details')+(r.status?' <span style="vertical-align:middle">'+mkBadge(r.status)+'</span>':'');
