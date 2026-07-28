@@ -731,11 +731,9 @@ function buildRideCard(r, isPast) {
 }
 
 async function deleteMyAccount() {
-  if (!confirm('Are you sure you want to delete your account? This will remove all your data and cannot be undone.')) return;
+  if (!confirm('Are you sure you want to delete your account? This will remove your login and profile information, but your ride and receipt history will be kept for your facility\'s records.')) return;
   if (!confirm('This is permanent. Continue?')) return;
   try {
-    await sb.from('rides').delete().eq('patient_id', currentUser.id);
-    await sb.from('rides').delete().eq('contact_email', currentUser.email);
     await sb.from('patients').delete().eq('id', currentUser.id);
     try {
       await fetch(API + '/api/auth/delete-user', {
@@ -1464,7 +1462,7 @@ function openCVRideDetail(ride, opts) {
   var r = ride;
   var SL = { invited:'Invite Sent', app_downloaded:'Account Created', reminder_sent:'Reminder Sent', no_response:'No Response', pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
   var SBG = { invited:'#F2F2F3', reminder_sent:'#F2F2F3', no_response:'#FBEAE8', pending:'#F2F2F3', confirmed:'#F2F2F3', assigned:'#F2F2F3', in_progress:'#F2F2F3', completed:'#F2F2F3', cancelled:'#FBEAE8' };
-  var STC = { invited:'#0A0A0A', reminder_sent:'#0A0A0A', no_response:'#D92D20', pending:'#0A0A0A', confirmed:'#0A0A0A', assigned:'#0A0A0A', in_progress:'#0A0A0A', completed:'#0A0A0A', cancelled:'#D92D20' };
+  var STC = { invited:'#2563C4', reminder_sent:'#B45309', no_response:'#D92D20', pending:'#B45309', confirmed:'#15803D', assigned:'#15803D', in_progress:'#0E7490', completed:'#15803D', cancelled:'#6B7280' };
   function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F2F2F3') + ';color:' + (STC[s]||'#0A0A0A') + '">' + (SL[s]||s) + '</span>'; }
   function fmtTs(ts) { if (!ts) return null; var d=new Date(ts); return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
   function escStr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -1482,8 +1480,8 @@ function openCVRideDetail(ride, opts) {
   steps.forEach(function(step, i) {
     var done = SO.indexOf(step.key) <= curIdx && r.status !== 'cancelled';
     var isLast = i === steps.length - 1;
-    var dotC = done ? '#0A0A0A' : '#E5E7EB';
-    var lineC = (done && !isLast) ? '#0A0A0A' : '#E5E7EB';
+    var dotC = done ? '#15803D' : '#E5E7EB';
+    var lineC = (done && !isLast) ? '#15803D' : '#E5E7EB';
     var ts = fmtTs(step.ts);
     tlHTML += '<div style="display:flex;align-items:flex-start;gap:12px' + (isLast?'':';padding-bottom:14px') + '"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:2px"><div style="width:10px;height:10px;border-radius:50%;background:' + dotC + ';flex-shrink:0"></div>' + (isLast?'':'<div style="width:2px;min-height:18px;flex:1;background:' + lineC + ';margin:3px 0"></div>') + '</div><div><div style="font-size:12px;font-weight:600;color:' + (done?'#0A0A0A':'#9CA3AF') + '">' + step.label + '</div>' + (ts?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">' + ts + '</div>':'') + '</div></div>';
   });
