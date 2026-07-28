@@ -60,15 +60,15 @@
     .td.muted { color:#6B6F76; font-size:12px; }
     .td.bold { font-weight:600; }
     .empty { padding:48px; text-align:center; color:#9CA3AF; font-size:13px; }
-    /* Badges — flat, monochrome, red reserved for error/cancelled states */
+    /* Badges — flat, minimal, selective color: only urgent/needs-action states get color */
     .badge { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; white-space:nowrap; background:none; padding:0; }
-    .b-teal { color:#060D1F; }
-    .b-gold { color:#6B6F76; }
-    .b-green { color:#060D1F; }
-    .b-gray { color:#6B6F76; }
-    .b-blue { color:#060D1F; }
-    .b-red { color:#D92D20; }
-    .b-orange { color:#6B6F76; }
+    .b-teal { color:#15803D; }    /* confirmed, assigned — on track */
+    .b-gold { color:#B45309; }    /* pending, reminder sent — needs your action */
+    .b-green { color:#15803D; }   /* arrived, completed — resolved */
+    .b-gray { color:#6B6F76; }    /* cancelled — neutral */
+    .b-blue { color:#2563C4; }    /* invited, account created — waiting, informational */
+    .b-red { color:#D92D20; }     /* no response — urgent */
+    .b-orange { color:#0E7490; }  /* in progress, en route — active right now */
     /* Action buttons */
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:7px 13px; border-radius:9px; font-size:11px; font-weight:600; font-family:inherit; cursor:pointer; border:none; transition:opacity 0.15s; white-space:nowrap; }
     .btn:hover { opacity:0.85; }
@@ -619,7 +619,7 @@ var STATUS_LABELS = {
 var STATUS_CLASS = {
   invited:'b-blue', reminder_sent:'b-gold', no_response:'b-red',
   app_downloaded:'b-blue', pending:'b-gold', confirmed:'b-teal',
-  assigned:'b-teal', in_progress:'b-gold', en_route:'b-orange', arrived:'b-green',
+  assigned:'b-teal', in_progress:'b-orange', en_route:'b-orange', arrived:'b-green',
   completed:'b-green', cancelled:'b-gray'
 };
 function statusBadge(s) {
@@ -856,13 +856,9 @@ function rideRow(r, cols, selectable, tab) {
   var t = r.pickup_time ? new Date(r.pickup_time) : null;
   var dateStr = t ? t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : '—';
   var isPending = ['invited','reminder_sent','no_response','pending'].includes(r.status);
-  var canDelete = r.status !== 'completed';
   var actionBtn = isPending
     ? '<button class="btn btn-navy" onclick="sendReminder(event,\'' + r.id + '\')">Remind</button> <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="cancelRide(event,\'' + r.id + '\')">Cancel</button>'
     : '<button class="btn btn-ghost" onclick="openDrawer(\'' + r.id + '\')">View</button>';
-  if (canDelete) {
-    actionBtn += ' <button class="btn btn-ghost" style="color:#D92D20;border:1px solid #F0BCB5" onclick="deleteRide(event,\'' + r.id + '\')" title="Delete permanently">Delete</button>';
-  }
   var checkboxCell = selectable
     ? '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="row-select" data-id="' + r.id + '" onchange="toggleRowSelect(\'' + r.id + '\',\'' + tab + '\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>'
     : '';
@@ -1604,7 +1600,7 @@ function openCVRideDetail(ride, opts) {
   var r = ride;
   var SL = { invited:'Invite Sent', app_downloaded:'Account Created', reminder_sent:'Reminder Sent', no_response:'No Response', pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
   var SBG = { invited:'#F2F2F3', reminder_sent:'#F2F2F3', no_response:'#FBEAE8', pending:'#F2F2F3', confirmed:'#F2F2F3', assigned:'#F2F2F3', in_progress:'#F2F2F3', completed:'#F2F2F3', cancelled:'#FBEAE8' };
-  var STC = { invited:'#060D1F', reminder_sent:'#060D1F', no_response:'#D92D20', pending:'#060D1F', confirmed:'#060D1F', assigned:'#060D1F', in_progress:'#060D1F', completed:'#060D1F', cancelled:'#D92D20' };
+  var STC = { invited:'#2563C4', reminder_sent:'#B45309', no_response:'#D92D20', pending:'#B45309', confirmed:'#15803D', assigned:'#15803D', in_progress:'#0E7490', completed:'#15803D', cancelled:'#6B7280' };
   function mkBadge(s) { return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:' + (SBG[s]||'#F2F2F3') + ';color:' + (STC[s]||'#060D1F') + '">' + (SL[s]||s) + '</span>'; }
   function fmtTs(ts) { if (!ts) return null; var d=new Date(ts); return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
   function escStr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -1622,8 +1618,8 @@ function openCVRideDetail(ride, opts) {
   steps.forEach(function(step, i) {
     var done = SO.indexOf(step.key) <= curIdx && r.status !== 'cancelled';
     var isLast = i === steps.length - 1;
-    var dotC = done ? '#060D1F' : '#E5E7EB';
-    var lineC = (done && !isLast) ? '#060D1F' : '#E5E7EB';
+    var dotC = done ? '#15803D' : '#E5E7EB';
+    var lineC = (done && !isLast) ? '#15803D' : '#E5E7EB';
     var ts = fmtTs(step.ts);
     tlHTML += '<div style="display:flex;align-items:flex-start;gap:12px' + (isLast?'':';padding-bottom:14px') + '"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:2px"><div style="width:10px;height:10px;border-radius:50%;background:' + dotC + ';flex-shrink:0"></div>' + (isLast?'':'<div style="width:2px;min-height:18px;flex:1;background:' + lineC + ';margin:3px 0"></div>') + '</div><div><div style="font-size:12px;font-weight:600;color:' + (done?'#060D1F':'#9CA3AF') + '">' + step.label + '</div>' + (ts?'<div style="font-size:11px;color:#9CA3AF;margin-top:1px">' + ts + '</div>':'') + '</div></div>';
   });
