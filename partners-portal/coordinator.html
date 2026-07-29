@@ -1659,6 +1659,7 @@ function openCVRideDetail(ride, opts) {
   var ctaHTML = '';
   if (opts.role === 'coord') {
     if (['invited','reminder_sent','no_response'].includes(r.status)) ctaHTML += '<button class="btn btn-navy" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();sendReminder(event,\''+r.id+'\')">Send Reminder</button>';
+    if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();openRescheduleModal(\''+r.id+'\')">Reschedule</button>';
     if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();cancelRide(event,\''+r.id+'\')">Cancel Ride</button>';
     if (r.status !== 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();deleteRide(event,\''+r.id+'\')">Delete Permanently</button>';
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-teal" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();resendReceipt(\''+r.id+'\')">Resend Receipt</button>';
@@ -1668,6 +1669,66 @@ function openCVRideDetail(ride, opts) {
   document.getElementById('cvRideDetailModal').style.display = 'flex';
 }
 function closeCVRideDetail() { document.getElementById('cvRideDetailModal').style.display = 'none'; }
+var _rescheduleRideId = null;
+function openRescheduleModal(rideId) {
+  var r = allRides.find(function(x){ return x.id === rideId; });
+  if (!r) return;
+  _rescheduleRideId = rideId;
+  var t = r.pickup_time ? new Date(r.pickup_time) : new Date();
+  var dateStr = t.toISOString().split('T')[0];
+  var timeStr = t.toTimeString().slice(0,5);
+  document.getElementById('rescheduleDate').value = dateStr;
+  document.getElementById('rescheduleDate').min = new Date().toISOString().split('T')[0];
+  document.getElementById('rescheduleTime').value = timeStr;
+  document.getElementById('rescheduleModal').style.display = 'flex';
+}
+function closeRescheduleModal() { document.getElementById('rescheduleModal').style.display = 'none'; _rescheduleRideId = null; }
+async function submitReschedule() {
+  var rideId = _rescheduleRideId;
+  var r = allRides.find(function(x){ return x.id === rideId; });
+  if (!r) return;
+  var newDate = document.getElementById('rescheduleDate').value;
+  var newTime = document.getElementById('rescheduleTime').value;
+  if (!newDate || !newTime) { showToast('Please select a date and time', 'err'); return; }
+  var oldPickup = new Date(r.pickup_time);
+  var newPickup = new Date(newDate + 'T' + newTime);
+  var deltaMs = newPickup.getTime() - oldPickup.getTime();
+
+  if (r.is_recurring && r.recurring_series_id) {
+    var choice = confirm('This ride is part of a recurring series. Click OK to reschedule ONLY this occurrence, or Cancel to keep it at the current time (series-wide rescheduling is not yet supported).');
+    if (!choice) { closeRescheduleModal(); return; }
+  }
+
+  try {
+    var resp = await fetch(SUPA + '/rest/v1/rides?id=eq.' + rideId, {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ pickup_time: newPickup.toISOString(), status: 'pending' })
+    });
+    if (!resp.ok) { showToast('Could not reschedule ride', 'err'); return; }
+    r.pickup_time = newPickup.toISOString();
+    r.status = 'pending';
+
+    if (r.round_trip_pair_id) {
+      var paired = allRides.find(function(x){ return x.round_trip_pair_id === r.round_trip_pair_id && x.id !== rideId; });
+      if (paired) {
+        var pairedOldPickup = new Date(paired.pickup_time);
+        var pairedNewPickup = new Date(pairedOldPickup.getTime() + deltaMs);
+        var resp2 = await fetch(SUPA + '/rest/v1/rides?id=eq.' + paired.id, {
+          method: 'PATCH',
+          headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ pickup_time: pairedNewPickup.toISOString(), status: 'pending' })
+        });
+        if (resp2.ok) { paired.pickup_time = pairedNewPickup.toISOString(); paired.status = 'pending'; }
+      }
+    }
+    updateStats(); renderPatientTable(); renderAlerts();
+    if (typeof renderDashRides === 'function') renderDashRides();
+    if (typeof renderRidesTab === 'function') renderRidesTab();
+    showToast('Ride rescheduled — patient will need to reconfirm', 'ok');
+    closeRescheduleModal();
+  } catch(e) { showToast('Could not reschedule ride', 'err'); }
+}
 </script>
 
 <!-- Shared Ride Detail Modal -->
@@ -1678,6 +1739,23 @@ function closeCVRideDetail() { document.getElementById('cvRideDetailModal').styl
       <button onclick="closeCVRideDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;line-height:1;flex-shrink:0">&times;</button>
     </div>
     <div id="cvRDMBody" style="padding:4px 24px 24px"></div>
+  </div>
+</div>
+<!-- Reschedule Modal -->
+<div id="rescheduleModal" onclick="if(event.target===this)closeRescheduleModal()" style="display:none;position:fixed;inset:0;background:rgba(6,13,31,0.6);z-index:3100;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:400px;box-shadow:0 24px 80px rgba(6,13,31,0.3)">
+    <div style="padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1F5F9">
+      <div style="font-size:17px;font-weight:600;color:#060D1F">Reschedule Ride</div>
+      <button onclick="closeRescheduleModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;line-height:1">&times;</button>
+    </div>
+    <div style="padding:20px 24px">
+      <label class="field-label">New date</label>
+      <input type="date" id="rescheduleDate" class="form-input" style="margin-bottom:14px">
+      <label class="field-label">New time</label>
+      <input type="time" id="rescheduleTime" class="form-input" style="margin-bottom:18px">
+      <div style="font-size:12px;color:#6B7280;margin-bottom:18px">The patient will need to reconfirm this ride at its new time.</div>
+      <button class="btn btn-navy" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="submitReschedule()">Confirm Reschedule</button>
+    </div>
   </div>
 </div>
 </body>
