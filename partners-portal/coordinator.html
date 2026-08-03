@@ -378,16 +378,12 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Patient First Name <span style="color:#EF4444">*</span></label>
-          <input class="form-input" id="patFirstName" placeholder="Jane">
+          <input class="form-input" id="patFirstName" placeholder="Jane" oninput="scheduleEhrLookup()">
         </div>
         <div class="form-group">
           <label class="form-label">Patient Last Name <span style="color:#EF4444">*</span></label>
-          <input class="form-input" id="patLastName" placeholder="Doe">
+          <input class="form-input" id="patLastName" placeholder="Doe" oninput="scheduleEhrLookup()">
         </div>
-      </div>
-      <div class="form-group" style="margin-bottom:16px">
-        <button type="button" class="btn btn-ghost" style="width:100%" onclick="lookupAthenaPatient()">Look up in athenahealth</button>
-        <div style="font-size:11px;color:#9CA3AF;margin-top:4px" id="athenaLookupStatus"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Patient Email <span style="color:#EF4444">*</span></label>
@@ -1154,24 +1150,23 @@ function fillExistingPatient() {
   document.getElementById('patPhone').value     = opt.dataset.phone || '';
 }
 
-async function lookupAthenaPatient() {
+var _ehrLookupTimeout = null;
+function scheduleEhrLookup() {
+  clearTimeout(_ehrLookupTimeout);
+  _ehrLookupTimeout = setTimeout(autoEhrLookup, 600);
+}
+async function autoEhrLookup() {
   var first = document.getElementById('patFirstName').value.trim();
   var last = document.getElementById('patLastName').value.trim();
-  var statusEl = document.getElementById('athenaLookupStatus');
-  if (!last) { statusEl.textContent = 'Enter a last name first.'; return; }
-  statusEl.textContent = 'Searching…';
+  var phoneEl = document.getElementById('patPhone');
+  if (!last || !first || phoneEl.value.trim() || !coordInfo || !coordInfo.hospital_id) return;
   try {
-    var r = await fetch(API + '/api/ehr/search-patient?firstName=' + encodeURIComponent(first) + '&lastName=' + encodeURIComponent(last));
+    var r = await fetch(API + '/api/ehr/search-patient?firstName=' + encodeURIComponent(first) + '&lastName=' + encodeURIComponent(last) + '&hospitalId=' + encodeURIComponent(coordInfo.hospital_id));
     var d = await r.json();
-    if (d.results && d.results.length) {
-      document.getElementById('patPhone').value = d.results[0].phone || '';
-      statusEl.textContent = 'Found in athenahealth — phone auto-filled.';
-    } else {
-      statusEl.textContent = 'No match found in athenahealth.';
+    if (d.results && d.results.length && !phoneEl.value.trim()) {
+      phoneEl.value = d.results[0].phone || '';
     }
-  } catch (e) {
-    statusEl.textContent = 'Lookup failed — you can still enter details manually.';
-  }
+  } catch (e) { /* fail silently */ }
 }
 
 function closeAddPatient() {
