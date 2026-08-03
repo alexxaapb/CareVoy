@@ -290,6 +290,14 @@
     </div>
     <div class="page-title">Rides</div>
     <div class="page-sub">All rides for your facility</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="filter-btn on" id="rf-all" onclick="setRidesFilter('all',this)">All</button>
+      <button class="filter-btn" id="rf-action" onclick="setRidesFilter('action',this)">Needs Action</button>
+      <button class="filter-btn" id="rf-confirmed" onclick="setRidesFilter('confirmed',this)">Confirmed</button>
+      <button class="filter-btn" id="rf-active" onclick="setRidesFilter('active',this)">Assigned / In Progress</button>
+      <button class="filter-btn" id="rf-completed" onclick="setRidesFilter('completed',this)">Completed</button>
+      <button class="filter-btn" id="rf-cancelled" onclick="setRidesFilter('cancelled',this)">Cancelled</button>
+    </div>
 
     <div id="ridesBulkBar" class="bulk-bar">
       <span id="ridesBulkCount" style="font-size:13px;font-weight:600"></span>
@@ -874,9 +882,25 @@ function renderDashRides() {
   body.innerHTML = recent.length ? recent.map(function(r){ return rideRow(r); }).join('') : '<div class="empty">No rides yet.</div>';
 }
 
+var ridesFilter = 'all';
+function setRidesFilter(f, el) {
+  ridesFilter = f;
+  document.querySelectorAll('#sec-rides .filter-btn').forEach(function(b){ b.classList.remove('on'); });
+  if (el) el.classList.add('on');
+  renderRidesTab();
+}
 function renderRidesTab() {
   var body = document.getElementById('ridesBody');
-  body.innerHTML = allRides.length ? allRides.map(function(r){ return rideRow(r, null, true, 'rides'); }).join('') : '<div class="empty">No rides for your facility yet.</div>';
+  var rows = allRides.filter(function(r){
+    if (ridesFilter === 'all') return true;
+    if (ridesFilter === 'action') return ['invited','reminder_sent','no_response','pending'].includes(r.status);
+    if (ridesFilter === 'confirmed') return r.status === 'confirmed';
+    if (ridesFilter === 'active') return ['assigned','in_progress','en_route','arrived'].includes(r.status);
+    if (ridesFilter === 'completed') return r.status === 'completed';
+    if (ridesFilter === 'cancelled') return r.status === 'cancelled';
+    return true;
+  });
+  body.innerHTML = rows.length ? rows.map(function(r){ return rideRow(r, null, true, 'rides'); }).join('') : '<div class="empty">No rides match this filter.</div>';
   clearSelection('rides');
 }
 
@@ -975,7 +999,7 @@ async function cancelRideSeries(evt, seriesId) {
 function filterPatients() { renderPatientTable(); }
 function setPatientFilter(f, el) {
   patientFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('on'); });
+  document.querySelectorAll('#sec-patients .filter-btn').forEach(function(b){ b.classList.remove('on'); });
   if (el) el.classList.add('on');
   renderPatientTable();
 }
