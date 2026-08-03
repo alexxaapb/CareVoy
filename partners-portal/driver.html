@@ -402,6 +402,8 @@ rides = rides.filter(function(rd) {
 return rd.hospital_state && myStates.includes(rd.hospital_state);
 });
 }
+var dismissed = JSON.parse(localStorage.getItem('carevoy_declined_rides') || '[]');
+rides = rides.filter(function(rd){ return !dismissed.includes(rd.id); });
 if (!rides.length) {
 body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">No available rides in your service area right now</div>';
 return;
@@ -416,7 +418,7 @@ return '<div style="background:#fff;border-radius:14px;border:1px solid #E4E4E7;
 '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + esc(rd.hospital_name || 'Facility') + ' · ' + tStr + '</div>' +
 '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">' + esc(rd.pickup_address || 'Pickup TBD') + ' → ' + esc(rd.dropoff_address || 'Dropoff TBD') + '</div>' +
 '</div>' +
-'<button onclick="acceptRide(\'' + rd.id + '\')" style="background:#060D1F;color:#fff;border:none;padding:8px 18px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Accept Ride</button>' +
+'<div style="display:flex;gap:8px"><button onclick="declineRide(\'' + rd.id + '\')" style="background:#fff;color:#6B7280;border:1px solid #E4E4E7;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Decline</button><button onclick="acceptRide(\'' + rd.id + '\')" style="background:#060D1F;color:#fff;border:none;padding:8px 18px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Accept Ride</button></div>' +
 '</div></div>';
 }).join('');
 } catch(e) {
@@ -470,6 +472,13 @@ return;
 }
 showToast('Rates saved', 'ok');
 } catch(e) { showToast('Could not save', 'err'); }
+}
+function declineRide(rideId) {
+  var dismissed = JSON.parse(localStorage.getItem('carevoy_declined_rides') || '[]');
+  if (!dismissed.includes(rideId)) dismissed.push(rideId);
+  localStorage.setItem('carevoy_declined_rides', JSON.stringify(dismissed));
+  showToast('Ride declined — removed from your list', 'ok');
+  loadAvailableRides();
 }
 async function acceptRide(rideId) {
 if (!staffInfo || !staffInfo.nemt_partner_id) return;
