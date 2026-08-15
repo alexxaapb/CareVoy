@@ -1168,6 +1168,7 @@ async function confirmRoundTrip() {
       status: 'confirmed',
       payment_responsibility: outbound.payment_responsibility
     }).eq('id', outbound.id);
+    fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: outbound.id }) }).catch(function(){});
     if (ret) {
       await sb.from('rides').update({
         pickup_address: facility,
@@ -1176,6 +1177,7 @@ async function confirmRoundTrip() {
         status: 'confirmed',
         payment_responsibility: outbound.payment_responsibility
       }).eq('id', ret.id);
+      fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: ret.id }) }).catch(function(){});
     }
     closeBookModal();
     toast('Round trip confirmed');
@@ -1253,6 +1255,7 @@ async function confirmBooking() {
       estimated_cost: window._estimatedFare||null,
       estimated_miles: window._estimatedMiles||null,
     }).eq('id', currentRide.id);
+    fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: currentRide.id }) }).catch(function(){});
     if (window._pairedRide) {
       await sb.from('rides').update({
         pickup_address: currentRide.dropoff_address || currentRide.hospital_name,
@@ -1265,6 +1268,7 @@ async function confirmBooking() {
         estimated_cost: window._estimatedFare||null,
         estimated_miles: window._estimatedMiles||null,
       }).eq('id', window._pairedRide.id);
+      fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: window._pairedRide.id }) }).catch(function(){});
     }
     closeBookModal();
     toast(window._pairedRide ? 'Round trip confirmed' : 'Ride confirmed');
