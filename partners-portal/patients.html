@@ -779,11 +779,13 @@ async function submitReschedule() {
   }
   try {
     await sb.from('rides').update({ pickup_time: newPickup.toISOString(), status: 'confirmed' }).eq('id', rideId);
+    fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: rideId }) }).catch(function(){});
     if (r.round_trip_pair_id) {
       var paired = allRides.find(function(x){ return x.round_trip_pair_id === r.round_trip_pair_id && x.id !== rideId; });
       if (paired) {
         var pairedNewPickup = new Date(new Date(paired.pickup_time).getTime() + deltaMs);
         await sb.from('rides').update({ pickup_time: pairedNewPickup.toISOString(), status: 'confirmed' }).eq('id', paired.id);
+        fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: paired.id }) }).catch(function(){});
       }
     }
     toast('Ride rescheduled');
