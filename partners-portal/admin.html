@@ -1018,14 +1018,6 @@
       loadStats();
     } catch(e) { showToast('Could not delete partners', 'err'); }
   }
-    var rows = list.map(function(p, i) {
-      var active = p.active ? '<span class="badge teal">Yes</span>' : '<span class="badge gray">No</span>';
-      return '<div class="table-row nemt-grid" style="cursor:pointer" onclick="showNemtProfile(' + i + ')"><div class="td">' + esc(p.company_name||'—') + '</div><div class="td muted">' + esc(p.city||'—') + '</div><div class="td muted">—</div><div class="td">' + active + '</div><div class="td muted">—</div></div>';
-    }).join('');
-    el.innerHTML = '<div class="table-head nemt-grid"><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div>' + rows;
-    // delegated click -> open read-only partner detail
-
-  }
 
   function showNemtProfile(idx) {
     var data = window._allNemt[idx];
