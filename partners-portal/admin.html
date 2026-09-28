@@ -76,7 +76,7 @@
     .table-row { display: grid; align-items: center; padding: 13px 18px; border-bottom: 1px solid #F6F6F7; }
     .table-row:last-child { border-bottom: none; }
     .fac-grid { grid-template-columns: 32px 2fr 1fr 1fr 0.8fr; }
-    .nemt-grid { grid-template-columns: 2fr 1fr 1fr 0.7fr 1.2fr; }
+    .nemt-grid { grid-template-columns: 32px 2fr 1fr 1fr 0.7fr 1.2fr; }
     .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; background: none; padding: 0; border-radius: 0; }
     .badge.green { color: #15803D; }
     .badge.red    { color: #D92D20; }
@@ -314,7 +314,14 @@
       <div class="section-count" id="nemtSub"></div>
     </div>
     <div class="table-card" id="nemtTable">
+      <div id="nemtBulkBar" class="bulk-bar" style="display:none;align-items:center;gap:10px;background:#060D1F;color:#fff;padding:10px 16px;border-radius:12px;margin-bottom:12px">
+        <span id="nemtBulkCount" style="font-size:13px;font-weight:600"></span>
+        <button style="background:rgba(255,255,255,.12);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkSetNemtInactive()">Deactivate</button>
+        <button style="background:rgba(217,45,32,.85);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkDeleteNemt()">Delete Permanently</button>
+        <button style="background:none;color:#9CA3AF;margin-left:auto;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="clearNemtSelection()">Clear</button>
+      </div>
       <div class="table-head nemt-grid">
+        <div class="th"><input type="checkbox" id="nemtSelectAll" onchange="toggleNemtSelectAll(this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>
         <div class="th">Company</div>
         <div class="th">City</div>
         <div class="th">Total Rides</div>
@@ -401,6 +408,12 @@
   <div id="nemtPendingSection" style="margin-bottom:20px;display:none">
     <div style="font-size:11px;font-weight:700;color:#F5A623;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">&#9679; Pending Review</div>
     <div id="nemtPendingBody"></div>
+  </div>
+  <div id="nemtFullBulkBar" class="bulk-bar" style="display:none;align-items:center;gap:10px;background:#060D1F;color:#fff;padding:10px 16px;border-radius:12px;margin-bottom:12px">
+    <span id="nemtFullBulkCount" style="font-size:13px;font-weight:600"></span>
+    <button style="background:rgba(255,255,255,.12);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkSetNemtInactive()">Deactivate</button>
+    <button style="background:rgba(217,45,32,.85);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkDeleteNemt()">Delete Permanently</button>
+    <button style="background:none;color:#9CA3AF;margin-left:auto;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="clearNemtSelection()">Clear</button>
   </div>
   <div id="nemtFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">
     <div class="tbl-head nemt-grid">
@@ -922,14 +935,89 @@
   }
 
   window._allNemt = [];
+  window._selectedNemtIds = window._selectedNemtIds || new Set();
   function renderNemt(list) {
     window._allNemt = list || [];
+    window._selectedNemtIds.clear();
+    updateNemtBulkBar();
     var el = document.getElementById('nemtTable');
     document.getElementById('nemtSub').textContent = list.length + ' total';
     if (!list.length) {
-      el.innerHTML = '<div class="table-head nemt-grid"><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div><div class="empty-row">No NEMT partners yet.</div>';
+      el.innerHTML = '<div class="table-head nemt-grid"><div class="th"></div><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div><div class="empty-row">No NEMT partners yet.</div>';
       return;
     }
+    var rows = list.map(function(p, i) {
+      var active = p.active ? '<span class="badge teal">Yes</span>' : '<span class="badge gray">No</span>';
+      var cb = '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="nemt-row-select" data-id="' + p.id + '" onchange="toggleNemtSelect(\'' + p.id + '\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>';
+      return '<div class="table-row nemt-grid" style="cursor:pointer" onclick="showNemtProfile(' + i + ')">' + cb + '<div class="td">' + esc(p.company_name||'—') + '</div><div class="td muted">' + esc(p.city||'—') + '</div><div class="td muted">—</div><div class="td">' + active + '</div><div class="td muted">—</div></div>';
+    }).join('');
+    el.innerHTML = '<div class="table-head nemt-grid"><div class="th"></div><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div>' + rows;
+  }
+
+  function toggleNemtSelect(id) {
+    if (window._selectedNemtIds.has(id)) window._selectedNemtIds.delete(id);
+    else window._selectedNemtIds.add(id);
+    updateNemtBulkBar();
+  }
+
+  function toggleNemtSelectAll(checked) {
+    window._selectedNemtIds.clear();
+    document.querySelectorAll('.nemt-row-select').forEach(function(cb) {
+      cb.checked = checked;
+      if (checked) window._selectedNemtIds.add(cb.dataset.id);
+    });
+    updateNemtBulkBar();
+  }
+
+  function updateNemtBulkBar() {
+    var n = window._selectedNemtIds.size;
+    ['nemtBulkBar', 'nemtFullBulkBar'].forEach(function(barId, i) {
+      var bar = document.getElementById(barId);
+      var count = document.getElementById(i === 0 ? 'nemtBulkCount' : 'nemtFullBulkCount');
+      if (!bar) return;
+      if (n > 0) { bar.style.display = 'flex'; if (count) count.textContent = n + ' selected'; }
+      else { bar.style.display = 'none'; }
+    });
+  }
+
+  function clearNemtSelection() {
+    window._selectedNemtIds.clear();
+    document.querySelectorAll('.nemt-row-select').forEach(function(cb){ cb.checked = false; });
+    var selAll = document.getElementById('nemtSelectAll');
+    if (selAll) selAll.checked = false;
+    updateNemtBulkBar();
+  }
+
+  async function bulkSetNemtInactive() {
+    var ids = Array.from(window._selectedNemtIds);
+    if (!ids.length) return;
+    if (!confirm('Deactivate ' + ids.length + ' partner' + (ids.length>1?'s':'') + '?')) return;
+    var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var _KEY  = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
+    var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+    var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    try {
+      await fetch(_SUPA + '/rest/v1/nemt_partners?id=in.(' + ids.join(',') + ')', { method: 'PATCH', headers: _H, body: JSON.stringify({ active: false }) });
+      showToast(ids.length + ' partner' + (ids.length>1?'s':'') + ' deactivated', 'ok');
+      loadStats();
+    } catch(e) { showToast('Could not update partners', 'err'); }
+  }
+
+  async function bulkDeleteNemt() {
+    var ids = Array.from(window._selectedNemtIds);
+    if (!ids.length) return;
+    if (!confirm('Permanently delete ' + ids.length + ' partner' + (ids.length>1?'s':'') + '? This cannot be undone.')) return;
+    var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var _KEY  = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
+    var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+    var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    try {
+      var resp = await fetch(_SUPA + '/rest/v1/nemt_partners?id=in.(' + ids.join(',') + ')', { method: 'DELETE', headers: _H });
+      if (!resp.ok) { showToast('Could not delete — some may have linked staff or ride records', 'err'); return; }
+      showToast(ids.length + ' partner' + (ids.length>1?'s':'') + ' deleted', 'ok');
+      loadStats();
+    } catch(e) { showToast('Could not delete partners', 'err'); }
+  }
     var rows = list.map(function(p, i) {
       var active = p.active ? '<span class="badge teal">Yes</span>' : '<span class="badge gray">No</span>';
       return '<div class="table-row nemt-grid" style="cursor:pointer" onclick="showNemtProfile(' + i + ')"><div class="td">' + esc(p.company_name||'—') + '</div><div class="td muted">' + esc(p.city||'—') + '</div><div class="td muted">—</div><div class="td">' + active + '</div><div class="td muted">—</div></div>';
