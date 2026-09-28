@@ -377,6 +377,12 @@
     <div style="font-size:11px;font-weight:700;color:#F5A623;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">&#9679; Pending Review</div>
     <div id="facPendingBody"></div>
   </div>
+  <div id="facilitiesFullBulkBar" class="bulk-bar" style="display:none;align-items:center;gap:10px;background:#060D1F;color:#fff;padding:10px 16px;border-radius:12px;margin-bottom:12px">
+    <span id="facilitiesFullBulkCount" style="font-size:13px;font-weight:600"></span>
+    <button style="background:rgba(255,255,255,.12);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkSetFacilitiesInactive()">Set Inactive</button>
+    <button style="background:rgba(217,45,32,.85);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkDeleteFacilities()">Delete Permanently</button>
+    <button style="background:none;color:#9CA3AF;margin-left:auto;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="clearFacilitiesSelection()">Clear</button>
+  </div>
   <div id="facilitiesFullPanel" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">
     <div class="tbl-head fac-grid">
       <div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div>
@@ -812,15 +818,18 @@
   }
 
   function updateFacilitiesBulkBar() {
-    var bar = document.getElementById('facilitiesBulkBar');
-    var count = document.getElementById('facilitiesBulkCount');
     var n = window._selectedFacilityIds.size;
-    if (n > 0) {
-      bar.style.display = 'flex';
-      count.textContent = n + ' selected';
-    } else {
-      bar.style.display = 'none';
-    }
+    ['facilitiesBulkBar', 'facilitiesFullBulkBar'].forEach(function(barId, i) {
+      var bar = document.getElementById(barId);
+      var count = document.getElementById(i === 0 ? 'facilitiesBulkCount' : 'facilitiesFullBulkCount');
+      if (!bar) return;
+      if (n > 0) {
+        bar.style.display = 'flex';
+        if (count) count.textContent = n + ' selected';
+      } else {
+        bar.style.display = 'none';
+      }
+    });
   }
 
   function clearFacilitiesSelection() {
