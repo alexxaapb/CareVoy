@@ -907,10 +907,13 @@
     var _nemtId = data.id;
     var toggleBtn = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
       + '<span style="font-size:12px;color:#6B7280">Status: <strong>' + (data.active ? 'Active' : 'Inactive') + '</strong></span>'
-      + '<button id="nemtToggleBtn" style="padding:8px 18px;border-radius:8px;background:' + _btnBg + ';color:' + _btnCl + ';border:1px solid ' + _btnBrd + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + _btnTxt + '</button></div>';
+      + '<button id="nemtToggleBtn" style="padding:8px 18px;border-radius:8px;background:' + _btnBg + ';color:' + _btnCl + ';border:1px solid ' + _btnBrd + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + _btnTxt + '</button></div>'
+      + '<div style="margin-top:10px;text-align:right"><button id="nemtDeleteBtn" style="padding:8px 18px;border-radius:8px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Delete Permanently</button></div>';
     document.getElementById("rideDetailBody").innerHTML = rows + toggleBtn;
     var _tb = document.getElementById("nemtToggleBtn");
     if (_tb) _tb.addEventListener("click", function(){ toggleNemtActive(_nemtId, _newVal); });
+    var _db = document.getElementById("nemtDeleteBtn");
+    if (_db) _db.addEventListener("click", function(){ deleteNemtPartner(_nemtId); });
     var modal = document.getElementById("rideDetailModal");
     var titleEl = modal.querySelector('div[style*="font-size:18px"]');
     if (titleEl) titleEl.textContent = "Partner Profile";
@@ -932,6 +935,29 @@
       showToast(newActive ? 'Partner set to Active' : 'Partner set to Inactive', 'ok');
       loadStats();
     } catch(e) { showToast('Could not update status', 'err'); }
+  }
+
+  async function deleteNemtPartner(partnerId) {
+    if (!confirm('Permanently delete this NEMT partner? This cannot be undone.')) return;
+    var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var _KEY  = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
+    var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+    var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    try {
+      var resp = await fetch(_SUPA + '/rest/v1/nemt_partners?id=eq.' + partnerId, {
+        method: 'DELETE',
+        headers: _H
+      });
+      if (!resp.ok) {
+        var errText = await resp.text();
+        showToast('Could not delete partner — it may have linked staff or ride records', 'err');
+        console.warn('Delete NEMT partner failed:', errText);
+        return;
+      }
+      document.getElementById("rideDetailModal").style.display = "none";
+      showToast('Partner deleted', 'ok');
+      loadStats();
+    } catch(e) { showToast('Could not delete partner', 'err'); }
   }
 
   function statusBadge(s) {
