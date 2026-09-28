@@ -75,7 +75,7 @@
     .table-head { display: grid; padding: 9px 18px; background: #F6F6F7; border-bottom: 1px solid #E4E4E7; }
     .table-row { display: grid; align-items: center; padding: 13px 18px; border-bottom: 1px solid #F6F6F7; }
     .table-row:last-child { border-bottom: none; }
-    .fac-grid { grid-template-columns: 2fr 1fr 1fr 0.8fr; }
+    .fac-grid { grid-template-columns: 32px 2fr 1fr 1fr 0.8fr; }
     .nemt-grid { grid-template-columns: 2fr 1fr 1fr 0.7fr 1.2fr; }
     .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; background: none; padding: 0; border-radius: 0; }
     .badge.green { color: #15803D; }
@@ -291,8 +291,15 @@
       <div class="section-title">Facilities</div>
       <div class="section-count" id="facilitiesSub"></div>
     </div>
+    <div id="facilitiesBulkBar" class="bulk-bar" style="display:none;align-items:center;gap:10px;background:#060D1F;color:#fff;padding:10px 16px;border-radius:12px;margin-bottom:12px">
+      <span id="facilitiesBulkCount" style="font-size:13px;font-weight:600"></span>
+      <button class="btn" style="background:rgba(255,255,255,.12);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkSetFacilitiesInactive()">Set Inactive</button>
+      <button class="btn" style="background:rgba(217,45,32,.85);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="bulkDeleteFacilities()">Delete Permanently</button>
+      <button class="btn" style="background:none;color:#9CA3AF;margin-left:auto;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit" onclick="clearFacilitiesSelection()">Clear</button>
+    </div>
     <div class="table-card" id="facilitiesTable">
       <div class="table-head fac-grid">
+        <div class="th"><input type="checkbox" id="facilitiesSelectAll" onchange="toggleFacilitiesSelectAll(this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>
         <div class="th">Name</div>
         <div class="th">City</div>
         <div class="th">Type</div>
@@ -769,21 +776,90 @@
   }
 
   window._allFacilities = [];
+  window._selectedFacilityIds = window._selectedFacilityIds || new Set();
   function renderFacilities(list) {
     window._allFacilities = list || [];
+    window._selectedFacilityIds.clear();
+    updateFacilitiesBulkBar();
     var el = document.getElementById('facilitiesTable');
     document.getElementById('facilitiesSub').textContent = list.length + ' total';
     if (!list.length) {
-      el.innerHTML = '<div class="table-head fac-grid"><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div><div class="empty-row">No facilities yet. Invite one using the button above.</div>';
+      el.innerHTML = '<div class="table-head fac-grid"><div class="th"></div><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div><div class="empty-row">No facilities yet. Invite one using the button above.</div>';
       return;
     }
     var rows = list.map(function(f, i) {
       var badge = f.active ? '<span class="badge green">● Active</span>' : '<span class="badge gray">Inactive</span>';
       var type = (f.facility_type || 'Hospital').replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-      return '<div class="table-row fac-grid" style="cursor:pointer" onclick="showFacilityProfile(' + i + ')"><div class="td">' + esc(f.name||'—') + '</div><div class="td muted">' + esc(f.city||'—') + '</div><div class="td muted">' + type + '</div><div class="td">' + badge + '</div></div>';
+      var cb = '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="fac-row-select" data-id="' + f.id + '" onchange="toggleFacilitySelect(\'' + f.id + '\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>';
+      return '<div class="table-row fac-grid" style="cursor:pointer" onclick="showFacilityProfile(' + i + ')">' + cb + '<div class="td">' + esc(f.name||'—') + '</div><div class="td muted">' + esc(f.city||'—') + '</div><div class="td muted">' + type + '</div><div class="td">' + badge + '</div></div>';
     }).join('');
-    el.innerHTML = '<div class="table-head fac-grid"><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div>' + rows;
+    el.innerHTML = '<div class="table-head fac-grid"><div class="th"></div><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div>' + rows;
+  }
 
+  function toggleFacilitySelect(id) {
+    if (window._selectedFacilityIds.has(id)) window._selectedFacilityIds.delete(id);
+    else window._selectedFacilityIds.add(id);
+    updateFacilitiesBulkBar();
+  }
+
+  function toggleFacilitiesSelectAll(checked) {
+    window._selectedFacilityIds.clear();
+    document.querySelectorAll('.fac-row-select').forEach(function(cb) {
+      cb.checked = checked;
+      if (checked) window._selectedFacilityIds.add(cb.dataset.id);
+    });
+    updateFacilitiesBulkBar();
+  }
+
+  function updateFacilitiesBulkBar() {
+    var bar = document.getElementById('facilitiesBulkBar');
+    var count = document.getElementById('facilitiesBulkCount');
+    var n = window._selectedFacilityIds.size;
+    if (n > 0) {
+      bar.style.display = 'flex';
+      count.textContent = n + ' selected';
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  function clearFacilitiesSelection() {
+    window._selectedFacilityIds.clear();
+    document.querySelectorAll('.fac-row-select').forEach(function(cb){ cb.checked = false; });
+    var selAll = document.getElementById('facilitiesSelectAll');
+    if (selAll) selAll.checked = false;
+    updateFacilitiesBulkBar();
+  }
+
+  async function bulkSetFacilitiesInactive() {
+    var ids = Array.from(window._selectedFacilityIds);
+    if (!ids.length) return;
+    if (!confirm('Set ' + ids.length + ' facilit' + (ids.length>1?'ies':'y') + ' to Inactive?')) return;
+    var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var _KEY  = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
+    var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+    var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    try {
+      await fetch(_SUPA + '/rest/v1/hospitals?id=in.(' + ids.join(',') + ')', { method: 'PATCH', headers: _H, body: JSON.stringify({ active: false }) });
+      showToast(ids.length + ' facilit' + (ids.length>1?'ies':'y') + ' set to Inactive', 'ok');
+      loadStats();
+    } catch(e) { showToast('Could not update facilities', 'err'); }
+  }
+
+  async function bulkDeleteFacilities() {
+    var ids = Array.from(window._selectedFacilityIds);
+    if (!ids.length) return;
+    if (!confirm('Permanently delete ' + ids.length + ' facilit' + (ids.length>1?'ies':'y') + '? This cannot be undone.')) return;
+    var _SUPA = 'https://byflpckbjjumxxjxoplk.supabase.co';
+    var _KEY  = 'sb_publishable_z2cTzmjGH3njGM1pGqEV7g_h2ys8C0H';
+    var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+    var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    try {
+      var resp = await fetch(_SUPA + '/rest/v1/hospitals?id=in.(' + ids.join(',') + ')', { method: 'DELETE', headers: _H });
+      if (!resp.ok) { showToast('Could not delete — some may have linked rides or staff records', 'err'); return; }
+      showToast(ids.length + ' facilit' + (ids.length>1?'ies':'y') + ' deleted', 'ok');
+      loadStats();
+    } catch(e) { showToast('Could not delete facilities', 'err'); }
   }
 
   function showFacilityProfile(idx) {
@@ -808,10 +884,13 @@
     var _facId  = data.id;
     var toggleBtn = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
       + '<span style="font-size:12px;color:#6B7280">Status: <strong>' + (data.active ? 'Active' : 'Inactive') + '</strong></span>'
-      + '<button id="facToggleBtn" style="padding:8px 18px;border-radius:8px;background:' + _btnBg + ';color:' + _btnCl + ';border:1px solid ' + _btnBrd + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + _btnTxt + '</button></div>';
+      + '<button id="facToggleBtn" style="padding:8px 18px;border-radius:8px;background:' + _btnBg + ';color:' + _btnCl + ';border:1px solid ' + _btnBrd + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + _btnTxt + '</button></div>'
+      + '<div style="margin-top:10px;text-align:right"><button id="facDeleteBtn" style="padding:8px 18px;border-radius:8px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Delete Permanently</button></div>';
     document.getElementById("rideDetailBody").innerHTML = rows + toggleBtn;
     var _tb = document.getElementById("facToggleBtn");
     if (_tb) _tb.addEventListener("click", function(){ toggleFacilityActive(_facId, _newVal); });
+    var _fdb = document.getElementById("facDeleteBtn");
+    if (_fdb) _fdb.addEventListener("click", function(){ deleteFacility(_facId); });
     var modal = document.getElementById("rideDetailModal");
     var titleEl = modal.querySelector('div[style*="font-size:18px"]');
     if (titleEl) titleEl.textContent = "Facility Profile";
