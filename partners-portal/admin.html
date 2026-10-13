@@ -341,9 +341,10 @@
     </div>
     <button onclick="exportCSV('patients')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
   </div>
+<div id="patientsBulkBar" style="display:none;align-items:center;gap:10px;background:#060D1F;color:#fff;padding:10px 16px;border-radius:12px;margin-bottom:12px"><span id="patientsBulkCount" style="font-size:12px;font-weight:600"></span><span style="flex:1"></span><button onclick="bulkDeletePatients()" style="background:rgba(217,45,32,.85);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit">Delete Selected</button></div>
   <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC">
-    <div class="rides-table-head" style="grid-template-columns:1.6fr 1.2fr 1fr 0.6fr 0.8fr">
-      <div class="th">Name</div>
+    <div class="rides-table-head" style="grid-template-columns:32px 1.6fr 1.2fr 1fr 0.6fr 0.8fr">
+      <div class="th"><input type="checkbox" class="sel-all-patients" title="Select all" onchange="bulkToggleAll('patients',this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div><div class="th">Name</div>
       <div class="th">Phone</div>
       <div class="th">Email</div>
       <div class="th">Joined</div>
@@ -364,9 +365,10 @@
     </div>
     <button onclick="exportCSV('rides')" style="background:#050D1F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Export CSV</button>
   </div>
+<div id="ridesBulkBar" style="display:none;align-items:center;gap:10px;background:#060D1F;color:#fff;padding:10px 16px;border-radius:12px;margin-bottom:12px"><span id="ridesBulkCount" style="font-size:12px;font-weight:600"></span><span style="flex:1"></span><button onclick="bulkDeleteRides()" style="background:rgba(217,45,32,.85);color:#fff;padding:7px 13px;border-radius:9px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit">Delete Selected</button></div>
   <div style="background:#fff;border-radius:14px;border:1px solid #E8E4DC" id="allRidesPanel">
-    <div class="rides-table-head" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">
-      <div class="th">Patient</div><div class="th">Hospital</div><div class="th">NEMT Partner</div>
+    <div class="rides-table-head" style="grid-template-columns:32px 1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">
+      <div class="th"><input type="checkbox" class="sel-all-rides" title="Select all" onchange="bulkToggleAll('rides',this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div><div class="th">Patient</div><div class="th">Hospital</div><div class="th">NEMT Partner</div>
       <div class="th">Status</div><div class="th">Date</div><div class="th">Action</div>
     </div>
     <div id="allRidesBody"><div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading…</div></div>
@@ -1184,7 +1186,8 @@
         var phone = p.phone || '—';
         var email = p.email || '—';
         var bg = i % 2 === 0 ? '#fff' : '#F9FAFB';
-        return '<div class="rides-row" style="grid-template-columns:1.6fr 1.2fr 1fr 0.6fr 0.8fr;background:' + bg + '">' +
+        return '<div class="rides-row" style="grid-template-columns:32px 1.6fr 1.2fr 1fr 0.6fr 0.8fr;background:' + bg + '">' +
+          '<div class="td"><input type="checkbox" class="sel-patients" data-id="' + esc(p.id||'') + '" data-email="' + esc(p.email||'') + '" onchange="bulkUpdateBar(\'patients\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>' +
           '<div class="td"><strong>' + esc(p.full_name || 'Unknown') + '</strong></div>' +
           '<div class="td">' + esc(phone) + '</div>' +
           '<div class="td" style="font-size:11px">' + esc(email) + '</div>' +
@@ -1192,6 +1195,7 @@
           '<div class="td"><button onclick="deletePatient(\'' + esc(p.id||'') + '\',\'' + esc(email) + '\')" style="padding:4px 10px;background:none;border:1px solid #FECACA;border-radius:6px;color:#EF4444;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Remove</button></div>' +
         '</div>';
       }).join('');
+      bulkUpdateBar('patients');
     } catch(e) {
       body.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-size:13px">Error loading patients: ' + esc(e.message) + '</div>';
     }
@@ -1253,6 +1257,60 @@
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(function() { t.classList.remove('show'); }, 3500);
+  }
+
+  // ── Bulk select for All Patients / All Rides ──
+  function bulkToggleAll(kind, checked) {
+    document.querySelectorAll('.sel-' + kind).forEach(function(x){ x.checked = checked; });
+    bulkUpdateBar(kind);
+  }
+  function bulkUpdateBar(kind) {
+    var boxes = document.querySelectorAll('.sel-' + kind);
+    var n = document.querySelectorAll('.sel-' + kind + ':checked').length;
+    document.querySelectorAll('.sel-all-' + kind).forEach(function(x){ x.checked = n > 0 && n === boxes.length; });
+    var bar = document.getElementById(kind + 'BulkBar');
+    var cnt = document.getElementById(kind + 'BulkCount');
+    if (bar) bar.style.display = n > 0 ? 'flex' : 'none';
+    if (cnt) cnt.textContent = n + ' selected';
+  }
+  async function bulkDeletePatients() {
+    var picked = Array.from(document.querySelectorAll('.sel-patients:checked'));
+    if (!picked.length) return;
+    if (!confirm('Permanently remove ' + picked.length + ' patient' + (picked.length > 1 ? 's' : '') + '? This cannot be undone.')) return;
+    var ok = 0, failed = 0;
+    for (var i = 0; i < picked.length; i++) {
+      try {
+        var resp = await fetch('https://care-voy-api-server.vercel.app/api/auth/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ user_id: picked[i].dataset.id, patient_email: picked[i].dataset.email })
+        });
+        var result = await resp.json();
+        if (result.success) ok++; else failed++;
+      } catch(e) { failed++; }
+    }
+    showToast(ok + ' removed' + (failed ? ', ' + failed + ' failed' : ''));
+    loadPatients();
+    loadStats();
+  }
+  async function bulkDeleteRides() {
+    var picked = Array.from(document.querySelectorAll('.sel-rides:checked'));
+    if (!picked.length) return;
+    if (!confirm('Permanently delete ' + picked.length + ' ride' + (picked.length > 1 ? 's' : '') + '? This cannot be undone.')) return;
+    var ok = 0, failed = 0;
+    for (var i = 0; i < picked.length; i++) {
+      try {
+        var resp = await fetch('https://care-voy-api-server.vercel.app/api/rides/update-status', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ ride_id: picked[i].dataset.id, action: 'delete' })
+        });
+        var result = await resp.json();
+        if (result.success) ok++; else failed++;
+      } catch(e) { failed++; }
+    }
+    showToast(ok + ' deleted' + (failed ? ', ' + failed + ' failed' : ''));
+    loadAllRides();
+    loadStats();
   }
 
   async function adminDeleteRide(rideId) {
@@ -1328,7 +1386,8 @@ function signOut() {
           actionBtn = '<span style="font-size:11px;color:#9CA3AF">Assigned</span>';
         }
         var deleteBtn = '<button onclick="adminDeleteRide(\'' + esc(r.id) + '\')" style="margin-left:6px;padding:4px 8px;background:none;border:1px solid #FECACA;border-radius:6px;color:#EF4444;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">Delete</button>';
-        return '<div class="rides-row" style="grid-template-columns:1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">' +
+        return '<div class="rides-row" style="grid-template-columns:32px 1.4fr 1.2fr 1fr 1fr 0.8fr 0.8fr">' +
+          '<div class="td"><input type="checkbox" class="sel-rides" data-id="' + esc(r.id) + '" onchange="bulkUpdateBar(\'rides\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>' +
           '<div class="td">' + esc(r.patient_name || 'Patient') + '</div>' +
           '<div class="td muted" style="font-size:12px">' + esc(hospName) + '</div>' +
           '<div class="td muted" style="font-size:12px">—</div>' +
@@ -1336,6 +1395,7 @@ function signOut() {
           '<div class="td muted" style="font-size:12px">' + tStr + '</div>' +
           '<div class="td">' + actionBtn + deleteBtn + '</div></div>';
       }).join('');
+      bulkUpdateBar('rides');
     } catch(e) { body.innerHTML = '<div style="padding:40px;text-align:center;color:red;font-size:13px">Error: ' + e.message + '</div>'; }
   }
 
