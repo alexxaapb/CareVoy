@@ -204,8 +204,10 @@ async function init() {
 
   try {
     // Validate token via Supabase
-    var res = await fetch(SUPA + '/rest/v1/invites?token=eq.' + encodeURIComponent(token) + '&select=*', {
-      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+    var res = await fetch(SUPA + '/rest/v1/rpc/get_invite', {
+      method: 'POST',
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_token: token })
     });
     var data = await res.json();
 
