@@ -1,5 +1,6 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const ws = require('ws');
+const { getCaller } = require('../../lib/security');
 const { createClient } = require("@supabase/supabase-js");
 
 module.exports = async (req, res) => {
@@ -10,7 +11,19 @@ module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { messages, patientId, conversationId } = req.body;
+    const { messages, conversationId } = req.body || {};
+    // Basic input limits (this endpoint costs money per call)
+    if (!Array.isArray(messages) || messages.length === 0 || messages.length > 100) {
+      return res.status(400).json({ error: 'Invalid messages' });
+    }
+    for (const m of messages) {
+      if (!m || (m.role !== 'user' && m.role !== 'assistant') || typeof m.content !== 'string' || m.content.length > 4000) {
+        return res.status(400).json({ error: 'Invalid messages' });
+      }
+    }
+    // Only save to the database when the caller is logged in; never trust a patientId from the request.
+    const caller = req.headers['authorization'] ? await getCaller(req) : null;
+    const patientId = caller ? caller.user.id : null;
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const supabase = createClient(
       process.env.SUPABASE_URL,

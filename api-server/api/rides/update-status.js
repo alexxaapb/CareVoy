@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
+const { getCaller, canAccessRide } = require('../../lib/security');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,8 +28,17 @@ module.exports = async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     , { realtime: { transport: ws } });
 
-    // Handle ride deletion
+    // Authorization: the caller must be allowed to touch THIS ride
+    // (admin: any ride; coordinator: own facility; NEMT: own assigned rides)
+    const callerCtx = await getCaller(req);
+    if (!callerCtx) return res.status(401).json({ error: 'Unauthorized' });
+    const { data: rideAuth } = await sb.from('rides').select('id, hospital_id, nemt_partner_id, patient_id').eq('id', ride_id).maybeSingle();
+    if (!rideAuth) return res.status(404).json({ error: 'Ride not found' });
+    if (!canAccessRide(callerCtx, rideAuth)) return res.status(403).json({ error: 'Forbidden' });
+
+    // Handle ride deletion (admins only)
     if (action === 'delete') {
+      if (!callerCtx.isAdmin) return res.status(403).json({ error: 'Admin access required to delete rides' });
       const { error } = await sb.from('rides').delete().eq('id', ride_id);
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json({ success: true, action: 'deleted' });

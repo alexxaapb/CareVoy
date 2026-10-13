@@ -1,13 +1,19 @@
+const { isInternal, getCaller, escHtml } = require('../../lib/security');
 const { Resend } = require('resend');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
+    if (!isInternal(req)) {
+      const caller = await getCaller(req);
+      if (!caller) return res.status(401).json({ error: 'Unauthorized' });
+      if (!caller.isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    }
     const { email, name, type } = req.body || {};
     if (!email) return res.status(400).json({ error: 'Missing email' });
     if (!process.env.RESEND_API_KEY) return res.status(200).json({ success: false, note: 'Resend not configured' });
@@ -17,7 +23,7 @@ module.exports = async function handler(req, res) {
     const roleLabel = type === 'nemt' ? 'transport partner' : 'facility coordinator';
     const dashUrl = type === 'nemt' ? portal + '/driver.html' : portal + '/coordinator.html';
 
-    const body = `Welcome${name ? ' ' + name : ''}! Your CareVoy ${roleLabel} account has been approved. You can now sign in anytime at <a href="${portal}" style="color:#00C2A8;text-decoration:none">partners.carevoy.co</a> to manage rides and coordinate transportation.<br><br>Need help getting started? Just reply to this email or reach us at the contacts below.`;
+    const body = `Welcome${name ? ' ' + escHtml(name) : ''}! Your CareVoy ${roleLabel} account has been approved. You can now sign in anytime at <a href="${portal}" style="color:#00C2A8;text-decoration:none">partners.carevoy.co</a> to manage rides and coordinate transportation.<br><br>Need help getting started? Just reply to this email or reach us at the contacts below.`;
 
     const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F0F4F8;font-family:-apple-system,Segoe UI,sans-serif">
     <div style="max-width:520px;margin:0 auto;padding:32px 20px">

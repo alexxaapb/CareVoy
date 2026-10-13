@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
+const { isInternal, getCaller, internalHeaders } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -13,6 +14,11 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
+    if (!isInternal(req)) {
+      const caller = await getCaller(req);
+      if (!caller) return res.status(401).json({ error: 'Unauthorized' });
+      if (!caller.isAdmin) return res.status(403).json({ error: 'Admin access required' });
+    }
     let sent = 0;
     const results = [];
 
@@ -23,7 +29,7 @@ module.exports = async function handler(req, res) {
         if (cd.email) {
           try {
             await fetch('https://care-voy-api-server.vercel.app/api/notify/send', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: internalHeaders({ 'Content-Type': 'application/json' }),
               body: JSON.stringify({ type: 'welcome', to: cd.email, data: { full_name: cd.full_name, role: 'coordinator' } })
             });
             sent++; results.push(cd.email);
@@ -39,7 +45,7 @@ module.exports = async function handler(req, res) {
         if (st.email) {
           try {
             await fetch('https://care-voy-api-server.vercel.app/api/notify/send', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: internalHeaders({ 'Content-Type': 'application/json' }),
               body: JSON.stringify({ type: 'welcome', to: st.email, data: { full_name: st.full_name, role: 'nemt' } })
             });
             sent++; results.push(st.email);

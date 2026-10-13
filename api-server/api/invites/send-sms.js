@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
+const { isInternal, getCaller } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -14,7 +15,14 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { phone, patient_name, facility, ride_id } = req.body;
+    let actorId = null;
+    if (!isInternal(req)) {
+      const caller = await getCaller(req);
+      if (!caller) return res.status(401).json({ error: 'Unauthorized' });
+      if (!caller.isAdmin && !caller.coordinator) return res.status(403).json({ error: 'Forbidden' });
+      actorId = caller.user.id;
+    }
+    const { phone, patient_name, facility, ride_id } = req.body || {};
     if (!phone) return res.status(400).json({ error: 'Missing phone' });
     var digits = String(phone).replace(/\D/g, '');
     if (digits.length === 10) digits = '1' + digits;
@@ -36,7 +44,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (ride_id) {
-      await supabase.from('audit_log').insert({ actor_role: 'coordinator', action: 'invite.sms_sent', entity_type: 'rides', entity_id: ride_id, new_value: { sms_sent: smsSent, phone } });
+      await supabase.from('audit_log').insert({ actor_id: actorId, actor_role: 'coordinator', action: 'invite.sms_sent', entity_type: 'rides', entity_id: ride_id, new_value: { sms_sent: smsSent, phone } });
     }
 
     return res.status(200).json({ success: true, sms_sent: smsSent });

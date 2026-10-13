@@ -1,4 +1,5 @@
 const Stripe = require("stripe");
+const { isInternal, getCaller } = require('../../lib/security');
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -8,6 +9,13 @@ module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
+    // Nothing in the apps calls this directly (charges happen in rides/update-status).
+    // Only server-to-server calls or an admin may use it.
+    if (!isInternal(req)) {
+      const caller = await getCaller(req);
+      if (!caller) return res.status(401).json({ error: "Unauthorized" });
+      if (!caller.isAdmin) return res.status(403).json({ error: "Forbidden" });
+    }
     const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
     const { amount, customerId, paymentMethodId, rideId, patientId } = req.body;
 

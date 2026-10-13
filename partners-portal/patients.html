@@ -737,9 +737,10 @@ async function deleteMyAccount() {
   try {
     await sb.from('patients').delete().eq('id', currentUser.id);
     try {
+      var delSess = (await sb.auth.getSession()).data.session;
       await fetch(API + '/api/auth/delete-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (delSess ? delSess.access_token : '') },
         body: JSON.stringify({ user_id: currentUser.id })
       });
     } catch(e2) {}

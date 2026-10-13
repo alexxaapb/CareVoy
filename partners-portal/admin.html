@@ -1268,7 +1268,7 @@ async function deletePatient(patientId, patientEmail) {
   try {
     var resp = await fetch('https://care-voy-api-server.vercel.app/api/auth/delete-user', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ user_id: patientId, patient_email: patientEmail })
     });
     var result = await resp.json();
@@ -1646,7 +1646,7 @@ function closeCVRideDetail() { document.getElementById('cvRideDetailModal').styl
       try {
         await fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
           body: JSON.stringify({email: email, name: name, type: type})
         });
       } catch(e) {}
@@ -1665,7 +1665,7 @@ function closeCVRideDetail() { document.getElementById('cvRideDetailModal').styl
       body: JSON.stringify({active: false, pending_review: false})
     });
     alert(name + ' declined.');
-    if (email) { fetch('https://care-voy-api-server.vercel.app/api/notify/partner-declined', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,name:name,type:type})}).catch(function(){}); }
+    if (email) { fetch('https://care-voy-api-server.vercel.app/api/notify/partner-declined', {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer ' + token},body:JSON.stringify({email:email,name:name,type:type})}).catch(function(){}); }
     document.getElementById('rideDetailModal').style.display = 'none';
     location.reload();
   }

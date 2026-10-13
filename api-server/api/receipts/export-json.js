@@ -1,5 +1,6 @@
 const { createClient } = require("@supabase/supabase-js");
 const ws = require('ws');
+const { getCaller, canAccessRide } = require('./../../lib/security');
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -16,6 +17,9 @@ module.exports = async (req, res) => {
     const { rideId } = req.query;
     if (!rideId) return res.status(400).json({ error: "rideId required" });
 
+    const caller = await getCaller(req);
+    if (!caller) return res.status(401).json({ error: "Unauthorized" });
+
     const { data: ride } = await supabase
       .from("rides")
       .select("*, patients(full_name, email, phone), hospitals(name, address, city, state)")
@@ -23,6 +27,7 @@ module.exports = async (req, res) => {
       .single();
 
     if (!ride) return res.status(404).json({ error: "Ride not found" });
+    if (!canAccessRide(caller, ride, { allowPatient: true })) return res.status(403).json({ error: "Forbidden" });
 
     const { data: receipt } = await supabase
       .from("receipts")

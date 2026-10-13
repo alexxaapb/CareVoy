@@ -1,11 +1,17 @@
+const { isInternal, getCaller, escHtml } = require('../../lib/security');
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
+    if (!isInternal(req)) {
+      const caller = await getCaller(req);
+      if (!caller) return res.status(401).json({ error: 'Unauthorized' });
+      if (!caller.isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    }
     const { email, name, type } = req.body || {};
     if (!email) return res.status(400).json({ error: 'Missing email' });
 
@@ -16,7 +22,7 @@ module.exports = async function handler(req, res) {
       '<span style="color:#00C2A8;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-left:8px">Partner Portal</span></div>' +
       '<div style="background:#fff;border-radius:0 0 14px 14px;padding:28px;border:1px solid #E2E8F0;border-top:none">' +
       '<h1 style="font-size:19px;color:#050D1F;margin:0 0 12px">Application update</h1>' +
-      '<p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px">Hi ' + (name || 'there') + ',<br><br>Thank you for your interest in joining CareVoy as a ' + appType + '. After reviewing your application, we are not able to move forward at this time.</p>' +
+      '<p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px">Hi ' + escHtml(name || 'there') + ',<br><br>Thank you for your interest in joining CareVoy as a ' + appType + '. After reviewing your application, we are not able to move forward at this time.</p>' +
       '<p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px">If you have questions or would like to reapply in the future, please reach out to us at <a href="mailto:partners@carevoy.co" style="color:#00C2A8;text-decoration:none">partners@carevoy.co</a>.</p>' +
       '<div style="margin-top:24px;padding-top:18px;border-top:1px solid #F0F4F8;font-size:11px;color:#B0B7C3;line-height:1.7">' +
       'This is an automated message from CareVoy.<br>&copy; 2026 CareVoy. All rights reserved.</div>' +

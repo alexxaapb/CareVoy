@@ -8,7 +8,7 @@ const supabase = createClient(
 
 module.exports = async function handler(req, res) {
   const authHeader = req.headers['authorization'] || '';
-  if (authHeader !== 'Bearer ' + process.env.CRON_SECRET) {
+  if (!process.env.CRON_SECRET || authHeader !== 'Bearer ' + process.env.CRON_SECRET) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
       try {
         await fetch(baseUrl + '/api/reminders/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET || '' },
           body: JSON.stringify({ ride_id: ride.id }),
         });
         await supabase.from('rides').update({ auto_reminder_sent_at: new Date().toISOString() }).eq('id', ride.id);

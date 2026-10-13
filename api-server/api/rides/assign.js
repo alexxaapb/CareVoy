@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
+const { internalHeaders } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -44,7 +45,7 @@ module.exports = async function handler(req, res) {
           for (const coord of coords) {
             if (coord.email) {
               await fetch('https://care-voy-api-server.vercel.app/api/notify/send', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: internalHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ type: 'ride_confirmed', to: coord.email, data: { patient_name: rideFull.patient_name, date: dateStr } })
               });
             }
@@ -59,7 +60,7 @@ module.exports = async function handler(req, res) {
         for (const drv of drivers) {
           if (drv.email) {
             await fetch('https://care-voy-api-server.vercel.app/api/notify/send', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: internalHeaders({ 'Content-Type': 'application/json' }),
               body: JSON.stringify({ type: 'ride_assigned_driver', to: drv.email, data: { patient_name: rideForDriver.patient_name, date: driverDate } })
             });
           }

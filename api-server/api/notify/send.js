@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
 const { Resend } = require('resend');
+const { isInternal, getCaller, escHtml } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -45,8 +46,15 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { type, to, data } = req.body;
+    if (!isInternal(req)) {
+      const caller = await getCaller(req);
+      if (!caller) return res.status(401).json({ error: 'Unauthorized' });
+      if (!caller.isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { type, to } = req.body || {};
+    const data = (req.body && req.body.data && typeof req.body.data === 'object') ? req.body.data : {};
     if (!to || !type) return res.status(400).json({ error: 'Missing to or type' });
+    if (typeof to !== 'string' || !/^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/.test(to)) return res.status(400).json({ error: 'Invalid recipient' });
     if (!resend) return res.status(200).json({ success: false, note: 'Resend not configured' });
 
     let subject, title, body, ctaText, ctaUrl;
@@ -55,29 +63,29 @@ module.exports = async function handler(req, res) {
     if (type === 'ride_confirmed') {
       subject = 'Ride Confirmed — ' + (data.patient_name || 'Patient');
       title = 'A ride has been confirmed';
-      body = `The ride for <strong>${data.patient_name || 'your patient'}</strong> on ${data.date || 'the scheduled date'} has been confirmed and assigned to a transport partner.`;
+      body = `The ride for <strong>${escHtml(data.patient_name || 'your patient')}</strong> on ${escHtml(data.date || 'the scheduled date')} has been confirmed and assigned to a transport partner.`;
       ctaText = 'View in Dashboard'; ctaUrl = portal + '/coordinator.html';
     } else if (type === 'ride_completed') {
       subject = 'Ride Completed — ' + (data.patient_name || 'Patient');
       title = 'A ride was completed';
-      body = `The ride for <strong>${data.patient_name || 'your patient'}</strong> has been completed. An IRS-compliant HSA/FSA receipt has been generated.`;
+      body = `The ride for <strong>${escHtml(data.patient_name || 'your patient')}</strong> has been completed. An IRS-compliant HSA/FSA receipt has been generated.`;
       ctaText = 'View Details'; ctaUrl = portal + '/coordinator.html';
     } else if (type === 'ride_assigned_driver') {
       subject = 'New Ride Assigned';
       title = 'You have a new ride assignment';
-      body = `A new ride for <strong>${data.patient_name || 'a patient'}</strong> on ${data.date || 'the scheduled date'} has been assigned to your company.`;
+      body = `A new ride for <strong>${escHtml(data.patient_name || 'a patient')}</strong> on ${escHtml(data.date || 'the scheduled date')} has been assigned to your company.`;
       ctaText = 'View Schedule'; ctaUrl = portal + '/driver.html';
     } else if (type === 'patient_no_response') {
       subject = 'Patient Needs Attention';
       title = 'A patient has not confirmed their ride';
-      body = `<strong>${data.patient_name || 'A patient'}</strong> has not confirmed their upcoming ride. You may want to follow up or send a reminder.`;
+      body = `<strong>${escHtml(data.patient_name || 'A patient')}</strong> has not confirmed their upcoming ride. You may want to follow up or send a reminder.`;
       ctaText = 'View Patient'; ctaUrl = portal + '/coordinator.html';
     } else if (type === 'welcome') {
       subject = 'Welcome to CareVoy';
       title = 'Your account is ready';
       const roleLabel = data.role === 'nemt' ? 'transport partner' : 'facility coordinator';
       const dashUrl = data.role === 'nemt' ? portal + '/driver.html' : portal + '/coordinator.html';
-      body = `Welcome${data.full_name ? ' ' + data.full_name : ''}! Your CareVoy ${roleLabel} account has been created successfully. You can now sign in anytime at <a href="${portal}" style="color:#00C2A8;text-decoration:none">partners.carevoy.co</a> to manage rides and coordinate transportation.<br><br>Need help getting started? Just reply to this email or reach us at the contacts below.`;
+      body = `Welcome${data.full_name ? ' ' + escHtml(data.full_name) : ''}! Your CareVoy ${roleLabel} account has been created successfully. You can now sign in anytime at <a href="${portal}" style="color:#00C2A8;text-decoration:none">partners.carevoy.co</a> to manage rides and coordinate transportation.<br><br>Need help getting started? Just reply to this email or reach us at the contacts below.`;
       ctaText = 'Go to My Dashboard'; ctaUrl = dashUrl;
     } else {
       return res.status(400).json({ error: 'Unknown notification type' });

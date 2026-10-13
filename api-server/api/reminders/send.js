@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
+const { isInternal, getCaller, canAccessRide, bearerToken } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -14,11 +15,18 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { ride_id } = req.body;
+    const { ride_id } = req.body || {};
     if (!ride_id) return res.status(400).json({ error: 'Missing ride_id' });
+    const internal = isInternal(req);
+    if (!internal && !bearerToken(req)) return res.status(401).json({ error: 'Unauthorized' });
 
     const { data: ride } = await supabase.from('rides').select('*, hospitals(name)').eq('id', ride_id).single();
     if (!ride) return res.status(404).json({ error: 'Ride not found' });
+    if (!internal) {
+      const caller = await getCaller(req);
+      if (!caller) return res.status(401).json({ error: 'Unauthorized' });
+      if (!canAccessRide(caller, ride)) return res.status(403).json({ error: 'Forbidden' });
+    }
 
     var rawPhone = ride.contact_phone || '';
     var digits = String(rawPhone).replace(/\D/g, '');

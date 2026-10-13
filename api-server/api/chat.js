@@ -7,7 +7,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
     const { message, context } = req.body;
-    if (!message) return res.status(400).json({ error: 'Missing message' });
+    if (!message || typeof message !== 'string') return res.status(400).json({ error: 'Missing message' });
+    if (message.length > 1000) return res.status(400).json({ error: 'Message too long' });
     const system = context === 'patient'
       ? "You are CareVoy's AI care coordinator. Help patients with medical rides, HSA/FSA reimbursement, and receipts. Be brief and warm. If they ask about specific rides, tell them to check the Rides tab."
       : "You are CareVoy's assistant for healthcare coordinators. Help with ride coordination and platform questions. Be concise.";
