@@ -812,7 +812,7 @@
       var cb = '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="fac-row-select" data-id="' + f.id + '" onchange="toggleFacilitySelect(\'' + f.id + '\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>';
       return '<div class="table-row fac-grid" style="cursor:pointer" onclick="showFacilityProfile(' + i + ')">' + cb + '<div class="td">' + esc(f.name||'—') + '</div><div class="td muted">' + esc(f.city||'—') + '</div><div class="td muted">' + type + '</div><div class="td">' + badge + '</div></div>';
     }).join('');
-    el.innerHTML = '<div class="table-head fac-grid"><div class="th"></div><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div>' + rows;
+    el.innerHTML = '<div class="table-head fac-grid"><div class="th"><input type="checkbox" class="fac-select-all" title="Select all" onchange="toggleFacilitiesSelectAll(this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div><div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div></div>' + rows;
   }
 
   function toggleFacilitySelect(id) {
@@ -827,11 +827,14 @@
       cb.checked = checked;
       if (checked) window._selectedFacilityIds.add(cb.dataset.id);
     });
+    document.querySelectorAll('.fac-select-all').forEach(function(x){ x.checked = checked; });
     updateFacilitiesBulkBar();
   }
 
   function updateFacilitiesBulkBar() {
     var n = window._selectedFacilityIds.size;
+    document.querySelectorAll('.fac-row-select').forEach(function(cb){ cb.checked = window._selectedFacilityIds.has(cb.dataset.id); });
+    document.querySelectorAll('.fac-select-all').forEach(function(x){ x.checked = n > 0 && n === (window._allFacilities || []).length; });
     ['facilitiesBulkBar', 'facilitiesFullBulkBar'].forEach(function(barId, i) {
       var bar = document.getElementById(barId);
       var count = document.getElementById(i === 0 ? 'facilitiesBulkCount' : 'facilitiesFullBulkCount');
@@ -951,7 +954,7 @@
       var cb = '<div class="td" onclick="event.stopPropagation()"><input type="checkbox" class="nemt-row-select" data-id="' + p.id + '" onchange="toggleNemtSelect(\'' + p.id + '\')" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div>';
       return '<div class="table-row nemt-grid" style="cursor:pointer" onclick="showNemtProfile(' + i + ')">' + cb + '<div class="td">' + esc(p.company_name||'—') + '</div><div class="td muted">' + esc(p.city||'—') + '</div><div class="td muted">—</div><div class="td">' + active + '</div><div class="td muted">—</div></div>';
     }).join('');
-    el.innerHTML = '<div class="table-head nemt-grid"><div class="th"></div><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div>' + rows;
+    el.innerHTML = '<div class="table-head nemt-grid"><div class="th"><input type="checkbox" class="nemt-select-all" title="Select all" onchange="toggleNemtSelectAll(this.checked)" style="width:15px;height:15px;accent-color:#060D1F;cursor:pointer"></div><div class="th">Company</div><div class="th">City</div><div class="th">Total Rides</div><div class="th">Active</div><div class="th">Last Ride</div></div>' + rows;
   }
 
   function toggleNemtSelect(id) {
@@ -966,11 +969,14 @@
       cb.checked = checked;
       if (checked) window._selectedNemtIds.add(cb.dataset.id);
     });
+    document.querySelectorAll('.nemt-select-all').forEach(function(x){ x.checked = checked; });
     updateNemtBulkBar();
   }
 
   function updateNemtBulkBar() {
     var n = window._selectedNemtIds.size;
+    document.querySelectorAll('.nemt-row-select').forEach(function(cb){ cb.checked = window._selectedNemtIds.has(cb.dataset.id); });
+    document.querySelectorAll('.nemt-select-all').forEach(function(x){ x.checked = n > 0 && n === (window._allNemt || []).length; });
     ['nemtBulkBar', 'nemtFullBulkBar'].forEach(function(barId, i) {
       var bar = document.getElementById(barId);
       var count = document.getElementById(i === 0 ? 'nemtBulkCount' : 'nemtFullBulkCount');
@@ -1230,12 +1236,12 @@
     if (name === 'facilities') {
       var src = document.getElementById('facilitiesTable');
       var dst = document.getElementById('facilitiesFullPanel');
-      if (src && dst) dst.innerHTML = src.innerHTML;
+      if (src && dst) { dst.innerHTML = src.innerHTML; updateFacilitiesBulkBar(); }
     }
     if (name === 'partners') {
       var src2 = document.getElementById('nemtTable');
       var dst2 = document.getElementById('nemtFullPanel');
-      if (src2 && dst2) dst2.innerHTML = src2.innerHTML;
+      if (src2 && dst2) { dst2.innerHTML = src2.innerHTML; updateNemtBulkBar(); }
     }
     if (name === 'rides') {
       loadAllRides();
