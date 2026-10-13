@@ -1,3 +1,4 @@
+const { isInternal } = require('../../lib/security');
 // POST /api/notify/urgent-escalate
 // Fallback: email the coordinator when an urgent ride wasn't accepted in time.
 // NOTE: uses Resend today; SWAP to a BAA email provider (AWS SES) before
@@ -8,6 +9,8 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  // Server-to-server only (database triggers / cron send x-internal-secret)
+  if (!isInternal(req)) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
     const { email, patient_name, when, ride_id } = req.body || {};

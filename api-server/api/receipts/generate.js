@@ -1,3 +1,4 @@
+const { isInternal } = require('../../lib/security');
 const { createClient } = require("@supabase/supabase-js");
 const ws = require('ws');
 const { Resend } = require("resend");
@@ -50,6 +51,8 @@ module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  // Server-to-server only (database triggers / cron send x-internal-secret)
+  if (!isInternal(req)) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
     const supabase = createClient(

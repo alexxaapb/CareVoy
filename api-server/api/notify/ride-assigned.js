@@ -1,3 +1,4 @@
+const { isInternal } = require('../../lib/security');
 // POST /api/notify/ride-assigned
 // Called by the DB trigger when a ride becomes 'assigned'. Sends the patient
 // an SMS (via Twilio) and/or email (via Resend) so they know a driver accepted
@@ -16,6 +17,8 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  // Server-to-server only (database triggers / cron send x-internal-secret)
+  if (!isInternal(req)) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
     const { channel, phone, email, patient_name, facility, date, ride_id } = req.body || {};
