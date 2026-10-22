@@ -684,6 +684,13 @@ function buildRoundTripCard(r, isPast, facility) {
     action = '<div class="ride-action" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:13px;color:var(--muted)">Waiting for driver assignment</span><button onclick="openRescheduleModal(\'' + outbound.id + '\')" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--navy);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Reschedule</button><button onclick="cancelRide(\'' + outbound.id + '\')" style="padding:6px 14px;border-radius:8px;border:1px solid #F0BCB5;background:none;color:#D92D20;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel trip</button></div>';
   }
 
+  var skipBtn = '';
+  if (ret && ret.status === 'cancelled') {
+    skipBtn = '<div style="margin-top:8px;font-size:12px;color:var(--muted)">Return ride cancelled. You will not be charged for it.</div>';
+  } else if (ret && !['completed','cancelled','in_progress','en_route','arrived'].includes(ret.status)) {
+    skipBtn = '<div style="margin-top:8px"><button onclick="skipReturnLeg(\'' + ret.id + '\')" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--navy);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">I do not need the return ride</button></div>';
+  }
+
   return '<div class="ride-card">' +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
       '<span class="ride-badge ' + badge + '">' + label + '</span>' +
@@ -693,6 +700,7 @@ function buildRoundTripCard(r, isPast, facility) {
     (payLabel ? '<div class="ride-meta"><span>' + payLabel + '</span></div>' : '') +
     '<div style="margin-top:10px">' + body + '</div>' +
     action +
+    skipBtn +
   '</div>';
 }
 
@@ -1384,6 +1392,102 @@ function viewReceipt(rideId) {
   modal.style.display = 'flex';
 }
 
+
+function rtEsc(v) {
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function skipReturnLeg(rideId) {
+  var r = allRides.find(function(x){ return x.id === rideId; });
+  if (!r) return;
+  if (!confirm('Cancel only the return ride? You will not be charged for it, and your receipt will cover just the ride you took.')) return;
+  try {
+    var res = await sb.from('rides').update({ status: 'cancelled' }).eq('id', rideId);
+    if (res.error) { toast('Could not cancel the return ride: ' + res.error.message); return; }
+    toast('Return ride cancelled');
+    await loadRides();
+  } catch(e) { toast('Could not cancel the return ride'); }
+}
+
+function cvCompletedRoundTrips() {
+  var pairs = {};
+  allRides.forEach(function(r){
+    if (!r.round_trip_pair_id) return;
+    (pairs[r.round_trip_pair_id] = pairs[r.round_trip_pair_id] || []).push(r);
+  });
+  var out = [];
+  Object.keys(pairs).forEach(function(id){
+    var legs = pairs[id].filter(function(x){ return x.status !== 'cancelled'; });
+    if (legs.length >= 2 && legs.every(function(x){ return x.status === 'completed'; })) {
+      legs.sort(function(a,b){ return new Date(a.pickup_time) - new Date(b.pickup_time); });
+      out.push({ id: id, legs: legs });
+    }
+  });
+  return out;
+}
+
+function viewRoundTripReceipt(pairId) {
+  var trip = cvCompletedRoundTrips().find(function(t){ return t.id === pairId; });
+  if (!trip) return;
+  var legs = trip.legs, first = legs[0];
+  var fac = (first.hospitals && first.hospitals.name) || first.hospital_name || 'Facility';
+  var isFac = first.payment_responsibility === 'facility';
+  var patName = first.patient_name || (currentUser && currentUser.email) || 'Patient';
+  var total = 0;
+  var rows = legs.map(function(l, i){
+    var cost = parseFloat(l.actual_cost || l.estimated_cost || 0);
+    total += cost;
+    var when = l.pickup_time ? new Date(l.pickup_time).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+    var from = l.pickup_address || (i === 0 ? 'Your address' : fac);
+    var to = l.dropoff_address || (i === 0 ? fac : 'Your address');
+    return '<div style="padding:12px 0;border-bottom:1px solid #F3F4F6">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#0A0A0A">' + (i === 0 ? 'Ride 1: to facility' : 'Ride 2: return home') + '</div>' +
+      '<div style="font-size:13px;font-weight:600;color:#0A0A0A;margin-top:3px">' + rtEsc(when) + '</div>' +
+      '<div style="font-size:12px;color:#6B7280;margin-top:2px">' + rtEsc(from) + ' &rarr; ' + rtEsc(to) + '</div>' +
+      (!isFac ? '<div style="font-size:13px;font-weight:700;color:#0A0A0A;margin-top:4px">$' + cost.toFixed(2) + '</div>' : '') +
+    '</div>';
+  }).join('');
+  var note = !isFac
+    ? '<strong>IRS Section 213(d) Eligible</strong><br>This receipt documents qualified medical transportation expenses eligible for HSA/FSA reimbursement.'
+    : 'These rides were covered by your healthcare facility.';
+  var inner = '<div style="background:#0A0A0A;padding:24px;border-radius:20px 20px 0 0;text-align:center">' +
+      '<div style="color:#fff;font-size:22px;font-weight:700;letter-spacing:.5px">CareVoy</div>' +
+      '<div style="color:#9CA3AF;font-size:12px;margin-top:4px">Round-Trip Medical Transportation Receipt</div>' +
+    '</div>' +
+    '<div style="padding:24px">' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Patient</div><div style="font-size:13px;color:#0A0A0A;font-weight:600">' + rtEsc(patName) + '</div></div>' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Facility</div><div style="font-size:13px;color:#0A0A0A;font-weight:600">' + rtEsc(fac) + '</div></div>' +
+      '<div style="display:flex;padding:10px 0;border-bottom:1px solid #F3F4F6"><div style="width:120px;font-size:12px;color:#6B7280">Payment</div><div style="font-size:13px;color:#0A0A0A;font-weight:600">' + (isFac ? 'Facility-Covered' : 'Self-Pay') + '</div></div>' +
+      rows +
+      (!isFac ? '<div style="display:flex;padding:14px 0;margin-top:4px"><div style="width:120px;font-size:14px;color:#6B7280;font-weight:600">Total</div><div style="font-size:20px;color:#0A0A0A;font-weight:700">$' + total.toFixed(2) + '</div></div>' : '') +
+      '<div style="background:#F2F2F3;border:1px solid #E4E4E7;border-radius:10px;padding:14px;margin-top:12px;font-size:11px;color:#0A0A0A;line-height:1.6">' + note + '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:20px">' +
+        '<button onclick="printRoundTripReceipt()" style="flex:1;padding:12px;background:#0A0A0A;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Print / Save as PDF</button>' +
+        '<button onclick="document.getElementById(\'receiptModal\').remove()" style="flex:1;padding:12px;background:#F3F4F6;color:#0A0A0A;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>' +
+      '</div>' +
+    '</div>';
+  window._rtReceiptHtml = '<div style="max-width:520px;margin:0 auto;font-family:Arial,sans-serif">' + inner + '</div>';
+  var modal = document.getElementById('receiptModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'receiptModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,10,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = '<div style="background:#fff;border-radius:20px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto">' + inner + '</div>';
+  modal.style.display = 'flex';
+}
+
+function printRoundTripReceipt() {
+  var w = window.open('', '_blank');
+  if (!w) { toast('Please allow pop-ups to print this receipt'); return; }
+  w.document.write('<!doctype html><html><head><title>CareVoy round-trip receipt</title></head><body>' +
+    (window._rtReceiptHtml || '').replace(/<button[\s\S]*?<\/button>/g, '') + '</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){ w.print(); }, 300);
+}
+
 async function downloadReceipt(rideId) {
   try {
     const { data: { session } } = await sb.auth.getSession();
@@ -1414,7 +1518,17 @@ async function loadReceipts() {
     list.innerHTML = '<div class="empty-box"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><div class="empty-title">No receipts yet</div><div class="empty-sub">IRS 213(d) compliant receipts will appear here after your rides are completed.</div></div>';
     return;
   }
-  list.innerHTML = completed.map(r => {
+  var _rtCards = cvCompletedRoundTrips().map(function(t){
+    var first = t.legs[0];
+    var fac = (first.hospitals && first.hospitals.name) || first.hospital_name || 'Facility';
+    var isFac = first.payment_responsibility === 'facility';
+    var total = t.legs.reduce(function(a, l){ return a + parseFloat(l.actual_cost || l.estimated_cost || 0); }, 0);
+    var d = first.pickup_time ? new Date(first.pickup_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+    return '<div class="receipt-card" onclick="viewRoundTripReceipt(\'' + t.id + '\')">' +
+      '<div class="receipt-info"><div class="receipt-name">' + rtEsc(fac) + ' (round trip)</div><div class="receipt-meta">Both rides in one receipt &middot; ' + d + '</div></div>' +
+      '<div class="receipt-amount">' + (isFac ? 'Covered' : '$' + total.toFixed(2)) + '</div></div>';
+  }).join('');
+  list.innerHTML = _rtCards + completed.map(r => {
     const d = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     const fac = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Facility';
     const cost = r.actual_cost || r.estimated_cost || 0;
