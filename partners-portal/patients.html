@@ -894,6 +894,7 @@ function cvAttachAutocomplete(input, onPick) {
 }
 
 function cvDriveMiles(origin, dest) {
+  window._lastRouteError = null;
   return fetch('https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix', {
     method: 'POST',
     headers: {
@@ -906,10 +907,23 @@ function cvDriveMiles(origin, dest) {
       destinations: [{ waypoint: { address: dest } }],
       travelMode: 'DRIVE'
     })
-  }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-    if (!d || !d.length || typeof d[0].distanceMeters !== 'number') return null;
+  }).then(function (r) {
+    if (r.ok) return r.json();
+    return r.json().catch(function () { return {}; }).then(function (d) {
+      window._lastRouteError = 'Google ' + r.status + (d && d.error && d.error.message ? ': ' + String(d.error.message).slice(0, 90) : '');
+      return null;
+    });
+  }).then(function (d) {
+    if (!d) return null;
+    if (!d.length || typeof d[0].distanceMeters !== 'number') {
+      window._lastRouteError = 'no route found for these addresses';
+      return null;
+    }
     return d[0].distanceMeters / 1609.34;
-  }).catch(function () { return null; });
+  }).catch(function (e) {
+    window._lastRouteError = 'network: ' + (e && e.message ? e.message : 'failed');
+    return null;
+  });
 }
 
 async function estimateFare() {
@@ -934,7 +948,7 @@ async function estimateFare() {
   } catch(e) {}
 
   var miles = await cvDriveMiles(pickup, dest);
-  if (miles === null) return;
+  if (miles === null) { toast('Fare estimate unavailable (' + (window._lastRouteError || 'unknown') + ')'); return; }
 
   var estimated = baseFare + (perMile * miles);
   var wheelchairEl = document.getElementById('bookWheelchair');
@@ -1293,7 +1307,7 @@ async function confirmBooking() {
     }
     var mobilityStr = (function(){var m=[];if(document.getElementById("bookWheelchair")&&document.getElementById("bookWheelchair").checked)m.push("wheelchair");if(document.getElementById("bookStretcher")&&document.getElementById("bookStretcher").checked)m.push("stretcher");return m.length?m.join(","):null;})();
     var companionChecked = (document.getElementById("bookCompanion")&&document.getElementById("bookCompanion").checked)||false;
-    await sb.from('rides').update({
+    var _upd1 = await sb.from('rides').update({
       pickup_time: pickupDt.toISOString(),
       ...(window._isReturnLeg ? { dropoff_address: pickup } : { pickup_address: pickup }),
       patient_id: currentUser.id,
@@ -1304,9 +1318,10 @@ async function confirmBooking() {
       estimated_cost: window._estimatedFare||null,
       estimated_miles: window._estimatedMiles||null,
     }).eq('id', currentRide.id);
+    if (_upd1.error) throw new Error(_upd1.error.message);
     fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: currentRide.id }) }).catch(function(){});
     if (window._pairedRide) {
-      await sb.from('rides').update({
+      var _upd2 = await sb.from('rides').update({
         pickup_address: currentRide.dropoff_address || currentRide.hospital_name,
         dropoff_address: pickup,
         patient_id: currentUser.id,
@@ -1317,6 +1332,7 @@ async function confirmBooking() {
         estimated_cost: window._estimatedFare||null,
         estimated_miles: window._estimatedMiles||null,
       }).eq('id', window._pairedRide.id);
+      if (_upd2.error) toast('Your first ride is saved, but the return ride could not be confirmed: ' + _upd2.error.message);
       fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: window._pairedRide.id }) }).catch(function(){});
     }
     closeBookModal();
@@ -1324,7 +1340,7 @@ async function confirmBooking() {
     await loadRides();
   } catch(e) {
     btn.disabled = false; btn.textContent = 'Confirm ride';
-    toast('Something went wrong, please try again');
+    toast('Something went wrong: ' + (e && e.message ? e.message : 'please try again'));
   }
 }
 
