@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.stripe.com/v3/"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjjS-GU3jUKzEu4n0r6OJ6JteGGPxT9Lg&libraries=places,geometry" async defer></script>
   <script src="https://www.google.com/recaptcha/api.js?render=6LeZu0gtAAAAAKaz2x49j0y9EFI9cmn2hlSlPaq2" async defer></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
@@ -838,11 +837,86 @@ async function openRideDetail(rideId) {
   openCVRideDetail(r, { role: 'patient', rates: rates });
 }
 
+
+// ---- Google Places (New) + Routes API via REST. A failure here never blocks booking. ----
+var CV_MAPS_KEY = 'AIzaSyCzmHeDDysKOrrGdRoKH5Vy_hwjaQkzDsA';
+
+function cvAttachAutocomplete(input, onPick) {
+  if (!input || input._acInit) return;
+  input._acInit = true;
+  var token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+  var box = document.createElement('div');
+  box.style.cssText = 'position:absolute;left:0;right:0;top:100%;z-index:9999;background:#fff;border:1px solid #e2e2e2;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:none;max-height:240px;overflow:auto;text-align:left';
+  var host = input.parentNode;
+  if (host && getComputedStyle(host).position === 'static') host.style.position = 'relative';
+  host.appendChild(box);
+  var timer = null, seq = 0;
+  function hide() { box.style.display = 'none'; box.innerHTML = ''; }
+  function show(items) {
+    box.innerHTML = '';
+    if (!items.length) return hide();
+    items.forEach(function (text) {
+      var row = document.createElement('div');
+      row.textContent = text;
+      row.style.cssText = 'padding:9px 12px;font-size:14px;cursor:pointer;border-bottom:1px solid #f1f1f1';
+      row.onmouseenter = function () { row.style.background = '#f6f6f6'; };
+      row.onmouseleave = function () { row.style.background = '#fff'; };
+      row.onmousedown = function (e) {
+        e.preventDefault();
+        input.value = text;
+        hide();
+        token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+        if (onPick) onPick(text);
+      };
+      box.appendChild(row);
+    });
+    box.style.display = 'block';
+  }
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    var q = input.value.trim();
+    if (q.length < 3) return hide();
+    var mine = ++seq;
+    timer = setTimeout(function () {
+      fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': CV_MAPS_KEY },
+        body: JSON.stringify({ input: q, includedRegionCodes: ['us'], sessionToken: token })
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (mine !== seq || !d || !d.suggestions) return hide();
+        show(d.suggestions.map(function (x) {
+          return x.placePrediction && x.placePrediction.text && x.placePrediction.text.text;
+        }).filter(Boolean).slice(0, 5));
+      }).catch(function () { hide(); });
+    }, 250);
+  });
+  input.addEventListener('blur', function () { setTimeout(hide, 150); });
+}
+
+function cvDriveMiles(origin, dest) {
+  return fetch('https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': CV_MAPS_KEY,
+      'X-Goog-FieldMask': 'originIndex,destinationIndex,distanceMeters,status'
+    },
+    body: JSON.stringify({
+      origins: [{ waypoint: { address: origin } }],
+      destinations: [{ waypoint: { address: dest } }],
+      travelMode: 'DRIVE'
+    })
+  }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (!d || !d.length || typeof d[0].distanceMeters !== 'number') return null;
+    return d[0].distanceMeters / 1609.34;
+  }).catch(function () { return null; });
+}
+
 async function estimateFare() {
   var pickup = document.getElementById('bookPickup').value;
   if (!pickup || !currentRide) return;
   var dest = currentRide.dropoff_address || currentRide.hospital_name;
-  if (!dest || typeof google === 'undefined' || !google.maps) return;
+  if (!dest) return;
 
   var baseFare = 25, perMile = 2.50, wheelchairSurcharge = 10, stretcherSurcharge = 25;
   try {
@@ -859,44 +933,26 @@ async function estimateFare() {
     }
   } catch(e) {}
 
-  var service = new google.maps.DistanceMatrixService();
-  service.getDistanceMatrix({
-    origins: [pickup], destinations: [dest],
-    travelMode: 'DRIVING', unitSystem: google.maps.UnitSystem.IMPERIAL
-  }, function(response, status) {
-    if (status !== 'OK' || !response.rows[0] || !response.rows[0].elements[0]) return;
-    var element = response.rows[0].elements[0];
-    if (element.status !== 'OK') return;
-    var miles = element.distance.value / 1609.34;
+  var miles = await cvDriveMiles(pickup, dest);
+  if (miles === null) return;
 
-    var estimated = baseFare + (perMile * miles);
-    var wheelchairEl = document.getElementById('bookWheelchair');
-    var stretcherEl = document.getElementById('bookStretcher');
-    if (wheelchairEl && wheelchairEl.checked) estimated += wheelchairSurcharge;
-    if (stretcherEl && stretcherEl.checked) estimated += stretcherSurcharge;
+  var estimated = baseFare + (perMile * miles);
+  var wheelchairEl = document.getElementById('bookWheelchair');
+  var stretcherEl = document.getElementById('bookStretcher');
+  if (wheelchairEl && wheelchairEl.checked) estimated += wheelchairSurcharge;
+  if (stretcherEl && stretcherEl.checked) estimated += stretcherSurcharge;
 
-    window._estimatedFare = Math.round(estimated * 100) / 100;
-    window._estimatedMiles = Math.round(miles * 10) / 10;
-    var fareAmountEl = document.getElementById('fareAmount');
-    var fareEstimateEl = document.getElementById('fareEstimate');
-    if (fareAmountEl) fareAmountEl.textContent = '$' + window._estimatedFare.toFixed(2);
-    if (fareEstimateEl) fareEstimateEl.style.display = 'block';
-    initApplePay();
-  });
+  window._estimatedFare = Math.round(estimated * 100) / 100;
+  window._estimatedMiles = Math.round(miles * 10) / 10;
+  var fareAmountEl = document.getElementById('fareAmount');
+  var fareEstimateEl = document.getElementById('fareEstimate');
+  if (fareAmountEl) fareAmountEl.textContent = '$' + window._estimatedFare.toFixed(2);
+  if (fareEstimateEl) fareEstimateEl.style.display = 'block';
+  initApplePay();
 }
 
 function initPlacesAutocomplete() {
-  var input = document.getElementById("bookPickup");
-  if (!input || input._acInit) return;
-  if (typeof google === "undefined" || !google.maps || !google.maps.places) return;
-  var ac = new google.maps.places.Autocomplete(input, {
-    types: ["address"], componentRestrictions: {country: "us"}, fields: ["formatted_address"]
-  });
-  ac.addListener("place_changed", function() {
-    var place = ac.getPlace();
-    if (place && place.formatted_address) { input.value = place.formatted_address; setTimeout(estimateFare, 300); }
-  });
-  input._acInit = true;
+  cvAttachAutocomplete(document.getElementById("bookPickup"), function () { setTimeout(estimateFare, 300); });
 }
 
 async function openBookModal(rideId) {
@@ -1118,18 +1174,10 @@ async function openRoundTripModal(outboundId) {
 }
 
 function initRtAutocomplete() {
-  var input = document.getElementById('rtHomeAddress');
-  if (!input || input._acInit || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
-  var ac = new google.maps.places.Autocomplete(input, { types:['address'], componentRestrictions:{country:'us'}, fields:['formatted_address'] });
-  ac.addListener('place_changed', function(){ var p = ac.getPlace(); if (p && p.formatted_address) input.value = p.formatted_address; });
-  input._acInit = true;
+  cvAttachAutocomplete(document.getElementById('rtHomeAddress'));
 }
 function initRtReturnAutocomplete() {
-  var input = document.getElementById('rtReturnDropoff');
-  if (!input || input._acInit || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
-  var ac = new google.maps.places.Autocomplete(input, { types:['address'], componentRestrictions:{country:'us'}, fields:['formatted_address'] });
-  ac.addListener('place_changed', function(){ var p = ac.getPlace(); if (p && p.formatted_address) input.value = p.formatted_address; });
-  input._acInit = true;
+  cvAttachAutocomplete(document.getElementById('rtReturnDropoff'));
 }
 
 async function confirmRoundTrip() {
