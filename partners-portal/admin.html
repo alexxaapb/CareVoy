@@ -550,6 +550,26 @@
     return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token };
   }
 
+  // Opens an uploaded partner document through a short-lived signed link,
+  // so the partner-docs bucket can be private.
+  async function cvOpenPartnerDoc(path) {
+    var w = window.open('', '_blank');
+    try {
+      var safe = String(path).split('/').map(encodeURIComponent).join('/');
+      var h = authHeaders();
+      h['Content-Type'] = 'application/json';
+      var r = await fetch(SUPA_URL + '/storage/v1/object/sign/partner-docs/' + safe, {
+        method: 'POST', headers: h, body: JSON.stringify({ expiresIn: 300 })
+      });
+      var d = await r.json();
+      if (!r.ok || !d.signedURL) throw new Error(d.message || d.error || 'Could not open the document');
+      if (w) w.location = SUPA_URL + '/storage/v1' + d.signedURL; else window.location = SUPA_URL + '/storage/v1' + d.signedURL;
+    } catch (e) {
+      if (w) w.close();
+      alert('Could not open the document: ' + e.message);
+    }
+  }
+
   async function tryRefreshToken(role) {
     var expiresAt = parseInt(localStorage.getItem('cv_' + role + '_expires') || '0');
     if (expiresAt && Date.now() < expiresAt - 300000) return;
@@ -1042,7 +1062,7 @@
       ["Active", data.active ? "Yes" : "No"]
     ];
     if (intake.insurance_doc) {
-      fields.push(["Insurance Doc", '<a href="https://byflpckbjjumxxjxoplk.supabase.co/storage/v1/object/public/partner-docs/' + intake.insurance_doc + '" target="_blank" style="color:#00C2A8;font-weight:600">View Document</a>']);
+      fields.push(["Insurance Doc", '<a href="#" data-path="' + encodeURIComponent(intake.insurance_doc) + '" onclick="cvOpenPartnerDoc(decodeURIComponent(this.getAttribute(\'data-path\')));return false" style="color:#00C2A8;font-weight:600">View Document</a>']);
     }
     var rows = fields.filter(function(f){return f[1];}).map(function(f) {
       return '<div style="display:flex;padding:10px 0;border-bottom:1px solid #FFFFFF">' +
@@ -1624,7 +1644,7 @@ function closeCVRideDetail() { document.getElementById('cvRideDetailModal').styl
         ["Contact Phone", intake.contact_phone], ["Home State", intake.home_state],
       ];
       if (intake.insurance_doc) {
-        fields.push(["Insurance Doc", '<a href="https://byflpckbjjumxxjxoplk.supabase.co/storage/v1/object/public/partner-docs/' + intake.insurance_doc + '" target="_blank" style="color:#00C2A8;font-weight:600">View Document</a>']);
+        fields.push(["Insurance Doc", '<a href="#" data-path="' + encodeURIComponent(intake.insurance_doc) + '" onclick="cvOpenPartnerDoc(decodeURIComponent(this.getAttribute(\'data-path\')));return false" style="color:#00C2A8;font-weight:600">View Document</a>']);
       }
     } else {
       fields = [
