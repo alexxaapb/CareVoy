@@ -29,6 +29,11 @@ module.exports = async function handler(req, res) {
     if (!ride_id || !nemt_partner_id) return res.status(400).json({ error: 'Missing ride_id or nemt_partner_id' });
 
     const { data: oldRide } = await supabase.from('rides').select('status, nemt_partner_id').eq('id', ride_id).single();
+    if (!oldRide) return res.status(404).json({ error: 'Ride not found' });
+    // A ride the patient has not confirmed yet (e.g. an invited return ride) cannot be given to a transport company
+    if (['invited', 'reminder_sent', 'no_response', 'app_downloaded', 'superseded', 'cancelled', 'completed'].includes(oldRide.status)) {
+      return res.status(409).json({ error: 'This ride cannot be assigned yet (status: ' + oldRide.status + '). The patient must confirm it first.' });
+    }
 
     const { error: updateErr } = await supabase.from('rides').update({ nemt_partner_id, status: 'confirmed', assigned_by: user.id, assigned_at: new Date().toISOString() }).eq('id', ride_id);
     if (updateErr) throw updateErr;

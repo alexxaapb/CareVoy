@@ -592,10 +592,17 @@ function dedupeRoundTripPairs(rides) {
     return true;
   });
 }
+// A round trip is still open while any of its rides (not cancelled) has not completed
+function cvPairStillOpen(r) {
+  if (!r.round_trip_pair_id) return false;
+  return allRides.some(function(x){
+    return x.round_trip_pair_id === r.round_trip_pair_id && !['completed','cancelled'].includes(x.status);
+  });
+}
 function renderRides() {
   const list = document.getElementById('ridesList');
-  const upcomingAll = allRides.filter(r => !['completed','cancelled'].includes(r.status));
-  const pastAll = allRides.filter(r => ['completed','cancelled'].includes(r.status));
+  const upcomingAll = allRides.filter(r => !['completed','cancelled'].includes(r.status) || cvPairStillOpen(r));
+  const pastAll = allRides.filter(r => ['completed','cancelled'].includes(r.status) && !cvPairStillOpen(r));
   const upcoming = dedupeRoundTripPairs(upcomingAll);
   const past = dedupeRoundTripPairs(pastAll);
   if (!allRides.length) {
@@ -650,6 +657,8 @@ function buildRoundTripCard(r, isPast, facility) {
     outbound = legs[0]; ret = null;
   }
   var status = outbound.status;
+  // One ride done but the other still open: the round trip is still in progress
+  if (status === 'completed' && legs.some(function(x){ return !['completed','cancelled'].includes(x.status); })) status = 'in_progress';
   var isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(status);
   var label = STATUS_LABEL[status] || status;
   var badge = STATUS_BADGE[status] || 'badge-pending';
