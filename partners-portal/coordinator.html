@@ -496,6 +496,14 @@
       </select>
       <div style="font-size:11px;color:#9CA3AF;margin-top:4px">Self-pay patients get an automatic HSA/FSA receipt. Facility-covered rides are invoiced to you.</div>
     </div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Ride options</label>
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="optWheelchair"> Wheelchair accessible</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="optStretcher"> Stretcher transport</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="optCompanion"> Companion riding along</label>
+      </div>
+    </div>
 
     <div id="addPatError" class="form-error"></div>
     <div class="modal-foot" style="display:flex;justify-content:flex-end;gap:10px">
@@ -1204,6 +1212,7 @@ function closeAddPatient() {
   var ids = ['patFirstName','patLastName','patPhone','patEmail','apptDate','apptTime','cgName','cgEmail','cgPhone'];
   ids.forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
   var payResp = document.getElementById('paymentResp'); if (payResp) payResp.value = 'self_pay';
+  ['optWheelchair','optStretcher','optCompanion'].forEach(function(id){ var el = document.getElementById(id); if (el) el.checked = false; });
   var rideType = document.getElementById('rideType'); if (rideType) rideType.value = '';
   var existingSel = document.getElementById('existingPatient'); if (existingSel) existingSel.value = '';
 }
@@ -1373,6 +1382,8 @@ async function submitAddPatient() {
         reminder_sent: false,
         ride_type: leg,
         payment_responsibility: document.getElementById('paymentResp').value || 'self_pay',
+        mobility_needs: (function(){ var m = []; if (document.getElementById('optWheelchair') && document.getElementById('optWheelchair').checked) m.push('wheelchair'); if (document.getElementById('optStretcher') && document.getElementById('optStretcher').checked) m.push('stretcher'); return m.length ? m.join(',') : null; })(),
+        companion_requested: !!(document.getElementById('optCompanion') && document.getElementById('optCompanion').checked),
         pickup_address: isPre ? null : facilityAddr,
         dropoff_address: isPre ? facilityAddr : null,
         is_recurring: !!recurringSeriesId,

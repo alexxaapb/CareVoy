@@ -1183,6 +1183,14 @@ async function openRoundTripModal(outboundId) {
       '<label class="form-label">Return drop-off <span style="color:#9CA3AF;font-weight:400">(optional — defaults to home)</span></label>' +
       '<input class="form-input" id="rtReturnDropoff" placeholder="Same as home address" onfocus="initRtReturnAutocomplete()" autocomplete="off" style="margin:0" value="">' +
     '</div>' +
+    '<div style="margin:16px 0">' +
+      '<div class="payment-label" style="margin-bottom:10px">Ride options (applies to both rides)</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:10px">' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--black);cursor:pointer"><input type="checkbox" id="rtWheelchair" style="width:16px;height:16px;accent-color:#0A0A0A"' + (/wheelchair/.test(outbound.mobility_needs || '') ? ' checked' : '') + '> Wheelchair accessible</label>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--black);cursor:pointer"><input type="checkbox" id="rtStretcher" style="width:16px;height:16px;accent-color:#0A0A0A"' + (/stretcher/.test(outbound.mobility_needs || '') ? ' checked' : '') + '> Stretcher transport</label>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--black);cursor:pointer"><input type="checkbox" id="rtCompanion" style="width:16px;height:16px;accent-color:#0A0A0A"' + (outbound.companion_requested ? ' checked' : '') + '> Bringing a companion</label>' +
+      '</div>' +
+    '</div>' +
     (isFacilityCovered
       ? '<div class="facility-covered-box"><span class="facility-covered-text">Your facility covers this round trip. No payment needed.</span></div>'
       : '<div class="hsa-pill">HSA/FSA eligible — Your card will be charged after each leg completes. IRS 213(d) receipts emailed automatically.</div>' +
@@ -1232,12 +1240,26 @@ async function confirmRoundTrip() {
       await sb.from('patients').upsert({ id: currentUser.id, stripe_customer_id: setupData.customerId, stripe_payment_method_id: setupIntent.payment_method }, { onConflict:'id' });
     }
     btn.textContent = 'Confirming…';
+    // Ride options and trip distance (distance is needed later to work out the fare)
+    var rtMobility = [];
+    if (document.getElementById('rtWheelchair') && document.getElementById('rtWheelchair').checked) rtMobility.push('wheelchair');
+    if (document.getElementById('rtStretcher') && document.getElementById('rtStretcher').checked) rtMobility.push('stretcher');
+    var rtMobilityStr = rtMobility.length ? rtMobility.join(',') : null;
+    var rtCompanion = !!(document.getElementById('rtCompanion') && document.getElementById('rtCompanion').checked);
+    var rtMilesOut = null, rtMilesBack = null;
+    try {
+      rtMilesOut = await cvDriveMiles(home, facility);
+      rtMilesBack = await cvDriveMiles(facility, returnDropoff);
+    } catch (e) {}
     await sb.from('rides').update({
       pickup_address: home,
       dropoff_address: facility,
       patient_id: currentUser.id,
       status: 'confirmed',
-      payment_responsibility: outbound.payment_responsibility
+      payment_responsibility: outbound.payment_responsibility,
+      mobility_needs: rtMobilityStr,
+      companion_requested: rtCompanion,
+      estimated_miles: rtMilesOut !== null ? Math.round(rtMilesOut * 10) / 10 : null
     }).eq('id', outbound.id);
     fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: outbound.id }) }).catch(function(){});
     if (ret) {
@@ -1246,7 +1268,10 @@ async function confirmRoundTrip() {
         dropoff_address: returnDropoff,
         patient_id: currentUser.id,
         status: 'confirmed',
-        payment_responsibility: outbound.payment_responsibility
+        payment_responsibility: outbound.payment_responsibility,
+        mobility_needs: rtMobilityStr,
+        companion_requested: rtCompanion,
+        estimated_miles: rtMilesBack !== null ? Math.round(rtMilesBack * 10) / 10 : null
       }).eq('id', ret.id);
       fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: ret.id }) }).catch(function(){});
     }
