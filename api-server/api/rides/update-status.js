@@ -107,11 +107,30 @@ module.exports = async function handler(req, res) {
     if (status === 'completed') {
       try {
         const { data: ride } = await sb.from('rides').select('*').eq('id', ride_id).single();
+
+        // Round trips: one combined receipt and one email, sent after the second ride completes
+        let pairLegs = null;
+        if (ride && ride.round_trip_pair_id) {
+          const { data: sibs } = await sb.from('rides')
+            .select('id,status,pickup_time,pickup_address,dropoff_address,actual_cost,estimated_cost')
+            .eq('round_trip_pair_id', ride.round_trip_pair_id)
+            .neq('status', 'cancelled')
+            .order('pickup_time', { ascending: true });
+          if (sibs && sibs.length > 1) {
+            if (sibs.some(function(x){ return x.status !== 'completed'; })) {
+              return res.status(200).json({ success: true, status, receipt: 'waits_for_return_ride' });
+            }
+            pairLegs = sibs;
+          }
+        }
+
         if (ride && ride.contact_email && process.env.RESEND_API_KEY) {
           const { Resend } = require('resend');
           const resend = new Resend(process.env.RESEND_API_KEY);
           const facility = ride.hospital_name || 'your healthcare facility';
-          const cost = ride.actual_cost || ride.estimated_cost || 0;
+          const cost = pairLegs
+            ? pairLegs.reduce(function(a, l){ return a + parseFloat(l.actual_cost || l.estimated_cost || 0); }, 0)
+            : (ride.actual_cost || ride.estimated_cost || 0);
           const isFacility = ride.payment_responsibility === 'facility';
 
           // Generate branded PDF receipt
@@ -146,15 +165,21 @@ module.exports = async function handler(req, res) {
             console.error('PDF generation error (email will send without attachment):', pdfErr);
           }
 
-          const rideDate = ride.pickup_time ? new Date(ride.pickup_time).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : '';
-          const pickup = ride.pickup_address || 'Pickup location';
-          const dropoff = ride.dropoff_address || facility;
+          let rideDate = ride.pickup_time ? new Date(ride.pickup_time).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : '';
+          let pickup = ride.pickup_address || 'Pickup location';
+          let dropoff = ride.dropoff_address || facility;
+          if (pairLegs) {
+            const dayFmt = function(t){ return t ? new Date(t).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : ''; };
+            rideDate = Array.from(new Set(pairLegs.map(function(l){ return dayFmt(l.pickup_time); }))).join(' & ');
+            pickup = pairLegs[0].pickup_address || pickup;
+            dropoff = (pairLegs[0].dropoff_address || dropoff) + ' and return';
+          }
 
           const html = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
             <div style="background:#050D1F;padding:20px 24px;border-radius:12px 12px 0 0;text-align:center">
               <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:1px">CareVoy</span></div>
             <div style="background:#fff;border:1px solid #E8E4DC;border-top:none;border-radius:0 0 12px 12px;padding:28px 24px">
-              <p style="color:#050D1F;font-size:16px;font-weight:600;margin:0 0 16px">Ride Receipt${receiptNumber ? ' — ' + receiptNumber : ''}</p>
+              <p style="color:#050D1F;font-size:16px;font-weight:600;margin:0 0 16px">${pairLegs ? 'Round-Trip Receipt' : 'Ride Receipt'}${receiptNumber ? ' — ' + receiptNumber : ''}</p>
               <table style="width:100%;border-collapse:collapse;font-size:13px;color:#374151">
                 <tr><td style="padding:8px 0;border-bottom:1px solid #F3F4F6;color:#6B7280">Patient</td><td style="padding:8px 0;border-bottom:1px solid #F3F4F6;text-align:right;font-weight:600;color:#050D1F">${ride.patient_name || 'Patient'}</td></tr>
                 <tr><td style="padding:8px 0;border-bottom:1px solid #F3F4F6;color:#6B7280">Date</td><td style="padding:8px 0;border-bottom:1px solid #F3F4F6;text-align:right;font-weight:600;color:#050D1F">${rideDate}</td></tr>
@@ -173,7 +198,7 @@ module.exports = async function handler(req, res) {
           const emailPayload = {
             from: 'CareVoy <notifications@carevoy.co>',
             to: ride.contact_email,
-            subject: isFacility ? 'Ride Completed — ' + facility : 'Ride Receipt — $' + parseFloat(cost).toFixed(2),
+            subject: isFacility ? 'Ride Completed — ' + facility : (pairLegs ? 'Round-Trip Receipt — $' : 'Ride Receipt — $') + parseFloat(cost).toFixed(2),
             html,
           };
           if (pdfAttachment) emailPayload.attachments = [pdfAttachment];

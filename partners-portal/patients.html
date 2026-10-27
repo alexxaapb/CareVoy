@@ -1487,7 +1487,7 @@ function viewRoundTripReceipt(pairId) {
       (!isFac ? '<div style="display:flex;padding:14px 0;margin-top:4px"><div style="width:120px;font-size:14px;color:#6B7280;font-weight:600">Total</div><div style="font-size:20px;color:#0A0A0A;font-weight:700">$' + total.toFixed(2) + '</div></div>' : '') +
       '<div style="background:#F2F2F3;border:1px solid #E4E4E7;border-radius:10px;padding:14px;margin-top:12px;font-size:11px;color:#0A0A0A;line-height:1.6">' + note + '</div>' +
       '<div style="display:flex;gap:10px;margin-top:20px">' +
-        '<button onclick="printRoundTripReceipt()" style="flex:1;padding:12px;background:#0A0A0A;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Print / Save as PDF</button>' +
+        '<button onclick="downloadReceipt(\'' + legs[0].id + '\')" style="flex:1;padding:12px;background:#0A0A0A;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Download PDF</button>' +
         '<button onclick="document.getElementById(\'receiptModal\').remove()" style="flex:1;padding:12px;background:#F3F4F6;color:#0A0A0A;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>' +
       '</div>' +
     '</div>';
@@ -1553,7 +1553,9 @@ async function loadReceipts() {
       '<div class="receipt-info"><div class="receipt-name">' + rtEsc(fac) + ' (round trip)</div><div class="receipt-meta">Both rides in one receipt &middot; ' + d + '</div></div>' +
       '<div class="receipt-amount">' + (isFac ? 'Covered' : '$' + total.toFixed(2)) + '</div></div>';
   }).join('');
-  list.innerHTML = _rtCards + completed.map(r => {
+  var _rtLegIds = {};
+  cvCompletedRoundTrips().forEach(function(t){ t.legs.forEach(function(l){ _rtLegIds[l.id] = true; }); });
+  list.innerHTML = _rtCards + completed.filter(function(r){ return !_rtLegIds[r.id]; }).map(r => {
     const d = r.pickup_time ? new Date(r.pickup_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     const fac = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Facility';
     const cost = r.actual_cost || r.estimated_cost || 0;

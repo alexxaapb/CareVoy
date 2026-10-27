@@ -70,13 +70,16 @@ function buildLineItems(ride) {
 }
 
 // ── HTML template ────────────────────────────────────────────────────────────
-function buildReceiptHtml(ride, receiptNumber) {
+function buildReceiptHtml(ride, receiptNumber, legs) {
+  // legs = both rides of a completed round trip -> one combined receipt
+  const combined = Array.isArray(legs) && legs.length > 1 ? legs : null;
   const patient    = { full_name: ride.patient_name, email: ride.contact_email, phone: ride.contact_phone };
   const hospital   = ride.hospitals   || {};
   const nemt       = ride.nemt_partners || {};
   const isFacility = ride.payment_responsibility === 'facility';
 
-  const { items, total } = buildLineItems(ride);
+  const { items, total: singleTotal } = buildLineItems(ride);
+  const total = combined ? combined.reduce((s, l) => s + buildLineItems(l).total, 0) : singleTotal;
 
   const facilityAddr = [hospital.address, hospital.city, hospital.state]
     .filter(Boolean).join(', ');
@@ -84,12 +87,21 @@ function buildReceiptHtml(ride, receiptNumber) {
   const dateIssued = new Date().toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
   });
-  const serviceDate = ride.pickup_time
-    ? new Date(ride.pickup_time).toLocaleString('en-US', {
+  const fmtWhen = (t) => t
+    ? new Date(t).toLocaleString('en-US', {
         month: 'short', day: 'numeric', year: 'numeric',
         hour: 'numeric', minute: '2-digit',
       })
     : '—';
+  const fmtDay = (t) => t
+    ? new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '—';
+  const serviceDate = combined
+    ? Array.from(new Set(combined.map((l) => fmtDay(l.pickup_time)))).join(' & ')
+    : fmtWhen(ride.pickup_time);
+  const providerName = combined
+    ? Array.from(new Set(combined.map((l) => (l.nemt_partners || {}).company_name || 'CareVoy Partner'))).join(' / ')
+    : (nemt.company_name || 'CareVoy Partner');
 
   const lineItemsHtml = items.map(({ label, amount }) => `
         <div class="lineitem-row">
@@ -105,6 +117,45 @@ function buildReceiptHtml(ride, receiptNumber) {
   const complianceBdr   = isFacility ? 'rgba(16,185,129,0.25)' : 'rgba(0,194,168,0.25)';
   const complianceColor = isFacility ? '#065F46' : '#00836F';
   const complianceTitle = isFacility ? 'Facility-Covered Transportation' : 'IRS Section 213(d) Eligible Medical Expense';
+
+  const singleBlockHtml = `
+    <div class="service-block">
+      <div class="service-desc-main">${escHtml(hospital.name || ride.dropoff_address || '—')}</div>
+      ${facilityAddr ? `<div class="service-desc-sub">${escHtml(facilityAddr)}</div>` : ''}
+      <div class="service-desc-sub"><strong>Reason for Transport:</strong> ${escHtml(rideTypeLabel(ride.ride_type))}</div>
+      <div class="service-desc-sub"><strong>Pickup Address:</strong> ${escHtml(ride.pickup_address || '—')}</div>
+
+      <div class="lineitems-block">
+        ${lineItemsHtml}
+      </div>
+    </div>`;
+
+  const legBlocksHtml = combined ? `
+    <div class="service-block">
+      <div class="service-desc-main">${escHtml(hospital.name || ride.dropoff_address || '—')}</div>
+      ${facilityAddr ? `<div class="service-desc-sub">${escHtml(facilityAddr)}</div>` : ''}
+    </div>` + combined.map((leg, i) => {
+      const legItems = buildLineItems(leg);
+      const legNemt = leg.nemt_partners || {};
+      const rows = legItems.items.map(({ label, amount }) => `
+        <div class="lineitem-row">
+          <span class="lineitem-label">${escHtml(label)}</span>
+          <span class="lineitem-amount">$${amount.toFixed(2)}</span>
+        </div>`).join('');
+      return `
+    <div class="service-block">
+      <div class="service-desc-main" style="font-size:13px">${i === 0 ? 'Ride 1: To the facility' : 'Ride 2: Return trip'} &middot; ${escHtml(fmtWhen(leg.pickup_time))}</div>
+      <div class="service-desc-sub"><strong>From:</strong> ${escHtml(leg.pickup_address || '—')}</div>
+      <div class="service-desc-sub"><strong>To:</strong> ${escHtml(leg.dropoff_address || '—')}</div>
+      <div class="service-desc-sub"><strong>Provider:</strong> ${escHtml(legNemt.company_name || 'CareVoy Partner')}</div>
+      <div class="lineitems-block">
+        ${rows}
+        <div class="lineitem-row" style="font-weight:700;color:#050D1F"><span>Ride ${i + 1} subtotal</span><span>$${legItems.total.toFixed(2)}</span></div>
+      </div>
+    </div>`;
+    }).join('') : '';
+
+  const serviceBlocksHtml = combined ? legBlocksHtml : singleBlockHtml;
 
   return `<!DOCTYPE html>
 <html>
@@ -217,7 +268,7 @@ function buildReceiptHtml(ride, receiptNumber) {
       </div>
     </div>
     <div class="header-right">
-      <div class="doc-title">Transportation Receipt</div>
+      <div class="doc-title">${combined ? 'Round-Trip Transportation Receipt' : 'Transportation Receipt'}</div>
       <div class="doc-number">Receipt No. ${escHtml(receiptNumber)}</div>
       <div class="doc-number">${escHtml(dateIssued)}</div>
     </div>
@@ -234,7 +285,7 @@ function buildReceiptHtml(ride, receiptNumber) {
       </div>
       <div class="info-block">
         <div class="info-label">Non-Emergency Medical Transportation Provider</div>
-        <div class="info-row"><strong>${escHtml(nemt.company_name || 'CareVoy Partner')}</strong></div>
+        <div class="info-row"><strong>${escHtml(providerName)}</strong></div>
         <div class="info-row">Coordinated via CareVoy</div>
       </div>
     </div>
@@ -244,16 +295,7 @@ function buildReceiptHtml(ride, receiptNumber) {
       <span class="service-header-label">Date of Service: ${escHtml(serviceDate)}</span>
     </div>
 
-    <div class="service-block">
-      <div class="service-desc-main">${escHtml(hospital.name || ride.dropoff_address || '—')}</div>
-      ${facilityAddr ? `<div class="service-desc-sub">${escHtml(facilityAddr)}</div>` : ''}
-      <div class="service-desc-sub"><strong>Reason for Transport:</strong> ${escHtml(rideTypeLabel(ride.ride_type))}</div>
-      <div class="service-desc-sub"><strong>Pickup Address:</strong> ${escHtml(ride.pickup_address || '—')}</div>
-
-      <div class="lineitems-block">
-        ${lineItemsHtml}
-      </div>
-    </div>
+${serviceBlocksHtml}
 
     <div class="totals-block">
       <div class="totals-table">
@@ -382,6 +424,23 @@ async function fetchRideForReceipt(supabase, rideId) {
   return ride;
 }
 
+// ── Both legs of a round trip (cancelled legs are ignored) ──────────────────
+async function fetchPairLegs(supabase, pairId) {
+  const { data, error } = await supabase
+    .from('rides')
+    .select(`
+      *,
+      patients(full_name, email, phone, home_address),
+      hospitals(name, address, city, state),
+      nemt_partners(company_name, base_fare, per_mile_rate, wheelchair_surcharge, stretcher_surcharge)
+    `)
+    .eq('round_trip_pair_id', pairId)
+    .neq('status', 'cancelled')
+    .order('pickup_time', { ascending: true });
+  if (error) throw new Error('Round-trip lookup error: ' + error.message);
+  return data || [];
+}
+
 // ── Upload PDF to private Supabase Storage bucket ────────────────────────────
 // Returns the storage path (not a URL). Paths never expire; signed URLs do.
 async function uploadPdf(supabase, receiptNumber, rideId, pdfBuffer) {
@@ -432,31 +491,50 @@ async function generateAndStoreReceipt(supabase, rideId) {
     return { receiptNumber: existing.receipt_number, storagePath: existing.receipt_pdf_url, pdfBuffer: null };
   }
 
-  const ride = await fetchRideForReceipt(supabase, rideId);
+  // Round trips get ONE combined receipt, issued once both rides are completed
+  let legs = null;
+  const { data: pairRow } = await supabase.from('rides').select('round_trip_pair_id').eq('id', rideId).single();
+  if (pairRow && pairRow.round_trip_pair_id) {
+    const siblings = await fetchPairLegs(supabase, pairRow.round_trip_pair_id);
+    if (siblings.length > 1) {
+      if (siblings.some((l) => l.status !== 'completed')) {
+        throw new Error('The round-trip receipt is available once both rides are completed');
+      }
+      legs = siblings;
+    }
+  }
+
+  const ride = legs ? legs[0] : await fetchRideForReceipt(supabase, rideId);
   const year = new Date().getFullYear();
   const receiptNumber = await assignReceiptNumber(supabase, year);
-  const html = buildReceiptHtml(ride, receiptNumber);
+  const html = buildReceiptHtml(ride, receiptNumber, legs);
   const pdfBuffer = await generatePdfBuffer(html);
-  const storagePath = await uploadPdf(supabase, receiptNumber, rideId, pdfBuffer);
+  const storageId = legs ? 'pair-' + legs[0].round_trip_pair_id : rideId;
+  const storagePath = await uploadPdf(supabase, receiptNumber, storageId, pdfBuffer);
 
-  // Persist receipt number and storage path on the ride row
-  await supabase.from('rides').update({ receipt_number: receiptNumber, receipt_pdf_url: storagePath }).eq('id', rideId);
+  // Persist receipt number and storage path on the ride row(s)
+  const rideRows = legs || [ride];
+  await supabase.from('rides')
+    .update({ receipt_number: receiptNumber, receipt_pdf_url: storagePath })
+    .in('id', rideRows.map((l) => l.id));
 
-  // Upsert into receipts table (aligns with existing schema columns)
-  const { items, total } = buildLineItems(ride);
-  await supabase.from('receipts').upsert(
-    {
-      ride_id: rideId,
-      patient_id: ride.patient_id,
-      pdf_url: storagePath,
-      provider_name: ride.nemt_partners?.company_name || 'CareVoy / APB Ventures LLC',
-      service_date: ride.pickup_time ? ride.pickup_time.split('T')[0] : null,
-      service_type: rideTypeLabel(ride.ride_type),
-      amount: total,
-      irs_code_reference: 'IRS Section 213(d)',
-    },
-    { onConflict: 'ride_id', ignoreDuplicates: false }
-  );
+  // Upsert into receipts table (aligns with existing schema columns), one row per ride
+  for (const leg of rideRows) {
+    const { total: legTotal } = buildLineItems(leg);
+    await supabase.from('receipts').upsert(
+      {
+        ride_id: leg.id,
+        patient_id: leg.patient_id,
+        pdf_url: storagePath,
+        provider_name: leg.nemt_partners?.company_name || 'CareVoy / APB Ventures LLC',
+        service_date: leg.pickup_time ? leg.pickup_time.split('T')[0] : null,
+        service_type: rideTypeLabel(leg.ride_type),
+        amount: legTotal,
+        irs_code_reference: 'IRS Section 213(d)',
+      },
+      { onConflict: 'ride_id', ignoreDuplicates: false }
+    );
+  }
 
   return { receiptNumber, storagePath, pdfBuffer };
 }
