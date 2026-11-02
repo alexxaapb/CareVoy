@@ -34,10 +34,6 @@
       "dest": "/patients.html"
     },
     {
-      "src": "/email-logo.png",
-      "dest": "/email-logo.png"
-    },
-    {
       "src": "/email-logo-mark.png",
       "dest": "/email-logo-mark.png"
     },
