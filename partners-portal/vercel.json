@@ -38,6 +38,10 @@
       "dest": "/email-logo.png"
     },
     {
+      "src": "/email-logo-mark.png",
+      "dest": "/email-logo-mark.png"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
