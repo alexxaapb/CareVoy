@@ -1250,7 +1250,7 @@ async function autoEhrLookup() {
   var phoneEl = document.getElementById('patPhone');
   if (!last || !first || phoneEl.value.trim() || !coordInfo || !coordInfo.hospital_id) return;
   try {
-    var r = await fetch(API + '/api/ehr/search-patient?firstName=' + encodeURIComponent(first) + '&lastName=' + encodeURIComponent(last) + '&hospitalId=' + encodeURIComponent(coordInfo.hospital_id));
+    var r = await fetch(API + '/api/ehr/search-patient?firstName=' + encodeURIComponent(first) + '&lastName=' + encodeURIComponent(last) + '&hospitalId=' + encodeURIComponent(coordInfo.hospital_id), { headers: { 'Authorization': 'Bearer ' + token } });
     var d = await r.json();
     if (d.results && d.results.length && !phoneEl.value.trim()) {
       phoneEl.value = d.results[0].phone || '';
