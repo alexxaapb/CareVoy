@@ -142,6 +142,7 @@
     <button class="nav-item" onclick="showNav('patients',this)">My Patients</button>
     <button class="nav-item" onclick="showNav('rides',this)">Rides</button>
     <button class="nav-item" onclick="showNav('alerts',this)">Alerts <span id="alertNavBadge" style="display:none;background:#060D1F;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:4px"></span></button>
+    <button class="nav-item" onclick="showNav('billing',this)">Billing</button>
     <button class="nav-item" onclick="showNav('settings',this)">Settings</button>
     <button class="nav-item" onclick="openFeatureBox()">Request a feature</button>
   </nav>
@@ -326,6 +327,13 @@
     <div class="page-title">Alerts</div>
     <div class="page-sub">Patients requiring attention</div>
     <div id="alertsList"><div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">No alerts right now.</div></div>
+  </div>
+
+  <!-- ── BILLING ── -->
+  <div class="page" id="sec-billing" style="display:none">
+    <div class="page-title">Billing</div>
+    <div class="page-sub">Your plan, usage, contract and add-ons</div>
+    <div id="billingBody"><div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Loading…</div></div>
   </div>
 
   <!-- ── SETTINGS ── -->
@@ -687,7 +695,7 @@ async function init() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     var _hash = (location.hash || '').replace('#', '');
-    if (_hash && ['dashboard','patients','rides','alerts','settings'].includes(_hash)) {
+    if (_hash && ['dashboard','patients','rides','alerts','billing','settings'].includes(_hash)) {
       showNav(_hash, document.querySelector('.nav-item[onclick*="\'' + _hash + '\'"]'));
     }
   } catch(e) {
@@ -1605,13 +1613,72 @@ function closeDrawer() {
 // ── Nav ────────────────────────────────────────────────────
 function showNav(name, el) {
   location.hash = name;
-  ['dashboard','patients','rides','alerts','settings'].forEach(function(s){
+  ['dashboard','patients','rides','alerts','billing','settings'].forEach(function(s){
     document.getElementById('sec-' + s).style.display = s === name ? 'block' : 'none';
   });
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
   if (el) el.classList.add('active');
   if (name === 'patients') { renderPatientTable(); }
+  if (name === 'billing') { loadBilling(); }
 }
+
+// ── Billing ────────────────────────────────────────────────
+function fmtMoney(c) { return c == null ? '—' : '$' + (c/100).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function fmtDate(d) { if (!d) return '—'; var x = new Date(d.length === 10 ? d + 'T12:00:00' : d); return isNaN(x) ? '—' : x.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+async function loadBilling() {
+  var box = document.getElementById('billingBody');
+  try {
+    var r = await fetch(API + '/api/billing/status', { headers: { 'Authorization': 'Bearer ' + token } });
+    var b = await r.json();
+    if (!r.ok) throw new Error(b.error || 'Could not load');
+    var card = 'background:#fff;border:1px solid #E4E4E7;border-radius:16px;padding:20px;margin-bottom:16px';
+    var h = '';
+    // Plan + usage
+    var pct = (b.ride_limit && b.rides_this_month != null) ? Math.min(100, Math.round(b.rides_this_month / b.ride_limit * 100)) : null;
+    h += '<div style="' + card + '"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px">' +
+      '<div><div style="font-size:12px;color:#6B6F76">Current plan</div><div style="font-size:22px;font-weight:700;color:#060D1F">' + esc(b.plan.label) + '</div>' +
+      (b.subscription_status ? '<div style="font-size:12px;color:#6B6F76;margin-top:2px">Status: ' + esc(b.subscription_status) + (b.renews_on ? ' · renews ' + fmtDate(b.renews_on) : '') + '</div>' : '') + '</div>' +
+      '<div style="display:flex;gap:8px;align-items:flex-start">' +
+      (b.billing_set_up ? '<button class="btn btn-navy" onclick="openBillingPortal()">Manage plan &amp; payment</button>' :
+        '<a class="btn btn-navy" href="mailto:partners@carevoy.co?subject=Change%20my%20CareVoy%20plan" style="text-decoration:none">Contact us to change plan</a>') +
+      '</div></div>';
+    h += '<div style="margin-top:16px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#6B6F76"><span>Rides this month</span><span>' +
+      (b.rides_this_month == null ? '—' : b.rides_this_month) + (b.ride_limit ? ' of ' + b.ride_limit : '') + '</span></div>' +
+      (pct != null ? '<div style="height:8px;background:#F0F0F2;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + (pct >= 90 ? '#E5484D' : '#00C2A8') + '"></div></div>' : '') + '</div></div>';
+    // Contract
+    var c = b.contract;
+    h += '<div style="' + card + '"><div style="font-weight:700;color:#060D1F;margin-bottom:10px">Your contract</div>' +
+      (c ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;font-size:13px">' +
+        '<div><div style="color:#6B6F76;font-size:12px">Monthly price</div>' + fmtMoney(c.monthly_price_cents) + '</div>' +
+        '<div><div style="color:#6B6F76;font-size:12px">Start</div>' + fmtDate(c.start) + '</div>' +
+        '<div><div style="color:#6B6F76;font-size:12px">End</div>' + fmtDate(c.end) + '</div></div>'
+       : '<div style="font-size:13px;color:#6B6F76">Contract details will appear here once your account is linked. Questions? <a href="mailto:partners@carevoy.co">partners@carevoy.co</a></div>') + '</div>';
+    // Add-ons
+    h += '<div style="' + card + '"><div style="font-weight:700;color:#060D1F;margin-bottom:10px">Add-ons</div>';
+    b.addons.forEach(function(a) {
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #F0F0F2;flex-wrap:wrap">' +
+        '<div><div style="font-weight:600;font-size:14px">' + esc(a.label) + (a.price_label ? ' <span style="color:#6B6F76;font-weight:500;font-size:12px">· ' + esc(a.price_label) + '</span>' : '') + '</div>' +
+        '<div style="font-size:12px;color:#6B6F76">' + esc(a.blurb) + '</div></div>' +
+        (a.active ? '<span style="background:rgba(0,194,168,0.12);color:#007a69;font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px">Active</span>' :
+          a.can_buy_online ? '<button class="btn btn-navy" onclick="buyAddon(\'' + a.key + '\')">Add</button>' :
+          '<a class="btn" style="background:#F0F0F2;color:#060D1F;text-decoration:none" href="mailto:partners@carevoy.co?subject=' + encodeURIComponent('Add ' + a.label) + '">Request</a>') + '</div>';
+    });
+    h += '</div>';
+    box.innerHTML = h;
+  } catch (e) {
+    box.innerHTML = '<div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Could not load billing. ' + esc(e.message) + '</div>';
+  }
+}
+async function billingRedirect(path, body) {
+  try {
+    var r = await fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body || {}) });
+    var d = await r.json();
+    if (!r.ok || !d.url) throw new Error(d.error || 'Something went wrong');
+    window.location.href = d.url;
+  } catch (e) { showToast(e.message, 'error'); }
+}
+function openBillingPortal() { billingRedirect('/api/billing/portal'); }
+function buyAddon(key) { billingRedirect('/api/billing/addon-checkout', { addon: key }); }
 
 // ── Helpers ────────────────────────────────────────────────
 function signOut() { ['cv_coord_token','cv_coord_uid','cv_coord_refresh','cv_coord_expires'].forEach(function(k){sessionStorage.removeItem(k);localStorage.removeItem(k);}); window.location.href = '/'; }

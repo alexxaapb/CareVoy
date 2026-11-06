@@ -47,5 +47,36 @@ module.exports = async (req, res) => {
     }
   }
 
+  // --- Facility add-ons and plan status (only acts on subscriptions tagged by CareVoy) ---
+  if (event.type === "checkout.session.completed" ||
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted") {
+    try {
+      const obj = event.data.object;
+      const meta = obj.metadata || {};
+      const hid = meta.hospital_id;
+      if (hid && meta.kind === "addon" && meta.addon) {
+        const { data: row } = await supabase.from("facility_billing")
+          .select("addons").eq("hospital_id", hid).maybeSingle();
+        if (row) {
+          let addons = (row.addons || []).filter((a) => a !== meta.addon);
+          const on =
+            event.type === "checkout.session.completed" ||
+            (event.type === "customer.subscription.updated" && ["active", "trialing", "past_due"].includes(obj.status));
+          if (on) addons.push(meta.addon);
+          await supabase.from("facility_billing")
+            .update({ addons, updated_at: new Date().toISOString() }).eq("hospital_id", hid);
+        }
+      } else if (event.type !== "checkout.session.completed" && obj.customer) {
+        // Main plan subscription: keep status and renewal date current.
+        const patch = { subscription_status: obj.status, updated_at: new Date().toISOString() };
+        if (obj.current_period_end) patch.current_period_end = new Date(obj.current_period_end * 1000).toISOString();
+        await supabase.from("facility_billing").update(patch).eq("stripe_customer_id", obj.customer);
+      }
+    } catch (e) {
+      console.error("Webhook billing update failed:", e.message);
+    }
+  }
+
   res.status(200).json({ received: true });
 };
