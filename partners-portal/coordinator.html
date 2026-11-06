@@ -122,6 +122,13 @@
     #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; position:fixed; inset:0; background:#F6F6F7; z-index:100; }
     .spinner { width:36px; height:36px; border:3px solid #E4E4E7; border-top-color:#060D1F; border-radius:50%; animation:spin 0.8s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg);} }
+    @media print {
+      .sidebar, .topbar, .nav-scrim, .no-print, #toast { display:none !important; }
+      .main { margin-left:0 !important; }
+      .page { display:none !important; }
+      #sec-reports { display:block !important; }
+      body { background:#fff !important; }
+    }
     .menu-btn { display:none; width:38px; height:38px; border-radius:10px; border:1px solid #E4E4E7; background:#fff; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; }
     .menu-btn span, .menu-btn span::before, .menu-btn span::after { display:block; width:16px; height:2px; background:#060D1F; border-radius:2px; position:relative; content:''; }
     .menu-btn span::before { position:absolute; top:-5px; left:0; }
@@ -157,6 +164,7 @@
     <button class="nav-item" onclick="showNav('patients',this)">My Patients</button>
     <button class="nav-item" onclick="showNav('rides',this)">Rides</button>
     <button class="nav-item" onclick="showNav('alerts',this)">Alerts <span id="alertNavBadge" style="display:none;background:#060D1F;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:4px"></span></button>
+    <button class="nav-item" onclick="showNav('reports',this)">Reports</button>
     <button class="nav-item" onclick="showNav('integrations',this)">Integrations</button>
     <button class="nav-item" onclick="showNav('billing',this)">Billing</button>
     <button class="nav-item" onclick="showNav('settings',this)">Settings</button>
@@ -353,6 +361,18 @@
     <div class="page-title">Alerts</div>
     <div class="page-sub">Patients requiring attention</div>
     <div id="alertsList"><div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">No alerts right now.</div></div>
+  </div>
+
+  <!-- ── REPORTS ── -->
+  <div class="page" id="sec-reports" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div><div class="page-title">Facility Impact Report</div><div class="page-sub" id="reportSub">Monthly summary you can share with leadership</div></div>
+      <div class="no-print" style="display:flex;gap:8px;align-items:center">
+        <select class="form-input" id="reportMonth" onchange="renderReport()" style="width:auto"></select>
+        <button class="btn btn-navy" onclick="window.print()">Print / Save PDF</button>
+      </div>
+    </div>
+    <div id="reportBody" style="margin-top:16px"></div>
   </div>
 
   <!-- ── INTEGRATIONS ── -->
@@ -729,7 +749,7 @@ async function init() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     var _hash = (location.hash || '').replace('#', '');
-    if (_hash && ['dashboard','patients','rides','alerts','integrations','billing','settings'].includes(_hash)) {
+    if (_hash && ['dashboard','patients','rides','alerts','reports','integrations','billing','settings'].includes(_hash)) {
       showNav(_hash, document.querySelector('.nav-item[onclick*="\'' + _hash + '\'"]'));
     }
   } catch(e) {
@@ -1677,7 +1697,7 @@ function toggleMenu(open) {
 function showNav(name, el) {
   toggleMenu(false);
   location.hash = name;
-  ['dashboard','patients','rides','alerts','integrations','billing','settings'].forEach(function(s){
+  ['dashboard','patients','rides','alerts','reports','integrations','billing','settings'].forEach(function(s){
     document.getElementById('sec-' + s).style.display = s === name ? 'block' : 'none';
   });
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
@@ -1685,6 +1705,60 @@ function showNav(name, el) {
   if (name === 'patients') { renderPatientTable(); }
   if (name === 'billing') { loadBilling(); }
   if (name === 'integrations') { loadIntegrations(); }
+  if (name === 'reports') { initReport(); }
+}
+
+// ── Facility Impact Report ─────────────────────────────────
+function initReport() {
+  var sel = document.getElementById('reportMonth');
+  if (!sel.options.length) {
+    var d = new Date(); d.setDate(1);
+    for (var i = 0; i < 12; i++) {
+      var o = document.createElement('option');
+      o.value = d.getFullYear() + '-' + pad(d.getMonth() + 1);
+      o.textContent = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      sel.appendChild(o);
+      d.setMonth(d.getMonth() - 1);
+    }
+  }
+  renderReport();
+}
+function renderReport() {
+  var val = document.getElementById('reportMonth').value.split('-');
+  var start = new Date(+val[0], +val[1] - 1, 1), end = new Date(+val[0], +val[1], 1);
+  var label = start.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  var fac = (coordInfo && (coordInfo.hospitals && coordInfo.hospitals.name || coordInfo.name)) || '';
+  document.getElementById('reportSub').textContent = (fac ? fac + ' · ' : '') + label;
+  var rides = (allRides || []).filter(function(r){ var t = r.pickup_time && new Date(r.pickup_time); return t && t >= start && t < end; });
+  var done = rides.filter(function(r){ return r.status === 'completed'; });
+  var cancelled = rides.filter(function(r){ return r.status === 'cancelled'; });
+  function cost(r) { return parseFloat(r.actual_cost || r.estimated_cost || 0); }
+  var facSpend = 0, selfSpend = 0;
+  done.forEach(function(r){ if (r.payment_responsibility === 'facility') facSpend += cost(r); else selfSpend += cost(r); });
+  var patients = {};
+  done.forEach(function(r){ patients[(r.contact_email || r.patient_name || r.id).toLowerCase()] = 1; });
+  var byType = {};
+  done.forEach(function(r){ var k = (typeof rideTypeLabel === 'function' ? rideTypeLabel(r.procedure_type) : r.procedure_type) || 'Other'; byType[k] = (byType[k] || 0) + 1; });
+  var typeRows = Object.keys(byType).sort(function(a,b){ return byType[b] - byType[a]; });
+  function money(n) { return '$' + Math.round(n).toLocaleString(); }
+  function tile(lbl, val, sub, dark) {
+    return '<div style="background:' + (dark ? '#060D1F' : '#fff') + ';border:1px solid ' + (dark ? '#060D1F' : '#E4E4E7') + ';border-radius:16px;padding:18px">' +
+      '<div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:' + (dark ? '#9CA3AF' : '#6B6F76') + '">' + lbl + '</div>' +
+      '<div style="font-size:30px;font-weight:700;margin-top:6px;color:' + (dark ? '#fff' : '#060D1F') + '">' + val + '</div>' +
+      (sub ? '<div style="font-size:11px;margin-top:2px;color:' + (dark ? '#6B7280' : '#6B6F76') + '">' + sub + '</div>' : '') + '</div>';
+  }
+  var h = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">' +
+    tile('Rides completed', done.length, 'Appointments your patients made it to', true) +
+    tile('Patients served', Object.keys(patients).length, 'Unique patients with a completed ride', true) +
+    tile('Facility-covered', money(facSpend), 'Completed rides you covered') +
+    tile('Patient self-pay', money(selfSpend), 'Completed rides patients paid for') +
+    tile('Est. HSA/FSA savings', money(selfSpend * 0.30), 'Self-pay rides · 30% bracket est. · actual savings vary') +
+    tile('Cancelled', cancelled.length, 'Rides cancelled this month') + '</div>';
+  h += '<div style="background:#fff;border:1px solid #E4E4E7;border-radius:16px;padding:18px;margin-top:14px"><div style="font-weight:700;color:#060D1F;margin-bottom:8px">Completed rides by appointment type</div>' +
+    (typeRows.length ? typeRows.map(function(k){ return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #F0F0F2;font-size:13px"><span>' + esc(k) + '</span><b>' + byType[k] + '</b></div>'; }).join('') :
+      '<div style="font-size:13px;color:#6B6F76">No completed rides in this month.</div>') + '</div>';
+  h += '<div style="font-size:11px;color:#6B6F76;margin-top:12px">Generated by CareVoy on ' + new Date().toLocaleDateString() + '. Savings are estimates for illustration and are not tax advice.</div>';
+  document.getElementById('reportBody').innerHTML = h;
 }
 
 // ── Plan usage on the dashboard ────────────────────────────
