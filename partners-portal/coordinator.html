@@ -326,6 +326,7 @@
     </div>
     <div class="page-title">Rides</div>
     <div class="page-sub">All rides for your facility</div>
+    <div id="ridesCal" style="margin-bottom:18px"></div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button class="filter-btn on" id="rf-all" onclick="setRidesFilter('all',this)">All</button>
       <button class="filter-btn" id="rf-action" onclick="setRidesFilter('action',this)">Needs Action</button>
@@ -994,6 +995,7 @@ function renderRidesTab() {
   });
   body.innerHTML = rows.length ? rows.map(function(r){ return rideRow(r, null, true, 'rides'); }).join('') : '<div class="empty">No rides match this filter.</div>';
   clearSelection('rides');
+  renderRidesCal();
 }
 
 function renderAlerts() {
@@ -1707,6 +1709,7 @@ function showNav(name, el) {
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
   if (el) el.classList.add('active');
   if (name === 'patients') { renderPatientTable(); }
+  if (name === 'rides') { renderRidesCal(); calLoadEvents(); }
   if (name === 'billing') { loadBilling(); }
   if (name === 'integrations') { loadIntegrations(); }
   if (name === 'reports') { initReport(); }
@@ -2043,6 +2046,133 @@ function bookFromCalendar(i) {
   document.getElementById('apptDate').value = dt.getFullYear() + '-' + pad(dt.getMonth()+1) + '-' + pad(dt.getDate());
   document.getElementById('apptTime').value = pad(dt.getHours()) + ':' + pad(dt.getMinutes());
   var t = document.getElementById('apptType'); if (t) { t.value = x.type; if (typeof toggleRecurringOption === 'function') toggleRecurringOption(); }
+}
+
+
+// ── Rides calendar (month / week / day) ────────────────────
+var calView = 'month', calDate = new Date(), calEvents = [], calState = 'idle', calKey = '', calPicked = null;
+var CAL_COLORS = { invited:'#B54708', reminder_sent:'#B54708', no_response:'#D92D20', pending:'#B54708', confirmed:'#0E9384', assigned:'#16A34A', en_route:'#16A34A', arrived:'#16A34A', in_progress:'#16A34A', completed:'#6B6F76', cancelled:'#D92D20' };
+function calStart(d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return x; }
+function calRange() {
+  var d = calStart(calDate), a, b;
+  if (calView === 'month') {
+    a = new Date(d.getFullYear(), d.getMonth(), 1); a.setDate(a.getDate() - a.getDay());
+    b = new Date(a); b.setDate(b.getDate() + 42);
+  } else if (calView === 'week') {
+    a = new Date(d); a.setDate(a.getDate() - a.getDay()); b = new Date(a); b.setDate(b.getDate() + 7);
+  } else { a = d; b = new Date(d); b.setDate(b.getDate() + 1); }
+  return { from: a, to: b };
+}
+function calDayKey(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+async function calLoadEvents() {
+  var rg = calRange(), key = rg.from.toISOString() + rg.to.toISOString();
+  if (key === calKey) return;
+  calKey = key;
+  try {
+    var r = await fetch(API + '/api/calendar/feed?from=' + encodeURIComponent(rg.from.toISOString()) + '&to=' + encodeURIComponent(rg.to.toISOString()), { headers: { 'Authorization': 'Bearer ' + token } });
+    if (r.status === 503 || r.status === 402 || r.status === 403 || r.status === 401) { calState = 'off'; calEvents = []; }
+    else {
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'x');
+      calState = d.connected ? 'on' : 'none'; calEvents = d.events || [];
+    }
+  } catch (e) { calState = 'error'; calEvents = []; }
+  if (key === calKey) renderRidesCal();
+}
+function calItemsFor(day) {
+  var k = calDayKey(day), items = [];
+  allRides.forEach(function(r) {
+    if (!r.pickup_time) return;
+    var t = new Date(r.pickup_time);
+    if (calDayKey(t) === k) items.push({ kind: 'ride', t: t, ride: r });
+  });
+  calEvents.forEach(function(ev, i) {
+    var t = new Date(ev.start);
+    if (calDayKey(t) === k) items.push({ kind: 'event', t: t, ev: ev, idx: i });
+  });
+  items.sort(function(a, b) { return a.t - b.t; });
+  return items;
+}
+function calItemHtml(it, big) {
+  var tm = it.t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (it.kind === 'ride') {
+    var r = it.ride, c = CAL_COLORS[r.status] || '#6B6F76';
+    var name = esc(r.patient_name || 'Patient');
+    return '<div onclick="event.stopPropagation();openDrawer(\'' + r.id + '\')" title="' + esc((STATUS_LABELS[r.status] || r.status)) + '" style="cursor:pointer;background:' + c + '1A;border-left:3px solid ' + c + ';border-radius:6px;padding:' + (big ? '8px 10px' : '2px 6px') + ';font-size:' + (big ? '13px' : '11px') + ';margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + (r.status === 'cancelled' ? 'text-decoration:line-through;opacity:.6' : '') + '"><b>' + tm + '</b> ' + name + (big ? ' <span style="color:#6B6F76">· ' + esc(STATUS_LABELS[r.status] || r.status) + '</span>' : '') + '</div>';
+  }
+  var ev = it.ev, needs = !!ev.type;
+  var all = ev.all_day;
+  return '<div onclick="event.stopPropagation();calPick(' + it.idx + ')" style="cursor:pointer;background:#F4F4F5;border-left:3px dashed ' + (needs ? '#F5A623' : '#C4C4C8') + ';border-radius:6px;padding:' + (big ? '8px 10px' : '2px 6px') + ';font-size:' + (big ? '13px' : '11px') + ';margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>' + (all ? 'All day' : tm) + '</b> ' + esc(ev.title || '(no title)') + (needs ? ' <span style="color:#B54708">· may need a ride</span>' : '') + '</div>';
+}
+function calSetView(v) { calView = v; calPicked = null; calKey = ''; renderRidesCal(); calLoadEvents(); }
+function calNav(dir) {
+  var d = new Date(calDate);
+  if (calView === 'month') d.setMonth(d.getMonth() + dir); else if (calView === 'week') d.setDate(d.getDate() + 7 * dir); else d.setDate(d.getDate() + dir);
+  calDate = d; calPicked = null; renderRidesCal(); calLoadEvents();
+}
+function calToday() { calDate = new Date(); calPicked = null; renderRidesCal(); calLoadEvents(); }
+function calGoDay(y, m, d) { calDate = new Date(y, m, d); calView = 'day'; calPicked = null; calKey = ''; renderRidesCal(); calLoadEvents(); }
+function calPick(i) { calPicked = i; renderRidesCal(); }
+function bookFromCalEvent(i) {
+  var ev = calEvents[i]; if (!ev) return;
+  openAddPatientModal();
+  var dt = new Date(ev.start);
+  document.getElementById('apptDate').value = dt.getFullYear() + '-' + pad(dt.getMonth()+1) + '-' + pad(dt.getDate());
+  document.getElementById('apptTime').value = pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+  var t = document.getElementById('apptType'); if (t && ev.type) { t.value = ev.type; if (typeof toggleRecurringOption === 'function') toggleRecurringOption(); }
+}
+function renderRidesCal() {
+  var box = document.getElementById('ridesCal'); if (!box) return;
+  var d = calStart(calDate), rg = calRange();
+  var title = calView === 'month' ? d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+    : calView === 'week' ? rg.from.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' – ' + new Date(rg.to.getTime() - 86400000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    : d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  var seg = function(v, l) { return '<button class="filter-btn' + (calView === v ? ' on' : '') + '" onclick="calSetView(\'' + v + '\')">' + l + '</button>'; };
+  var h = '<div style="background:#fff;border:1px solid #E4E4E7;border-radius:16px;padding:16px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">' +
+    '<div style="display:flex;align-items:center;gap:8px"><button class="filter-btn" onclick="calNav(-1)" aria-label="Previous">‹</button><button class="filter-btn" onclick="calToday()">Today</button><button class="filter-btn" onclick="calNav(1)" aria-label="Next">›</button>' +
+    '<div style="font-weight:700;font-size:16px;color:#060D1F;margin-left:6px">' + esc(title) + '</div></div>' +
+    '<div style="display:flex;gap:6px">' + seg('month', 'Month') + seg('week', 'Week') + seg('day', 'Day') + '</div></div>';
+  var names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], todayK = calDayKey(new Date());
+  if (calView === 'month') {
+    h += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:11px;font-weight:600;color:#6B6F76;margin-bottom:4px">' + names.map(function(n){ return '<div style="padding:0 4px">' + n + '</div>'; }).join('') + '</div>';
+    h += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">';
+    for (var i = 0; i < 42; i++) {
+      var day = new Date(rg.from); day.setDate(day.getDate() + i);
+      var items = calItemsFor(day), inMonth = day.getMonth() === d.getMonth(), isToday = calDayKey(day) === todayK;
+      h += '<div onclick="calGoDay(' + day.getFullYear() + ',' + day.getMonth() + ',' + day.getDate() + ')" style="cursor:pointer;min-height:92px;border:1px solid ' + (isToday ? '#00C2A8' : '#EEEEF0') + ';border-radius:8px;padding:4px;overflow:hidden;' + (inMonth ? '' : 'background:#FAFAFB;opacity:.6') + '">' +
+        '<div style="font-size:11px;font-weight:' + (isToday ? '800' : '600') + ';color:' + (isToday ? '#0E9384' : '#6B6F76') + ';margin-bottom:3px">' + day.getDate() + '</div>' +
+        items.slice(0, 3).map(function(it){ return calItemHtml(it, false); }).join('') +
+        (items.length > 3 ? '<div style="font-size:11px;color:#6B6F76">+' + (items.length - 3) + ' more</div>' : '') + '</div>';
+    }
+    h += '</div>';
+  } else if (calView === 'week') {
+    h += '<div style="display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));gap:6px;overflow-x:auto">';
+    for (var j = 0; j < 7; j++) {
+      var wd = new Date(rg.from); wd.setDate(wd.getDate() + j);
+      var its = calItemsFor(wd), tdy = calDayKey(wd) === todayK;
+      h += '<div style="border:1px solid ' + (tdy ? '#00C2A8' : '#EEEEF0') + ';border-radius:10px;padding:8px;min-height:160px"><div onclick="calGoDay(' + wd.getFullYear() + ',' + wd.getMonth() + ',' + wd.getDate() + ')" style="cursor:pointer;font-size:12px;font-weight:700;color:#060D1F;margin-bottom:6px">' + names[wd.getDay()] + ' ' + wd.getDate() + '</div>' +
+        (its.length ? its.map(function(it){ return calItemHtml(it, true); }).join('') : '<div style="font-size:12px;color:#B4B4BA">Nothing scheduled</div>') + '</div>';
+    }
+    h += '</div>';
+  } else {
+    var its2 = calItemsFor(d);
+    h += its2.length ? its2.map(function(it){ return calItemHtml(it, true); }).join('') : '<div class="empty" style="padding:24px">Nothing scheduled this day.</div>';
+  }
+  // Selected calendar appointment
+  if (calPicked != null && calEvents[calPicked]) {
+    var ev = calEvents[calPicked], st = new Date(ev.start);
+    h += '<div style="margin-top:14px;border:1px solid #F5D9A0;background:#FFFBF2;border-radius:12px;padding:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><div style="font-weight:700;font-size:14px">' + esc(ev.title || '(no title)') + '</div><div style="font-size:12px;color:#6B6F76">' +
+      st.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + (ev.all_day ? ' · All day' : ' · ' + st.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + (ev.location ? ' · ' + esc(ev.location) : '') + '</div></div>' +
+      '<div style="display:flex;gap:8px"><button class="btn btn-navy" onclick="bookFromCalEvent(' + calPicked + ')">Send ride invite</button><button class="btn" style="background:#F0F0F2;color:#060D1F" onclick="calPick(null)">Close</button></div></div>';
+  }
+  // Legend and connection hint
+  h += '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:12px;font-size:11px;color:#6B6F76">' +
+    '<span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#0E9384;margin-right:4px"></span>CareVoy ride</span>' +
+    '<span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;border:1px dashed #F5A623;margin-right:4px"></span>Your calendar</span>' +
+    (calState === 'none' ? '<a href="#" onclick="showNav(\'integrations\');return false" style="color:#0E9384;font-weight:600">Connect your calendar to see appointments here</a>' : '') +
+    (calState === 'error' ? '<span style="color:#B54708">Could not load your calendar right now.</span>' : '') + '</div></div>';
+  box.innerHTML = h;
 }
 
 // ── Billing ────────────────────────────────────────────────

@@ -1,12 +1,13 @@
 'use strict';
 // Calendar Sync (add-on). Coordinators only.
 //  GET    /api/calendar/feed   -> { connected, suggestions[] }   (reads the calendar live; nothing is stored)
+//  GET    /api/calendar/feed?from=ISO&to=ISO -> { connected, events[] }   (all events in that window, max 62 days, for the calendar view)
 //  POST   /api/calendar/feed   body { ics_url }  -> saves the link after checking it works
 //  DELETE /api/calendar/feed   -> disconnects
 // Off unless CALENDAR_SYNC_ENABLED=true in Vercel.
 const { getCaller, adminClient } = require('../../lib/security');
 const { requireAddon } = require('../../lib/billing');
-const { validateFeedUrl, fetchIcs, suggestionsFromIcs } = require('../../lib/calendar');
+const { validateFeedUrl, fetchIcs, suggestionsFromIcs, eventsFromIcs } = require('../../lib/calendar');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,9 +33,15 @@ module.exports = async function handler(req, res) {
       if (error || !data) return res.status(200).json({ connected: false, suggestions: [] });
       try {
         const text = await fetchIcs(data.ics_url);
+        const q = req.query || {};
+        if (q.from && q.to) {
+          const f = new Date(q.from), t = new Date(q.to);
+          if (isNaN(f) || isNaN(t) || t <= f || t - f > 62 * 86400000) return res.status(400).json({ error: 'Invalid date range' });
+          return res.status(200).json({ connected: true, events: eventsFromIcs(text, f, t) });
+        }
         return res.status(200).json({ connected: true, suggestions: suggestionsFromIcs(text) });
       } catch (e) {
-        return res.status(200).json({ connected: true, suggestions: [], warning: e.message });
+        return res.status(200).json({ connected: true, suggestions: [], events: [], warning: e.message });
       }
     }
 
