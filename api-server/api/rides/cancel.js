@@ -116,6 +116,8 @@ module.exports = async function handler(req, res) {
       });
     } catch (e) { console.warn('audit failed (non-fatal):', e.message); }
 
+    try { await require('../../lib/alerts').notifyFacility(ride.hospital_id, 'ride_cancelled', ride); } catch (_) {}
+
     return res.status(200).json({ success: true, notified: texted });
   } catch (e) {
     console.error('rides/cancel error:', e);
