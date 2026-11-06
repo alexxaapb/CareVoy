@@ -23,6 +23,7 @@ const ADDONS = {
     blurb: 'Spot appointments on your calendar that need a ride and book them in one click.',
     price_label: null,
     price_env: 'STRIPE_PRICE_CALENDAR_SYNC',
+    free: true, // included with every plan: always unlocked, no Stripe price needed
   },
 };
 
@@ -71,8 +72,8 @@ async function loadBilling(sb, hospitalId) {
     label: ADDONS[key].label,
     blurb: ADDONS[key].blurb,
     price_label: ADDONS[key].price_label,
-    active: owned.includes(key),
-    can_buy_online: hasCustomer && !!process.env[ADDONS[key].price_env] && !owned.includes(key),
+    active: !!ADDONS[key].free || owned.includes(key),
+    can_buy_online: !ADDONS[key].free && hasCustomer && !!process.env[ADDONS[key].price_env] && !owned.includes(key),
   }));
 
   const tier = hospital.tier || 'starter';
