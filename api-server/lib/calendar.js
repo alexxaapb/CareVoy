@@ -92,4 +92,30 @@ function suggestionsFromIcs(text, now) {
   return out.filter((x) => !x.all_day).slice(0, 60);
 }
 
-module.exports = { validateFeedUrl, fetchIcs, suggestionsFromIcs, classify };
+// Every event between from and to (max 62 days), for the calendar view.
+// Titles and places only: descriptions and attendees are never returned.
+function eventsFromIcs(text, from, to) {
+  const data = ical.sync.parseICS(text);
+  const out = [];
+  for (const k of Object.keys(data)) {
+    const ev = data[k];
+    if (!ev || ev.type !== 'VEVENT') continue;
+    const insts = ical.expandRecurringEvent(ev, { from, to, includeOverrides: true, excludeExdates: true });
+    for (const i of insts) {
+      if (!i.start || i.start < from || i.start > to) continue;
+      const title = String(i.summary && i.summary.val !== undefined ? i.summary.val : i.summary || '');
+      const loc = String(ev.location && ev.location.val !== undefined ? ev.location.val : ev.location || '');
+      const cls = classify(title + ' ' + loc);
+      out.push({
+        title: title.slice(0, 120), location: loc.slice(0, 160),
+        start: i.start.toISOString(), end: i.end ? i.end.toISOString() : null,
+        all_day: !!i.datetype && i.datetype === 'date',
+        type: cls ? cls.type : null, label: cls ? cls.label : null,
+      });
+    }
+  }
+  out.sort((a, b) => a.start.localeCompare(b.start));
+  return out.slice(0, 500);
+}
+
+module.exports = { validateFeedUrl, fetchIcs, suggestionsFromIcs, eventsFromIcs, classify };
