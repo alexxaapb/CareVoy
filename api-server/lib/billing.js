@@ -106,4 +106,12 @@ async function requireAddon(caller, addonKey) {
   return { ok: !!(a && a.active) };
 }
 
-module.exports = { ADDONS, TIER_LABELS, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, requireAddon, monthRangeUTC };
+// Which EHR (and practice) a facility is connected to. Empty values mean "not connected".
+async function loadEhrConfig(hospitalId) {
+  const { data, error } = await adminClient()
+    .from('facility_billing').select('ehr_system, ehr_practice_id').eq('hospital_id', hospitalId).maybeSingle();
+  if (error || !data) return { system: null, practiceId: null };
+  return { system: data.ehr_system || null, practiceId: data.ehr_practice_id || null };
+}
+
+module.exports = { ADDONS, TIER_LABELS, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, loadEhrConfig, requireAddon, monthRangeUTC };
