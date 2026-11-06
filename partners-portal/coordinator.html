@@ -381,6 +381,7 @@
     <div class="page-sub">Connect CareVoy to the tools your team already uses</div>
     <div id="integrationsBody"><div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Loading…</div></div>
     <div id="calendarPanel" style="display:none;margin-top:20px"></div>
+    <div id="alertsPanel" style="margin-top:20px"></div>
   </div>
 
   <!-- ── BILLING ── -->
@@ -1828,9 +1829,53 @@ async function loadIntegrations() {
     box.innerHTML = h;
     var cal = b.addons.filter(function(a){ return a.key === 'calendar_sync'; })[0];
     if (cal && (cal.active || !b.enforcement_on)) loadCalendarPanel(); else document.getElementById('calendarPanel').style.display = 'none';
+    loadAlertsPanel();
   } catch (e) {
     box.innerHTML = '<div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Could not load integrations. ' + esc(e.message) + '</div>';
   }
+}
+
+// ── Alerts (Slack / Teams / email) ─────────────────────────
+async function loadAlertsPanel() {
+  var box = document.getElementById('alertsPanel');
+  try {
+    var r = await fetch(API + '/api/alerts/settings', { headers: { 'Authorization': 'Bearer ' + token } });
+    var d = await r.json();
+    if (!r.ok) { box.innerHTML = ''; return; }
+    var inp = 'class="form-input" style="width:100%"';
+    var h = '<div style="background:#fff;border:1px solid #E4E4E7;border-radius:16px;padding:20px">' +
+      '<div style="font-weight:700;font-size:16px;color:#060D1F">Alerts</div>' +
+      '<div style="font-size:13px;color:#6B6F76;margin:6px 0 14px">Get a message in Slack, Microsoft Teams or email when a ride changes. Alerts never include patient names; they say what happened and link back to CareVoy.</div>' +
+      '<div class="form-group"><label class="form-label">Slack webhook link ' + (d.slack ? '<span style="color:#007a69">· ' + esc(d.slack) + '</span>' : '') + '</label><input ' + inp + ' id="alSlack" placeholder="' + (d.slack ? 'Paste a new link to replace it' : 'https://hooks.slack.com/services/…') + '"></div>' +
+      '<div class="form-group"><label class="form-label">Microsoft Teams webhook link ' + (d.teams ? '<span style="color:#007a69">· ' + esc(d.teams) + '</span>' : '') + '</label><input ' + inp + ' id="alTeams" placeholder="' + (d.teams ? 'Paste a new link to replace it' : 'From the Teams Workflows app: “Post to a channel when a webhook request is received”') + '"></div>' +
+      '<div class="form-group"><label class="form-label">Email</label><input ' + inp + ' id="alEmail" type="email" value="' + esc(d.alert_email) + '" placeholder="alerts@yourfacility.org"></div>' +
+      '<div style="margin:8px 0 14px">' + d.available_events.map(function(e){
+        return '<label style="display:flex;gap:8px;align-items:center;font-size:13px;padding:4px 0"><input type="checkbox" class="alEvt" value="' + e.key + '"' + (d.events.indexOf(e.key) > -1 ? ' checked' : '') + '> ' + esc(e.label) + '</label>'; }).join('') + '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-navy" onclick="saveAlerts()">Save alerts</button><button class="btn btn-ghost" onclick="testAlerts()">Send a test</button></div></div>';
+    box.innerHTML = h;
+  } catch (e) { box.innerHTML = ''; }
+}
+async function saveAlerts() {
+  var body = { alert_email: document.getElementById('alEmail').value, events: Array.prototype.map.call(document.querySelectorAll('.alEvt:checked'), function(c){ return c.value; }) };
+  var sl = document.getElementById('alSlack').value.trim(), tm = document.getElementById('alTeams').value.trim();
+  if (sl) body.slack_webhook_url = sl;
+  if (tm) body.teams_webhook_url = tm;
+  try {
+    var r = await fetch(API + '/api/alerts/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+    var d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Could not save');
+    showToast('Alerts saved'); loadAlertsPanel();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+async function testAlerts() {
+  try {
+    var r = await fetch(API + '/api/alerts/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ test: true }) });
+    var d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Could not send');
+    var bits = [];
+    ['slack','teams','email'].forEach(function(k){ if (d.results[k] === true) bits.push(k + ' sent'); else if (d.results[k] === false) bits.push(k + ' failed'); });
+    showToast(bits.length ? bits.join(', ') : 'Nothing to send to yet');
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 // ── Calendar Sync ──────────────────────────────────────────

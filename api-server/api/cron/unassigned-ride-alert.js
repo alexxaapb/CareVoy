@@ -10,7 +10,7 @@ async function checkTier(now, hoursOut, columnName, label) {
   const cutoff = new Date(now.getTime() + hoursOut * 60 * 60 * 1000);
   const { data: rides, error } = await supabase
     .from('rides')
-    .select('id, patient_name, pickup_time, hospital_name')
+    .select('id, patient_name, pickup_time, hospital_name, hospital_id')
     .eq('status', 'confirmed')
     .is('nemt_partner_id', null)
     .lte('pickup_time', cutoff.toISOString())
@@ -40,6 +40,14 @@ module.exports = async function handler(req, res) {
 
     const nonEmpty = tiers.filter(t => t.rides.length > 0);
     if (!nonEmpty.length) return res.status(200).json({ success: true, alerted: 0 });
+
+    // Optional facility alerts (Slack/Teams/email) for rides still waiting on a driver. No patient details.
+    try {
+      const { notifyFacility } = require('../../lib/alerts');
+      for (const tier of nonEmpty) {
+        for (const r of tier.rides) { await notifyFacility(r.hospital_id, 'ride_unaccepted', r); }
+      }
+    } catch (_) {}
 
     if (process.env.RESEND_API_KEY) {
       const { Resend } = require('resend');
