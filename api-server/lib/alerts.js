@@ -72,13 +72,23 @@ async function sendToChannels(cfg, text) {
 }
 
 // Fire-and-forget safe: never throws, never blocks a ride update on a failed alert.
+// Sends to the facility's Slack/Teams/email alerts and to its webhook, whichever are set up.
 async function notifyFacility(hospitalId, event, ride) {
   try {
     if (!hospitalId || !EVENTS[event]) return;
-    const { data: cfg, error } = await adminClient().from('facility_alerts').select('*').eq('hospital_id', hospitalId).maybeSingle();
-    if (error || !cfg) return;
-    if (!(cfg.events || []).includes(event)) return;
-    await sendToChannels(cfg, buildText(event, ride && ride.pickup_time));
+    const sb = adminClient();
+    const [al, api] = await Promise.all([
+      sb.from('facility_alerts').select('*').eq('hospital_id', hospitalId).maybeSingle(),
+      sb.from('facility_api').select('webhook_url, webhook_secret, events').eq('hospital_id', hospitalId).maybeSingle(),
+    ]);
+    const jobs = [];
+    if (!al.error && al.data && (al.data.events || []).includes(event)) {
+      jobs.push(sendToChannels(al.data, buildText(event, ride && ride.pickup_time)));
+    }
+    if (!api.error && api.data && api.data.webhook_url && (api.data.events || []).includes(event)) {
+      jobs.push(require('./webhooks').deliver(api.data, event, Object.assign({ hospital_id: hospitalId }, ride)));
+    }
+    await Promise.all(jobs);
   } catch (e) { /* alerts must never break the main flow */ }
 }
 

@@ -118,7 +118,7 @@ module.exports = async function handler(req, res) {
       if (status === 'assigned' || status === 'completed' || status === 'cancelled') {
         try {
           const { notifyFacility } = require('../../lib/alerts');
-          const { data: ar } = await sb.from('rides').select('hospital_id, pickup_time').eq('id', ride_id).maybeSingle();
+          const { data: ar } = await sb.from('rides').select('id, hospital_id, pickup_time').eq('id', ride_id).maybeSingle();
           if (ar) await notifyFacility(ar.hospital_id, status === 'assigned' ? 'ride_accepted' : status === 'completed' ? 'ride_completed' : 'ride_cancelled', ar);
         } catch (_) {}
       }

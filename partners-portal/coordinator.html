@@ -384,6 +384,7 @@
     <div id="integrationsBody"><div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Loading…</div></div>
     <div id="calendarPanel" style="display:none;margin-top:20px"></div>
     <div id="alertsPanel" style="margin-top:20px"></div>
+    <div id="devPanel" style="margin-top:20px"></div>
   </div>
 
   <!-- ── BILLING ── -->
@@ -1876,9 +1877,73 @@ async function loadIntegrations() {
     var cal = b.addons.filter(function(a){ return a.key === 'calendar_sync'; })[0];
     if (cal && (cal.active || !b.enforcement_on)) loadCalendarPanel(); else document.getElementById('calendarPanel').style.display = 'none';
     loadAlertsPanel();
+    loadDevPanel();
   } catch (e) {
     box.innerHTML = '<div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Could not load integrations. ' + esc(e.message) + '</div>';
   }
+}
+
+// ── Developer: API key + webhook ───────────────────────────
+async function devCall(body) {
+  var r = await fetch(API + '/api/developer/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+  var d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Something went wrong');
+  return d;
+}
+function secretBox(label, value) {
+  return '<div style="background:#FFF7E6;border:1px solid #F5D9A0;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:12px;color:#7A4B00"><b>' + esc(label) + '</b> (copy it now, it will not be shown again)<div style="font-family:ui-monospace,monospace;font-size:12px;word-break:break-all;margin-top:6px;color:#060D1F;user-select:all">' + esc(value) + '</div></div>';
+}
+async function loadDevPanel(reveal) {
+  var box = document.getElementById('devPanel');
+  try {
+    var r = await fetch(API + '/api/developer/settings', { headers: { 'Authorization': 'Bearer ' + token } });
+    var d = await r.json();
+    if (!r.ok) { box.innerHTML = ''; return; }
+    var inp = 'class="form-input" style="width:100%"';
+    var h = '<div style="background:#fff;border:1px solid #E4E4E7;border-radius:16px;padding:20px">' +
+      '<div style="font-weight:700;font-size:16px;color:#060D1F">Developer: API key and webhook</div>' +
+      '<div style="font-size:13px;color:#6B6F76;margin:6px 0 14px">For your IT team. Read your rides from other systems, or have CareVoy notify a URL when a ride changes.</div>' +
+      (reveal || '') +
+      '<div style="font-weight:600;font-size:13px;margin-top:6px">API key (read-only)</div>' +
+      '<div style="font-size:12px;color:#6B6F76;margin:2px 0 8px">' + (d.has_key ? 'Active key starting <b>' + esc(d.key_prefix) + '…</b>' : 'No key yet.') + '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-navy" onclick="devCreateKey()">' + (d.has_key ? 'Replace key' : 'Create key') + '</button>' +
+      (d.has_key ? '<button class="btn btn-ghost" onclick="devRevokeKey()">Revoke</button>' : '') + '</div>' +
+      '<div style="font-size:11px;color:#6B6F76;margin-top:8px;font-family:ui-monospace,monospace;word-break:break-all">curl -H "Authorization: Bearer YOUR_KEY" "https://care-voy-api-server.vercel.app/api/v1/rides?status=completed&amp;limit=50"</div>' +
+      '<div style="font-size:11px;color:#6B6F76;margin-top:4px">Returns your facility\'s rides, including patient names. Treat the key like a password.</div>' +
+      '<div style="border-top:1px solid #F0F0F2;margin:16px 0"></div>' +
+      '<div style="font-weight:600;font-size:13px">Webhook</div>' +
+      '<div class="form-group" style="margin-top:8px"><label class="form-label">Webhook URL (https)</label><input ' + inp + ' id="whUrl" value="' + esc(d.webhook_url) + '" placeholder="https://your-system.example.com/carevoy"></div>' +
+      '<div style="margin:6px 0 12px">' + d.available_events.map(function(e){
+        return '<label style="display:flex;gap:8px;align-items:center;font-size:13px;padding:3px 0"><input type="checkbox" class="whEvt" value="' + e.key + '"' + (d.events.indexOf(e.key) > -1 ? ' checked' : '') + '> ' + esc(e.label) + '</label>'; }).join('') + '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-navy" onclick="devSaveWebhook()">Save webhook</button>' +
+      (d.webhook_url ? '<button class="btn btn-ghost" onclick="devTestWebhook()">Send a test</button><button class="btn btn-ghost" onclick="devRotateSecret()">New signing secret</button><button class="btn btn-ghost" onclick="devRemoveWebhook()">Remove</button>' : '') + '</div>' +
+      '<div style="font-size:11px;color:#6B6F76;margin-top:8px">Each message is signed: header <code>X-CareVoy-Signature: sha256=…</code> is an HMAC-SHA256 of <code>timestamp.body</code> using your signing secret (timestamp is in <code>X-CareVoy-Timestamp</code>). Messages contain ids and times only, not patient names.</div></div>';
+    box.innerHTML = h;
+  } catch (e) { box.innerHTML = ''; }
+}
+async function devCreateKey() {
+  if (!confirm('Create a new API key? Any existing key stops working.')) return;
+  try { var d = await devCall({ action: 'create_key' }); loadDevPanel(secretBox('Your new API key', d.api_key)); } catch (e) { showToast(e.message, 'error'); }
+}
+async function devRevokeKey() {
+  if (!confirm('Revoke the API key? Anything using it will stop working.')) return;
+  try { await devCall({ action: 'revoke_key' }); showToast('Key revoked'); loadDevPanel(); } catch (e) { showToast(e.message, 'error'); }
+}
+async function devSaveWebhook() {
+  try {
+    var d = await devCall({ webhook_url: document.getElementById('whUrl').value, events: Array.prototype.map.call(document.querySelectorAll('.whEvt:checked'), function(c){ return c.value; }) });
+    showToast('Webhook saved'); loadDevPanel(d.webhook_secret ? secretBox('Your webhook signing secret', d.webhook_secret) : '');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+async function devTestWebhook() {
+  try { var d = await devCall({ test: true }); showToast(d.delivered ? 'Test delivered' : 'Test failed. Check the URL and that your server replies with 200.'); } catch (e) { showToast(e.message, 'error'); }
+}
+async function devRotateSecret() {
+  if (!confirm('Make a new signing secret? The old one stops working.')) return;
+  try { var d = await devCall({ action: 'rotate_secret' }); loadDevPanel(secretBox('Your new signing secret', d.webhook_secret)); } catch (e) { showToast(e.message, 'error'); }
+}
+async function devRemoveWebhook() {
+  try { await devCall({ action: 'remove_webhook' }); showToast('Webhook removed'); loadDevPanel(); } catch (e) { showToast(e.message, 'error'); }
 }
 
 // ── Alerts (Slack / Teams / email) ─────────────────────────
