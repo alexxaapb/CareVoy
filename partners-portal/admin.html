@@ -145,6 +145,7 @@
     <button class="nav-item" onclick="showSection('patients')">All Patients</button>
     <button class="nav-item" onclick="showSection('rides')">All Rides</button>
     <button class="nav-item" onclick="showSection('facilities')">Facilities</button>
+    <button class="nav-item" onclick="showSection('usage')">Plans &amp; Usage</button>
     <button class="nav-item" onclick="showSection('partners')">NEMT Partners</button>
     <button class="nav-item" onclick="showSection('revenue')">Revenue</button>
     <button class="nav-item" onclick="showSection('settings')">Settings</button>
@@ -397,6 +398,15 @@
       <div class="th">Name</div><div class="th">City</div><div class="th">Type</div><div class="th">Status</div>
     </div>
     <div id="facilitiesFullBody"><div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading…</div></div>
+  </div>
+</div>
+
+<!-- ── PLANS & USAGE ── -->
+<div id="sec-usage" style="display:none" class="page-overlay">
+  <div class="page-title">Plans &amp; Usage</div>
+  <div class="page-sub" id="usageSub">Rides used this month against each facility's plan</div>
+  <div id="usageBody" style="background:#fff;border-radius:14px;border:1px solid #E8E4DC;margin-top:14px;overflow-x:auto">
+    <div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">Loading…</div>
   </div>
 </div>
 
@@ -1222,7 +1232,7 @@
   }
 
     location.hash = name;
-    var sections = ['overview','patients','rides','facilities','partners','revenue','settings'];
+    var sections = ['overview','patients','rides','facilities','usage','partners','revenue','settings'];
     // Update nav active state
     document.querySelectorAll('.nav-item').forEach(function(el, i) {
       el.classList.toggle('active', sections[i] === name);
@@ -1231,13 +1241,14 @@
     var overviewEl = document.getElementById('sec-overview');
     if (overviewEl) overviewEl.style.display = name === 'overview' ? 'block' : 'none';
     // Show/hide section overlays
-    ['patients','rides','facilities','partners','revenue','settings'].forEach(function(s) {
+    ['patients','rides','facilities','usage','partners','revenue','settings'].forEach(function(s) {
       var el = document.getElementById('sec-' + s);
       if (el) el.style.display = s === name ? 'block' : 'none';
     });
     // Populate revenue section with same data as overview
     // Load data when switching to the patients tab
     if (name === 'patients') { loadPatients(); }
+    if (name === 'usage') { loadUsage(); }
     
     if (name === 'revenue') {
       var t1 = document.getElementById('revThisMonth');
@@ -1269,6 +1280,36 @@
     }
     if (name === 'rides') {
       loadAllRides();
+    }
+  }
+
+  async function loadUsage() {
+    var body = document.getElementById('usageBody');
+    try {
+      var _tk = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+      var r = await fetch(API + '/api/billing/overview', { headers: { 'Authorization': 'Bearer ' + _tk } });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Could not load');
+      var rows = d.rows || [];
+      var over = rows.filter(function(x){ return x.percent != null && x.percent >= 90; }).length;
+      document.getElementById('usageSub').textContent = rows.length + ' facilities' + (over ? ' · ' + over + ' at 90% or more of their limit' : '');
+      if (!rows.length) { body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px">No facilities yet.</div>'; return; }
+      var th = 'padding:10px 14px;font-size:11px;font-weight:700;color:#6B6F76;text-transform:uppercase;letter-spacing:.05em;text-align:left';
+      var h = '<table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px"><thead><tr style="border-bottom:1px solid #E8E4DC">' +
+        '<th style="' + th + '">Facility</th><th style="' + th + '">Plan</th><th style="' + th + ';min-width:200px">Rides this month</th><th style="' + th + '">Billing</th><th style="' + th + '">Add-ons</th><th style="' + th + '">Renews</th></tr></thead><tbody>';
+      rows.forEach(function(x) {
+        var bar = x.ride_limit ?
+          '<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:7px;background:#F0F0F2;border-radius:99px;overflow:hidden"><div style="height:100%;width:' + Math.min(100, x.percent) + '%;background:' + (x.percent >= 100 ? '#D92D20' : x.percent >= 90 ? '#F5A623' : '#00C2A8') + '"></div></div><span style="font-size:12px;white-space:nowrap">' + x.rides_this_month + ' / ' + x.ride_limit + '</span></div>' :
+          '<span style="color:#9CA3AF">' + x.rides_this_month + ' (no limit set)</span>';
+        var billing = x.billing_linked ? '<span class="badge ' + ((x.subscription_status === 'active' || x.subscription_status === 'trialing') ? 'green' : (x.subscription_status ? 'red' : 'gray')) + '">&#9679; ' + esc(x.subscription_status || 'linked') + '</span>' : '<span class="badge gray">Not linked</span>';
+        var addons = (x.addons || []).map(function(a){ return a === 'ehr_sync' ? 'EHR Sync' : a === 'calendar_sync' ? 'Calendar' : a; }).join(', ') || '<span style="color:#9CA3AF">—</span>';
+        var renews = x.renews_on ? new Date(x.renews_on).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+        h += '<tr style="border-bottom:1px solid #F3F1EC"><td style="padding:12px 14px;font-weight:600">' + esc(x.name || '—') + (x.active ? '' : ' <span class="badge gray">Inactive</span>') + '</td>' +
+          '<td style="padding:12px 14px">' + esc(x.plan) + '</td><td style="padding:12px 14px">' + bar + '</td><td style="padding:12px 14px">' + billing + '</td><td style="padding:12px 14px">' + addons + '</td><td style="padding:12px 14px;color:#6B6F76">' + renews + '</td></tr>';
+      });
+      body.innerHTML = h + '</tbody></table>';
+    } catch (e) {
+      body.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-size:13px">Could not load plans and usage: ' + esc(e.message) + '</div>';
     }
   }
 
@@ -1519,7 +1560,7 @@ function signOut() {
     loadStats().then(function(){
       var l=document.getElementById('loading');if(l)l.style.display='none';
       var _hash = (location.hash || '').replace('#', '');
-      if (_hash && ['overview','patients','rides','facilities','partners','revenue','settings'].includes(_hash)) {
+      if (_hash && ['overview','patients','rides','facilities','usage','partners','revenue','settings'].includes(_hash)) {
         showSection(_hash);
       }
     }).catch(function(){var l=document.getElementById('loading');if(l)l.style.display='none';});

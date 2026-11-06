@@ -114,4 +114,4 @@ async function loadEhrConfig(hospitalId) {
   return { system: data.ehr_system || null, practiceId: data.ehr_practice_id || null };
 }
 
-module.exports = { ADDONS, TIER_LABELS, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, loadEhrConfig, requireAddon, monthRangeUTC };
+module.exports = { ADDONS, TIER_LABELS, COUNTED_STATUSES, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, loadEhrConfig, requireAddon, monthRangeUTC };
