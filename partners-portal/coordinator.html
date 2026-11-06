@@ -1863,7 +1863,7 @@ async function loadIntegrations() {
         ? '<span style="background:rgba(0,194,168,0.12);color:#007a69;font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px">Active</span>'
         : (a.can_buy_online
             ? '<button class="btn btn-navy" onclick="buyAddon(\'' + a.key + '\')">Add' + (a.price_label ? ' · ' + esc(a.price_label) : '') + '</button>'
-            : '<a class="btn btn-navy" style="text-decoration:none" href="mailto:partners@carevoy.co?subject=' + encodeURIComponent('Add ' + a.label) + '">Request this add-on</a>');
+            : '<button class="btn btn-navy" onclick="sendPlanRequest(\'Add-on request\', \'Please add ' + esc(a.label) + ' to our plan.\', this)">Request this add-on</button>');
       h += '<div style="background:#fff;border:1px solid #E4E4E7;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:26px">' + info.icon + '</div>' +
         (a.active ? '' : '<span style="font-size:11px;color:#6B6F76;font-weight:600;letter-spacing:.04em">ADD-ON</span>') + '</div>' +
@@ -2063,7 +2063,7 @@ async function loadBilling() {
       (b.subscription_status ? '<div style="font-size:12px;color:#6B6F76;margin-top:2px">Status: ' + esc(b.subscription_status) + (b.renews_on ? ' · renews ' + fmtDate(b.renews_on) : '') + '</div>' : '') + '</div>' +
       '<div style="display:flex;gap:8px;align-items:flex-start">' +
       (b.billing_set_up ? '<button class="btn btn-navy" onclick="openBillingPortal()">Manage plan &amp; payment</button>' :
-        '<a class="btn btn-navy" href="mailto:partners@carevoy.co?subject=Change%20my%20CareVoy%20plan" style="text-decoration:none">Contact us to change plan</a>') +
+        '<button class="btn btn-navy" onclick="sendPlanRequest(\'Plan change request\', \'We would like to change our CareVoy plan. Please contact us.\', this)">Contact us to change plan</button>') +
       '</div></div>';
     h += '<div style="margin-top:16px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#6B6F76"><span>Rides this month</span><span>' +
       (b.rides_this_month == null ? '—' : b.rides_this_month) + (b.ride_limit ? ' of ' + b.ride_limit : '') + '</span></div>' +
@@ -2084,7 +2084,7 @@ async function loadBilling() {
         '<div style="font-size:12px;color:#6B6F76">' + esc(a.blurb) + '</div></div>' +
         (a.active ? '<span style="background:rgba(0,194,168,0.12);color:#007a69;font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px">Active</span>' :
           a.can_buy_online ? '<button class="btn btn-navy" onclick="buyAddon(\'' + a.key + '\')">Add</button>' :
-          '<a class="btn" style="background:#F0F0F2;color:#060D1F;text-decoration:none" href="mailto:partners@carevoy.co?subject=' + encodeURIComponent('Add ' + a.label) + '">Request</a>') + '</div>';
+          '<button class="btn" style="background:#F0F0F2;color:#060D1F" onclick="sendPlanRequest(\'Add-on request\', \'Please add ' + esc(a.label) + ' to our plan.\', this)">Request</button>') + '</div>';
     });
     h += '</div>';
     box.innerHTML = h;
@@ -2099,6 +2099,21 @@ async function billingRedirect(path, body) {
     if (!r.ok || !d.url) throw new Error(d.error || 'Something went wrong');
     window.location.href = d.url;
   } catch (e) { showToast(e.message, 'error'); }
+}
+
+// Sends a plan or add-on request to CareVoy from inside the portal (no email app needed).
+async function sendPlanRequest(topic, message, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    var r = await fetch(API + '/api/feedback/feature-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ topic: topic, message: message, page: 'Billing' }) });
+    var d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Could not send');
+    if (btn) btn.textContent = 'Request sent';
+    showToast('Request sent. We will be in touch soon.');
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Try again'; }
+    showToast(e.message, 'error');
+  }
 }
 function openBillingPortal() { billingRedirect('/api/billing/portal'); }
 function buyAddon(key) { billingRedirect('/api/billing/addon-checkout', { addon: key }); }
