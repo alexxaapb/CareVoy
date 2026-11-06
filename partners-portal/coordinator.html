@@ -204,6 +204,15 @@
       </div>
     </div>
 
+    <!-- Return rides waiting on a driver -->
+    <div id="returnRideBanner" style="display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#FFF7E6;border:1px solid #F5D9A0;border-radius:14px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#7A4B00">
+      <span id="returnRideBannerText"></span>
+      <button class="btn btn-ghost" onclick="showNav('rides',document.querySelector('.nav-item[onclick*=&quot;rides&quot;]'))">View rides</button>
+    </div>
+
+    <!-- Plan usage -->
+    <div id="planUsageCard" style="display:none;background:#fff;border:1px solid #E4E4E7;border-radius:14px;padding:14px 16px;margin-bottom:14px"></div>
+
     <!-- Operational metrics -->
     <div class="stats-row">
       <div class="stat-card">
@@ -793,6 +802,19 @@ function updateStats() {
   document.getElementById('statAction').textContent = action.length;
   document.getElementById('statUpcoming').textContent = upcoming.length;
 
+  // Return rides in the next 3 days that no driver has accepted yet
+  var soon = new Date(); soon.setDate(soon.getDate() + 3);
+  var waitingReturns = allRides.filter(function(r){
+    return r.round_trip_pair_id && r.ride_type === 'post_op' && ['pending','confirmed'].includes(r.status) &&
+      r.pickup_time && new Date(r.pickup_time) >= new Date() && new Date(r.pickup_time) <= soon;
+  });
+  var rb = document.getElementById('returnRideBanner');
+  if (waitingReturns.length) {
+    document.getElementById('returnRideBannerText').textContent = waitingReturns.length + ' return ride' + (waitingReturns.length > 1 ? 's' : '') + ' in the next 3 days ' + (waitingReturns.length > 1 ? "haven't" : "hasn't") + ' been accepted by a driver yet.';
+    rb.style.display = 'flex';
+  } else { rb.style.display = 'none'; }
+  loadPlanUsage();
+
 
   if (action.length > 0) {
     document.getElementById('alertBanner').style.display = 'flex';
@@ -1235,6 +1257,7 @@ function openAddPatientModal() {
       opt.value = email;
       opt.dataset.name = r.patient_name || '';
       opt.dataset.phone = r.contact_phone || '';
+      opt.dataset.caregiver = r.caregiver_name || '';
       opt.textContent = (r.patient_name || email) + ' — ' + email;
       sel.appendChild(opt);
     });
@@ -1252,6 +1275,16 @@ function fillExistingPatient() {
   var parts = fullName.trim().split(/\s+/);
   var first = parts[0] || '';
   var last  = parts.slice(1).join(' ') || '';
+  // Previously booked by a caregiver: switch to caregiver mode and fill their details too
+  if (opt.dataset.caregiver) {
+    setBookingFor('caregiver');
+    document.getElementById('cgPatFirst').value = first;
+    document.getElementById('cgPatLast').value  = last;
+    document.getElementById('cgName').value     = opt.dataset.caregiver;
+    document.getElementById('cgEmail').value    = opt.value;
+    document.getElementById('cgPhone').value    = opt.dataset.phone || '';
+    return;
+  }
   document.getElementById('patFirstName').value = first;
   document.getElementById('patLastName').value  = last;
   document.getElementById('patEmail').value     = opt.value;
@@ -1652,6 +1685,21 @@ function showNav(name, el) {
   if (name === 'patients') { renderPatientTable(); }
   if (name === 'billing') { loadBilling(); }
   if (name === 'integrations') { loadIntegrations(); }
+}
+
+// ── Plan usage on the dashboard ────────────────────────────
+async function loadPlanUsage() {
+  var box = document.getElementById('planUsageCard');
+  try {
+    var r = await fetch(API + '/api/billing/status', { headers: { 'Authorization': 'Bearer ' + token } });
+    var b = await r.json();
+    if (!r.ok || !b.ride_limit || b.rides_this_month == null) { box.style.display = 'none'; return; }
+    var pct = Math.min(100, Math.round(b.rides_this_month / b.ride_limit * 100));
+    box.innerHTML = '<div style="display:flex;justify-content:space-between;font-size:12px;color:#6B6F76;margin-bottom:6px"><span><b style="color:#060D1F">' + esc(b.plan.label) + ' plan</b> · rides this month</span><span>' + b.rides_this_month + ' of ' + b.ride_limit +
+      ' · <a href="#billing" onclick="showNav(\'billing\',document.querySelector(\'.nav-item[onclick*=billing]\'));return false">Billing</a></span></div>' +
+      '<div style="height:8px;background:#F0F0F2;border-radius:99px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + (pct >= 90 ? '#E5484D' : '#00C2A8') + '"></div></div>';
+    box.style.display = 'block';
+  } catch (e) { box.style.display = 'none'; }
 }
 
 // ── Integrations ───────────────────────────────────────────
