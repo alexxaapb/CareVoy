@@ -333,6 +333,7 @@
       <button class="filter-btn" id="rf-active" onclick="setRidesFilter('active',this)">Assigned / In Progress</button>
       <button class="filter-btn" id="rf-completed" onclick="setRidesFilter('completed',this)">Completed</button>
       <button class="filter-btn" id="rf-cancelled" onclick="setRidesFilter('cancelled',this)">Cancelled</button>
+      <button class="filter-btn" onclick="exportRidesCSV()" style="margin-left:auto">Export CSV</button>
     </div>
 
     <div id="ridesBulkBar" class="bulk-bar">
@@ -369,6 +370,7 @@
       <div><div class="page-title">Facility Impact Report</div><div class="page-sub" id="reportSub">Monthly summary you can share with leadership</div></div>
       <div class="no-print" style="display:flex;gap:8px;align-items:center">
         <select class="form-input" id="reportMonth" onchange="renderReport()" style="width:auto"></select>
+        <button class="btn btn-ghost" onclick="exportStatementCSV()">Statement CSV</button>
         <button class="btn btn-navy" onclick="window.print()">Print / Save PDF</button>
       </div>
     </div>
@@ -1707,6 +1709,50 @@ function showNav(name, el) {
   if (name === 'billing') { loadBilling(); }
   if (name === 'integrations') { loadIntegrations(); }
   if (name === 'reports') { initReport(); }
+}
+
+// ── CSV export (opens in Excel or Google Sheets) ───────────
+function csvCell(v) {
+  var t = v == null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;   // stop spreadsheet formula injection
+  return '"' + t.replace(/"/g, '""') + '"';
+}
+function downloadCSV(filename, header, rows) {
+  var text = '﻿' + [header].concat(rows).map(function(r){ return r.map(csvCell).join(','); }).join('\r\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+  a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function rideCsvRow(r) {
+  var t = r.pickup_time ? new Date(r.pickup_time) : null;
+  return [
+    t ? t.toLocaleDateString() : '', t ? t.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : '',
+    r.patient_name || '', r.status || '', typeof rideTypeLabel === 'function' ? rideTypeLabel(r.procedure_type) : (r.procedure_type || ''),
+    r.pickup_address || '', r.dropoff_address || '', r.driver_name || '',
+    r.payment_responsibility === 'facility' ? 'Facility' : 'Self-pay',
+    (r.actual_cost || r.estimated_cost) ? parseFloat(r.actual_cost || r.estimated_cost).toFixed(2) : ''
+  ];
+}
+var RIDE_CSV_HEADER = ['Date','Time','Patient','Status','Appointment type','Pickup','Destination','Driver','Paid by','Amount'];
+function exportRidesCSV() {
+  var rides = (allRides || []).slice().sort(function(a,b){ return new Date(b.pickup_time||0) - new Date(a.pickup_time||0); });
+  if (!rides.length) return showToast('No rides to export', 'err');
+  downloadCSV('carevoy-rides-' + todayStr() + '.csv', RIDE_CSV_HEADER, rides.map(rideCsvRow));
+}
+function exportStatementCSV() {
+  var val = document.getElementById('reportMonth').value.split('-');
+  var start = new Date(+val[0], +val[1] - 1, 1), end = new Date(+val[0], +val[1], 1);
+  var rows = (allRides || []).filter(function(r){
+    var t = r.pickup_time && new Date(r.pickup_time);
+    return t && t >= start && t < end && r.status === 'completed' && r.payment_responsibility === 'facility';
+  }).sort(function(a,b){ return new Date(a.pickup_time) - new Date(b.pickup_time); });
+  if (!rows.length) return showToast('No facility-covered rides this month', 'err');
+  var total = rows.reduce(function(s,r){ return s + parseFloat(r.actual_cost || r.estimated_cost || 0); }, 0);
+  var out = rows.map(rideCsvRow);
+  out.push(['','','Total','','','','','','',total.toFixed(2)]);
+  downloadCSV('carevoy-statement-' + val[0] + '-' + val[1] + '.csv', RIDE_CSV_HEADER, out);
 }
 
 // ── Facility Impact Report ─────────────────────────────────
