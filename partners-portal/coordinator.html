@@ -1074,6 +1074,22 @@ async function resendReceipt(rideId) {
   } catch(e) { showToast('Could not resend', 'err'); }
 }
 
+async function downloadReceipt(rideId) {
+  try {
+    var resp = await fetch(API + '/api/receipts/generate-pdf?rideId=' + encodeURIComponent(rideId), { headers: H });
+    if (!resp.ok) { showToast('Could not load receipt', 'err'); return; }
+    var blob = await resp.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'carevoy-receipt-' + rideId + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e) { showToast('Could not download receipt', 'err'); }
+}
+
 function exportCoordCSV() {
   if (!allRides || !allRides.length) { alert('No data to export'); return; }
   var fields = ['patient_name','contact_email','contact_phone','procedure_type','status','payment_responsibility','pickup_time','pickup_address','hospital_name'];
@@ -1696,6 +1712,7 @@ function openCVRideDetail(ride, opts) {
     if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();openRescheduleModal(\''+r.id+'\')">Reschedule</button>';
     if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();cancelRide(event,\''+r.id+'\')">Cancel Ride</button>';
     if (r.status !== 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();deleteRide(event,\''+r.id+'\')">Delete Permanently</button>';
+    if (r.status === 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="downloadReceipt(\''+r.id+'\')">Download Receipt (PDF)</button>';
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-teal" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();resendReceipt(\''+r.id+'\')">Resend Receipt</button>';
   }
   document.getElementById('cvRDMTitle').innerHTML = escStr(r.patient_name||'Ride Details')+(r.status?' <span style="vertical-align:middle">'+mkBadge(r.status)+'</span>':'');
