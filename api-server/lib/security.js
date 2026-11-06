@@ -46,6 +46,24 @@ function internalHeaders(extra) {
   return Object.assign({ 'x-internal-secret': secret }, extra || {});
 }
 
+// Turns a phone number typed any way ("(614) 555-0100", "614-555-0100",
+// "1 614 555 0100", "+16145550100") into "+1XXXXXXXXXX". A number that starts
+// with "+" and a country code other than 1 is kept as given. Returns '' when
+// the number cannot be texted, so callers can skip it or return an error.
+function toE164(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return '';
+  const digits = s.replace(/\D/g, '');
+  if (s.charAt(0) === '+' && !digits.startsWith('1')) {
+    return digits.length >= 8 && digits.length <= 15 ? '+' + digits : '';
+  }
+  let national = digits;
+  if (national.length === 11 && national.charAt(0) === '1') national = national.slice(1);
+  if (national.length !== 10) return '';
+  if (/^[01]/.test(national)) return '';
+  return '+1' + national;
+}
+
 function bearerToken(req) {
   const h = (req.headers && req.headers['authorization']) || '';
   return h.replace(/^Bearer\s+/i, '').trim();
@@ -98,5 +116,5 @@ function escHtml(s) {
 
 module.exports = {
   adminClient, safeEqual, isInternal, internalHeaders, getCaller,
-  canAccessRide, deny, escHtml, bearerToken,
+  canAccessRide, deny, escHtml, bearerToken, toE164,
 };

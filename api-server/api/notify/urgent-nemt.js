@@ -1,4 +1,4 @@
-const { isInternal } = require('../../lib/security');
+const { isInternal, toE164 } = require('../../lib/security');
 // POST /api/notify/urgent-nemt
 // SMS the NEMT dispatcher about a short-notice ride needing acceptance.
 module.exports = async function handler(req, res) {
@@ -13,6 +13,8 @@ module.exports = async function handler(req, res) {
   try {
     const { phone, patient_name, facility, state, when, ride_id } = req.body || {};
     if (!phone) return res.status(400).json({ error: 'Missing phone' });
+    const toPhone = toE164(phone);
+    if (!toPhone) return res.status(400).json({ error: 'Invalid phone number. Use a 10-digit US number.' });
 
     const msg = 'CareVoy URGENT: ride needed for ' + (patient_name || 'a patient') +
       ' to ' + (facility || 'a facility') + ' (' + (state || '') + ') on ' + (when || 'soon') +
@@ -24,7 +26,7 @@ module.exports = async function handler(req, res) {
         const tw = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + process.env.TWILIO_ACCOUNT_SID + '/Messages.json', {
           method: 'POST',
           headers: { 'Authorization': 'Basic ' + Buffer.from(process.env.TWILIO_ACCOUNT_SID + ':' + process.env.TWILIO_AUTH_TOKEN).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ To: phone, From: process.env.TWILIO_PHONE_FROM, Body: msg }).toString()
+          body: new URLSearchParams({ To: toPhone, From: process.env.TWILIO_PHONE_FROM, Body: msg }).toString()
         });
         if (tw.ok) sent = true;
       } catch (e) { console.warn('urgent NEMT SMS failed:', e.message); }

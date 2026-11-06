@@ -1,4 +1,4 @@
-const { isInternal } = require('../../lib/security');
+const { isInternal, toE164 } = require('../../lib/security');
 // POST /api/notify/ride-assigned
 // Called by the DB trigger when a ride becomes 'assigned'. Sends the patient
 // an SMS (via Twilio) and/or email (via Resend) so they know a driver accepted
@@ -29,13 +29,14 @@ module.exports = async function handler(req, res) {
 
     let sent = false;
 
-    if (channel === 'sms' && phone) {
+    const toPhone = channel === 'sms' ? toE164(phone) : '';
+    if (channel === 'sms' && toPhone) {
       if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_FROM) {
         try {
           const tw = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + process.env.TWILIO_ACCOUNT_SID + '/Messages.json', {
             method: 'POST',
             headers: { 'Authorization': 'Basic ' + Buffer.from(process.env.TWILIO_ACCOUNT_SID + ':' + process.env.TWILIO_AUTH_TOKEN).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ To: phone, From: process.env.TWILIO_PHONE_FROM, Body: msg }).toString()
+            body: new URLSearchParams({ To: toPhone, From: process.env.TWILIO_PHONE_FROM, Body: msg }).toString()
           });
           if (tw.ok) sent = true;
         } catch (e) { console.warn('assign SMS failed:', e.message); }

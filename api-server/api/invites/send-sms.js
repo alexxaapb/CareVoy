@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
-const { isInternal, getCaller } = require('../../lib/security');
+const { isInternal, getCaller, toE164 } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -24,9 +24,8 @@ module.exports = async function handler(req, res) {
     }
     const { phone, patient_name, facility, ride_id } = req.body || {};
     if (!phone) return res.status(400).json({ error: 'Missing phone' });
-    var digits = String(phone).replace(/\D/g, '');
-    if (digits.length === 10) digits = '1' + digits;
-    var normalizedPhone = '+' + digits;
+    var normalizedPhone = toE164(phone);
+    if (!normalizedPhone) return res.status(400).json({ error: 'Invalid phone number. Use a 10-digit US number.' });
 
     const appLink = 'https://apps.apple.com/us/app/carevoy/id6768714735';
     const message = (facility || 'Your care team') + ' has scheduled an appointment for ' + (patient_name || 'you') + '. Download CareVoy to book your ride and get your HSA/FSA receipt: ' + appLink;
