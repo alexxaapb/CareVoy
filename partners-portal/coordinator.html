@@ -2072,8 +2072,31 @@ function openCVRideDetail(ride, opts) {
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-teal" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();resendReceipt(\''+r.id+'\')">Resend Receipt</button>';
   }
   document.getElementById('cvRDMTitle').innerHTML = escStr(r.patient_name||'Ride Details')+(r.status?' <span style="vertical-align:middle">'+mkBadge(r.status)+'</span>':'');
-  document.getElementById('cvRDMBody').innerHTML = infoHTML+tlHTML+fareHTML+(ctaHTML?'<div style="margin-top:4px">'+ctaHTML+'</div>':'');
+  var summaryHTML = '';
+  if (r.status === 'completed') {
+    var when = r.completed_at ? new Date(r.completed_at) : (r.pickup_time ? new Date(r.pickup_time) : null);
+    var proc2 = (r.procedure_type||'').replace(/_/g,' ');
+    var amt = parseFloat(r.actual_cost || r.estimated_cost || 0);
+    var payTxt = r.payment_responsibility === 'facility' ? 'covered by the facility' : 'paid by the patient';
+    var text = (r.patient_name || 'Patient') + ' completed a ' + (proc2 || 'medical') + ' ride' +
+      (when ? ' on ' + when.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'}) + ' at ' + when.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : '') + '.' +
+      (r.pickup_address && r.dropoff_address ? ' Route: ' + r.pickup_address + ' to ' + r.dropoff_address + '.' : '') +
+      (r.driver_name ? ' Driver: ' + r.driver_name + '.' : '') +
+      (amt > 0 ? ' Fare: $' + amt.toFixed(2) + ', ' + payTxt + '.' : '');
+    window._lastRideSummary = text;
+    summaryHTML = '<div style="margin:16px 0 4px;padding:14px 16px;background:rgba(0,194,168,0.08);border:1px solid rgba(0,194,168,0.25);border-radius:12px">' +
+      '<div style="font-size:11px;font-weight:700;color:#007a69;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Ride summary</div>' +
+      '<div style="font-size:13px;color:#060D1F;line-height:1.5">' + escStr(text) + '</div>' +
+      '<button class="btn btn-ghost" style="margin-top:10px" onclick="copyRideSummary(this)">Copy summary</button></div>';
+  }
+  document.getElementById('cvRDMBody').innerHTML = summaryHTML+infoHTML+tlHTML+fareHTML+(ctaHTML?'<div style="margin-top:4px">'+ctaHTML+'</div>':'');
   document.getElementById('cvRideDetailModal').style.display = 'flex';
+}
+function copyRideSummary(btn) {
+  var t = window._lastRideSummary || '';
+  function done() { btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = 'Copy summary'; }, 1500); }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done, function(){ showToast('Could not copy', 'err'); }); }
+  else { showToast('Could not copy', 'err'); }
 }
 function closeCVRideDetail() { document.getElementById('cvRideDetailModal').style.display = 'none'; }
 var _rescheduleRideId = null;
