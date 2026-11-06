@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
-const { isInternal, getCaller, canAccessRide, bearerToken } = require('../../lib/security');
+const { isInternal, getCaller, canAccessRide, bearerToken, toE164 } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -28,10 +28,7 @@ module.exports = async function handler(req, res) {
       if (!canAccessRide(caller, ride)) return res.status(403).json({ error: 'Forbidden' });
     }
 
-    var rawPhone = ride.contact_phone || '';
-    var digits = String(rawPhone).replace(/\D/g, '');
-    if (digits.length === 10) digits = '1' + digits;
-    const contactPhone = digits ? '+' + digits : '';
+    const contactPhone = toE164(ride.contact_phone);
     const patientName  = ride.patient_name || 'your patient';
     const facilityName = (ride.hospitals && ride.hospitals.name) || 'your facility';
     const apptDate     = ride.pickup_time ? new Date(ride.pickup_time).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'your upcoming appointment';

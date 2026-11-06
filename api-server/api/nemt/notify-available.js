@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
+const { toE164 } = require('../../lib/security');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -32,10 +33,7 @@ module.exports = async function handler(req, res) {
     let sentCount = 0;
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_FROM) {
       for (const partner of matching) {
-        let rawPhone = partner.contact_phone || '';
-        let digits = String(rawPhone).replace(/\D/g, '');
-        if (digits.length === 10) digits = '1' + digits;
-        const toPhone = digits ? '+' + digits : '';
+        const toPhone = toE164(partner.contact_phone);
         if (!toPhone) continue;
         try {
           const twilioRes = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + process.env.TWILIO_ACCOUNT_SID + '/Messages.json', {
