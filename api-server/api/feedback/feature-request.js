@@ -25,6 +25,8 @@ module.exports = async function handler(req, res) {
 
     const message = String((req.body && req.body.message) || '').trim();
     const page = String((req.body && req.body.page) || '').slice(0, 60);
+    // Optional label so plan and add-on requests are easy to tell apart in the inbox.
+    const topic = String((req.body && req.body.topic) || '').replace(/[\r\n]/g, ' ').slice(0, 60) || 'Feature request';
     if (message.length < 5) return res.status(400).json({ error: 'Please write a few words about the feature.' });
     if (message.length > MAX_LEN) return res.status(400).json({ error: 'Please keep it under ' + MAX_LEN + ' characters.' });
 
@@ -63,7 +65,7 @@ module.exports = async function handler(req, res) {
     let sent = false;
     if (process.env.RESEND_API_KEY) {
       const html = '<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px">' +
-        '<h2 style="color:#050D1F;font-size:18px;margin:0 0 12px">New feature request</h2>' +
+        '<h2 style="color:#050D1F;font-size:18px;margin:0 0 12px">' + escHtml(topic) + '</h2>' +
         '<p style="color:#374151;font-size:14px;margin:0 0 4px"><strong>From:</strong> ' + escHtml(email) + ' (' + escHtml(role) + (org ? ', ' + escHtml(org) : '') + ')</p>' +
         '<p style="color:#374151;font-size:14px;margin:0 0 16px"><strong>Page:</strong> ' + escHtml(page || 'not given') + '</p>' +
         '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:16px;color:#050D1F;font-size:14px;line-height:1.6;white-space:pre-wrap">' + escHtml(message) + '</div>' +
@@ -71,7 +73,7 @@ module.exports = async function handler(req, res) {
       const body = {
         from: 'CareVoy Portal <notifications@carevoy.co>',
         to: ['partners@carevoy.co'],
-        subject: 'Feature request' + (org ? ' from ' + org : ''),
+        subject: topic + (org ? ' from ' + org : ''),
         html,
       };
       if (email) body.reply_to = email;
