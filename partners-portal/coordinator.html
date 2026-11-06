@@ -143,6 +143,7 @@
     <button class="nav-item" onclick="showNav('rides',this)">Rides</button>
     <button class="nav-item" onclick="showNav('alerts',this)">Alerts <span id="alertNavBadge" style="display:none;background:#060D1F;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:4px"></span></button>
     <button class="nav-item" onclick="showNav('settings',this)">Settings</button>
+    <button class="nav-item" onclick="openFeatureBox()">Request a feature</button>
   </nav>
   <div style="padding:14px 10px;border-top:1px solid rgba(255,255,255,0.07)">
     <div id="sidebarFacility" style="color:#6B7280;font-size:11px;padding:4px 12px;line-height:1.4"></div>
@@ -1830,5 +1831,40 @@ async function submitReschedule() {
     </div>
   </div>
 </div>
+
+<!-- ── REQUEST A FEATURE ── -->
+<div id="featureBox" style="display:none;position:fixed;inset:0;background:rgba(6,13,31,0.45);z-index:300;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeFeatureBox()">
+  <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(6,13,31,0.25)">
+    <div style="font-size:16px;font-weight:700;color:#060D1F;margin-bottom:4px">Request a feature</div>
+    <div style="font-size:13px;color:#6B7280;margin-bottom:14px">Tell us what would make CareVoy work better for you. We read every request.</div>
+    <textarea id="featureText" maxlength="2000" rows="5" placeholder="Example: I'd like to see all of next week's rides on one page." style="width:100%;box-sizing:border-box;border:1px solid #E2E8F0;border-radius:10px;padding:12px;font-size:13px;font-family:inherit;resize:vertical;color:#060D1F"></textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+      <button type="button" onclick="closeFeatureBox()" style="padding:10px 16px;border-radius:10px;border:1px solid #E2E8F0;background:none;color:#060D1F;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+      <button type="button" id="featureSend" onclick="sendFeatureRequest()" style="padding:10px 18px;border-radius:10px;border:none;background:#060D1F;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Send</button>
+    </div>
+  </div>
+</div>
+<script>
+function openFeatureBox() { var b = document.getElementById('featureBox'); b.style.display = 'flex'; document.getElementById('featureText').focus(); }
+function closeFeatureBox() { document.getElementById('featureBox').style.display = 'none'; }
+async function sendFeatureRequest() {
+  var text = document.getElementById('featureText').value.trim();
+  if (text.length < 5) { showToast('Please write a few words first', 'err'); return; }
+  var btn = document.getElementById('featureSend');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    var resp = await fetch(API + '/api/feedback/feature-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ message: text, page: PAGE_NAME })
+    });
+    var out = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok) { showToast(out.error || 'Could not send', 'err'); }
+    else { document.getElementById('featureText').value = ''; closeFeatureBox(); showToast('Thanks! Your request was sent.', 'ok'); }
+  } catch (e) { showToast('Could not send. Please email partners@carevoy.co', 'err'); }
+  btn.disabled = false; btn.textContent = 'Send';
+}
+var PAGE_NAME = 'coordinator';
+</script>
 </body>
 </html>
