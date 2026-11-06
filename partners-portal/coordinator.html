@@ -335,6 +335,7 @@
     <div class="page-title">Integrations</div>
     <div class="page-sub">Connect CareVoy to the tools your team already uses</div>
     <div id="integrationsBody"><div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Loading…</div></div>
+    <div id="calendarPanel" style="display:none;margin-top:20px"></div>
   </div>
 
   <!-- ── BILLING ── -->
@@ -1660,9 +1661,67 @@ async function loadIntegrations() {
     });
     h += '</div>';
     box.innerHTML = h;
+    var cal = b.addons.filter(function(a){ return a.key === 'calendar_sync'; })[0];
+    if (cal && (cal.active || !b.enforcement_on)) loadCalendarPanel(); else document.getElementById('calendarPanel').style.display = 'none';
   } catch (e) {
     box.innerHTML = '<div class="empty" style="background:#fff;border-radius:16px;border:1px solid #E4E4E7">Could not load integrations. ' + esc(e.message) + '</div>';
   }
+}
+
+// ── Calendar Sync ──────────────────────────────────────────
+var _calSug = [];
+async function loadCalendarPanel() {
+  var box = document.getElementById('calendarPanel');
+  try {
+    var r = await fetch(API + '/api/calendar/feed', { headers: { 'Authorization': 'Bearer ' + token } });
+    var d = await r.json();
+    if (r.status === 503 || r.status === 402) { box.style.display = 'none'; return; }   // not turned on / not purchased: stay hidden
+    if (!r.ok) throw new Error(d.error || 'Could not load');
+    var card = 'background:#fff;border:1px solid #E4E4E7;border-radius:16px;padding:20px';
+    var h = '<div style="' + card + '"><div style="font-weight:700;font-size:16px;color:#060D1F">Calendar Sync</div>';
+    if (!d.connected) {
+      h += '<div style="font-size:13px;color:#6B6F76;margin:6px 0 12px">Paste your calendar\'s private link. In Google Calendar: Settings → your calendar → <b>Secret address in iCal format</b>. In Outlook: Publish calendar → ICS link. CareVoy only reads it and does not store your events.</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap"><input class="form-input" id="calUrl" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" style="flex:1;min-width:240px">' +
+        '<button class="btn btn-navy" onclick="connectCalendar()">Connect</button></div>';
+    } else {
+      _calSug = d.suggestions || [];
+      h += '<div style="font-size:13px;color:#6B6F76;margin:6px 0 12px">Appointments in the next 14 days that usually need a ride. <a href="#" onclick="disconnectCalendar();return false">Disconnect</a></div>';
+      if (d.warning) h += '<div style="font-size:12px;color:#B54708;margin-bottom:10px">' + esc(d.warning) + '</div>';
+      if (!_calSug.length) h += '<div class="empty" style="padding:16px">No ride-type appointments found.</div>';
+      _calSug.forEach(function(x, i) {
+        var dt = new Date(x.start);
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #F0F0F2;flex-wrap:wrap">' +
+          '<div><div style="font-weight:600;font-size:13px">' + esc(x.title) + '</div><div style="font-size:12px;color:#6B6F76">' +
+          dt.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}) + ' · ' + dt.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}) +
+          ' · ' + esc(x.label) + (x.location ? ' · ' + esc(x.location) : '') + '</div></div>' +
+          '<button class="btn btn-navy" onclick="bookFromCalendar(' + i + ')">Send ride invite</button></div>';
+      });
+    }
+    h += '</div>';
+    box.innerHTML = h; box.style.display = 'block';
+  } catch (e) { box.style.display = 'none'; }
+}
+async function connectCalendar() {
+  var url = (document.getElementById('calUrl').value || '').trim();
+  if (!url) return showToast('Paste your calendar link first', 'error');
+  try {
+    var r = await fetch(API + '/api/calendar/feed', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ ics_url: url }) });
+    var d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Could not connect');
+    showToast('Calendar connected'); loadCalendarPanel();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+async function disconnectCalendar() {
+  try { await fetch(API + '/api/calendar/feed', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); } catch (e) {}
+  loadCalendarPanel();
+}
+function bookFromCalendar(i) {
+  var x = _calSug[i]; if (!x) return;
+  openAddPatientModal();
+  var dt = new Date(x.start);
+  document.getElementById('apptDate').value = dt.getFullYear() + '-' + pad(dt.getMonth()+1) + '-' + pad(dt.getDate());
+  document.getElementById('apptTime').value = pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+  var t = document.getElementById('apptType'); if (t) { t.value = x.type; if (typeof toggleRecurringOption === 'function') toggleRecurringOption(); }
 }
 
 // ── Billing ────────────────────────────────────────────────
