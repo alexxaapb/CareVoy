@@ -10,7 +10,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { ride_id, status, driver_name, driver_phone, action } = req.body;
+    let { ride_id, status, driver_name, driver_phone, action, resend_only } = req.body;
+    const resendOnly = resend_only === true;
     if (!ride_id) return res.status(400).json({ error: 'Missing ride_id' });
 
     const authHeader = req.headers['authorization'] || '';
@@ -42,6 +43,16 @@ module.exports = async function handler(req, res) {
       const { error } = await sb.from('rides').delete().eq('id', ride_id);
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json({ success: true, action: 'deleted' });
+    }
+
+    // Resend Receipt: only re-send the email for a ride that is already completed.
+    // Must NOT touch the ride (completion time, fare, payment) or charge anything again.
+    if (resendOnly) {
+      const { data: cur } = await sb.from('rides').select('status').eq('id', ride_id).maybeSingle();
+      if (!cur || cur.status !== 'completed') {
+        return res.status(400).json({ error: 'Receipts can only be resent for completed rides.' });
+      }
+      status = 'resend';
     }
 
     // Build update payload
@@ -100,11 +111,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const { error } = await sb.from('rides').update(update).eq('id', ride_id);
-    if (error) return res.status(500).json({ error: error.message });
+    if (!resendOnly) {
+      const { error } = await sb.from('rides').update(update).eq('id', ride_id);
+      if (error) return res.status(500).json({ error: error.message });
+    }
 
-    // On completion, generate branded PDF receipt and send email with attachment
-    if (status === 'completed') {
+    // On completion (or a resend), generate branded PDF receipt and send email with attachment
+    if (status === 'completed' || resendOnly) {
       try {
         const { data: ride } = await sb.from('rides').select('*').eq('id', ride_id).single();
 
