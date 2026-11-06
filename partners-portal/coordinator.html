@@ -1064,6 +1064,26 @@ async function deleteRide(evt, rideId) {
   } catch(e) { showToast('Could not remove: ' + e.message, 'err'); }
 }
 
+// A ride with a driver assigned can be cancelled until 2 hours before pickup.
+var CANCEL_CUTOFF_MS = 2 * 60 * 60 * 1000;
+function canCancelAssigned(r) {
+  if (!r || r.status !== 'assigned' || !r.pickup_time) return false;
+  return new Date(r.pickup_time).getTime() - Date.now() >= CANCEL_CUTOFF_MS;
+}
+async function cancelAssignedRide(rideId) {
+  if (!confirm('Cancel this ride? The driver and transport company will be notified.')) return;
+  try {
+    var resp = await fetch(API + '/api/rides/cancel', {
+      method: 'POST', headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ride_id: rideId })
+    });
+    var out = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok) { showToast(out.error || 'Could not cancel ride', 'err'); return; }
+    showToast('Ride cancelled. Driver notified.', 'ok');
+    await loadRides();
+  } catch(e) { showToast('Could not cancel ride', 'err'); }
+}
+
 async function resendReceipt(rideId) {
   try {
     var resp = await fetch(API + '/api/rides/update-status', {
@@ -1711,6 +1731,7 @@ function openCVRideDetail(ride, opts) {
     if (['invited','reminder_sent','no_response'].includes(r.status)) ctaHTML += '<button class="btn btn-navy" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();sendReminder(event,\''+r.id+'\')">Send Reminder</button>';
     if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();openRescheduleModal(\''+r.id+'\')">Reschedule</button>';
     if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();cancelRide(event,\''+r.id+'\')">Cancel Ride</button>';
+    if (canCancelAssigned(r)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();cancelAssignedRide(\''+r.id+'\')">Cancel Ride (driver notified)</button>';
     if (r.status !== 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();deleteRide(event,\''+r.id+'\')">Delete Permanently</button>';
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="downloadReceipt(\''+r.id+'\')">Download Receipt (PDF)</button>';
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-teal" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();resendReceipt(\''+r.id+'\')">Resend Receipt</button>';
