@@ -847,9 +847,16 @@
     var counts = {};
     (list || []).forEach(function(p){ stateKeys(kind, p).forEach(function(k){ counts[k] = (counts[k]||0) + 1; }); });
     var keys = Object.keys(counts).sort();
-    if (!keys.length) { box.innerHTML = ''; return; }
+    var total = (list || []).length;
+    if (!total) { box.innerHTML = ''; return; }
     var sel = _stateSel[kind];
     var h = '<div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">By state' + (kind === 'nemt' ? ' (states they serve)' : '') + '</div><div style="display:flex;flex-wrap:wrap;gap:12px">';
+    // Overall total first (a partner serving several states counts once here)
+    var allOn = sel === '__ALL__';
+    h += '<button type="button" onclick="pickState(\'' + kind + '\',\'__ALL__\')" style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">' +
+      '<span style="width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;border:2px solid #00C2A8;box-sizing:border-box;' +
+      (allOn ? 'background:#00C2A8;color:#050D1F;box-shadow:0 0 0 3px rgba(0,194,168,.3)' : 'background:#fff;color:#050D1F') + '">' + total + '</span>' +
+      '<span style="font-size:11px;font-weight:700;color:#050D1F">All</span></button>';
     keys.forEach(function(k) {
       var on = sel === k;
       h += '<button type="button" onclick="pickState(\'' + kind + '\',\'' + esc(k) + '\')" style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">' +
@@ -859,7 +866,7 @@
     });
     h += '</div><div id="' + kind + 'StateList"></div>';
     box.innerHTML = h;
-    if (sel && counts[sel]) renderStateList(kind, sel); else _stateSel[kind] = null;
+    if (sel && (sel === '__ALL__' || counts[sel])) renderStateList(kind, sel); else _stateSel[kind] = null;
   }
   function pickState(kind, k) {
     _stateSel[kind] = _stateSel[kind] === k ? null : k;
@@ -871,7 +878,7 @@
     if (!el) return;
     var rows = '';
     list.forEach(function(p, i) {
-      if (stateKeys(kind, p).indexOf(k) < 0) return;
+      if (k !== '__ALL__' && stateKeys(kind, p).indexOf(k) < 0) return;
       var it = p.intake_data || {};
       var name = kind === 'fac' ? p.name : p.company_name;
       var phone = it.contact_phone || p.contact_phone || '';
@@ -883,7 +890,7 @@
         '<div style="color:#6B7280">' + esc(phone || '—') + '</div>' +
         '<div>' + (p.active ? '<span class="badge green">Active</span>' : '<span class="badge gray">Inactive</span>') + '</div></div>';
     });
-    el.innerHTML = '<div style="background:#fff;border:1px solid #E8E4DC;border-radius:14px;margin-top:14px;overflow-x:auto"><div style="padding:12px 16px;font-weight:700;color:#050D1F;font-size:14px">' + esc(k) + ' · click a row for documents and everything they submitted</div>' + rows + '</div>';
+    el.innerHTML = '<div style="background:#fff;border:1px solid #E8E4DC;border-radius:14px;margin-top:14px;overflow-x:auto"><div style="padding:12px 16px;font-weight:700;color:#050D1F;font-size:14px">' + (k === '__ALL__' ? 'All' : esc(k)) + ' · click a row for documents and everything they submitted</div>' + rows + '</div>';
   }
   window._allFacilities = [];
   window._selectedFacilityIds = window._selectedFacilityIds || new Set();
