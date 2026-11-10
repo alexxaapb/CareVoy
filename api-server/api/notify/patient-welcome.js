@@ -1,13 +1,20 @@
-const { escHtml } = require('../../lib/security');
+const { escHtml, getCaller, adminClient } = require('../../lib/security');
+const { limited, record } = require('../../lib/ratelimit');
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');
   if(req.method==='OPTIONS') return res.status(200).end();
   if(req.method!=='POST') return res.status(405).json({error:'Method not allowed'});
   try {
-    const {name, email} = req.body;
-    if(!email) return res.status(400).json({error:'Missing email'});
+    // Only the signed-in person can trigger their own welcome email (never an arbitrary address),
+    // and only once a day.
+    const caller = await getCaller(req);
+    if(!caller || !caller.user.email) return res.status(401).json({error:'Please sign in'});
+    const {name} = req.body || {};
+    const email = caller.user.email;
+    const sb = adminClient();
+    if(await limited(sb, caller.user.id, 'rate.patient_welcome', 2, 86400000)) return res.status(429).json({error:'Already sent'});
     const firstName = (name||'there').split(' ')[0];
     const {Resend} = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
@@ -38,7 +45,8 @@ module.exports = async function handler(req, res) {
         </div>
       </div>`
     });
-    if(error) return res.status(500).json({error: error.message});
+    if(error) return res.status(500).json({error: 'Could not send the email'});
+    await record(sb, caller.user.id, 'patient', 'rate.patient_welcome');
     return res.status(200).json({success:true, email_sent:true});
-  } catch(e) { return res.status(500).json({error:e.message}); }
+  } catch(e) { return res.status(500).json({error:'Could not send the email'}); }
 };

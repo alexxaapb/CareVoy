@@ -1,18 +1,44 @@
+// POST /api/invites/send-patient-email   body: { email, patient_name, facility, city }
+// Logged-in coordinators and admins only. Everything inserted into the email is escaped.
+// Limit: 100 invite emails per person per 24 hours.
+const { getCaller, escHtml, adminClient } = require('../../lib/security');
+const { limited, record } = require('../../lib/ratelimit');
+
+const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { email, patient_name, facility, city } = req.body;
-    if (!email) return res.status(400).json({ error: 'Missing email' });
+    const caller = await getCaller(req);
+    if (!caller) return res.status(401).json({ error: 'Please sign in again' });
+    if (!caller.isAdmin && !caller.coordinator) return res.status(403).json({ error: 'Not allowed' });
+
+    const body = req.body || {};
+    const email = String(body.email || '').trim();
+    if (!email || email.length > 254 || !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Missing or invalid email' });
+
+    const sb = adminClient();
+    if (await limited(sb, caller.user.id, 'rate.patient_invite_email', 100, 86400000)) {
+      return res.status(429).json({ error: 'Daily invite email limit reached' });
+    }
+
+    // Use the coordinator's own facility name from the database when there is one.
+    let facility = String(body.facility || '').slice(0, 120);
+    let city = String(body.city || '').slice(0, 80);
+    if (caller.coordinator && caller.coordinator.hospital_id) {
+      const { data: h } = await sb.from('hospitals').select('name, city').eq('id', caller.coordinator.hospital_id).maybeSingle();
+      if (h && h.name) { facility = h.name; city = h.city || city; }
+    }
 
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const firstName = (patient_name || 'there').split(' ')[0];
-    const facilityDisplay = [facility, city].filter(Boolean).join(', ');
+    const firstName = escHtml(String(body.patient_name || 'there').split(' ')[0].slice(0, 60));
+    const facilityDisplay = escHtml([facility, city].filter(Boolean).join(', '));
 
     const { error } = await resend.emails.send({
       from: 'CareVoy <notifications@carevoy.co>',
@@ -43,10 +69,11 @@ module.exports = async function handler(req, res) {
       </div>`
     });
 
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) return res.status(500).json({ error: 'Could not send the email' });
+    await record(sb, caller.user.id, caller.isAdmin ? 'admin' : 'coordinator', 'rate.patient_invite_email');
     return res.status(200).json({ success: true, email_sent: true });
-  } catch(e) {
+  } catch (e) {
     console.error('Patient invite email error:', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: 'Could not send the email' });
   }
 };

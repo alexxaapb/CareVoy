@@ -476,7 +476,7 @@ async function doSignup() {
   currentUser = data.user;
   await sb.from('patients').upsert({ id: currentUser.id, full_name: name, email: email, phone: phone || null, onboarding_complete: true }, { onConflict: 'id' });
   await claimInvitedRides(email, currentUser.id);
-  try { await fetch(API + '/api/notify/patient-welcome', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email }) }); } catch(e) {}
+  try { const ws = await sb.auth.getSession(); const tk = ws && ws.data && ws.data.session ? ws.data.session.access_token : ''; if (tk) await fetch(API + '/api/notify/patient-welcome', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk}, body: JSON.stringify({ name }) }); } catch(e) {}
   const claimed = await getRides(email, currentUser.id);
   document.getElementById('welcomeMsg').textContent = claimed.length > 0
     ? `Welcome, ${name.split(' ')[0]}! You have ${claimed.length} ride${claimed.length>1?'s':''} waiting for you.`
@@ -1609,25 +1609,28 @@ function askTopic(btn) {
   if (inp) { inp.value = q; sendChat(); }
 }
 
+function escChat(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 async function sendChat() {
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
   const msgs = document.getElementById('chatMessages');
-  msgs.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+  msgs.innerHTML += `<div class="chat-msg user">${escChat(msg)}</div>`;
   msgs.innerHTML += `<div class="chat-msg ai typing" id="typingMsg">Thinking…</div>`;
   msgs.scrollTop = msgs.scrollHeight;
   try {
+    const cs = await sb.auth.getSession();
+    const ctk = cs && cs.data && cs.data.session ? cs.data.session.access_token : '';
     const res  = await fetch(API + '/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ctk },
       body: JSON.stringify({ message: msg, context: 'patient' })
     });
     const data = await res.json();
     const reply = data.reply || 'I was unable to get a response. For further assistance email support@carevoy.co and someone will follow up within 48 business hours.';
     document.getElementById('typingMsg').remove();
-    msgs.innerHTML += `<div class="chat-msg ai">${reply}</div>`;
+    msgs.innerHTML += `<div class="chat-msg ai">${escChat(reply)}</div>`;
   } catch(e) {
     document.getElementById('typingMsg').textContent = 'I was unable to get a response. For further assistance email support@carevoy.co and someone will follow up within 48 business hours.';
   }

@@ -1423,7 +1423,7 @@ async function submitAddPatient() {
     try {
       await fetch(API + '/api/invites/send-patient-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ email: patEmail, patient_name: patientName, facility: hospitalInfo ? hospitalInfo.name : 'your facility' })
       });
     } catch(e2) {}
@@ -1451,7 +1451,7 @@ async function submitAddPatient() {
     try {
       await fetch(API + '/api/invites/send-patient-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ email: patEmail, patient_name: patientName, facility: hospitalInfo ? hospitalInfo.name : 'your facility' })
       });
     } catch(e2) {}
@@ -1536,7 +1536,7 @@ async function submitAddPatient() {
     try {
       await fetch(API + '/api/invites/send-patient-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({
           email: patEmail,
           patient_name: patientName,
