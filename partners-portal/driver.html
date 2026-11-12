@@ -60,6 +60,14 @@ body { font-family:'Inter',-apple-system,sans-serif; background:#F6F6F7; min-hei
 /* Action buttons */
 .ride-action { width:100%; padding:13px; border-radius:12px; border:none; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity 0.15s; }
 .ride-action:hover { opacity:0.88; }
+.nav-row { display:flex; gap:8px; margin-top:8px; }
+.nav-btn { flex:1; padding:10px 8px; border-radius:10px; border:1px solid #060D1F; background:#fff; color:#060D1F; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; }
+.nav-sheet-bg { position:fixed; inset:0; background:rgba(6,13,31,.45); z-index:9999; display:flex; align-items:flex-end; justify-content:center; }
+.nav-sheet { background:#fff; width:100%; max-width:480px; border-radius:18px 18px 0 0; padding:18px 18px 22px; }
+.nav-sheet h4 { margin:0 0 4px; font-size:15px; color:#060D1F; }
+.nav-sheet p { margin:0 0 14px; font-size:12px; color:#6B7280; word-break:break-word; }
+.nav-sheet a { display:block; text-align:center; padding:13px; margin-bottom:8px; border-radius:12px; background:#060D1F; color:#fff; font-weight:600; font-size:14px; text-decoration:none; }
+.nav-sheet button { width:100%; padding:12px; border:none; background:none; color:#6B7280; font-size:13px; font-family:inherit; cursor:pointer; }
 .act-start { background:#060D1F; color:#fff; }
 .act-complete { background:#060D1F; color:#fff; }
 .act-done { background:#FFFFFF; color:#9CA3AF; border:1px solid #E4E4E7; cursor:default; }
@@ -651,9 +659,41 @@ return '<div class="ride-card" id="card-' + r.id + '">' +
 '</div>' +
 (tags ? '<div class="ride-tags">' + tags + '</div>' : '') +
 actionBtn +
+navButtons(r, status) +
 '<button onclick="event.stopPropagation();openDriverRideDetail(\'' + r.id + '\')" style="width:100%;margin-top:6px;padding:8px;border:1px solid #E4E4E7;background:none;border-radius:10px;font-size:12px;color:#6B7280;cursor:pointer;font-family:inherit">View Details &amp; Fare</button>' +
 '</div>';
 }
+// ── Navigate: opens the driver's own maps app for pickup or drop-off ──
+function navButtons(r, status) {
+if (['completed','cancelled'].indexOf(status) >= 0) return '';
+var pick = r.pickup_address, drop = r.dropoff_address || r.hospital_name;
+if (!pick && !drop) return '';
+return '<div class="nav-row">' +
+(pick ? '<button class="nav-btn" onclick="event.stopPropagation();openNavSheet(\'' + r.id + '\',\'pickup\')">Navigate to pickup</button>' : '') +
+(drop ? '<button class="nav-btn" onclick="event.stopPropagation();openNavSheet(\'' + r.id + '\',\'dropoff\')">Navigate to drop-off</button>' : '') +
+'</div>';
+}
+function openNavSheet(rideId, which) {
+var r = allRides.filter(function(x){ return x.id === rideId; })[0];
+if (!r) return;
+var addr = which === 'pickup' ? r.pickup_address : (r.dropoff_address || r.hospital_name);
+if (!addr) return;
+var q = encodeURIComponent(addr);
+var links = [
+['Google Maps', 'https://www.google.com/maps/dir/?api=1&destination=' + q + '&travelmode=driving'],
+['Apple Maps', 'https://maps.apple.com/?daddr=' + q + '&dirflg=d'],
+['Waze', 'https://waze.com/ul?q=' + q + '&navigate=yes']
+];
+closeNavSheet();
+var bg = document.createElement('div');
+bg.className = 'nav-sheet-bg'; bg.id = 'navSheet';
+bg.onclick = function(e){ if (e.target === bg) closeNavSheet(); };
+bg.innerHTML = '<div class="nav-sheet"><h4>Navigate to ' + (which === 'pickup' ? 'pickup' : 'drop-off') + '</h4><p>' + esc(addr) + '</p>' +
+links.map(function(l){ return '<a href="' + l[1] + '" target="_blank" rel="noopener" onclick="closeNavSheet()">Open in ' + l[0] + '</a>'; }).join('') +
+'<button type="button" onclick="closeNavSheet()">Cancel</button></div>';
+document.body.appendChild(bg);
+}
+function closeNavSheet() { var e = document.getElementById('navSheet'); if (e) e.remove(); }
 async function updateStatus(rideId, newStatus) {
 statusOverrides[rideId] = newStatus;
 renderTodayRides();
