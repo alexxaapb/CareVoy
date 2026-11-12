@@ -999,6 +999,19 @@
     updateFacilitiesBulkBar();
   }
 
+  // Emails the facility/partner when an admin deactivates or deletes it. Look up BEFORE the change
+  // (a deleted row has no contact left), send AFTER it worked. Never blocks the change.
+  async function noticeLookup(type, ids) {
+    try {
+      var r = await fetch(API + '/api/admin/account-notice', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'lookup', type: type, ids: ids }) });
+      var d = await r.json(); return (d && d.recipients) || [];
+    } catch (e) { return []; }
+  }
+  function noticeSend(type, kind, recipients) {
+    if (!recipients || !recipients.length) return;
+    fetch(API + '/api/admin/account-notice', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'send', type: type, kind: kind, recipients: recipients }) }).catch(function(){});
+  }
+
   async function bulkSetFacilitiesInactive() {
     var ids = Array.from(window._selectedFacilityIds);
     if (!ids.length) return;
@@ -1008,7 +1021,9 @@
     var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
     var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
+      var _rc = await noticeLookup('facility', ids);
       await fetch(_SUPA + '/rest/v1/hospitals?id=in.(' + ids.join(',') + ')', { method: 'PATCH', headers: _H, body: JSON.stringify({ active: false }) });
+      noticeSend('facility', 'deactivated', _rc);
       showToast(ids.length + ' facilit' + (ids.length>1?'ies':'y') + ' set to Inactive', 'ok');
       loadStats();
     } catch(e) { showToast('Could not update facilities', 'err'); }
@@ -1023,8 +1038,10 @@
     var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
     var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
+      var _rc = await noticeLookup('facility', ids);
       var resp = await fetch(_SUPA + '/rest/v1/hospitals?id=in.(' + ids.join(',') + ')', { method: 'DELETE', headers: _H });
       if (!resp.ok) { showToast('Could not delete — some may have linked rides or staff records', 'err'); return; }
+      noticeSend('facility', 'deleted', _rc);
       showToast(ids.length + ' facilit' + (ids.length>1?'ies':'y') + ' deleted', 'ok');
       loadStats();
     } catch(e) { showToast('Could not delete facilities', 'err'); }
@@ -1135,9 +1152,11 @@
     var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
     var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
+      var _rc = newActive ? [] : await noticeLookup('facility', [String(facilityId)]);
       await fetch(_SUPA + '/rest/v1/hospitals?id=eq.' + facilityId, {
         method: 'PATCH', headers: _H, body: JSON.stringify({ active: newActive })
       });
+      if (!newActive) noticeSend('facility', 'deactivated', _rc);
       document.getElementById("rideDetailModal").style.display = "none";
       showToast(newActive ? 'Facility set to Active' : 'Facility set to Inactive', 'ok');
       loadStats();
@@ -1211,7 +1230,9 @@
     var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
     var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
+      var _rc = await noticeLookup('nemt', ids);
       await fetch(_SUPA + '/rest/v1/nemt_partners?id=in.(' + ids.join(',') + ')', { method: 'PATCH', headers: _H, body: JSON.stringify({ active: false }) });
+      noticeSend('nemt', 'deactivated', _rc);
       showToast(ids.length + ' partner' + (ids.length>1?'s':'') + ' deactivated', 'ok');
       loadStats();
     } catch(e) { showToast('Could not update partners', 'err'); }
@@ -1226,8 +1247,10 @@
     var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
     var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
+      var _rc = await noticeLookup('nemt', ids);
       var resp = await fetch(_SUPA + '/rest/v1/nemt_partners?id=in.(' + ids.join(',') + ')', { method: 'DELETE', headers: _H });
       if (!resp.ok) { showToast('Could not delete — some may have linked staff or ride records', 'err'); return; }
+      noticeSend('nemt', 'deleted', _rc);
       showToast(ids.length + ' partner' + (ids.length>1?'s':'') + ' deleted', 'ok');
       loadStats();
     } catch(e) { showToast('Could not delete partners', 'err'); }
@@ -1282,11 +1305,13 @@
     var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
     var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
+      var _rc = newActive ? [] : await noticeLookup('nemt', [String(partnerId)]);
       await fetch(_SUPA + '/rest/v1/nemt_partners?id=eq.' + partnerId, {
         method: 'PATCH',
         headers: _H,
         body: JSON.stringify({ active: newActive })
       });
+      if (!newActive) noticeSend('nemt', 'deactivated', _rc);
       document.getElementById("rideDetailModal").style.display = "none";
       showToast(newActive ? 'Partner set to Active' : 'Partner set to Inactive', 'ok');
       loadStats();
@@ -1300,6 +1325,7 @@
     var _tk   = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
     var _H    = { 'apikey': _KEY, 'Authorization': 'Bearer ' + _tk, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     try {
+      var _rc = await noticeLookup('nemt', [String(partnerId)]);
       var resp = await fetch(_SUPA + '/rest/v1/nemt_partners?id=eq.' + partnerId, {
         method: 'DELETE',
         headers: _H
@@ -1310,6 +1336,7 @@
         console.warn('Delete NEMT partner failed:', errText);
         return;
       }
+      noticeSend('nemt', 'deleted', _rc);
       document.getElementById("rideDetailModal").style.display = "none";
       showToast('Partner deleted', 'ok');
       loadStats();
