@@ -69,6 +69,8 @@ body { font-family:'Inter',-apple-system,sans-serif; background:#F6F6F7; min-hei
 .nav-sheet a { display:block; text-align:center; padding:13px; margin-bottom:8px; border-radius:12px; background:#060D1F; color:#fff; font-weight:600; font-size:14px; text-decoration:none; }
 .nav-sheet button { width:100%; padding:12px; border:none; background:none; color:#6B7280; font-size:13px; font-family:inherit; cursor:pointer; }
 .act-start { background:#060D1F; color:#fff; }
+.cal-btn { padding:9px 16px; border-radius:10px; border:1px solid #060D1F; background:#fff; color:#060D1F; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; text-decoration:none; display:inline-block; text-align:center; }
+.cal-btn.quiet { color:#6B7280; border-color:#E4E4E7; }
 .act-complete { background:#060D1F; color:#fff; }
 .act-done { background:#FFFFFF; color:#9CA3AF; border:1px solid #E4E4E7; cursor:default; }
 .act-done:hover { opacity:1; }
@@ -212,7 +214,12 @@ body { font-family:'Inter',-apple-system,sans-serif; background:#F6F6F7; min-hei
 <button onclick="exportNemtCSV('schedule')" style="background:#060D1F;color:#fff;border:none;padding:6px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Export CSV</button>
 </div>
 <div style="font-size:22px;font-weight:600;color:#060D1F;margin-bottom:4px">My Schedule</div>
-<div style="font-size:13px;color:#6B7280;margin-bottom:22px">Upcoming assigned rides</div>
+<div style="font-size:13px;color:#6B7280;margin-bottom:14px">Upcoming assigned rides</div>
+<div class="panel" style="padding:14px 18px;margin-bottom:14px">
+<div style="font-size:13px;font-weight:600;color:#060D1F">Show these rides on your calendar</div>
+<div style="font-size:12px;color:#6B7280;margin:2px 0 10px">Adds your accepted rides to Google, Apple or Outlook calendar and keeps them up to date. It shows times and addresses only, no patient names.</div>
+<div id="calFeedBox"><button class="cal-btn" onclick="getCalFeed(false)">Get my calendar link</button></div>
+</div>
 <div class="panel">
 <div class="tbl-head" style="grid-template-columns:1.4fr 1fr 1.2fr 0.8fr">
 <div class="th">Patient</div>
@@ -712,6 +719,29 @@ showToast('Failed: ' + (result.error || 'Unknown error'), 'err');
 }
 } catch(e) { showToast('Status update failed: ' + e.message, 'err'); }
 await loadRides();
+}
+// ── Calendar feed: a private link that shows accepted rides on the driver's own calendar ──
+async function getCalFeed(reset) {
+var box = document.getElementById('calFeedBox');
+if (reset && !confirm('Make a new link? The old link will stop working and you will need to add the new one to your calendar.')) return;
+box.innerHTML = '<span style="font-size:12px;color:#6B7280">Working…</span>';
+try {
+var r = await fetch(API + '/api/calendar/driver-feed', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ reset: !!reset }) });
+var d = await r.json();
+if (!r.ok) throw new Error(d.error || 'Could not get the link');
+var web = d.url.replace(/^https:/, 'webcal:');
+var g = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(web);
+box.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+'<a class="cal-btn" href="' + esc(web) + '">Add to Apple / Outlook</a>' +
+'<a class="cal-btn" href="' + esc(g) + '" target="_blank" rel="noopener">Add to Google Calendar</a>' +
+'<button class="cal-btn" id="calCopyBtn">Copy link</button>' +
+'<button class="cal-btn quiet" onclick="getCalFeed(true)">Make a new link</button></div>';
+document.getElementById('calCopyBtn').onclick = function(){
+try { navigator.clipboard.writeText(d.url).then(function(){ showToast('Link copied', 'ok'); }, function(){ showToast('Could not copy', 'err'); }); } catch (e) { showToast('Could not copy', 'err'); }
+};
+} catch (e) {
+box.innerHTML = '<button class="cal-btn" onclick="getCalFeed(false)">Get my calendar link</button> <span style="font-size:12px;color:#D92D20">' + esc(e.message) + '</span>';
+}
 }
 function renderSchedule() {
 var upcoming = allRides.filter(function(r){

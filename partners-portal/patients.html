@@ -713,6 +713,37 @@ function buildRoundTripCard(r, isPast, facility) {
   '</div>';
 }
 
+// ── Add to calendar (single rides): downloads an .ics file or opens Google Calendar. No medical details in the event. ──
+function _icsStamp(d) { return new Date(d).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+function _icsEsc(t) { return String(t == null ? '' : t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function _calParts(r) {
+  if (!r || !r.pickup_time) return null;
+  var start = new Date(r.pickup_time); if (isNaN(start)) return null;
+  var end = new Date(start.getTime() + 60 * 60000);
+  var desc = 'Your CareVoy ride.' + (r.dropoff_address ? ' Destination: ' + r.dropoff_address + '.' : '') + ' Open the CareVoy patient portal for details.';
+  return { start: start, end: end, title: 'CareVoy ride', loc: r.pickup_address || '', desc: desc };
+}
+function addRideToCalendar(rideId, kind) {
+  var r = (window._allRidesById || {})[rideId]; var p = _calParts(r);
+  if (!p) { toast('This ride has no pickup time yet'); return; }
+  if (kind === 'google') {
+    window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(p.title) + '&dates=' + _icsStamp(p.start) + '/' + _icsStamp(p.end) + '&details=' + encodeURIComponent(p.desc) + '&location=' + encodeURIComponent(p.loc), '_blank', 'noopener');
+    return;
+  }
+  var ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CareVoy//Patient ride//EN','BEGIN:VEVENT','UID:' + r.id + '@carevoy.co','DTSTAMP:' + _icsStamp(Date.now()),
+    'DTSTART:' + _icsStamp(p.start),'DTEND:' + _icsStamp(p.end),'SUMMARY:' + _icsEsc(p.title),'LOCATION:' + _icsEsc(p.loc),'DESCRIPTION:' + _icsEsc(p.desc),
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Your ride is coming up','TRIGGER:-PT60M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  a.download = 'carevoy-ride.ics'; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function calButtons(r) {
+  if (!r || !r.pickup_time || ['confirmed','assigned','en_route','in_progress'].indexOf(r.status) < 0) return '';
+  window._allRidesById = window._allRidesById || {}; window._allRidesById[r.id] = r;
+  var st = 'padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--navy);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
+  return '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button style="' + st + '" onclick="event.stopPropagation();addRideToCalendar(\'' + r.id + '\',\'ics\')">Add to calendar</button><button style="' + st + '" onclick="event.stopPropagation();addRideToCalendar(\'' + r.id + '\',\'google\')">Google Calendar</button></div>';
+}
 function buildRideCard(r, isPast) {
   const isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(r.status);
   const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Your Facility';
@@ -735,6 +766,7 @@ function buildRideCard(r, isPast) {
     action = `<div class="ride-action"><div style="font-size:13px;color:var(--black);font-weight:600">Driver: ${dName}</div>${dPhone ? '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + dPhone + '</div>' : ''}<div style="font-size:11px;color:var(--muted);margin-top:4px">Contact your driver through CareVoy support</div>${emergencyBtn}${assignedCancel}</div>`;
   }
   else if (r.status === 'completed') { var fareShow = r.actual_cost || r.estimated_cost; if (fareShow && r.payment_responsibility !== 'facility') action = `<div class="ride-action" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--muted)">Fare: <strong style="color:var(--black)">$${parseFloat(fareShow).toFixed(2)}</strong></span></div>`; }
+  if (!isPast) action += calButtons(r);
   return `<div class="ride-card" onclick="openRideDetail('${r.id}')">
     <span class="ride-badge ${badge}">${label}</span>
     <div class="ride-facility">${facility}</div>
