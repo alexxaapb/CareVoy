@@ -132,11 +132,11 @@ module.exports = async function handler(req, res) {
         } catch (_) {}
       }
       // Optional facility alerts (Slack/Teams/email). Never blocks the update; contains no patient details.
-      if (status === 'assigned' || status === 'completed' || status === 'cancelled') {
+      if (status === 'assigned' || status === 'completed' || status === 'cancelled' || status === 'no_response') {
         try {
           const { notifyFacility } = require('../../lib/alerts');
           const { data: ar } = await sb.from('rides').select('id, hospital_id, pickup_time').eq('id', ride_id).maybeSingle();
-          if (ar) await notifyFacility(ar.hospital_id, status === 'assigned' ? 'ride_accepted' : status === 'completed' ? 'ride_completed' : 'ride_cancelled', ar);
+          if (ar) await notifyFacility(ar.hospital_id, status === 'assigned' ? 'ride_accepted' : status === 'completed' ? 'ride_completed' : status === 'no_response' ? 'patient_no_response' : 'ride_cancelled', ar);
         } catch (_) {}
       }
     }

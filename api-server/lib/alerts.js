@@ -11,6 +11,7 @@ const EVENTS = {
   ride_completed:  { label: 'A ride was completed' },
   ride_cancelled:  { label: 'A ride was cancelled' },
   ride_unaccepted: { label: 'A ride still has no driver' },
+  patient_no_response: { label: 'A patient has not confirmed an upcoming ride' },
 };
 
 const SLACK_HOST = /^hooks\.slack\.com$/i;
