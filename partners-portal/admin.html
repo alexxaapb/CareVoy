@@ -1059,7 +1059,8 @@
       + '<span style="font-size:12px;color:#6B7280">Status: <strong>' + (data.active ? 'Active' : 'Inactive') + '</strong></span>'
       + '<button id="facToggleBtn" style="padding:8px 18px;border-radius:8px;background:' + _btnBg + ';color:' + _btnCl + ';border:1px solid ' + _btnBrd + ';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + _btnTxt + '</button></div>'
       + '<div style="margin-top:10px;text-align:right"><button id="facDeleteBtn" style="padding:8px 18px;border-radius:8px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Delete Permanently</button></div>';
-    document.getElementById("rideDetailBody").innerHTML = rows + toggleBtn;
+    document.getElementById("rideDetailBody").innerHTML = rows + '<div id="facAcct" style="margin-top:18px;font-size:12px;color:#6B7280">Loading account…</div>' + toggleBtn;
+    loadFacilityAccount(data.id);
     var _tb = document.getElementById("facToggleBtn");
     if (_tb) _tb.addEventListener("click", function(){ toggleFacilityActive(_facId, _newVal); });
     var _fdb = document.getElementById("facDeleteBtn");
@@ -1068,6 +1069,64 @@
     var titleEl = modal.querySelector('div[style*="font-size:18px"]');
     if (titleEl) titleEl.textContent = "Facility Profile";
     modal.style.display = "flex";
+  }
+
+  // ── Facility account view: plan, usage, rides, contacts, invoices and private notes ──
+  function _acctSec(title, inner) {
+    return '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">' + title + '</div>' + inner + '</div>';
+  }
+  function _acctRow(k, v) {
+    return '<div style="display:flex;padding:6px 0;border-bottom:1px solid #F3F4F6"><div style="width:140px;font-size:12px;color:#6B7280;flex-shrink:0">' + k + '</div><div style="font-size:13px;color:#050D1F;font-weight:500">' + v + '</div></div>';
+  }
+  async function loadFacilityAccount(hid) {
+    var box = document.getElementById('facAcct');
+    if (!box) return;
+    try {
+      var tk = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+      var r = await fetch(API + '/api/admin/facility-account?hospital_id=' + encodeURIComponent(hid), { headers: { 'Authorization': 'Bearer ' + tk } });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Could not load');
+      var p = d.plan || {}, fmt = function(c){ return c == null ? '—' : fmtUSD(c / 100); };
+      var dt = function(x){ return x ? new Date(x).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: String(x).length <= 10 ? 'UTC' : undefined }) : '—'; };
+      var h = '<div style="border-top:2px solid #E8E4DC;padding-top:14px;font-size:14px;font-weight:700;color:#050D1F">Account</div>';
+      h += _acctSec('Plan', _acctRow('Plan', esc(p.label || '—')) + _acctRow('Subscription', esc(p.subscription_status || 'not linked')) +
+        _acctRow('Monthly price', fmt(p.monthly_price_cents)) + _acctRow('Renews', dt(p.renews_on)) +
+        _acctRow('Rides this month', (p.rides_this_month || 0) + (p.ride_limit ? ' of ' + p.ride_limit : '')) +
+        _acctRow('Add-ons', (p.addons && p.addons.length) ? esc(p.addons.join(', ')) : 'None') +
+        _acctRow('Contract', p.contract_start ? dt(p.contract_start) + ' to ' + dt(p.contract_end) : '—') +
+        _acctRow('Customer since', dt(d.facility && d.facility.since)));
+      var bs = (d.rides && d.rides.by_status) || {}, parts = Object.keys(bs).sort().map(function(k){ return esc(k.replace(/_/g,' ')) + ': ' + bs[k]; });
+      var recent = ((d.rides && d.rides.recent) || []).map(function(x){
+        return '<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #F3F4F6;font-size:12px"><div style="width:96px;color:#6B7280">' + dt(x.pickup_time) + '</div><div style="flex:1;color:#050D1F">' + esc(x.patient_name || 'Patient') + '</div><div style="color:#6B7280">' + esc((x.status || '').replace(/_/g,' ')) + '</div></div>';
+      }).join('');
+      h += _acctSec('Rides', '<div style="font-size:12px;color:#050D1F;margin-bottom:6px">' + (parts.length ? parts.join(' · ') : 'No rides yet') + '</div>' + recent);
+      var cs = (d.contacts || []).map(function(c){
+        return '<div style="padding:6px 0;border-bottom:1px solid #F3F4F6;font-size:12px"><span style="font-weight:600;color:#050D1F">' + esc(c.full_name || '—') + '</span> <span style="color:#6B7280">' + esc(c.email || '') + (c.phone ? ' · ' + esc(c.phone) : '') + '</span></div>';
+      }).join('');
+      var fc = d.facility || {};
+      h += _acctSec('Contacts', (fc.contact_email || fc.contact_phone ? '<div style="padding:6px 0;border-bottom:1px solid #F3F4F6;font-size:12px"><span style="font-weight:600;color:#050D1F">Main contact</span> <span style="color:#6B7280">' + esc(fc.contact_email || '') + (fc.contact_phone ? ' · ' + esc(fc.contact_phone) : '') + '</span></div>' : '') + (cs || '<div style="font-size:12px">No coordinators yet</div>'));
+      var inv = (d.invoices || []).map(function(i){
+        return '<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #F3F4F6;font-size:12px"><div style="width:96px;color:#6B7280">' + dt(i.date) + '</div><div style="flex:1;color:#050D1F">' + esc(i.number || 'Invoice') + ' · ' + fmt(i.amount_cents) + '</div><div style="color:#6B7280">' + esc(i.status || '') + '</div>' + (i.url ? '<a href="' + esc(i.url) + '" target="_blank" rel="noopener" style="color:#00A890;text-decoration:none">View</a>' : '') + '</div>';
+      }).join('');
+      h += _acctSec('Invoices', inv || '<div style="font-size:12px">' + esc(d.invoices_note || 'No invoices yet') + '</div>');
+      h += _acctSec('Private notes', '<textarea id="facNotes" rows="4" maxlength="5000" style="width:100%;box-sizing:border-box;border:1px solid #E5E7EB;border-radius:8px;padding:10px;font-family:inherit;font-size:13px;resize:vertical" placeholder="Only admins can see this">' + esc(d.notes || '') + '</textarea>' +
+        '<div style="margin-top:6px;display:flex;align-items:center;gap:10px"><button id="facNotesSave" style="padding:7px 16px;border-radius:8px;background:#050D1F;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Save notes</button><span id="facNotesMsg" style="font-size:12px;color:#6B7280"></span></div>');
+      box.style.color = ''; box.style.fontSize = ''; box.innerHTML = h;
+      document.getElementById('facNotesSave').addEventListener('click', function(){ saveFacilityNotes(hid); });
+    } catch (e) {
+      box.textContent = 'Could not load the account details right now.';
+    }
+  }
+  async function saveFacilityNotes(hid) {
+    var msg = document.getElementById('facNotesMsg'), ta = document.getElementById('facNotes');
+    if (!ta) return;
+    msg.textContent = 'Saving…';
+    try {
+      var tk = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+      var r = await fetch(API + '/api/admin/facility-account', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tk }, body: JSON.stringify({ hospital_id: hid, notes: ta.value }) });
+      var d = await r.json();
+      msg.textContent = r.ok ? 'Saved' : (d.error || 'Could not save');
+    } catch (e) { msg.textContent = 'Could not save'; }
   }
 
   async function toggleFacilityActive(facilityId, newActive) {
