@@ -60,9 +60,9 @@ body { font-family:'Inter',-apple-system,sans-serif; background:#F6F6F7; min-hei
 /* Action buttons */
 .ride-action { width:100%; padding:13px; border-radius:12px; border:none; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity 0.15s; }
 .ride-action:hover { opacity:0.88; }
+.act-start { background:#060D1F; color:#fff; }
 .cal-btn { padding:9px 16px; border-radius:10px; border:1px solid #060D1F; background:#fff; color:#060D1F; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; text-decoration:none; display:inline-block; text-align:center; }
 .cal-btn.quiet { color:#6B7280; border-color:#E4E4E7; }
-.act-start { background:#060D1F; color:#fff; }
 .act-complete { background:#060D1F; color:#fff; }
 .act-done { background:#FFFFFF; color:#9CA3AF; border:1px solid #E4E4E7; cursor:default; }
 .act-done:hover { opacity:1; }
@@ -661,6 +661,25 @@ actionBtn +
 '<button onclick="event.stopPropagation();openDriverRideDetail(\'' + r.id + '\')" style="width:100%;margin-top:6px;padding:8px;border:1px solid #E4E4E7;background:none;border-radius:10px;font-size:12px;color:#6B7280;cursor:pointer;font-family:inherit">View Details &amp; Fare</button>' +
 '</div>';
 }
+async function updateStatus(rideId, newStatus) {
+statusOverrides[rideId] = newStatus;
+renderTodayRides();
+renderSchedule();
+try {
+var resp = await fetch(API + '/api/rides/update-status', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+body: JSON.stringify({ ride_id: rideId, status: newStatus })
+});
+var result = await resp.json();
+if (result.success) {
+showToast(newStatus === 'in_progress' ? 'Ride started' : newStatus === 'completed' ? 'Ride completed' : 'Status updated', 'ok');
+} else {
+showToast('Failed: ' + (result.error || 'Unknown error'), 'err');
+}
+} catch(e) { showToast('Status update failed: ' + e.message, 'err'); }
+await loadRides();
+}
 // ── Calendar feed: a private link that shows accepted rides on the driver's own calendar ──
 async function getCalFeed(reset) {
 var box = document.getElementById('calFeedBox');
@@ -683,25 +702,6 @@ try { navigator.clipboard.writeText(d.url).then(function(){ showToast('Link copi
 } catch (e) {
 box.innerHTML = '<button class="cal-btn" onclick="getCalFeed(false)">Get my calendar link</button> <span style="font-size:12px;color:#D92D20">' + esc(e.message) + '</span>';
 }
-}
-async function updateStatus(rideId, newStatus) {
-statusOverrides[rideId] = newStatus;
-renderTodayRides();
-renderSchedule();
-try {
-var resp = await fetch(API + '/api/rides/update-status', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-body: JSON.stringify({ ride_id: rideId, status: newStatus })
-});
-var result = await resp.json();
-if (result.success) {
-showToast(newStatus === 'in_progress' ? 'Ride started' : newStatus === 'completed' ? 'Ride completed' : 'Status updated', 'ok');
-} else {
-showToast('Failed: ' + (result.error || 'Unknown error'), 'err');
-}
-} catch(e) { showToast('Status update failed: ' + e.message, 'err'); }
-await loadRides();
 }
 function renderSchedule() {
 var upcoming = allRides.filter(function(r){
