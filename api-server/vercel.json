@@ -8,6 +8,7 @@
   ],
   "crons": [
     { "path": "/api/cron/auto-reminders", "schedule": "0 14 * * *" },
-    { "path": "/api/cron/unassigned-ride-alert", "schedule": "0 * * * *" }
+    { "path": "/api/cron/unassigned-ride-alert", "schedule": "0 * * * *" },
+    { "path": "/api/cron/ride-reminders", "schedule": "10 * * * *" }
   ]
 }
