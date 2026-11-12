@@ -744,6 +744,15 @@ function calButtons(r) {
   var st = 'padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--navy);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
   return '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button style="' + st + '" onclick="event.stopPropagation();addRideToCalendar(\'' + r.id + '\',\'ics\')">Add to calendar</button><button style="' + st + '" onclick="event.stopPropagation();addRideToCalendar(\'' + r.id + '\',\'google\')">Google Calendar</button></div>';
 }
+  // Tells nearby transport partners a new ride is open. Needs the signed-in token (the server checks it).
+  async function notifyNemtAvailable(rideId) {
+    try {
+      var ws = await sb.auth.getSession();
+      var tk = ws && ws.data && ws.data.session ? ws.data.session.access_token : '';
+      if (!tk) return;
+      await fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tk }, body: JSON.stringify({ ride_id: rideId }) });
+    } catch (e) {}
+  }
 function buildRideCard(r, isPast) {
   const isPending = ['invited','app_downloaded','reminder_sent','no_response','pending'].includes(r.status);
   const facility = (r.hospitals && r.hospitals.name) || r.hospital_name || 'Your Facility';
@@ -829,13 +838,13 @@ async function submitReschedule() {
   }
   try {
     await sb.from('rides').update({ pickup_time: newPickup.toISOString(), status: 'confirmed' }).eq('id', rideId);
-    fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: rideId }) }).catch(function(){});
+    notifyNemtAvailable(rideId);
     if (r.round_trip_pair_id) {
       var paired = allRides.find(function(x){ return x.round_trip_pair_id === r.round_trip_pair_id && x.id !== rideId; });
       if (paired) {
         var pairedNewPickup = new Date(new Date(paired.pickup_time).getTime() + deltaMs);
         await sb.from('rides').update({ pickup_time: pairedNewPickup.toISOString(), status: 'confirmed' }).eq('id', paired.id);
-        fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: paired.id }) }).catch(function(){});
+        notifyNemtAvailable(paired.id);
       }
     }
     toast('Ride rescheduled');
@@ -1325,7 +1334,7 @@ async function confirmRoundTrip() {
       companion_requested: rtCompanion,
       estimated_miles: rtMilesOut !== null ? Math.round(rtMilesOut * 10) / 10 : null
     }).eq('id', outbound.id);
-    fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: outbound.id }) }).catch(function(){});
+    notifyNemtAvailable(outbound.id);
     if (ret) {
       await sb.from('rides').update({
         pickup_address: facility,
@@ -1337,7 +1346,7 @@ async function confirmRoundTrip() {
         companion_requested: rtCompanion,
         estimated_miles: rtMilesBack !== null ? Math.round(rtMilesBack * 10) / 10 : null
       }).eq('id', ret.id);
-      fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: ret.id }) }).catch(function(){});
+      notifyNemtAvailable(ret.id);
     }
     closeBookModal();
     toast('Round trip confirmed');
@@ -1416,7 +1425,7 @@ async function confirmBooking() {
       estimated_miles: window._estimatedMiles||null,
     }).eq('id', currentRide.id);
     if (_upd1.error) throw new Error(_upd1.error.message);
-    fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: currentRide.id }) }).catch(function(){});
+    notifyNemtAvailable(currentRide.id);
     if (window._pairedRide) {
       var _upd2 = await sb.from('rides').update({
         pickup_address: currentRide.dropoff_address || currentRide.hospital_name,
@@ -1430,7 +1439,7 @@ async function confirmBooking() {
         estimated_miles: window._estimatedMiles||null,
       }).eq('id', window._pairedRide.id);
       if (_upd2.error) toast('Your first ride is saved, but the return ride could not be confirmed: ' + _upd2.error.message);
-      fetch(API + '/api/nemt/notify-available', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ride_id: window._pairedRide.id }) }).catch(function(){});
+      notifyNemtAvailable(window._pairedRide.id);
     }
     closeBookModal();
     toast(window._pairedRide ? 'Round trip confirmed' : 'Ride confirmed');

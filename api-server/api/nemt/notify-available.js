@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
-const { toE164 } = require('../../lib/security');
+const { toE164, getCaller, canAccessRide } = require('../../lib/security');
+const { limited, record, hit } = require('../../lib/ratelimit');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -15,11 +16,19 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { ride_id } = req.body;
+    // Texts every matching transport partner, so only a signed-in person with access to the ride may trigger it.
+    const caller = await getCaller(req);
+    if (!caller) return res.status(401).json({ error: 'Unauthorized' });
+    const { ride_id } = req.body || {};
     if (!ride_id) return res.status(400).json({ error: 'Missing ride_id' });
 
     const { data: ride } = await supabase.from('rides').select('*, hospitals(name)').eq('id', ride_id).single();
     if (!ride) return res.status(404).json({ error: 'Ride not found' });
+    if (!canAccessRide(caller, ride, { allowPatient: true })) return res.status(403).json({ error: 'Forbidden' });
+    // At most 2 broadcasts per ride per hour, and 60 per person per day.
+    if (await hit(supabase, 'ride:' + ride_id, 'nemt_broadcast', 2, 3600000)) return res.status(200).json({ success: true, notified: 0, note: 'Already sent recently' });
+    if (await limited(supabase, caller.user.id, 'nemt_broadcast_user', 60, 86400000)) return res.status(429).json({ error: 'Too many requests' });
+    await record(supabase, caller.user.id, 'user', 'nemt_broadcast_user');
 
     const { data: partners } = await supabase.from('nemt_partners').select('id, company_name, contact_phone, service_states').eq('active', true);
     if (!partners || !partners.length) return res.status(200).json({ success: true, notified: 0 });
