@@ -112,8 +112,25 @@ module.exports = async function handler(req, res) {
     }
 
     if (!resendOnly) {
+      let prevStatus = null;
+      if (status === 'in_progress' || status === 'en_route') {
+        const { data: prev } = await sb.from('rides').select('status').eq('id', ride_id).maybeSingle();
+        prevStatus = prev ? prev.status : null;
+      }
       const { error } = await sb.from('rides').update(update).eq('id', ride_id);
       if (error) return res.status(500).json({ error: error.message });
+      // "Your driver is on the way" text, once, when the driver starts the ride. Never blocks the update.
+      if ((status === 'in_progress' || status === 'en_route') && prevStatus !== 'in_progress' && prevStatus !== 'en_route') {
+        try {
+          const { sendSms } = require('../../lib/sms');
+          const { data: dr } = await sb.from('rides').select('contact_phone, driver_name, driver_on_way_sent_at').eq('id', ride_id).maybeSingle();
+          if (dr && dr.contact_phone && !dr.driver_on_way_sent_at) {
+            const first = String(dr.driver_name || '').trim().split(/\s+/)[0];
+            const ok = await sendSms(dr.contact_phone, 'CareVoy: your driver' + (first ? ' ' + first : '') + ' is on the way. Reply STOP to opt out.');
+            if (ok) await sb.from('rides').update({ driver_on_way_sent_at: new Date().toISOString() }).eq('id', ride_id);
+          }
+        } catch (_) {}
+      }
       // Optional facility alerts (Slack/Teams/email). Never blocks the update; contains no patient details.
       if (status === 'assigned' || status === 'completed' || status === 'cancelled') {
         try {
