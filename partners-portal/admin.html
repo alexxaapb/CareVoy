@@ -224,6 +224,26 @@
       </div>
     </div>
 
+    <!-- Business metrics (MRR, paying facilities, rides per month, completion rate) -->
+    <div class="stats-row" style="grid-template-columns: repeat(3,1fr); margin-bottom: 14px;">
+      <div class="stat-card">
+        <div class="stat-label">MRR</div>
+        <div class="stat-value teal" id="metMrr">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Paying Facilities</div>
+        <div class="stat-value" id="metPaying">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completion Rate <span style="font-weight:400;text-transform:none;letter-spacing:0">(90 days)</span></div>
+        <div class="stat-value" id="metCompletion">—</div>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:28px">
+      <div class="panel-header"><div><div class="panel-title">Rides per Month</div></div><span class="panel-sub" id="metSub">Last 6 months</span></div>
+      <div id="metMonths" style="display:flex;align-items:flex-end;gap:14px;padding:6px 20px 18px;min-height:130px"></div>
+    </div>
+
     <!-- Live Rides + Recent Activity -->
     <div class="two-col">
       <!-- Live Rides -->
@@ -705,6 +725,7 @@
       renderNemt(Array.isArray(nemts) ? nemts : []);
       renderLiveRides(Array.isArray(liveRides) ? liveRides : []);
       renderActivity(aCount, tCount, Array.isArray(liveRides) ? liveRides : []);
+      loadMetrics();
 
     } catch(e) {
       document.getElementById('pageSub').textContent = 'Could not load data — check your connection';
@@ -714,6 +735,29 @@
   }
 
 
+
+  // ── Business metrics (admin home): MRR, paying facilities, rides per month, completion rate ──
+  async function loadMetrics() {
+    try {
+      var tk = localStorage.getItem('cv_admin_token') || sessionStorage.getItem('cv_admin_token') || '';
+      var r = await fetch(API + '/api/billing/metrics', { headers: { 'Authorization': 'Bearer ' + tk } });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Could not load');
+      document.getElementById('metMrr').textContent = fmtUSD((d.mrr_cents || 0) / 100);
+      document.getElementById('metPaying').textContent = d.paying_facilities || 0;
+      document.getElementById('metCompletion').textContent = d.completion_rate == null ? '—' : d.completion_rate + '%';
+      var max = Math.max.apply(null, (d.months || []).map(function(m){ return m.rides; }).concat([1]));
+      document.getElementById('metMonths').innerHTML = (d.months || []).map(function(m){
+        var h = Math.max(4, Math.round((m.rides / max) * 90));
+        return '<div style="flex:1;text-align:center"><div style="font-size:12px;font-weight:700;color:#050D1F;margin-bottom:4px">' + m.rides + '</div>' +
+          '<div style="height:' + h + 'px;background:#00C2A8;border-radius:6px 6px 0 0"></div>' +
+          '<div style="font-size:11px;color:#6B7280;margin-top:6px">' + esc(m.label) + '</div></div>';
+      }).join('');
+      document.getElementById('metSub').textContent = d.partial ? 'Some numbers could not load' : 'Last 6 months';
+    } catch (e) {
+      document.getElementById('metSub').textContent = 'Could not load metrics';
+    }
+  }
 
   async function exportCSV(type) {
     var h2 = authHeaders();
