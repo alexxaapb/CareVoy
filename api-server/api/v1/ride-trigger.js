@@ -5,6 +5,7 @@
 // the rest (invites ~7 days before, or immediately if sooner).
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
+const { hit } = require('../../lib/ratelimit');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -22,6 +23,7 @@ module.exports = async function handler(req, res) {
     const apiKey = req.headers['x-api-key'];
     if (!apiKey) return res.status(401).json({ error: 'Missing x-api-key' });
 
+    if (await hit(supabase, 'key:' + require('crypto').createHash('sha256').update(String(apiKey)).digest('hex').slice(0, 16), 'v1_trigger', 600, 3600000)) return res.status(429).json({ error: 'Rate limit: 600 requests per hour' });
     const { data: keyRow } = await supabase
       .from('facility_api_keys')
       .select('hospital_id, active')

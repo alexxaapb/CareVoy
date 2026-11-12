@@ -1,6 +1,7 @@
 const Stripe = require("stripe");
 const ws = require('ws');
 const { createClient } = require("@supabase/supabase-js");
+const { limited, record } = require("../../lib/ratelimit");
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -20,6 +21,8 @@ module.exports = async (req, res) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ error: "Unauthorized" });
 
+    if (await limited(supabase, user.id, 'stripe_setup', 20, 3600000)) return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
+    await record(supabase, user.id, 'patient', 'stripe_setup');
     const { email } = req.body || {};
 
     const { data: patient } = await supabase

@@ -2,6 +2,17 @@
   "version": 2,
   "routes": [
     {
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "X-Frame-Options": "DENY",
+        "Permissions-Policy": "camera=(), microphone=(), payment=(), geolocation=(self)"
+      },
+      "continue": true
+    },
+    {
       "src": "/nemt-signup",
       "dest": "/nemt-signup.html"
     },

@@ -21,9 +21,10 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Invalid messages' });
       }
     }
-    // Only save to the database when the caller is logged in; never trust a patientId from the request.
-    const caller = req.headers['authorization'] ? await getCaller(req) : null;
-    const patientId = caller ? caller.user.id : null;
+    // Signed-in users only (this endpoint costs money per call). Never trust a patientId from the request.
+    const caller = await getCaller(req);
+    if (!caller) return res.status(401).json({ error: 'Please sign in' });
+    const patientId = caller.user.id;
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const supabase = createClient(
       process.env.SUPABASE_URL,

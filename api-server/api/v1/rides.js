@@ -5,6 +5,7 @@
 // Returns the rides of the facility that owns the key, newest first (max 200 per call).
 const crypto = require('crypto');
 const { adminClient } = require('../../lib/security');
+const { hit } = require('../../lib/ratelimit');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,6 +18,8 @@ module.exports = async function handler(req, res) {
     const key = ((req.headers['authorization'] || '').replace(/^Bearer\s+/i, '')).trim();
     if (!/^cv_live_[A-Za-z0-9_-]{20,}$/.test(key)) return res.status(401).json({ error: 'Missing or invalid API key' });
     const sb = adminClient();
+    const keyHash = crypto.createHash('sha256').update(key).digest('hex');
+    if (await hit(sb, 'key:' + keyHash.slice(0, 16), 'v1_rides', 120, 60000)) return res.status(429).json({ error: 'Rate limit: 120 requests per minute' });
     const { data: row } = await sb.from('facility_api').select('hospital_id').eq('api_key_hash', crypto.createHash('sha256').update(key).digest('hex')).maybeSingle();
     if (!row) return res.status(401).json({ error: 'Missing or invalid API key' });
 
