@@ -84,6 +84,12 @@ module.exports = async (req, res) => {
         expense_type: "Medical Transportation",
         eligibility_note: "Transportation to and from medical care qualifies under IRS Code 213(d).",
       },
+      visit_confirmation: {
+        confirmed: !!ride.visit_confirmed_at,
+        confirmed_at: ride.visit_confirmed_at ?? null,
+        confirmed_by: ride.visit_confirmed_by ?? null,
+        confirmed_for: ride.hospitals?.name ?? null,
+      },
       audit_trail: {
         booking_timestamp: ride.created_at,
         payment_timestamp: ride.payment_timestamp ?? null,
