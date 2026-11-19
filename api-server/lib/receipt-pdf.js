@@ -118,6 +118,15 @@ function buildReceiptHtml(ride, receiptNumber, legs) {
   const complianceColor = isFacility ? '#065F46' : '#00836F';
   const complianceTitle = isFacility ? 'Facility-Covered Transportation' : 'IRS Section 213(d) Eligible Medical Expense';
 
+  // Practice confirmation that the appointment took place (set from the coordinator portal)
+  const confirmedRide = (combined || [ride]).find((l) => l && l.visit_confirmed_at);
+  const visitConfirmHtml = confirmedRide
+    ? `<div class="compliance-box" style="margin-top:10px">
+      <div class="compliance-title">Appointment confirmed by the care provider</div>
+      <div class="compliance-text">${escHtml(hospital.name || 'The facility')} confirmed on ${escHtml(fmtDay(confirmedRide.visit_confirmed_at))} that this patient's appointment took place${confirmedRide.visit_confirmed_by ? ` (confirmed by ${escHtml(confirmedRide.visit_confirmed_by)})` : ''}.</div>
+    </div>`
+    : '';
+
   const singleBlockHtml = `
     <div class="service-block">
       <div class="service-desc-main">${escHtml(hospital.name || ride.dropoff_address || '—')}</div>
@@ -315,6 +324,7 @@ ${serviceBlocksHtml}
       <div class="compliance-title">${escHtml(complianceTitle)}</div>
       <div class="compliance-text">${complianceText}</div>
     </div>
+    ${visitConfirmHtml}
 
   </div>
 
@@ -539,8 +549,30 @@ async function generateAndStoreReceipt(supabase, rideId) {
   return { receiptNumber, storagePath, pdfBuffer };
 }
 
+// Rebuild an already-issued receipt PDF (same receipt number, same storage path),
+// e.g. after the facility confirms the visit. Does nothing if no receipt exists yet.
+async function regenerateReceiptPdf(supabase, rideId) {
+  const { data: existing } = await supabase.from('rides')
+    .select('receipt_number, receipt_pdf_url, round_trip_pair_id').eq('id', rideId).single();
+  if (!existing || !existing.receipt_pdf_url || !existing.receipt_number) return null;
+
+  let legs = null;
+  if (existing.round_trip_pair_id) {
+    const siblings = await fetchPairLegs(supabase, existing.round_trip_pair_id);
+    if (siblings.length > 1) legs = siblings;
+  }
+  const ride = legs ? legs[0] : await fetchRideForReceipt(supabase, rideId);
+  const html = buildReceiptHtml(ride, existing.receipt_number, legs);
+  const pdfBuffer = await generatePdfBuffer(html);
+  const { error } = await supabase.storage.from('receipts')
+    .upload(existing.receipt_pdf_url, pdfBuffer, { contentType: 'application/pdf', upsert: true });
+  if (error) throw new Error('Storage upload error: ' + error.message);
+  return { receiptNumber: existing.receipt_number, storagePath: existing.receipt_pdf_url };
+}
+
 module.exports = {
   buildReceiptHtml,
+  regenerateReceiptPdf,
   buildLineItems,
   generatePdfBuffer,
   generateAndStoreReceipt,

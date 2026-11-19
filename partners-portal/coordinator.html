@@ -1199,6 +1199,17 @@ async function resendReceipt(rideId) {
   } catch(e) { showToast('Could not resend', 'err'); }
 }
 
+async function confirmVisit(rideId) {
+  if (!confirm('Confirm that this patient\'s appointment took place? Your facility name and today\'s date will appear on their receipt.')) return;
+  try {
+    var resp = await fetch(API + '/api/rides/confirm-visit', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: JSON.stringify({ ride_id: rideId }) });
+    var out = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok) { showToast(out.error || 'Could not confirm the visit', 'err'); return; }
+    showToast(out.receipt === 'update_failed' ? 'Visit confirmed. The receipt will show it next time it is generated.' : 'Visit confirmed', 'ok');
+    closeCVRideDetail();
+    if (typeof loadRides === 'function') loadRides();
+  } catch (e) { showToast('Could not confirm the visit', 'err'); }
+}
 async function downloadReceipt(rideId) {
   try {
     var resp = await fetch(API + '/api/receipts/generate-pdf?rideId=' + encodeURIComponent(rideId), { headers: H });
@@ -2404,6 +2415,9 @@ function openCVRideDetail(ride, opts) {
     if (['invited','reminder_sent','no_response','pending','confirmed'].includes(r.status)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();cancelRide(event,\''+r.id+'\')">Cancel Ride</button>';
     if (canCancelAssigned(r)) ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();cancelAssignedRide(\''+r.id+'\')">Cancel Ride (driver notified)</button>';
     if (r.status !== 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px;color:#D92D20;border-color:#F0BCB5" onclick="closeCVRideDetail();deleteRide(event,\''+r.id+'\')">Delete Permanently</button>';
+    if (r.status === 'completed') ctaHTML += r.visit_confirmed_at
+      ? '<div style="width:100%;margin-bottom:8px;padding:12px;font-size:12px;border-radius:10px;background:rgba(0,194,168,0.08);color:#007a69;text-align:center">Visit confirmed ' + new Date(r.visit_confirmed_at).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}) + (r.visit_confirmed_by ? ' by ' + escStr(r.visit_confirmed_by) : '') + ' &middot; shown on the receipt</div>'
+      : '<button class="btn btn-teal" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="confirmVisit(\''+r.id+'\')">Confirm visit took place</button>';
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px;padding:12px;font-size:13px;border-radius:10px" onclick="downloadReceipt(\''+r.id+'\')">Download Receipt (PDF)</button>';
     if (r.status === 'completed') ctaHTML += '<button class="btn btn-teal" style="width:100%;padding:12px;font-size:13px;border-radius:10px" onclick="closeCVRideDetail();resendReceipt(\''+r.id+'\')">Resend Receipt</button>';
   }
