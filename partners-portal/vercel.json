@@ -53,6 +53,10 @@
       "dest": "/email-logo-mark.png"
     },
     {
+      "src": "/carevoy-logo.svg",
+      "dest": "/carevoy-logo.svg"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
