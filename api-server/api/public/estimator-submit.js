@@ -9,6 +9,7 @@
 
 const { escHtml, adminClient } = require('../../lib/security');
 const { hit, clientIp } = require('../../lib/ratelimit');
+const { upsertLead } = require('../../lib/estimator-leads');
 
 // A facility "qualifies" at this many likely rides per year (about 10 a month).
 // Keep in sync with QUALIFY_RIDES in partners-portal/estimator.html.
@@ -83,6 +84,9 @@ module.exports = async function handler(req, res) {
       html: shell('We received your numbers', '<p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">Thank you. Here is what you sent. We will follow up within two business days.</p>' + table +
         '<p style="color:#9CA3AF;font-size:12px;margin-top:18px">Questions? Reply to this email or write partners@carevoy.co</p>'),
     }).catch(() => {});
+
+    // Mark them as sent so no reminder goes out (best effort: ignored if the leads table is not set up yet).
+    await upsertLead(adminClient(), email, { appointments: appts, pct_commercial: p[0], pct_medicare: p[1], pct_medicaid: p[2], pct_selfpay: p[3], pct_need_ride: need, contact_name: name, facility_name: facility, visit_types: visits }, true).catch(() => {});
 
     return res.status(200).json({ success: true, qualifies, rides, out_of_pocket_rides: oop });
   } catch (e) {
