@@ -31,6 +31,19 @@
     .stat-card { background:#fff; border-radius:14px; padding:16px 18px; border:1px solid #E4E4E7; box-shadow:0 1px 3px rgba(6,13,31,.05); }
     .stat-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; background:#F2F2F3; color:#060D1F; }
     .stat-icon.on-dark { background:rgba(255,255,255,.10); color:#fff; }
+    .hero-card { border-top:3px solid #00C2A8; }
+    .hero-icon { background:rgba(0,194,168,0.12); color:#007a69; }
+    .hero-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+    @media(max-width:560px){ .hero-grid { grid-template-columns:1fr; } }
+    .hero-note { color:#6B6F76; font-size:11px; margin-top:2px; }
+    .report-label { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:1px; margin:6px 0 10px; }
+    .conn-panel { padding:12px 10px 4px; border-top:1px solid #E4E4E7; }
+    .conn-title { font-size:10px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:1px; padding:0 12px 6px; }
+    .conn-item { display:flex; align-items:center; gap:8px; width:100%; padding:7px 12px; border:none; background:none; border-radius:8px; font-family:inherit; font-size:12px; color:#374151; cursor:pointer; text-align:left; }
+    .conn-item:hover { background:#F6F6F7; }
+    .conn-dot { width:7px; height:7px; border-radius:50%; background:#D1D5DB; flex-shrink:0; }
+    .conn-dot.on { background:#00C2A8; }
+    .conn-state { margin-left:auto; font-size:10px; color:#9CA3AF; }
     .stat-label { color:#6B6F76; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
     .stat-value { font-size:28px; font-weight:600; color:#060D1F; }
     .stat-value.teal { color:#060D1F; }
@@ -170,6 +183,12 @@
     <button class="nav-item" onclick="showNav('settings',this)">Settings</button>
     <button class="nav-item" onclick="openFeatureBox()">Request a feature</button>
   </nav>
+  <div class="conn-panel" id="connPanel">
+    <div class="conn-title">Connected</div>
+    <button class="conn-item" onclick="showNav('integrations',document.querySelector('.nav-item[onclick*=integrations]'))"><span class="conn-dot" id="connDotCal"></span>Calendar sync<span class="conn-state" id="connStateCal"></span></button>
+    <button class="conn-item" onclick="showNav('integrations',document.querySelector('.nav-item[onclick*=integrations]'))"><span class="conn-dot" id="connDotEhr"></span>EHR sync<span class="conn-state" id="connStateEhr"></span></button>
+    <button class="conn-item" onclick="showNav('integrations',document.querySelector('.nav-item[onclick*=integrations]'))"><span class="conn-dot"></span>Alerts<span class="conn-state">Manage</span></button>
+  </div>
   <div style="padding:14px 10px;border-top:1px solid #E4E4E7">
     <div id="sidebarFacility" style="color:#6B7280;font-size:11px;padding:4px 12px;line-height:1.4"></div>
   </div>
@@ -197,18 +216,19 @@
     <div class="page-sub" id="pageFacility">Loading your facility…</div>
 
     <!-- Hero metrics: the numbers a facility shows their boss -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-      <div class="stat-card" style="background:#060D1F;border:none">
-        <div class="stat-icon on-dark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-        <div class="stat-label" style="color:#9CA3AF">Rides Completed</div>
-        <div class="stat-value" style="color:#fff;font-size:32px" id="statKept">—</div>
-        <div style="color:#6B7280;font-size:11px;margin-top:2px">Completed rides = appointments your patients made</div>
+    <div class="report-label">Impact</div>
+    <div class="hero-grid">
+      <div class="stat-card hero-card">
+        <div class="stat-icon hero-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <div class="stat-label">Rides Completed</div>
+        <div class="stat-value" style="font-size:32px" id="statKept">—</div>
+        <div class="hero-note">Completed rides = appointments your patients made</div>
       </div>
-      <div class="stat-card" style="background:#060D1F;border:none">
-        <div class="stat-icon on-dark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
-        <div class="stat-label" style="color:#9CA3AF">Est. HSA/FSA Tax Savings</div>
-        <div class="stat-value" style="color:#fff;font-size:32px" id="statSavings">—</div>
-        <div style="color:#6B7280;font-size:11px;margin-top:2px">IRS 213(d) receipts · 30% bracket est. · actual savings vary by patient</div>
+      <div class="stat-card hero-card">
+        <div class="stat-icon hero-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+        <div class="stat-label">Est. HSA/FSA Tax Savings</div>
+        <div class="stat-value" style="font-size:32px" id="statSavings">—</div>
+        <div class="hero-note">IRS 213(d) receipts · 30% bracket est. · actual savings vary by patient</div>
       </div>
     </div>
 
@@ -737,6 +757,7 @@ async function init() {
     document.getElementById('pageFacility').textContent = (hospitalInfo ? hospitalInfo.name : 'Not linked to a facility') + ' · ' + new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
     document.getElementById('topSub').textContent = hospitalInfo ? hospitalInfo.name : '';
     document.getElementById('sidebarFacility').textContent = hospitalInfo ? hospitalInfo.name : '';
+    loadConnPanel();
 
     // Settings populate
     document.getElementById('setPocName').textContent = coordInfo.full_name || '—';
@@ -1699,6 +1720,20 @@ function closeDrawer() {
 // ── Nav ────────────────────────────────────────────────────
 function toggleMenu(open) {
   document.body.classList.toggle('nav-open', typeof open === 'boolean' ? open : !document.body.classList.contains('nav-open'));
+}
+async function loadConnPanel() {
+  try {
+    var r = await fetch(API + '/api/billing/status', { headers: { 'Authorization': 'Bearer ' + token } });
+    var b = await r.json();
+    if (!r.ok) return;
+    [['calendar_sync','Cal'],['ehr_sync','Ehr']].forEach(function(p) {
+      var a = (b.addons || []).filter(function(x){ return x.key === p[0]; })[0];
+      var on = !!(a && (a.active || !b.enforcement_on));
+      var dot = document.getElementById('connDot' + p[1]), st = document.getElementById('connState' + p[1]);
+      if (dot) dot.className = 'conn-dot' + (on ? ' on' : '');
+      if (st) st.textContent = on ? 'On' : 'Add';
+    });
+  } catch (e) {}
 }
 function showNav(name, el) {
   toggleMenu(false);

@@ -127,13 +127,36 @@
     .page-overlay .page-title { color:#060D1F; font-size:22px; font-weight:600; margin-bottom:2px; letter-spacing:-.01em; }
     .page-overlay .page-sub { color:#6B6F76; font-size:13px; margin-bottom:24px; }
     @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(3, 1fr); } .two-col { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    .menu-btn { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid #E4E4E7; background: #fff; cursor: pointer; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 10px; }
+    .menu-btn span, .menu-btn span::before, .menu-btn span::after { display: block; width: 16px; height: 2px; background: #060D1F; border-radius: 2px; position: relative; content: ''; }
+    .menu-btn span::before { position: absolute; top: -5px; left: 0; }
+    .menu-btn span::after { position: absolute; top: 5px; left: 0; }
+    .nav-scrim { display: none; position: fixed; inset: 0; background: rgba(6,13,31,0.35); z-index: 19; }
+    .report-label { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 10px; }
+    .conn-panel { padding: 12px 10px 4px; border-top: 1px solid #E4E4E7; }
+    .conn-title { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1px; padding: 0 12px 6px; }
+    .conn-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; border: none; background: none; border-radius: 8px; font-family: inherit; font-size: 12px; color: #374151; cursor: pointer; text-align: left; }
+    .conn-item:hover { background: #F6F6F7; }
+    .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: #D1D5DB; flex-shrink: 0; }
+    .conn-state { margin-left: auto; font-size: 10px; color: #9CA3AF; }
+    @media (max-width: 768px) {
+      .menu-btn { display: flex; }
+      .sidebar { transform: translateX(-100%); transition: transform .2s ease; }
+      body.nav-open .sidebar { transform: translateX(0); box-shadow: 0 0 30px rgba(0,0,0,0.15); }
+      body.nav-open .nav-scrim { display: block; }
+      .main { margin-left: 0; }
+      .stats-row { grid-template-columns: repeat(2, 1fr) !important; }
+      .topbar { padding: 0 14px; }
+      .date-label, .topbar-left > div[style*="margin-left:20px"] { display: none !important; }
+      .page, .page-overlay { padding: 18px 14px 64px; }
+    }
   </style>
 </head>
 <body>
 
 <div id="loading"><div class="spinner"></div></div>
 
+<div class="nav-scrim" onclick="toggleMenu(false)"></div>
 <!-- Sidebar -->
 <div class="sidebar">
   <div class="sidebar-brand">
@@ -150,12 +173,19 @@
     <button class="nav-item" onclick="showSection('revenue')">Revenue</button>
     <button class="nav-item" onclick="showSection('settings')">Settings</button>
   </nav>
+  <div class="conn-panel">
+    <div class="conn-title">Platform services</div>
+    <button class="conn-item" onclick="showSection('settings')"><span class="conn-dot"></span>Email (Resend)</button>
+    <button class="conn-item" onclick="showSection('settings')"><span class="conn-dot"></span>Texts (Twilio)</button>
+    <button class="conn-item" onclick="showSection('settings')"><span class="conn-dot"></span>Payments (Stripe)</button>
+  </div>
 </div>
 
 <!-- Main -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
+      <button class="menu-btn" onclick="toggleMenu()" aria-label="Menu"><span></span></button>
       <div class="live-dot"></div>
       <span class="live-label">Live</span>
       <div style="margin-left:20px;display:flex;align-items:center;gap:6px">
@@ -180,6 +210,7 @@
     <div class="page-sub" id="pageSub">Live data · refreshes every 30 seconds</div>
 
     <div id="sec-overview">
+    <div class="report-label">Overview</div>
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card">
@@ -212,6 +243,7 @@
       </div>
     </div>
 
+    <div class="report-label">Network</div>
     <!-- Facilities Active stat -->
     <div class="stats-row" style="grid-template-columns: repeat(2,1fr) 1fr; margin-bottom: 28px;">
       <div class="stat-card" style="grid-column:1">
@@ -224,6 +256,7 @@
       </div>
     </div>
 
+    <div class="report-label">Business</div>
     <!-- Business metrics (MRR, paying facilities, rides per month, completion rate) -->
     <div class="stats-row" style="grid-template-columns: repeat(3,1fr); margin-bottom: 14px;">
       <div class="stat-card">
@@ -1398,7 +1431,11 @@
     currentInviteUrl = '';
   }
 
+  function toggleMenu(open) {
+    document.body.classList.toggle('nav-open', typeof open === 'boolean' ? open : !document.body.classList.contains('nav-open'));
+  }
   function showSection(name) {
+    toggleMenu(false);
 
   // ── Load all registered patients ──
   async function loadPatients() {
