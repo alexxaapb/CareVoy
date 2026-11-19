@@ -21,6 +21,10 @@
       "dest": "/facility-signup.html"
     },
     {
+      "src": "/estimator",
+      "dest": "/estimator.html"
+    },
+    {
       "src": "/admin.html",
       "dest": "/admin.html"
     },
@@ -47,6 +51,10 @@
     {
       "src": "/email-logo-mark.png",
       "dest": "/email-logo-mark.png"
+    },
+    {
+      "src": "/carevoy-logo.svg",
+      "dest": "/carevoy-logo.svg"
     },
     {
       "src": "/(.*)",
