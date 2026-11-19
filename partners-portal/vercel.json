@@ -21,6 +21,10 @@
       "dest": "/facility-signup.html"
     },
     {
+      "src": "/estimator",
+      "dest": "/estimator.html"
+    },
+    {
       "src": "/admin.html",
       "dest": "/admin.html"
     },
