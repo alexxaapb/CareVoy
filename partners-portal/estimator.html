@@ -52,10 +52,18 @@
     .btn-dark { background: #060D1F; color: #fff; }
     .btn-light { background: #fff; color: #060D1F; }
     .foot { margin-top: 22px; font-size: 12.5px; color: #4B5563; }
+    .status { font-size: 13.5px; margin-top: 12px; display: none; padding: 10px 12px; border-radius: 10px; }
+    .status.err { display: block; background: #FEE2E2; color: #991B1B; }
+    .status.ok { display: block; background: #E6FAF6; color: #065F52; }
+    .qualify { display: none; margin-top: 16px; border: 1.5px solid #00C2A8; background: #F0FBF9; border-radius: 14px; padding: 16px; }
+    .q-title { font-weight: 700; font-size: 16px; }
+    .q-body { font-size: 13.5px; color: #374151; margin-top: 4px; }
+    .btn[disabled] { opacity: .6; cursor: default; }
     @media print {
+      .status { display: none !important; }
       body { background: #fff; }
       .band { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .actions, .note, .inputs-card { display: none !important; }
+      .actions, .note, .inputs-card, .qualify { display: none !important; }
       .grid { grid-template-columns: 1fr; }
       .card { box-shadow: none; }
     }
@@ -75,7 +83,7 @@
 
   <div class="note">
     <div class="note-dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#060D1F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></div>
-    <div><strong>Counts only.</strong> Please don't enter patient names, birth dates, addresses or ID numbers. This page does the math in your browser. Nothing you type is saved or sent anywhere unless you choose to email it to us.</div>
+    <div><strong>Counts only.</strong> Please don't enter patient names, birth dates, addresses or ID numbers. This page does the math in your browser. The snapshot updates in your browser as you type. Nothing is sent to us until you press <strong>Send to CareVoy</strong>, and then we receive only the counts and the contact details you enter.</div>
   </div>
 
   <div class="grid">
@@ -103,6 +111,19 @@
         <label for="facility">Facility name <span class="hint">(optional, for your printout)</span></label>
         <input type="text" id="facility" maxlength="80" autocomplete="organization">
       </div>
+      <div class="field">
+        <label for="visits">Most common visit types <span class="hint">(optional, e.g. imaging, dialysis)</span></label>
+        <input type="text" id="visits" maxlength="120">
+      </div>
+      <div class="field">
+        <label for="cname">Your name <span class="hint">(optional)</span></label>
+        <input type="text" id="cname" maxlength="80" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="cemail">Your email <span class="hint">(so we can send your snapshot)</span></label>
+        <input type="text" id="cemail" maxlength="120" inputmode="email" autocomplete="email">
+      </div>
+      <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website <input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
     </div>
 
     <div class="card" id="result">
@@ -126,8 +147,14 @@
       </div>
       <div class="assume">Estimate only. Assumes patients who need rides pay the same way as everyone else. Your real mix may differ.</div>
       <div class="actions">
-        <button class="btn btn-dark" type="button" onclick="window.print()">Print or save as PDF</button>
-        <a class="btn btn-light" id="mail" href="mailto:partners@carevoy.co?subject=Ride%20Opportunity%20Snapshot">Email this to CareVoy</a>
+        <button class="btn btn-dark" type="button" id="send">Send to CareVoy</button>
+        <button class="btn btn-light" type="button" onclick="window.print()">Print or save as PDF</button>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <div class="qualify" id="qualify">
+        <div class="q-title" id="qTitle"></div>
+        <div class="q-body" id="qBody"></div>
+        <a class="btn btn-dark" id="qBtn" href="/facility-signup" style="margin-top:12px">Sign up your facility</a>
       </div>
     </div>
   </div>
@@ -138,7 +165,10 @@
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var ids = ['appts', 'p_comm', 'p_mcare', 'p_mcaid', 'p_self', 'need', 'facility'];
+  var ids = ['appts', 'p_comm', 'p_mcare', 'p_mcaid', 'p_self', 'need', 'facility', 'visits', 'cname', 'cemail'];
+  var API = 'https://care-voy-api-server.vercel.app';
+  // A facility qualifies at this many likely rides per year (about 10 a month). Keep in sync with api-server/api/public/estimator-submit.js.
+  var QUALIFY_RIDES = 120;
   function num(id) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : 0; }
   function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
   function pctStr(n) { return (Math.round(n * 10) / 10) + '%'; }
@@ -170,15 +200,47 @@
       $('headline').textContent = 'Enter your numbers to see your snapshot.';
     }
 
-    var body = 'Facility: ' + (name || '(not given)') + '\n' +
-      'Appointments per year: ' + (appts || '-') + '\n' +
-      'Commercial: ' + pctStr(p[0]) + '  Medicare: ' + pctStr(p[1]) + '  Medicaid: ' + pctStr(p[2]) + '  Self-pay: ' + pctStr(p[3]) + '\n' +
-      'Needing a ride: ' + pctStr(need) + '\n' +
-      'Estimated rides per year: ' + (appts > 0 && need > 0 ? fmt(rides) : '-') + '\n' +
-      'Estimated out-of-pocket rides: ' + (appts > 0 && need > 0 && sum > 0 ? fmt(oop) : '-') + '\n';
-    $('mail').href = 'mailto:partners@carevoy.co?subject=' + encodeURIComponent('Ride Opportunity Snapshot' + (name ? ' - ' + name : '')) + '&body=' + encodeURIComponent(body);
   }
-  ids.forEach(function (id) { $(id).addEventListener('input', update); });
+  function showQualify(q, rides) {
+    $('qualify').style.display = 'block';
+    if (q) {
+      $('qTitle').textContent = 'Good news: you are a strong fit for CareVoy.';
+      $('qBody').textContent = 'With about ' + fmt(rides) + ' likely rides a year, you can start now. Create your facility account in a few minutes, or wait for our follow-up.';
+      $('qBtn').textContent = 'Sign up your facility';
+      $('qBtn').style.display = 'inline-block';
+    } else {
+      $('qTitle').textContent = 'Thanks. We will be in touch.';
+      $('qBody').textContent = 'At about ' + fmt(rides) + ' likely rides a year you are on the smaller side for now, but we will follow up with options. You are welcome to sign up any time.';
+      $('qBtn').textContent = 'Sign up anyway';
+      $('qBtn').style.display = 'inline-block';
+    }
+  }
+  function status(kind, msg) { var el = $('status'); el.className = 'status ' + kind; el.textContent = msg; }
+  $('send').addEventListener('click', function () {
+    var btn = $('send');
+    var payload = {
+      appointments: num('appts'), pct_commercial: num('p_comm'), pct_medicare: num('p_mcare'), pct_medicaid: num('p_mcaid'),
+      pct_selfpay: num('p_self'), pct_need_ride: num('need'), facility_name: $('facility').value, visit_types: $('visits').value,
+      contact_name: $('cname').value, contact_email: $('cemail').value.trim(), website: $('website').value
+    };
+    if (!(payload.appointments > 0)) { status('err', 'Please enter your appointments per year.'); return; }
+    if (!(payload.pct_commercial + payload.pct_medicare + payload.pct_medicaid + payload.pct_selfpay > 0)) { status('err', 'Please enter the share of appointments paid by each source.'); return; }
+    if (!/^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/.test(payload.contact_email)) { status('err', 'Please enter a valid email so we can send your snapshot.'); return; }
+    btn.disabled = true; btn.textContent = 'Sending...';
+    fetch(API + '/api/public/estimator-submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (x) {
+        if (!x.ok) throw new Error((x.j && x.j.error) || 'Could not send.');
+        status('ok', 'Sent. A copy is on its way to ' + payload.contact_email + '.');
+        btn.textContent = 'Sent';
+        showQualify(!!x.j.qualifies, x.j.rides || 0);
+      })
+      .catch(function (e) {
+        btn.disabled = false; btn.textContent = 'Send to CareVoy';
+        status('err', (e && e.message ? e.message : 'Could not send.') + ' You can also email partners@carevoy.co.');
+      });
+  });
+  ids.forEach(function (id) { $(id).addEventListener('input', function () { update(); var b = $('send'); if (b.textContent === 'Sent') { b.disabled = false; b.textContent = 'Send to CareVoy'; } }); });
   update();
 })();
 </script>
