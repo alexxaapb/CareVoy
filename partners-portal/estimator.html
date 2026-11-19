@@ -122,6 +122,7 @@
       <div class="field">
         <label for="cemail">Your email <span class="hint">(so we can send your snapshot)</span></label>
         <input type="text" id="cemail" maxlength="120" inputmode="email" autocomplete="email">
+        <div class="hint" style="font-size:12px;margin-top:4px">We save your numbers once you enter your email, so you can finish later. We send one reminder at most.</div>
       </div>
       <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website <input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
     </div>
@@ -216,13 +217,43 @@
     }
   }
   function status(kind, msg) { var el = $('status'); el.className = 'status ' + kind; el.textContent = msg; }
-  $('send').addEventListener('click', function () {
-    var btn = $('send');
-    var payload = {
+  // Save a half-finished form once the email is in, so one reminder can go out if they never press Send.
+  var emailRe = /^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/, lastSaved = '', sent = false;
+  function collect() {
+    return {
       appointments: num('appts'), pct_commercial: num('p_comm'), pct_medicare: num('p_mcare'), pct_medicaid: num('p_mcaid'),
       pct_selfpay: num('p_self'), pct_need_ride: num('need'), facility_name: $('facility').value, visit_types: $('visits').value,
       contact_name: $('cname').value, contact_email: $('cemail').value.trim(), website: $('website').value
     };
+  }
+  function savePartial() {
+    var p = collect();
+    if (sent || !emailRe.test(p.contact_email) || !(p.appointments > 0)) return;
+    var key = JSON.stringify(p);
+    if (key === lastSaved) return;
+    lastSaved = key;
+    try { fetch(API + '/api/public/estimator-save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: key, keepalive: true }).catch(function () {}); } catch (e) {}
+  }
+  ['cemail', 'cname', 'facility', 'appts'].forEach(function (id) { $(id).addEventListener('blur', savePartial); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') savePartial(); });
+
+  // Reopen saved numbers from the reminder email link (?r=<token>)
+  try {
+    var tok = new URLSearchParams(location.search).get('r');
+    if (tok && /^[0-9a-f-]{36}$/i.test(tok)) {
+      fetch(API + '/api/public/estimator-resume?token=' + tok).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+        if (!j || !j.lead) return;
+        var L = j.lead, map = { appts: 'appointments', p_comm: 'pct_commercial', p_mcare: 'pct_medicare', p_mcaid: 'pct_medicaid', p_self: 'pct_selfpay', need: 'pct_need_ride', facility: 'facility_name', visits: 'visit_types', cname: 'contact_name', cemail: 'email' };
+        Object.keys(map).forEach(function (id) { if (L[map[id]] != null && L[map[id]] !== '') $(id).value = L[map[id]]; });
+        update();
+        status('ok', 'Welcome back. Your numbers are filled in. Press Send when you are ready.');
+      }).catch(function () {});
+    }
+  } catch (e) {}
+
+  $('send').addEventListener('click', function () {
+    var btn = $('send');
+    var payload = collect();
     if (!(payload.appointments > 0)) { status('err', 'Please enter your appointments per year.'); return; }
     if (!(payload.pct_commercial + payload.pct_medicare + payload.pct_medicaid + payload.pct_selfpay > 0)) { status('err', 'Please enter the share of appointments paid by each source.'); return; }
     if (!/^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/.test(payload.contact_email)) { status('err', 'Please enter a valid email so we can send your snapshot.'); return; }
@@ -232,7 +263,7 @@
       .then(function (x) {
         if (!x.ok) throw new Error((x.j && x.j.error) || 'Could not send.');
         status('ok', 'Sent. A copy is on its way to ' + payload.contact_email + '.');
-        btn.textContent = 'Sent';
+        btn.textContent = 'Sent'; sent = true;
         showQualify(!!x.j.qualifies, x.j.rides || 0);
       })
       .catch(function (e) {
@@ -240,7 +271,7 @@
         status('err', (e && e.message ? e.message : 'Could not send.') + ' You can also email partners@carevoy.co.');
       });
   });
-  ids.forEach(function (id) { $(id).addEventListener('input', function () { update(); var b = $('send'); if (b.textContent === 'Sent') { b.disabled = false; b.textContent = 'Send to CareVoy'; } }); });
+  ids.forEach(function (id) { $(id).addEventListener('input', function () { update(); var b = $('send'); if (b.textContent === 'Sent') { sent = false; b.disabled = false; b.textContent = 'Send to CareVoy'; } }); });
   update();
 })();
 </script>
