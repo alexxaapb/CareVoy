@@ -133,12 +133,6 @@
     .menu-btn span::after { position: absolute; top: 5px; left: 0; }
     .nav-scrim { display: none; position: fixed; inset: 0; background: rgba(6,13,31,0.35); z-index: 19; }
     .report-label { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 10px; }
-    .conn-panel { padding: 12px 10px 4px; border-top: 1px solid #E4E4E7; }
-    .conn-title { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1px; padding: 0 12px 6px; }
-    .conn-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; border: none; background: none; border-radius: 8px; font-family: inherit; font-size: 12px; color: #374151; cursor: pointer; text-align: left; }
-    .conn-item:hover { background: #F6F6F7; }
-    .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: #D1D5DB; flex-shrink: 0; }
-    .conn-state { margin-left: auto; font-size: 10px; color: #9CA3AF; }
     @media (max-width: 768px) {
       .menu-btn { display: flex; }
       .sidebar { transform: translateX(-100%); transition: transform .2s ease; }
@@ -168,17 +162,11 @@
     <button class="nav-item" onclick="showSection('patients')">All Patients</button>
     <button class="nav-item" onclick="showSection('rides')">All Rides</button>
     <button class="nav-item" onclick="showSection('facilities')">Facilities</button>
-    <button class="nav-item" onclick="showSection('usage')">Plans &amp; Usage</button>
     <button class="nav-item" onclick="showSection('partners')">NEMT Partners</button>
+    <button class="nav-item" onclick="showSection('usage')">Plans &amp; Usage</button>
     <button class="nav-item" onclick="showSection('revenue')">Revenue</button>
     <button class="nav-item" onclick="showSection('settings')">Settings</button>
   </nav>
-  <div class="conn-panel">
-    <div class="conn-title">Platform services</div>
-    <button class="conn-item" onclick="showSection('settings')"><span class="conn-dot"></span>Email (Resend)</button>
-    <button class="conn-item" onclick="showSection('settings')"><span class="conn-dot"></span>Texts (Twilio)</button>
-    <button class="conn-item" onclick="showSection('settings')"><span class="conn-dot"></span>Payments (Stripe)</button>
-  </div>
 </div>
 
 <!-- Main -->
@@ -1472,7 +1460,7 @@
   }
 
     location.hash = name;
-    var sections = ['overview','patients','rides','facilities','usage','partners','revenue','settings'];
+    var sections = ['overview','patients','rides','facilities','partners','usage','revenue','settings'];
     // Update nav active state
     document.querySelectorAll('.nav-item').forEach(function(el, i) {
       el.classList.toggle('active', sections[i] === name);
