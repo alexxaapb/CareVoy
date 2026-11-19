@@ -168,8 +168,8 @@
     <button class="nav-item" onclick="showSection('patients')">All Patients</button>
     <button class="nav-item" onclick="showSection('rides')">All Rides</button>
     <button class="nav-item" onclick="showSection('facilities')">Facilities</button>
-    <button class="nav-item" onclick="showSection('usage')">Plans &amp; Usage</button>
     <button class="nav-item" onclick="showSection('partners')">NEMT Partners</button>
+    <button class="nav-item" onclick="showSection('usage')">Plans &amp; Usage</button>
     <button class="nav-item" onclick="showSection('revenue')">Revenue</button>
     <button class="nav-item" onclick="showSection('settings')">Settings</button>
   </nav>
@@ -1472,7 +1472,7 @@
   }
 
     location.hash = name;
-    var sections = ['overview','patients','rides','facilities','usage','partners','revenue','settings'];
+    var sections = ['overview','patients','rides','facilities','partners','usage','revenue','settings'];
     // Update nav active state
     document.querySelectorAll('.nav-item').forEach(function(el, i) {
       el.classList.toggle('active', sections[i] === name);
