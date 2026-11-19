@@ -6,6 +6,7 @@
 // add-on locking stays OFF until ENFORCE_ADDONS=true is set in Vercel.
 
 const { adminClient } = require('./security');
+const { PLANS, tierForBand } = require('./plans');
 
 const TIER_LABELS = { starter: 'Starter', essential: 'Essential', professional: 'Professional' };
 
@@ -45,7 +46,7 @@ function monthRangeUTC(now) {
 async function loadBilling(sb, hospitalId) {
   const client = sb || adminClient();
   const [hospRes, billRes] = await Promise.all([
-    client.from('hospitals').select('name, tier').eq('id', hospitalId).maybeSingle(),
+    client.from('hospitals').select('name, tier, active, intake_data').eq('id', hospitalId).maybeSingle(),
     client.from('facility_billing').select('*').eq('hospital_id', hospitalId).maybeSingle(),
   ]);
   const hospital = hospRes.data || {};
@@ -77,7 +78,23 @@ async function loadBilling(sb, hospitalId) {
   }));
 
   const tier = hospital.tier || 'starter';
+
+  // Self-serve signups must choose and pay for a plan before the portal opens. Plan names and prices
+  // are only sent to a facility that is in this state, so they stay private.
+  const intake = hospital.intake_data || {};
+  const activeSub = ACTIVE_SUB_STATUSES.includes(bill && bill.subscription_status);
+  const needsPlan = intake.signup_flow === 'self_serve' && !hospital.active && !activeSub;
+  const recommended = tierForBand(intake.patient_volume);
+  const signup = { needs_plan: needsPlan };
+  if (needsPlan) {
+    signup.recommended = recommended;
+    signup.plans = Object.keys(PLANS).map((k) => ({
+      tier: k, label: PLANS[k].label, price_label: PLANS[k].price_label, rides: PLANS[k].rides,
+      best_for: PLANS[k].best_for, can_buy: !!process.env.STRIPE_SECRET_KEY && !!process.env[PLANS[k].price_env],
+    }));
+  }
   return {
+    signup,
     facility: hospital.name || '',
     plan: { tier, label: TIER_LABELS[tier] || (tier.charAt(0).toUpperCase() + tier.slice(1)) },
     subscription_status: bill ? bill.subscription_status || null : null,
