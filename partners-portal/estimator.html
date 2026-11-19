@@ -94,12 +94,12 @@
         <input type="number" id="appts" inputmode="numeric" min="0" step="1" placeholder="e.g. 12000">
       </div>
       <div class="field">
-        <label>Share of appointments paid by <span class="hint">(about 100% total)</span></label>
+        <label>Share of appointments paid by <span class="hint">(self-pay fills in for you so the total is 100%)</span></label>
         <div class="pairs">
           <div class="pct"><input type="number" id="p_comm" inputmode="decimal" min="0" max="100" placeholder="Commercial" aria-label="Commercial insurance percent"><span>%</span></div>
           <div class="pct"><input type="number" id="p_mcare" inputmode="decimal" min="0" max="100" placeholder="Medicare" aria-label="Medicare percent"><span>%</span></div>
           <div class="pct"><input type="number" id="p_mcaid" inputmode="decimal" min="0" max="100" placeholder="Medicaid" aria-label="Medicaid percent"><span>%</span></div>
-          <div class="pct"><input type="number" id="p_self" inputmode="decimal" min="0" max="100" placeholder="Self-pay" aria-label="Self-pay or out of pocket percent"><span>%</span></div>
+          <div class="pct"><input type="number" id="p_self" readonly tabindex="-1" placeholder="Self-pay (auto)" aria-label="Self-pay or out of pocket percent, calculated for you" style="background:#F6F6F7"><span>%</span></div>
         </div>
         <div class="warn" id="sumWarn"></div>
       </div>
@@ -176,13 +176,19 @@
 
   function update() {
     var appts = num('appts'), need = Math.min(num('need'), 100);
-    var p = [num('p_comm'), num('p_mcare'), num('p_mcaid'), num('p_self')].map(function (v) { return Math.min(v, 100); });
+    // Self-pay is whatever is left after the three insurance sources, so the total is always 100%.
+    var ins = [num('p_comm'), num('p_mcare'), num('p_mcaid')].map(function (v) { return Math.min(v, 100); });
+    var insSum = ins[0] + ins[1] + ins[2];
+    var anyIns = $('p_comm').value !== '' || $('p_mcare').value !== '' || $('p_mcaid').value !== '';
+    var selfPay = Math.max(0, Math.round((100 - insSum) * 10) / 10);
+    $('p_self').value = anyIns ? selfPay : '';
+    var p = [ins[0], ins[1], ins[2], anyIns ? selfPay : 0];
     var sum = p[0] + p[1] + p[2] + p[3];
 
     var warn = $('sumWarn');
-    if (sum > 0 && Math.abs(sum - 100) > 2) {
+    if (insSum > 100) {
       warn.style.display = 'block';
-      warn.textContent = 'These add up to ' + pctStr(sum) + '. The snapshot scales them to 100%, but check the numbers if that looks off.';
+      warn.textContent = 'Commercial, Medicare and Medicaid add up to ' + pctStr(insSum) + ', which is over 100%. Please check those numbers.';
     } else { warn.style.display = 'none'; }
 
     var shares = sum > 0 ? p.map(function (v) { return v / sum * 100; }) : [0, 0, 0, 0];
