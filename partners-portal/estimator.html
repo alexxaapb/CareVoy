@@ -52,6 +52,8 @@
     .btn-dark { background: #060D1F; color: #fff; }
     .btn-light { background: #fff; color: #060D1F; }
     .foot { margin-top: 22px; font-size: 12.5px; color: #4B5563; }
+    .plan { margin-top: 12px; border: 1px solid #E4E4E7; border-radius: 12px; padding: 14px; background: #F0FBF9; }
+    .plan-v { font-size: 20px; font-weight: 700; margin-top: 2px; }
     .status { font-size: 13.5px; margin-top: 12px; display: none; padding: 10px 12px; border-radius: 10px; }
     .status.err { display: block; background: #FEE2E2; color: #991B1B; }
     .status.ok { display: block; background: #E6FAF6; color: #065F52; }
@@ -146,6 +148,7 @@
         <div class="tile"><div class="tile-l">Likely rides / year</div><div class="tile-v" id="t_rides">–</div></div>
         <div class="tile"><div class="tile-l">Out-of-pocket rides</div><div class="tile-v" id="t_oop">–</div><div class="tile-s">patients who would pay themselves</div></div>
       </div>
+      <div class="plan" id="plan" style="display:none"><div class="tile-l">Plan that fits your volume</div><div class="plan-v" id="planV"></div><div class="tile-s" id="planS"></div></div>
       <div class="assume">Estimate only. Assumes patients who need rides pay the same way as everyone else. Your real mix may differ.</div>
       <div class="actions">
         <button class="btn btn-dark" type="button" id="send">Send to CareVoy</button>
@@ -168,8 +171,14 @@
   var $ = function (id) { return document.getElementById(id); };
   var ids = ['appts', 'p_comm', 'p_mcare', 'p_mcaid', 'p_self', 'need', 'facility', 'visits', 'cname', 'cemail'];
   var API = 'https://care-voy-api-server.vercel.app';
-  // A facility qualifies at this many likely rides per year (about 10 a month). Keep in sync with api-server/api/public/estimator-submit.js.
-  var QUALIFY_RIDES = 120;
+  // A facility qualifies at this many likely rides per month. Keep in sync with api-server/api/public/estimator-submit.js.
+  var QUALIFY_PER_MONTH = 20;
+  function planFor(m) {
+    if (m <= 75) return { name: 'Starter', price: '$899/mo', band: 'up_to_75' };
+    if (m <= 300) return { name: 'Essential', price: '$1,999/mo', band: '75_300' };
+    if (m <= 800) return { name: 'Professional', price: '$4,499/mo', band: '300_800' };
+    return { name: 'Enterprise', price: 'Custom pricing', band: m <= 2000 ? '800_2000' : '2000_plus' };
+  }
   function num(id) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : 0; }
   function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
   function pctStr(n) { return (Math.round(n * 10) / 10) + '%'; }
@@ -200,6 +209,12 @@
     $('t_rides').textContent = appts > 0 && need > 0 ? fmt(rides) : '–';
     $('t_oop').textContent = appts > 0 && need > 0 && sum > 0 ? fmt(oop) : '–';
 
+    var perMonth = rides / 12, pl = planFor(perMonth);
+    if (appts > 0 && need > 0) {
+      $('plan').style.display = 'block';
+      $('planV').textContent = pl.name + ' \u00b7 ' + pl.price;
+      $('planS').textContent = 'About ' + fmt(perMonth) + ' rides a month' + (pl.name === 'Enterprise' ? '. We will build a custom plan.' : '. Plans are priced by monthly ride volume.');
+    } else { $('plan').style.display = 'none'; }
     var name = $('facility').value.trim();
     if (sum > 0) {
       $('headline').textContent = (name ? name + ': about ' : 'About ') + (shares[3] >= 9.5 ? '1 in ' + Math.max(1, Math.round(100 / shares[3])) : Math.round(shares[3]) + '%') + ' of your appointments ' + (shares[3] >= 9.5 ? 'is' : 'are') + ' paid out of pocket.';
@@ -209,18 +224,19 @@
 
   }
   function showQualify(q, rides) {
+    var pl = planFor(rides / 12);
     $('qualify').style.display = 'block';
+    $('qBtn').href = '/facility-signup?volume=' + pl.band;
     if (q) {
       $('qTitle').textContent = 'Good news: you are a strong fit for CareVoy.';
-      $('qBody').textContent = 'With about ' + fmt(rides) + ' likely rides a year, you can start now. Create your facility account in a few minutes, or wait for our follow-up.';
-      $('qBtn').textContent = 'Sign up your facility';
-      $('qBtn').style.display = 'inline-block';
+      $('qBody').textContent = 'With about ' + fmt(rides / 12) + ' likely rides a month, the ' + pl.name + ' plan fits. Start your application now (your plan is already chosen, and you can change it), or wait for our follow-up.';
+      $('qBtn').textContent = 'Apply now';
     } else {
       $('qTitle').textContent = 'Thanks. We will be in touch.';
-      $('qBody').textContent = 'At about ' + fmt(rides) + ' likely rides a year you are on the smaller side for now, but we will follow up with options. You are welcome to sign up any time.';
-      $('qBtn').textContent = 'Sign up anyway';
-      $('qBtn').style.display = 'inline-block';
+      $('qBody').textContent = 'At about ' + fmt(rides / 12) + ' likely rides a month you are on the smaller side for now, but we will follow up with options. You are welcome to apply any time.';
+      $('qBtn').textContent = 'Apply anyway';
     }
+    $('qBtn').style.display = 'inline-block';
   }
   function status(kind, msg) { var el = $('status'); el.className = 'status ' + kind; el.textContent = msg; }
   // Save a half-finished form once the email is in, so one reminder can go out if they never press Send.
