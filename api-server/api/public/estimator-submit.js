@@ -11,9 +11,15 @@ const { escHtml, adminClient } = require('../../lib/security');
 const { hit, clientIp } = require('../../lib/ratelimit');
 const { upsertLead } = require('../../lib/estimator-leads');
 
-// A facility "qualifies" at this many likely rides per year (about 10 a month).
-// Keep in sync with QUALIFY_RIDES in partners-portal/estimator.html.
-const QUALIFY_RIDES = 120;
+// A facility "qualifies" at this many likely rides per MONTH. Keep in sync with
+// QUALIFY_PER_MONTH in partners-portal/estimator.html. Plans are priced by monthly ride volume.
+const QUALIFY_PER_MONTH = 20;
+function planFor(m) {
+  if (m <= 75) return { name: 'Starter', price: '$899/mo', band: 'up_to_75' };
+  if (m <= 300) return { name: 'Essential', price: '$1,999/mo', band: '75_300' };
+  if (m <= 800) return { name: 'Professional', price: '$4,499/mo', band: '300_800' };
+  return { name: 'Enterprise', price: 'Custom', band: m <= 2000 ? '800_2000' : '2000_plus' };
+}
 
 function pct(v) { const n = parseFloat(v); return isFinite(n) ? Math.min(Math.max(n, 0), 100) : 0; }
 function clean(v, max) { return String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').trim().slice(0, max); }
@@ -47,7 +53,9 @@ module.exports = async function handler(req, res) {
     const need = pct(b.pct_need_ride);
     const rides = Math.round(appts * need / 100);
     const oop = Math.round(rides * shares[3] / 100);
-    const qualifies = rides >= QUALIFY_RIDES;
+    const perMonth = rides / 12;
+    const plan = planFor(perMonth);
+    const qualifies = perMonth >= QUALIFY_PER_MONTH;
 
     const name = clean(b.contact_name, 80), facility = clean(b.facility_name, 100), visits = clean(b.visit_types, 120);
     const r1 = n => (Math.round(n * 10) / 10) + '%';
@@ -55,9 +63,9 @@ module.exports = async function handler(req, res) {
       ['Facility', facility || '(not given)'], ['Contact', (name || '(not given)') + ' <' + email + '>'],
       ['Appointments per year', appts.toLocaleString('en-US')],
       ['Commercial', r1(shares[0])], ['Medicare', r1(shares[1])], ['Medicaid', r1(shares[2])], ['Self-pay', r1(shares[3])],
-      ['Needing a ride', r1(need)], ['Likely rides per year', rides.toLocaleString('en-US')],
+      ['Needing a ride', r1(need)], ['Likely rides per year', rides.toLocaleString('en-US')], ['Likely rides per month', Math.round(perMonth).toLocaleString('en-US')], ['Fits plan', plan.name + ' (' + plan.price + ')'],
       ['Out-of-pocket rides per year', oop.toLocaleString('en-US')], ['Common visit types', visits || '(not given)'],
-      ['Meets ' + QUALIFY_RIDES + '-ride threshold', qualifies ? 'YES' : 'No'],
+      ['Meets ' + QUALIFY_PER_MONTH + ' rides/month threshold', qualifies ? 'YES' : 'No'],
     ];
     const table = '<table style="border-collapse:collapse;font-size:14px;width:100%">' + rows.map(r =>
       '<tr><td style="padding:6px 10px;border-bottom:1px solid #E4E4E7;color:#4B5563">' + escHtml(r[0]) + '</td><td style="padding:6px 10px;border-bottom:1px solid #E4E4E7;font-weight:600;color:#060D1F">' + escHtml(r[1]) + '</td></tr>').join('') + '</table>';
@@ -72,7 +80,7 @@ module.exports = async function handler(req, res) {
 
     const adminRes = await send({
       to: ['partners@carevoy.co'], reply_to: email,
-      subject: (qualifies ? 'QUALIFIED lead: ' : 'Estimator submission: ') + (facility || email),
+      subject: (qualifies ? 'QUALIFIED lead (' + plan.name + '): ' : 'Estimator submission (' + plan.name + '): ') + (facility || email),
       html: shell('New estimator submission', table),
     });
     if (!adminRes.ok) return res.status(500).json({ error: 'Could not send right now. Please email partners@carevoy.co.' });
@@ -88,7 +96,7 @@ module.exports = async function handler(req, res) {
     // Mark them as sent so no reminder goes out (best effort: ignored if the leads table is not set up yet).
     await upsertLead(adminClient(), email, { appointments: appts, pct_commercial: p[0], pct_medicare: p[1], pct_medicaid: p[2], pct_selfpay: p[3], pct_need_ride: need, contact_name: name, facility_name: facility, visit_types: visits }, true).catch(() => {});
 
-    return res.status(200).json({ success: true, qualifies, rides, out_of_pocket_rides: oop });
+    return res.status(200).json({ success: true, qualifies, rides, out_of_pocket_rides: oop, plan: plan.name, volume_band: plan.band });
   } catch (e) {
     return res.status(500).json({ error: 'Could not send right now. Please email partners@carevoy.co.' });
   }

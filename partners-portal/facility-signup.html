@@ -440,6 +440,13 @@
       if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'HIDE'; }
       else { inp.type = 'password'; btn.textContent = 'SHOW'; }
     }
+  
+    // Coming from /estimator: pre-select the ride volume (and so the plan) they were shown.
+    try {
+      var vq = new URLSearchParams(location.search).get('volume');
+      var vsel = document.getElementById('patientVolume');
+      if (vq && vsel && Array.prototype.some.call(vsel.options, function (o) { return o.value === vq; })) vsel.value = vq;
+    } catch (e) {}
   </script>
 </body>
 </html>

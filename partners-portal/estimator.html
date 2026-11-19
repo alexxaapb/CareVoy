@@ -168,8 +168,15 @@
   var $ = function (id) { return document.getElementById(id); };
   var ids = ['appts', 'p_comm', 'p_mcare', 'p_mcaid', 'p_self', 'need', 'facility', 'visits', 'cname', 'cemail'];
   var API = 'https://care-voy-api-server.vercel.app';
-  // A facility qualifies at this many likely rides per year (about 10 a month). Keep in sync with api-server/api/public/estimator-submit.js.
-  var QUALIFY_RIDES = 120;
+  // A facility qualifies at this many likely rides per month. Keep in sync with api-server/api/public/estimator-submit.js.
+  var QUALIFY_PER_MONTH = 20;
+  function planFor(m) {
+    // Only the ride-volume band is used on this public page. Plan names and prices are never shown here.
+    if (m <= 75) return { band: 'up_to_75' };
+    if (m <= 300) return { band: '75_300' };
+    if (m <= 800) return { band: '300_800' };
+    return { band: m <= 2000 ? '800_2000' : '2000_plus' };
+  }
   function num(id) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : 0; }
   function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
   function pctStr(n) { return (Math.round(n * 10) / 10) + '%'; }
@@ -209,18 +216,19 @@
 
   }
   function showQualify(q, rides) {
+    var pl = planFor(rides / 12);
     $('qualify').style.display = 'block';
+    $('qBtn').href = '/facility-signup?volume=' + pl.band;
     if (q) {
       $('qTitle').textContent = 'Good news: you are a strong fit for CareVoy.';
-      $('qBody').textContent = 'With about ' + fmt(rides) + ' likely rides a year, you can start now. Create your facility account in a few minutes, or wait for our follow-up.';
-      $('qBtn').textContent = 'Sign up your facility';
-      $('qBtn').style.display = 'inline-block';
+      $('qBody').textContent = 'With about ' + fmt(rides / 12) + ' likely rides a month, CareVoy fits your volume. Create your facility account now and we will show you the plan we recommend, or wait for our follow-up.';
+      $('qBtn').textContent = 'Apply now';
     } else {
       $('qTitle').textContent = 'Thanks. We will be in touch.';
-      $('qBody').textContent = 'At about ' + fmt(rides) + ' likely rides a year you are on the smaller side for now, but we will follow up with options. You are welcome to sign up any time.';
-      $('qBtn').textContent = 'Sign up anyway';
-      $('qBtn').style.display = 'inline-block';
+      $('qBody').textContent = 'At about ' + fmt(rides / 12) + ' likely rides a month you are on the smaller side for now, but we will follow up with options. You are welcome to apply any time.';
+      $('qBtn').textContent = 'Apply anyway';
     }
+    $('qBtn').style.display = 'inline-block';
   }
   function status(kind, msg) { var el = $('status'); el.className = 'status ' + kind; el.textContent = msg; }
   // Save a half-finished form once the email is in, so one reminder can go out if they never press Send.
