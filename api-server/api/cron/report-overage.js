@@ -2,9 +2,13 @@
 // Hourly. Reports overage rides to Stripe so Essential and Professional facilities are billed
 // $5 / $4 per ride over their plan limit on their next invoice. CRON_SECRET bearer auth.
 //
-// For each paying facility: count rides in its current Stripe billing period, work out how many are
-// over the plan limit, and send only the NEW overage since the last report as a Stripe meter event.
-// Rides cancelled after being reported cannot be taken back automatically (see PR notes).
+// Overage is reported only during the LAST 24 HOURS of each billing period, so rides cancelled earlier in
+// the month are already out of the count and nothing needs refunding. It still runs hourly through that
+// window (and sends only the new overage since the last report), so a ride added late is still caught
+// before Stripe closes the invoice about an hour after the period ends. Anything reported after the
+// period ends would land on the next invoice, which is why the window is a full day.
+// A ride cancelled inside that final day can be credited by hand in Stripe (credit note).
+const REPORT_WINDOW_SECONDS = 24 * 3600;
 const Stripe = require('stripe');
 const { adminClient } = require('../../lib/security');
 const { PLANS, METER_EVENT_NAME } = require('../../lib/plans');
@@ -40,6 +44,8 @@ module.exports = async function handler(req, res) {
         if (!sub) continue;
         const period = periodOf(sub);
         if (!period) continue;
+        // Not the last day of the period yet: nothing to report.
+        if (Math.floor(Date.now() / 1000) < period.end - REPORT_WINDOW_SECONDS) continue;
         checked++;
         const startIso = new Date(period.start * 1000).toISOString();
         const endIso = new Date(period.end * 1000).toISOString();
