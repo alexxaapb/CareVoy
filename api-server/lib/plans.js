@@ -4,8 +4,8 @@
 // Enterprise (800+ rides a month) is custom and is never sold online.
 const PLANS = {
   starter:      { label: 'Starter',      rides: 75,  cents: 89900,  price_label: '$899',   price_env: 'STRIPE_PRICE_STARTER',      best_for: 'Independent practices, occasional coordination' },
-  essential:    { label: 'Essential',    rides: 300, cents: 199900, price_label: '$1,999', price_env: 'STRIPE_PRICE_ESSENTIAL',    best_for: 'Growing facilities, multi-provider practices' },
-  professional: { label: 'Professional', rides: 800, cents: 449900, price_label: '$4,499', price_env: 'STRIPE_PRICE_PROFESSIONAL', best_for: 'High-volume facilities: dialysis, larger assisted living' },
+  essential:    { label: 'Essential',    rides: 300, cents: 199900, price_label: '$1,999', price_env: 'STRIPE_PRICE_ESSENTIAL',    overage_env: 'STRIPE_PRICE_ESSENTIAL_OVERAGE',    overage_label: '$5',  best_for: 'Growing facilities, multi-provider practices' },
+  professional: { label: 'Professional', rides: 800, cents: 449900, price_label: '$4,499', price_env: 'STRIPE_PRICE_PROFESSIONAL', overage_env: 'STRIPE_PRICE_PROFESSIONAL_OVERAGE', overage_label: '$4', best_for: 'High-volume facilities: dialysis, larger assisted living' },
 };
 // The ride-volume choice on the signup form -> the plan that fits.
 function tierForBand(band) {
@@ -15,4 +15,6 @@ function tierForBand(band) {
   if (band === '800_2000' || band === '2000_plus') return 'enterprise';
   return 'starter';
 }
-module.exports = { PLANS, tierForBand };
+// Name of the Stripe Billing Meter that counts overage rides (create it once in Stripe).
+const METER_EVENT_NAME = process.env.STRIPE_METER_EVENT_NAME || 'overage_rides';
+module.exports = { PLANS, tierForBand, METER_EVENT_NAME };

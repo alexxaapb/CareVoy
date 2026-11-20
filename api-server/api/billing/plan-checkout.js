@@ -51,11 +51,14 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Could not start checkout. Has the plan checkout SQL been run?' });
     }
 
+    const lineItems = [{ price: priceId, quantity: 1 }];
+    // Essential and Professional also get the pay-per-ride overage price (metered, billed in arrears).
+    if (plan.overage_env && process.env[plan.overage_env]) lineItems.push({ price: process.env[plan.overage_env] });
     const meta = { hospital_id: hid, tier, kind: 'plan' };
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: lineItems,
       subscription_data: { metadata: meta },
       metadata: meta,
       allow_promotion_codes: true,

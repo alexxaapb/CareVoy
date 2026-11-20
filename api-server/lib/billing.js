@@ -124,6 +124,21 @@ async function requireAddon(caller, addonKey) {
   return { ok: !!(a && a.active) };
 }
 
+// True when a facility signed up on its own and has not paid yet. Used to stop unpaid facilities
+// from creating rides or API keys through the server. Facilities that were set up before pay-to-start
+// (no signup_flow marker) are never blocked.
+async function facilityBlocked(hospitalId) {
+  if (!hospitalId) return false;
+  try {
+    const sb = adminClient();
+    const { data: h } = await sb.from('hospitals').select('active, intake_data').eq('id', hospitalId).maybeSingle();
+    if (!h || h.active) return false;
+    if (!(h.intake_data && h.intake_data.signup_flow === 'self_serve')) return false;
+    const { data: b } = await sb.from('facility_billing').select('subscription_status').eq('hospital_id', hospitalId).maybeSingle();
+    return !ACTIVE_SUB_STATUSES.includes(b && b.subscription_status);
+  } catch (e) { return false; }
+}
+
 // Which EHR (and practice) a facility is connected to. Empty values mean "not connected".
 async function loadEhrConfig(hospitalId) {
   const { data, error } = await adminClient()
@@ -132,4 +147,4 @@ async function loadEhrConfig(hospitalId) {
   return { system: data.ehr_system || null, practiceId: data.ehr_practice_id || null };
 }
 
-module.exports = { ADDONS, TIER_LABELS, COUNTED_STATUSES, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, loadEhrConfig, requireAddon, monthRangeUTC };
+module.exports = { facilityBlocked, ADDONS, TIER_LABELS, COUNTED_STATUSES, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, loadEhrConfig, requireAddon, monthRangeUTC };

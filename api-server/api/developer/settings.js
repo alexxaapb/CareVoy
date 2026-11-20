@@ -26,6 +26,7 @@ module.exports = async function handler(req, res) {
     const hid = caller && caller.coordinator && caller.coordinator.hospital_id;
     if (!hid) return res.status(403).json({ error: 'Only facility coordinators can change developer settings' });
     const sb = adminClient();
+    if (await require('../../lib/billing').facilityBlocked(hid)) return res.status(402).json({ error: 'Choose a plan to unlock this.' });
     const { data: cur } = await sb.from('facility_api').select('*').eq('hospital_id', hid).maybeSingle();
     const audit = (action) => sb.from('audit_log').insert({ actor_id: caller.user.id, actor_role: 'coordinator', action, entity_type: 'hospital', entity_id: hid }).then(() => {}, () => {});
 
