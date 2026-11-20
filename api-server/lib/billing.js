@@ -6,6 +6,7 @@
 // add-on locking stays OFF until ENFORCE_ADDONS=true is set in Vercel.
 
 const { adminClient } = require('./security');
+const { PLANS, tierForBand } = require('./plans');
 
 const TIER_LABELS = { starter: 'Starter', essential: 'Essential', professional: 'Professional' };
 
@@ -45,7 +46,7 @@ function monthRangeUTC(now) {
 async function loadBilling(sb, hospitalId) {
   const client = sb || adminClient();
   const [hospRes, billRes] = await Promise.all([
-    client.from('hospitals').select('name, tier').eq('id', hospitalId).maybeSingle(),
+    client.from('hospitals').select('name, tier, active, intake_data').eq('id', hospitalId).maybeSingle(),
     client.from('facility_billing').select('*').eq('hospital_id', hospitalId).maybeSingle(),
   ]);
   const hospital = hospRes.data || {};
@@ -77,7 +78,23 @@ async function loadBilling(sb, hospitalId) {
   }));
 
   const tier = hospital.tier || 'starter';
+
+  // Self-serve signups must choose and pay for a plan before the portal opens. Plan names and prices
+  // are only sent to a facility that is in this state, so they stay private.
+  const intake = hospital.intake_data || {};
+  const activeSub = ACTIVE_SUB_STATUSES.includes(bill && bill.subscription_status);
+  const needsPlan = intake.signup_flow === 'self_serve' && !hospital.active && !activeSub;
+  const recommended = tierForBand(intake.patient_volume);
+  const signup = { needs_plan: needsPlan };
+  if (needsPlan) {
+    signup.recommended = recommended;
+    signup.plans = Object.keys(PLANS).map((k) => ({
+      tier: k, label: PLANS[k].label, price_label: PLANS[k].price_label, rides: PLANS[k].rides,
+      best_for: PLANS[k].best_for, can_buy: !!process.env.STRIPE_SECRET_KEY && !!process.env[PLANS[k].price_env],
+    }));
+  }
   return {
+    signup,
     facility: hospital.name || '',
     plan: { tier, label: TIER_LABELS[tier] || (tier.charAt(0).toUpperCase() + tier.slice(1)) },
     subscription_status: bill ? bill.subscription_status || null : null,
@@ -107,6 +124,21 @@ async function requireAddon(caller, addonKey) {
   return { ok: !!(a && a.active) };
 }
 
+// True when a facility signed up on its own and has not paid yet. Used to stop unpaid facilities
+// from creating rides or API keys through the server. Facilities that were set up before pay-to-start
+// (no signup_flow marker) are never blocked.
+async function facilityBlocked(hospitalId) {
+  if (!hospitalId) return false;
+  try {
+    const sb = adminClient();
+    const { data: h } = await sb.from('hospitals').select('active, intake_data').eq('id', hospitalId).maybeSingle();
+    if (!h || h.active) return false;
+    if (!(h.intake_data && h.intake_data.signup_flow === 'self_serve')) return false;
+    const { data: b } = await sb.from('facility_billing').select('subscription_status').eq('hospital_id', hospitalId).maybeSingle();
+    return !ACTIVE_SUB_STATUSES.includes(b && b.subscription_status);
+  } catch (e) { return false; }
+}
+
 // Which EHR (and practice) a facility is connected to. Empty values mean "not connected".
 async function loadEhrConfig(hospitalId) {
   const { data, error } = await adminClient()
@@ -115,4 +147,4 @@ async function loadEhrConfig(hospitalId) {
   return { system: data.ehr_system || null, practiceId: data.ehr_practice_id || null };
 }
 
-module.exports = { ADDONS, TIER_LABELS, COUNTED_STATUSES, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, loadEhrConfig, requireAddon, monthRangeUTC };
+module.exports = { facilityBlocked, ADDONS, TIER_LABELS, COUNTED_STATUSES, ACTIVE_SUB_STATUSES, enforcementOn, loadBilling, loadEhrConfig, requireAddon, monthRangeUTC };

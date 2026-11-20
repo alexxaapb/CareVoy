@@ -34,6 +34,10 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid or inactive API key' });
     }
 
+    if (await require('../../lib/billing').facilityBlocked(keyRow.hospital_id)) {
+      return res.status(402).json({ error: 'This facility has not started its CareVoy plan yet.' });
+    }
+
     const { patient_name, contact_phone, contact_email, appointment_at, procedure_type, caregiver_name } = req.body || {};
     if (!patient_name || !contact_phone || !appointment_at) {
       return res.status(400).json({ error: 'Required: patient_name, contact_phone, appointment_at (ISO 8601)' });

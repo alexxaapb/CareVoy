@@ -55,7 +55,37 @@ module.exports = async (req, res) => {
       const obj = event.data.object;
       const meta = obj.metadata || {};
       const hid = meta.hospital_id;
-      if (hid && meta.kind === "addon" && meta.addon) {
+      if (hid && meta.kind === "plan" && meta.tier) {
+        // A facility paid for its plan (or its plan subscription changed).
+        const { PLANS } = require("../../lib/plans");
+        const plan = PLANS[meta.tier];
+        const paid = event.type === "checkout.session.completed" ||
+          (event.type === "customer.subscription.updated" && ["active", "trialing", "past_due"].includes(obj.status));
+        const ended = event.type === "customer.subscription.deleted" ||
+          (event.type === "customer.subscription.updated" && ["canceled", "unpaid", "incomplete_expired"].includes(obj.status));
+        const now = new Date().toISOString();
+        if (paid && plan) {
+          await supabase.from("hospitals").update({ active: true, pending_review: false, tier: meta.tier }).eq("id", hid);
+          const patch = { subscription_status: event.type === "checkout.session.completed" ? "active" : obj.status,
+            plan: meta.tier, ride_limit: plan.rides, monthly_price_cents: plan.cents, updated_at: now };
+          if (event.type === "checkout.session.completed") patch.contract_start = now.slice(0, 10);
+          if (obj.current_period_end) patch.current_period_end = new Date(obj.current_period_end * 1000).toISOString();
+          await supabase.from("facility_billing").update(patch).eq("hospital_id", hid);
+          if (event.type === "checkout.session.completed" && process.env.RESEND_API_KEY) {
+            const { data: h } = await supabase.from("hospitals").select("name").eq("id", hid).maybeSingle();
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json" },
+              body: JSON.stringify({ from: "CareVoy <partners@carevoy.co>", to: ["partners@carevoy.co"],
+                subject: "New paying facility: " + ((h && h.name) || hid) + " (" + plan.label + ")",
+                text: ((h && h.name) || hid) + " started the " + plan.label + " plan." }),
+            }).catch(() => {});
+          }
+        } else if (ended) {
+          await supabase.from("hospitals").update({ active: false }).eq("id", hid);
+          await supabase.from("facility_billing").update({ subscription_status: obj.status || "canceled", updated_at: now }).eq("hospital_id", hid);
+        }
+      } else if (hid && meta.kind === "addon" && meta.addon) {
         const { data: row } = await supabase.from("facility_billing")
           .select("addons").eq("hospital_id", hid).maybeSingle();
         if (row) {

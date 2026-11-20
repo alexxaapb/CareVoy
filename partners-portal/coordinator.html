@@ -15,7 +15,37 @@
     .sidebar-nav { flex:1; padding:14px 10px; display:flex; flex-direction:column; gap:2px; }
     .nav-item { display:flex; align-items:center; padding:10px 12px; border-radius:10px; color:#6B6F76; font-size:13px; font-weight:500; cursor:pointer; border:none; background:none; font-family:inherit; width:100%; text-align:left; transition:all 0.15s; }
     .nav-item:hover { background:#F6F6F7; color:#060D1F; }
-    .nav-item.active { background:rgba(0,194,168,0.10); color:#060D1F; font-weight:600; }
+  
+  /* Plan gate: shown to new self-serve facilities until they pick a plan and pay */
+  #planGate { position:fixed; inset:0; z-index:9999; background:#fff; overflow:auto; font-family:'Inter',-apple-system,sans-serif; color:#060D1F; }
+  #planGate .pg-top { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid #E4E4E7; }
+  #planGate .pg-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; }
+  #planGate .pg-brand img { width:32px; height:32px; border-radius:8px; }
+  #planGate .pg-out { background:none; border:none; color:#4B5563; font-size:13px; cursor:pointer; font-family:inherit; }
+  #planGate .pg-wrap { max-width:980px; margin:0 auto; padding:40px 20px 56px; }
+  #planGate h1 { font-size:clamp(24px,4vw,32px); letter-spacing:-0.02em; margin-bottom:8px; }
+  #planGate .pg-sub { color:#4B5563; font-size:15px; margin-bottom:28px; }
+  #planGate .pg-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+  @media (min-width:820px){ #planGate .pg-grid { grid-template-columns:repeat(3,1fr); } }
+  #planGate .pg-card { position:relative; display:flex; flex-direction:column; justify-content:flex-start; text-align:left; background:#fff; border:1.5px solid #E4E4E7; border-radius:14px; padding:22px 20px; cursor:pointer; font-family:inherit; color:inherit; }
+  #planGate .pg-card:hover { border-color:#9CA3AF; }
+  #planGate .pg-card.sel { border-color:#060D1F; box-shadow:0 0 0 3px rgba(6,13,31,.08); }
+  #planGate .pg-badge { position:absolute; top:-11px; left:18px; background:#00C2A8; color:#060D1F; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:3px 10px; border-radius:99px; }
+  #planGate .pg-name { font-weight:700; font-size:16px; }
+  #planGate .pg-price { font-size:32px; font-weight:700; margin:8px 0 2px; letter-spacing:-0.02em; }
+  #planGate .pg-price span { font-size:14px; font-weight:500; color:#4B5563; }
+  #planGate .pg-line { font-size:13.5px; color:#374151; margin-top:8px; }
+  #planGate ul { list-style:none; margin-top:12px; padding:0; }
+  #planGate li { font-size:13px; color:#374151; padding:4px 0 4px 20px; position:relative; }
+  #planGate li:before { content:''; position:absolute; left:2px; top:9px; width:8px; height:5px; border-left:2px solid #00C2A8; border-bottom:2px solid #00C2A8; transform:rotate(-45deg); }
+  #planGate .pg-ent { margin-top:14px; border:1px solid #E4E4E7; border-radius:12px; padding:14px 18px; font-size:14px; color:#374151; }
+  #planGate .pg-terms { display:flex; gap:10px; align-items:flex-start; margin-top:24px; font-size:13.5px; color:#374151; }
+  #planGate .pg-terms input { margin-top:3px; }
+  #planGate .pg-btn { margin-top:16px; background:#060D1F; color:#fff; border:none; border-radius:10px; padding:14px 24px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
+  #planGate .pg-btn[disabled] { opacity:.5; cursor:default; }
+  #planGate .pg-err { color:#B91C1C; font-size:13.5px; margin-top:12px; min-height:18px; }
+  #planGate .pg-foot { color:#6B7280; font-size:12.5px; margin-top:14px; }
+  .nav-item.active { background:rgba(0,194,168,0.10); color:#060D1F; font-weight:600; }
     .main { margin-left:200px; flex:1; min-height:100vh; display:flex; flex-direction:column; }
     .topbar { background:#fff; border-bottom:1px solid #E4E4E7; padding:0 28px; height:58px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
     .topbar-left { display:flex; align-items:center; gap:10px; }
@@ -758,6 +788,7 @@ async function init() {
     document.getElementById('topSub').textContent = hospitalInfo ? hospitalInfo.name : '';
     document.getElementById('sidebarFacility').textContent = hospitalInfo ? hospitalInfo.name : '';
     loadConnPanel();
+    checkPlanGate();
 
     // Settings populate
     document.getElementById('setPocName').textContent = coordInfo.full_name || '—';
@@ -1731,6 +1762,78 @@ function closeDrawer() {
 // ── Nav ────────────────────────────────────────────────────
 function toggleMenu(open) {
   document.body.classList.toggle('nav-open', typeof open === 'boolean' ? open : !document.body.classList.contains('nav-open'));
+}
+
+// ── Plan gate: new self-serve facilities choose a plan and pay before the portal opens ──
+function pgEsc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+var PG_FEATURES = {
+  starter: ['Up to 75 rides a month', 'HSA/FSA receipts on every ride', 'Calendar Sync included'],
+  essential: ['Up to 300 rides a month', 'HSA/FSA receipts on every ride', 'Calendar Sync included', '$5 per ride over 300'],
+  professional: ['Up to 800 rides a month', 'HSA/FSA receipts on every ride', 'Calendar Sync included', '$4 per ride over 800']
+};
+function pgShell(inner) {
+  var el = document.getElementById('planGate');
+  if (!el) { el = document.createElement('div'); el.id = 'planGate'; document.body.appendChild(el); }
+  el.innerHTML = '<div class="pg-top"><div class="pg-brand"><img src="/carevoy-logo.svg" alt="CareVoy">CareVoy</div><button class="pg-out" onclick="signOut()">Sign out</button></div><div class="pg-wrap">' + inner + '</div>';
+  return el;
+}
+async function checkPlanGate() {
+  try {
+    var success = /[?&]plan=success/.test(location.search);
+    var r = await fetch(API + '/api/billing/status', { headers: H });
+    if (!r.ok) return;
+    var b = await r.json();
+    if (!b.signup || !b.signup.needs_plan) { var g = document.getElementById('planGate'); if (g) g.remove(); return; }
+    if (success) { pgWaiting(0); return; }
+    pgRender(b.signup);
+  } catch (e) {}
+}
+function pgWaiting(n) {
+  pgShell('<h1>Payment received</h1><p class="pg-sub">Setting up your account. This takes a few seconds.</p>');
+  if (n > 20) { pgShell('<h1>Almost there</h1><p class="pg-sub">Your payment went through, but your account is still being activated. Refresh in a minute, or email partners@carevoy.co.</p>'); return; }
+  setTimeout(async function () {
+    try {
+      var r = await fetch(API + '/api/billing/status', { headers: H });
+      var b = r.ok ? await r.json() : null;
+      if (b && b.signup && !b.signup.needs_plan) { location.href = '/coordinator.html'; return; }
+    } catch (e) {}
+    pgWaiting(n + 1);
+  }, 2500);
+}
+function pgRender(sg) {
+  var sel = sg.recommended === 'enterprise' ? 'essential' : sg.recommended;
+  var cards = sg.plans.map(function (p) {
+    return '<button type="button" class="pg-card" data-tier="' + pgEsc(p.tier) + '">' +
+      (p.tier === sg.recommended ? '<div class="pg-badge">Recommended for you</div>' : '') +
+      '<div class="pg-name">' + pgEsc(p.label) + '</div>' +
+      '<div class="pg-price">' + pgEsc(p.price_label) + '<span>/month</span></div>' +
+      '<div class="pg-line">' + pgEsc(p.best_for) + '</div>' +
+      '<ul>' + (PG_FEATURES[p.tier] || []).map(function (f) { return '<li>' + pgEsc(f) + '</li>'; }).join('') + '</ul></button>';
+  }).join('');
+  var rec = sg.plans.filter(function (p) { return p.tier === sg.recommended; })[0];
+  var sub = rec ? 'Based on the ride volume you gave us, we recommend ' + pgEsc(rec.label) + '. You can pick a different plan.' :
+    'Based on the ride volume you gave us, a custom plan fits best. Email partners@carevoy.co and we will set it up, or pick a plan below.';
+  var el = pgShell('<h1>Choose your plan</h1><p class="pg-sub">' + sub + '</p><div class="pg-grid">' + cards + '</div>' +
+    '<div class="pg-ent"><strong>800+ rides a month?</strong> Enterprise plans are custom. Email <a href="mailto:partners@carevoy.co">partners@carevoy.co</a>.</div>' +
+    '<label class="pg-terms"><input type="checkbox" id="pgTerms"><span>I agree to the CareVoy <a href="https://www.carevoy.co/terms" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://www.carevoy.co/privacy" target="_blank" rel="noopener">Privacy Policy</a>, and I am authorized to sign up this facility.</span></label>' +
+    '<button class="pg-btn" id="pgGo" disabled>Continue to secure checkout</button><div class="pg-err" id="pgErr"></div>' +
+    '<div class="pg-foot">Payments are handled securely by Stripe. Cancel any time from your billing page.</div>');
+  var chosen = sel;
+  function mark() { el.querySelectorAll('.pg-card').forEach(function (c) { c.classList.toggle('sel', c.getAttribute('data-tier') === chosen); }); }
+  el.querySelectorAll('.pg-card').forEach(function (c) { c.addEventListener('click', function () { chosen = c.getAttribute('data-tier'); mark(); }); });
+  mark();
+  var cb = el.querySelector('#pgTerms'), go = el.querySelector('#pgGo');
+  cb.addEventListener('change', function () { go.disabled = !cb.checked; });
+  go.addEventListener('click', async function () {
+    var err = el.querySelector('#pgErr'); err.textContent = '';
+    go.disabled = true; go.textContent = 'Opening checkout...';
+    try {
+      var r = await fetch(API + '/api/billing/plan-checkout', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: JSON.stringify({ tier: chosen, accept_terms: true }) });
+      var j = await r.json();
+      if (!r.ok || !j.url) throw new Error(j.error || 'Could not start checkout.');
+      location.href = j.url;
+    } catch (e) { err.textContent = e.message; go.disabled = false; go.textContent = 'Continue to secure checkout'; }
+  });
 }
 async function loadConnPanel() {
   try {
