@@ -1997,16 +1997,24 @@ function closeCVRideDetail() { document.getElementById('cvRideDetailModal').styl
       headers: Object.assign({}, hdr, {'Content-Type':'application/json'}),
       body: JSON.stringify({active: true, pending_review: false})
     });
+    var emailNote = 'No email address on file, so no email was sent.';
     if (email) {
+      var emailOk = false, emailErr = '';
       try {
-        await fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
+        var er = await fetch('https://care-voy-api-server.vercel.app/api/notify/partner-approved', {
           method: 'POST',
           headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
           body: JSON.stringify({email: email, name: name, type: type})
         });
-      } catch(e) {}
+        var ed = await er.json().catch(function(){ return {}; });
+        emailOk = er.ok && ed.success === true;
+        if (!emailOk) emailErr = ed.error || ed.note || ('HTTP ' + er.status);
+      } catch(e) { emailErr = e.message || 'network error'; }
+      emailNote = emailOk
+        ? 'Login email sent to ' + email + '.'
+        : 'WARNING: the login email to ' + email + ' did NOT send (' + emailErr + '). Contact them directly with the sign-in link: https://partners.carevoy.co';
     }
-    alert(name + ' approved. Login email sent to ' + (email||'partner') + '.');
+    alert(name + ' approved. ' + emailNote);
     document.getElementById('rideDetailModal').style.display = 'none';
     location.reload();
   }
